@@ -312,14 +312,34 @@ async function loadKellyPanel() {
             const divider = document.createElement('div');
             divider.style.cssText = 'border-top:1px solid var(--border);margin:8px 0';
 
-            const stats = document.createElement('div');
-            stats.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;font-size:.75rem';
-            [
+            // Color the headline 0% red when Kelly is clamped (negative edge),
+            // not green — green at 0% reads as "fine, don't bet much" but a
+            // clamped value means "your edge is broken at this R:R".
+            const isClamped = (b.kelly_raw_pct != null && b.kelly_raw_pct <= 0);
+            if (isClamped) {
+                rec.style.color = 'var(--danger,#e53935)';
+            }
+
+            const rows = [
                 ['Win Rate',  b.win_rate + '%'],
                 ['Trades',    b.trade_count],
                 ['Avg Win',   '+$' + b.avg_win_usd.toFixed(1)],
                 ['Avg Loss',  '-$' + b.avg_loss_usd.toFixed(1)],
-            ].forEach(([k, v]) => {
+            ];
+            if (b.reward_ratio != null) {
+                rows.push(['R:R',         b.reward_ratio.toFixed(2)]);
+            }
+            if (b.win_rate_breakeven != null) {
+                rows.push(['Breakeven WR', b.win_rate_breakeven + '%']);
+            }
+            if (b.kelly_raw_pct != null && b.kelly_raw_pct !== b.kelly_full_pct) {
+                // Show the unclamped value when it disagrees with the displayed one
+                rows.push(['Kelly (raw)',  b.kelly_raw_pct + '%']);
+            }
+
+            const stats = document.createElement('div');
+            stats.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;font-size:.75rem';
+            rows.forEach(([k, v]) => {
                 const lbl = document.createElement('span');
                 lbl.style.color = 'var(--muted)';
                 lbl.textContent = k;
@@ -335,6 +355,16 @@ async function loadKellyPanel() {
             card.appendChild(recLabel);
             card.appendChild(divider);
             card.appendChild(stats);
+
+            // When the API surfaces a reason (e.g. negative edge), show it as
+            // a warning footer so a 0% headline isn't mistaken for "no data".
+            if (b.reason) {
+                const warn = document.createElement('div');
+                warn.style.cssText = 'margin-top:10px;padding:8px 10px;background:rgba(229,57,53,0.08);border-left:3px solid var(--danger,#e53935);border-radius:4px;font-size:.72rem;line-height:1.4;color:var(--text-2,#aeb6cc)';
+                warn.textContent = '⚠ ' + b.reason;
+                card.appendChild(warn);
+            }
+
             grid.appendChild(card);
         });
 
