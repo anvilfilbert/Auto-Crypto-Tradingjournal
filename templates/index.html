@@ -692,12 +692,23 @@ select:focus,input:focus{border-color:var(--accent)}
       </div>
 
       <div class="section-title">P&amp;L by Setup Type</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">
+        How each setup type performed across your closed trades. Untagged trades
+        roll up under <code>(untagged)</code> — that's your full picture, even when you
+        forgot to label the setup at journal time.
+      </div>
       <div class="table-card" style="overflow-x:auto">
         <div id="setup-breakdown-body" style="padding:12px">Loading...</div>
       </div>
 
-      <div class="table-card" style="margin-top:16px">
-        <div class="card-header" style="font-weight:700;font-size:.9rem;padding:12px 14px;border-bottom:1px solid var(--border)">vs BTC Buy-and-Hold</div>
+      <div class="section-title" style="margin-top:16px">vs BTC Buy-and-Hold</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">
+        Your active-trading return compared against holding BTC for the same period.
+        Alpha &gt; 0 means you beat the market. Negative alpha means buy-and-hold
+        BTC would have outperformed your active trading. Assumed capital is the
+        median position size × 5 (retail-plausible bankroll proxy).
+      </div>
+      <div class="table-card">
         <div id="benchmark-body" style="padding:14px">Loading...</div>
       </div>
 
@@ -771,6 +782,39 @@ select:focus,input:focus{border-color:var(--accent)}
           </tr></thead>
           <tbody id="deep-rr-tbody"><tr><td colspan="8" style="color:var(--muted);text-align:center">Link trades to analyst calls to see R:R data here</td></tr></tbody>
         </table>
+      </div>
+
+      <!-- ── Expected Value by Setup ──────────────────────────────────────── -->
+      <div class="section-title">Expected Value by Setup</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">
+        Average P&amp;L weighted by win rate × R-multiple. Lets you compare setup types
+        on raw edge instead of headline win rate alone.
+      </div>
+      <div class="table-card">
+        <div id="edge-ev-body" style="padding:12px">Loading…</div>
+      </div>
+
+      <!-- ── MFE / MAE per Setup ──────────────────────────────────────────── -->
+      <div class="section-title">Trade Excursion — MFE / MAE per Setup</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">
+        MFE = max favourable excursion (best unrealized gain during the trade).
+        MAE = max adverse excursion (worst drawdown during the trade).
+        Tells you whether you cut winners early (high MFE, low realized) or
+        held losers too long (high MAE).
+      </div>
+      <div class="table-card">
+        <div id="edge-mfemae-body" style="padding:12px">Loading…</div>
+      </div>
+
+      <!-- ── Accuracy Trend ──────────────────────────────────────────────── -->
+      <div class="section-title">AI Scoring Accuracy — monthly trend</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">
+        Per-month true-positive (correct enter) and false-positive (wrong enter)
+        rates over your closed trade history. If the AI is learning, the TP line
+        should rise and FP should fall over time.
+      </div>
+      <div class="table-card">
+        <div id="edge-accuracy-body" style="padding:12px">Loading…</div>
       </div>
     </div>
 
@@ -2034,7 +2078,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/01-utils.js?v=3.3"></script>
 <script src="/static/js/02-dashboard.js?v=2.8"></script>
 <script src="/static/js/03-journal.js?v=2.9"></script>
-<script src="/static/js/04-deep-edge.js?v=3.1"></script>
+<script src="/static/js/04-deep-edge.js?v=3.2"></script>
 <script src="/static/js/05-advisor.js?v=2.8"></script>
 <script src="/static/js/06-import.js?v=2.8"></script>
 <script src="/static/js/07-calls.js?v=2.9"></script>
@@ -2047,7 +2091,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/13-init.js?v=2.8"></script>
 <script src="/static/js/14-scanner.js?v=4.2"></script>
 <script src="/static/js/15-hindsight.js?v=3.0"></script>
-<script src="/static/js/16-settings.js?v=2.7"></script>
+<script src="/static/js/16-settings.js?v=2.8"></script>
 <script src="/static/js/17-risk.js?v=2.2"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">

@@ -433,6 +433,10 @@ async function loadBenchmark() {
 // ══════════════════════════════════════════════════════════════════════════════
 async function loadEdge() {
   loadRulebook();
+  // Three previously-orphan panels: EV-by-setup, MFE/MAE, accuracy trend
+  loadEvBySetupPanel();
+  loadMfeMaePanel();
+  loadAccuracyTrendPanel();
   const res = await api('/api/analytics/deep?' + new URLSearchParams(exchFilters()));
   if (!res.ok) return;
   const d = res.data;
@@ -568,4 +572,146 @@ function renderRulebook(data) {
           <div style="font-size:.84rem;color:var(--fg)">${r.rule}</div>
         </div>`;
     }).join('') + `</div>`;
+}
+
+
+// ── Expected Value by Setup ────────────────────────────────────────────────────
+async function loadEvBySetupPanel() {
+  const el = document.getElementById('edge-ev-body');
+  if (!el) return;
+  el.textContent = 'Loading…';
+  try {
+    const res = await fetch('/api/analytics/ev-by-setup?' + new URLSearchParams(exchFilters()))
+                .then(r => r.json());
+    const rows = (res.ok && res.data) || [];
+    if (!rows.length) {
+      el.textContent = 'No EV-by-setup data yet — tag closed trades with a setup type to populate this panel.';
+      el.style.color = 'var(--muted)';
+      return;
+    }
+    const tbl = document.createElement('table');
+    tbl.className = 'tbl';
+    const thead = tbl.createTHead();
+    const hr = thead.insertRow();
+    ['Setup','Trades','Win %','Avg Win','Avg Loss','EV per trade','Total P&L'].forEach(h => {
+      const th = document.createElement('th'); th.textContent = h; hr.appendChild(th);
+    });
+    const tbody = tbl.createTBody();
+    rows.forEach(r => {
+      const tr = tbody.insertRow();
+      const cells = [
+        r.setup_type || '—',
+        r.trade_count,
+        (r.win_rate || 0).toFixed(1) + '%',
+        '+' + (r.avg_win || 0).toFixed(2),
+        (r.avg_loss || 0).toFixed(2),
+        (r.ev_per_trade != null ? (r.ev_per_trade >= 0 ? '+' : '') + r.ev_per_trade.toFixed(2) : '—'),
+        (r.total_pnl >= 0 ? '+' : '') + (r.total_pnl || 0).toFixed(2),
+      ];
+      cells.forEach((v, i) => {
+        const td = tr.insertCell();
+        td.textContent = v;
+        if (i === 5 || i === 6) {
+          td.style.color = (String(v).startsWith('-')) ? 'var(--red)' : 'var(--accent3)';
+          td.style.fontWeight = '600';
+        }
+      });
+    });
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.appendChild(tbl);
+  } catch (e) {
+    el.textContent = 'EV-by-setup failed to load: ' + e.message;
+  }
+}
+
+// ── MFE / MAE per Setup ────────────────────────────────────────────────────────
+async function loadMfeMaePanel() {
+  const el = document.getElementById('edge-mfemae-body');
+  if (!el) return;
+  el.textContent = 'Loading…';
+  try {
+    const res = await fetch('/api/analytics/mfe-mae?' + new URLSearchParams(exchFilters()))
+                .then(r => r.json());
+    const d = (res.ok && res.data) || {};
+    if (!d.available) {
+      el.textContent = d.message || 'No MFE/MAE data yet — will populate on next sync after positions have intraday tick data attached.';
+      el.style.color = 'var(--muted)';
+      return;
+    }
+    const setups = d.by_setup || d.setups || [];
+    if (!setups.length) {
+      el.textContent = 'Data flagged available but empty payload — check backend.';
+      el.style.color = 'var(--muted)';
+      return;
+    }
+    const tbl = document.createElement('table');
+    tbl.className = 'tbl';
+    const thead = tbl.createTHead();
+    const hr = thead.insertRow();
+    ['Setup','n','Avg MFE %','Avg MAE %','MFE / MAE ratio','Capture %'].forEach(h => {
+      const th = document.createElement('th'); th.textContent = h; hr.appendChild(th);
+    });
+    const tbody = tbl.createTBody();
+    setups.forEach(s => {
+      const tr = tbody.insertRow();
+      const mfe = s.mfe_pct || 0;
+      const mae = s.mae_pct || 0;
+      const ratio = (mae !== 0) ? (mfe / Math.abs(mae)).toFixed(2) : '—';
+      const capture = (s.capture_pct != null ? s.capture_pct.toFixed(1) + '%' : '—');
+      [s.setup_type || '—', s.n, '+' + mfe.toFixed(2) + '%', mae.toFixed(2) + '%',
+       ratio, capture].forEach(v => {
+        const td = tr.insertCell();
+        td.textContent = v;
+      });
+    });
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.appendChild(tbl);
+  } catch (e) {
+    el.textContent = 'MFE/MAE failed to load: ' + e.message;
+  }
+}
+
+// ── Accuracy Trend ─────────────────────────────────────────────────────────────
+async function loadAccuracyTrendPanel() {
+  const el = document.getElementById('edge-accuracy-body');
+  if (!el) return;
+  el.textContent = 'Loading…';
+  try {
+    const res = await fetch('/api/analytics/accuracy-trend?' + new URLSearchParams(exchFilters()))
+                .then(r => r.json());
+    const rows = (res.ok && res.data) || [];
+    if (!rows.length) {
+      el.textContent = 'No accuracy data yet — need closed trades with AI scores.';
+      el.style.color = 'var(--muted)';
+      return;
+    }
+    // Render as a compact table for now; can graduate to a Chart.js line later
+    const tbl = document.createElement('table');
+    tbl.className = 'tbl';
+    const thead = tbl.createTHead();
+    const hr = thead.insertRow();
+    ['Month','Trades','True Positive %','False Positive %','Δ (TP − FP)'].forEach(h => {
+      const th = document.createElement('th'); th.textContent = h; hr.appendChild(th);
+    });
+    const tbody = tbl.createTBody();
+    rows.forEach(r => {
+      const tr = tbody.insertRow();
+      const tp = r.tp_rate != null ? r.tp_rate : 0;
+      const fp = r.fp_rate != null ? r.fp_rate : 0;
+      const delta = (tp - fp);
+      [r.month, r.n, tp.toFixed(1) + '%', fp.toFixed(1) + '%',
+       (delta >= 0 ? '+' : '') + delta.toFixed(1) + 'pp'].forEach((v, i) => {
+        const td = tr.insertCell();
+        td.textContent = v;
+        if (i === 4) {
+          td.style.color = delta >= 0 ? 'var(--accent3)' : 'var(--red)';
+          td.style.fontWeight = '600';
+        }
+      });
+    });
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.appendChild(tbl);
+  } catch (e) {
+    el.textContent = 'Accuracy trend failed to load: ' + e.message;
+  }
 }

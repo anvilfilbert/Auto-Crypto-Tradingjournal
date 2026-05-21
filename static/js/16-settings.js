@@ -79,6 +79,21 @@ async function loadSettings() {
       </div>
     </div>
 
+    <div class="settings-section-title" style="margin-top:28px">⚙️ Scanner Maintenance</div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px">
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px;line-height:1.5">
+        Recalibrate the scanner's setup-score → win-rate mapping using your closed-trade outcomes.
+        Run this after a meaningful chunk of new closed trades accrues (≈ every few weeks).
+        Pure SQL — no AI calls — completes in &lt; 1s.
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button id="scanner-calibrate-btn" class="btn btn-primary"
+                onclick="runScannerCalibration()"
+                style="padding:7px 14px">🎯 Recalibrate Scanner</button>
+        <span id="scanner-calibrate-status" style="font-size:.78rem;color:var(--muted)"></span>
+      </div>
+    </div>
+
     <div class="settings-section-title" style="margin-top:28px">🤖 AI Token Usage (last 7 days)</div>
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:.8rem">
@@ -341,3 +356,28 @@ async function loadTokenUsage() {
 // Exchange filter is now global in the sync bar (01-utils.js setGlobalExchange).
 // getExchangeFilter() is kept as an alias for backward compatibility.
 function getExchangeFilter() { return _globalExchange; }
+
+
+// ── Manual scanner calibration ────────────────────────────────────────────────
+async function runScannerCalibration() {
+  const btn = document.getElementById('scanner-calibrate-btn');
+  const lbl = document.getElementById('scanner-calibrate-status');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Recalibrating…';
+  if (lbl) { lbl.textContent = ''; lbl.style.color = 'var(--muted)'; }
+  try {
+    const res = await fetch('/api/scanner/calibrate', { method: 'POST' }).then(r => r.json());
+    if (!res.ok) throw new Error(res.error || 'unknown error');
+    const d = res.data || {};
+    const summary = d.message
+      || (d.buckets ? `${d.buckets.length} score buckets recalibrated` : 'calibration applied');
+    btn.textContent = '✓ Recalibrated';
+    if (lbl) { lbl.textContent = '· ' + summary; lbl.style.color = 'var(--accent3)'; }
+    setTimeout(() => { btn.disabled = false; btn.textContent = '🎯 Recalibrate Scanner'; }, 4000);
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '🎯 Recalibrate Scanner';
+    if (lbl) { lbl.textContent = '✗ ' + e.message; lbl.style.color = 'var(--red)'; }
+  }
+}
