@@ -345,14 +345,17 @@ def get_deep_stats(filters=None, conn=None):
         LIMIT 5
     """, params)
 
-    # by setup type
+    # by setup type — include untagged trades under '(untagged)' so all 100%
+    # of closed positions are represented. Filtering NULL was hiding the bulk
+    # of the user's data: only 1 of 111 trades had setup_type set on first
+    # observation (2026-05-21 audit). Users need to see this gap exists.
     by_setup = _rows(conn, f"""
-        SELECT setup_type,
+        SELECT COALESCE(NULLIF(TRIM(setup_type), ''), '(untagged)') AS setup_type,
                COUNT(*) AS trade_count,
                ROUND(SUM(realized_pnl), 4) AS total_pnl,
                ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
                ROUND(AVG(realized_pnl), 4) AS avg_pnl
-        FROM positions {where} {and_} setup_type IS NOT NULL AND setup_type != ''
+        FROM positions {where}
         GROUP BY setup_type
         ORDER BY total_pnl DESC
     """, params)
@@ -915,11 +918,14 @@ def get_benchmark_comparison(filters=None, conn=None) -> dict:
         exchange_clause = "AND COALESCE(exchange, 'bitget') = ?"
         exchange_params = [filters["exchange"]]
 
+    # Use MEDIAN size, not AVG — the corrupt-size rows (1000BONK=100000 contracts
+    # instead of USDT notional) inflate AVG dramatically. Median is robust to
+    # those outliers. Also clamp avg_size to a retail-plausible range as a
+    # safety net.
     row = conn.execute(f"""
         SELECT MIN(date(close_time)) AS first_date,
                MAX(date(close_time)) AS last_date,
-               SUM(realized_pnl)     AS total_pnl,
-               AVG(size_usdt)        AS avg_size
+               SUM(realized_pnl)     AS total_pnl
         FROM positions
         WHERE realized_pnl IS NOT NULL {exchange_clause}
     """, exchange_params).fetchone()
@@ -931,11 +937,25 @@ def get_benchmark_comparison(filters=None, conn=None) -> dict:
                 "btc_start": None, "btc_end": None,
                 "assumed_capital": 1000.0, "available": False}
 
+    # Median size_usdt across reasonable rows — survives the size_usdt
+    # data-quality issue (some rows store contract count, not USDT notional).
+    size_rows = conn.execute(f"""
+        SELECT size_usdt FROM positions
+        WHERE realized_pnl IS NOT NULL AND size_usdt > 0 AND size_usdt < 10000
+              {exchange_clause}
+        ORDER BY size_usdt
+    """, exchange_params).fetchall()
+    sizes = [float(r["size_usdt"]) for r in size_rows]
+    if sizes:
+        n = len(sizes)
+        median_size = sizes[n // 2] if n % 2 else (sizes[n // 2 - 1] + sizes[n // 2]) / 2
+    else:
+        median_size = 200.0
+
     start_date = row["first_date"]
     end_date   = row["last_date"]
     total_pnl  = float(row["total_pnl"] or 0)
-    avg_size   = float(row["avg_size"] or 200)
-    assumed_capital = max(avg_size * 5, 1000.0)
+    assumed_capital = max(median_size * 5, 1000.0)
     trader_return_pct = round(total_pnl / assumed_capital * 100, 2)
 
     btc_start = btc_end = None
@@ -945,11 +965,23 @@ def get_benchmark_comparison(filters=None, conn=None) -> dict:
                      _dt.timedelta(days=1)).strftime("%Y-%m-%d")
         btc_data = yf.download("BTC-USD", start=start_date, end=end_plus1,
                                progress=False, auto_adjust=True)
-        if not btc_data.empty and "Close" in btc_data.columns:
-            close = btc_data["Close"].dropna()
-            btc_start = float(close.iloc[0])
-            btc_end   = float(close.iloc[-1])
-            btc_return_pct = round((btc_end - btc_start) / btc_start * 100, 2)
+        if not btc_data.empty:
+            # yfinance ≥0.2.40 returns multi-level columns (('Close','BTC-USD'))
+            # → btc_data["Close"] is a 1-col DataFrame. Same fix as in
+            # risk_analytics.compute_pnl_attribution.
+            import pandas as pd
+            if isinstance(btc_data.columns, pd.MultiIndex):
+                close = btc_data.xs("Close", axis=1, level=0)
+            else:
+                close = btc_data.get("Close")
+            if isinstance(close, pd.DataFrame):
+                close = close.iloc[:, 0]
+            if close is not None:
+                close = close.dropna()
+                if len(close) > 0:
+                    btc_start = float(close.iloc[0])
+                    btc_end   = float(close.iloc[-1])
+                    btc_return_pct = round((btc_end - btc_start) / btc_start * 100, 2)
     except Exception:
         pass
 
