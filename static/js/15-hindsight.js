@@ -188,6 +188,16 @@ function _buildInsight(s, pnlDiff) {
 // ── Trade table ───────────────────────────────────────────────────────────────
 
 function renderHindsightTable(rows) {
+  // Inline legend bar — explains the four verdict states without forcing the
+  // reader to scroll back to the SIGNAL ACCURACY card or guess from the badges.
+  const legend = `<div class="hindsight-legend" style="display:flex;flex-wrap:wrap;gap:14px;padding:8px 12px;margin-bottom:8px;background:rgba(121,134,203,0.06);border-radius:6px;font-size:.72rem;color:var(--text-2,#aeb6cc);line-height:1.4">
+    <span style="color:var(--muted);font-weight:600;letter-spacing:.04em">VERDICT KEY:</span>
+    <span><span class="badge" style="background:rgba(38,217,107,.15);color:var(--accent3);font-size:.65rem;padding:2px 6px;border-radius:4px;font-weight:600">TP</span> True Positive — AI said ENTER, trade won (right call)</span>
+    <span><span class="badge" style="background:rgba(239,83,80,.15);color:var(--red);font-size:.65rem;padding:2px 6px;border-radius:4px;font-weight:600">FP</span> False Positive — AI said ENTER, trade lost (false alarm)</span>
+    <span><span class="badge" style="background:rgba(38,217,107,.10);color:var(--accent3);font-size:.65rem;padding:2px 6px;border-radius:4px;font-weight:600">TN</span> True Negative — AI said SKIP, trade would have lost (correctly avoided)</span>
+    <span><span class="badge" style="background:rgba(255,179,0,.12);color:var(--yellow);font-size:.65rem;padding:2px 6px;border-radius:4px;font-weight:600">FN</span> False Negative — AI said SKIP, trade would have won (missed)</span>
+  </div>`;
+
   const hdr = `<div class="hindsight-row hindsight-hdr">
     <div>Trade</div>
     <div>Date</div>
@@ -196,7 +206,7 @@ function renderHindsightTable(rows) {
     <div>Rec.</div>
     <div>Hyp. P&L</div>
     <div>Δ</div>
-    <div>Verdict</div>
+    <div title="True/False Positive/Negative — see legend above">Verdict <span style="color:var(--muted);font-size:.7em">ⓘ</span></div>
   </div>`;
 
   const bodyRows = rows.map(r => {
@@ -230,17 +240,17 @@ function renderHindsightTable(rows) {
     </div>`;
   }).join('');
 
-  return `<div class="hindsight-table">${hdr}${bodyRows}</div>`;
+  return `<div class="hindsight-table">${legend}${hdr}${bodyRows}</div>`;
 }
 
 function _verdictBadge(v) {
   const map = {
-    TP:      ['rgba(38,217,107,.15)',  'var(--accent3)', 'TP'],
-    TN:      ['rgba(38,217,107,.10)',  'var(--accent3)', 'TN'],
-    FP:      ['rgba(239,83,80,.15)',   'var(--red)',     'FP'],
-    FN:      ['rgba(255,179,0,.12)',   'var(--yellow)',  'FN'],
-    NEUTRAL: ['rgba(121,134,203,.1)',  'var(--muted)',   '—'],
+    TP:      ['rgba(38,217,107,.15)',  'var(--accent3)', 'TP', 'True Positive — AI said ENTER and the trade won'],
+    TN:      ['rgba(38,217,107,.10)',  'var(--accent3)', 'TN', 'True Negative — AI said SKIP and the trade would have lost'],
+    FP:      ['rgba(239,83,80,.15)',   'var(--red)',     'FP', 'False Positive — AI said ENTER but the trade lost'],
+    FN:      ['rgba(255,179,0,.12)',   'var(--yellow)',  'FN', 'False Negative — AI said SKIP but the trade would have won'],
+    NEUTRAL: ['rgba(121,134,203,.1)',  'var(--muted)',   '—',  'Insufficient data to classify'],
   };
-  const [bg, col, label] = map[v] || map.NEUTRAL;
-  return `<span class="badge" style="background:${bg};color:${col};font-size:.68rem">${label}</span>`;
+  const [bg, col, label, tip] = map[v] || map.NEUTRAL;
+  return `<span class="badge" title="${tip}" style="background:${bg};color:${col};font-size:.68rem">${label}</span>`;
 }
