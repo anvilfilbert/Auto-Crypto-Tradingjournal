@@ -606,6 +606,12 @@ async function loadAnalystStats() {
       <div style="font-size:.72rem;color:var(--muted);padding:8px 16px 4px">
         Sorted by Edge Score (0-100) · 50% trade win rate + 30% call outcome win rate + 20% TP1 hit rate · Needs 3+ closed trades to score
       </div>
+      <div style="font-size:.7rem;color:var(--muted);padding:0 16px 8px;line-height:1.5">
+        <strong>Reading the empty cells:</strong>
+        <span style="color:var(--accent3)">Trades · Win% · PnL</span> come from your <em>closed positions</em> tagged with this analyst.
+        <span style="color:var(--accent2)">Call W/L · TP1 Rate · Entry Rate · Score</span> come from <em>AI Analyzer runs</em> on their tips.
+        Most rows only show one side because you entered trades without running the analyzer first (or vice-versa). Hover any "—" for context.
+      </div>
       <table class="tbl">
         <thead><tr>
           <th>#</th><th>Analyst</th>
@@ -629,13 +635,13 @@ async function loadAnalystStats() {
             <td><strong>${escHtml(a.analyst)}</strong></td>
             <td>${edgeBadge(a.edge_score)}</td>
             <td>${a.trade_count || 0}</td>
-            <td class="${a.win_rate >= 50 ? 'pos' : 'neg'}">${a.trade_count > 0 ? a.win_rate + '%' : '—'}</td>
-            <td class="${pnlClass(a.total_pnl)}">${a.trade_count > 0 ? pnlSign(a.total_pnl) + fmtC(a.total_pnl) : '—'}</td>
-            <td class="${pnlClass(a.avg_pnl)}">${a.trade_count > 0 ? pnlSign(a.avg_pnl) + fmtC(a.avg_pnl) : '—'}</td>
-            <td>${a.call_win_rate != null ? `<span class="pos">${a.call_win_rate}%</span>` : '—'}</td>
-            <td>${a.tp1_hit_rate != null ? `<span class="${a.tp1_hit_rate >= 50 ? 'pos' : 'neg'}">${a.tp1_hit_rate}%</span>` : '—'}</td>
-            <td style="color:var(--muted)">${a.conv_rate != null ? a.conv_rate + '%' : '—'}</td>
-            <td style="color:var(--muted)">${a.avg_setup_score != null ? a.avg_setup_score + '/10' : '—'}</td>
+            <td class="${a.win_rate >= 50 ? 'pos' : 'neg'}">${a.trade_count > 0 ? a.win_rate + '%' : '<span title="No closed trades from this analyst yet" style="color:var(--muted);opacity:0.5;font-style:italic">no trades</span>'}</td>
+            <td class="${pnlClass(a.total_pnl)}">${a.trade_count > 0 ? pnlSign(a.total_pnl) + fmtC(a.total_pnl) : '<span title="No closed trades yet" style="color:var(--muted);opacity:0.5">—</span>'}</td>
+            <td class="${pnlClass(a.avg_pnl)}">${a.trade_count > 0 ? pnlSign(a.avg_pnl) + fmtC(a.avg_pnl) : '<span title="No closed trades yet" style="color:var(--muted);opacity:0.5">—</span>'}</td>
+            <td>${a.call_win_rate != null ? `<span class="pos">${a.call_win_rate}%</span>` : '<span title="No AI Analyzer runs recorded for this analyst — run AI Analysis on their tips before entering to track call accuracy" style="color:var(--muted);opacity:0.5;font-style:italic">not analyzed</span>'}</td>
+            <td>${a.tp1_hit_rate != null ? `<span class="${a.tp1_hit_rate >= 50 ? 'pos' : 'neg'}">${a.tp1_hit_rate}%</span>` : '<span title="No AI Analyzer runs recorded" style="color:var(--muted);opacity:0.5;font-style:italic">not analyzed</span>'}</td>
+            <td style="color:var(--muted)">${a.conv_rate != null ? a.conv_rate + '%' : '<span title="No AI Analyzer runs recorded" style="opacity:0.5;font-style:italic">not analyzed</span>'}</td>
+            <td style="color:var(--muted)">${a.avg_setup_score != null ? a.avg_setup_score + '/10' : '<span title="No AI Analyzer runs recorded" style="opacity:0.5;font-style:italic">not analyzed</span>'}</td>
             <td>${a.pending_count > 0 ? `<span style="color:var(--accent2)">${a.pending_count}</span>` : '—'}</td>
           </tr>`;
         }).join('')}</tbody>
