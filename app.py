@@ -110,6 +110,8 @@ if __name__ == "__main__":
     blofin_sync.start_background_sync()
     scanner_scheduler.start()
     monitor_scheduler.start()
+    import self_review_scheduler
+    self_review_scheduler.start()
 
     port = int(os.environ.get("PORT", 8082))
     _log.info("[App] Trading Journal running on http://0.0.0.0:%d", port)
