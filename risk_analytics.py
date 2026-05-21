@@ -193,8 +193,19 @@ def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
                      _dt.timedelta(days=1)).strftime("%Y-%m-%d")
         btc = yf.download("BTC-USD", start=min_date, end=end_plus1,
                           progress=False, auto_adjust=True)
-        if not btc.empty and "Close" in btc.columns:
-            btc_close = btc["Close"].dropna()
+        # yfinance ≥0.2.40 returns multi-level columns (e.g. ('Close','BTC-USD'))
+        # → btc["Close"] is a DataFrame with one column, not a Series. The old
+        # float() conversion on .asof() output then raised TypeError on every
+        # trade, leaving attributed=0 and the UI saying "not enough data".
+        if not btc.empty:
+            if isinstance(btc.columns, pd.MultiIndex):
+                close = btc.xs("Close", axis=1, level=0)
+            else:
+                close = btc.get("Close")
+            if isinstance(close, pd.DataFrame):
+                close = close.iloc[:, 0]
+            if close is not None:
+                btc_close = close.dropna()
     except Exception:
         pass
 
@@ -208,8 +219,13 @@ def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
             alpha_pnl += pnl
             continue
         try:
-            btc_o = float(btc_close.asof(pd.Timestamp(r["open_date"])))
-            btc_c = float(btc_close.asof(pd.Timestamp(r["close_date"])))
+            # asof() may return a Series under odd shapes — defensively extract scalar
+            v_o = btc_close.asof(pd.Timestamp(r["open_date"]))
+            v_c = btc_close.asof(pd.Timestamp(r["close_date"]))
+            if hasattr(v_o, "iloc"): v_o = v_o.iloc[0]
+            if hasattr(v_c, "iloc"): v_c = v_c.iloc[0]
+            btc_o = float(v_o) if v_o is not None else 0.0
+            btc_c = float(v_c) if v_c is not None else 0.0
             if btc_o and btc_c:
                 btc_ret = (btc_c - btc_o) / btc_o
                 is_long = (r["direction"] or "Long").lower() == "long"
@@ -271,17 +287,33 @@ def compute_kelly_by_bucket(conn) -> dict:
         lr = 1 - wr
         aw = float(r["avg_win"]  or 0)
         al = abs(float(r["avg_loss"] or 1))
-        kelly_full = max(0.0, (wr * aw - lr * al) / aw) if aw > 0 else 0.0
+        # Compute UNCLAMPED Kelly first so we can distinguish "clamped at 0"
+        # (negative edge) from "no data yet" — UX-critical because a 0% value
+        # with healthy-looking stats (high WR) looks like a bug otherwise.
+        kelly_raw  = (wr * aw - lr * al) / aw if aw > 0 else 0.0
+        kelly_full = max(0.0, kelly_raw)
         kelly_half = kelly_full / 2
+        rr        = round(aw / al, 2) if al > 0 else None
+        wr_breakeven = round(al / (al + aw) * 100, 1) if (aw + al) > 0 else None
+        reason = ""
+        if kelly_raw <= 0 and aw > 0 and al > 0:
+            reason = (f"Negative edge: avg loss (${al:.2f}) is "
+                      f"{al/aw:.2f}× avg win (${aw:.2f}). "
+                      f"Need win rate ≥ {wr_breakeven}% to be profitable; "
+                      f"currently {round(wr*100,1)}%. Kelly clamped at 0%.")
         buckets.append({
             "score_range":          r["bucket"],
             "trade_count":          r["n"],
             "win_rate":             round(wr * 100, 1),
+            "win_rate_breakeven":   wr_breakeven,
             "avg_win_usd":          round(aw, 2),
             "avg_loss_usd":         round(al, 2),
+            "reward_ratio":         rr,
+            "kelly_raw_pct":        round(kelly_raw * 100, 1),
             "kelly_full_pct":       round(kelly_full * 100, 1),
             "kelly_half_pct":       round(kelly_half * 100, 1),
             "recommended_size_pct": min(round(kelly_half * 100, 1), 20.0),
+            "reason":               reason,
         })
     return {"buckets": buckets, "available": True}
 
