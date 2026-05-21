@@ -401,9 +401,11 @@ def get_setup_type_stats(filters=None, conn=None) -> list:
     where, params = _build_where(filters)
     and_ = "AND" if where else "WHERE"
 
+    # Include untagged trades under '(untagged)' — filtering NULL/empty hid
+    # 110 of 111 trades on initial audit. Users see the data gap explicitly.
     rows = _rows(conn, f"""
         SELECT
-            COALESCE(setup_type, 'Unknown') AS setup_type,
+            COALESCE(NULLIF(TRIM(setup_type), ''), '(untagged)') AS setup_type,
             COUNT(*) AS trade_count,
             ROUND(SUM(realized_pnl), 2) AS total_pnl,
             ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
@@ -417,7 +419,6 @@ def get_setup_type_stats(filters=None, conn=None) -> list:
             ) AS profit_factor
         FROM positions
         {where}
-        {and_} setup_type IS NOT NULL AND setup_type != ''
         GROUP BY setup_type
         ORDER BY total_pnl DESC
     """, params)
