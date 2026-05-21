@@ -50,6 +50,7 @@ def _save(conn, symbol: str, timeframe: str, samples: list, ts: float) -> None:
         "VALUES (?, ?, ?, ?)",
         (symbol, timeframe, json.dumps(samples), ts),
     )
+    conn.commit()   # db_conn() context manager only closes; writes need explicit commit
 
 
 def record_sample(symbol: str, timeframe: str, volume: float) -> None:
@@ -115,6 +116,7 @@ def reset(symbol: str | None = None, timeframe: str | None = None) -> int:
                 cur = conn.execute("DELETE FROM volume_baseline WHERE symbol=?", (symbol,))
             else:
                 cur = conn.execute("DELETE FROM volume_baseline")
+            conn.commit()
             return cur.rowcount or 0
     except Exception:
         return 0
