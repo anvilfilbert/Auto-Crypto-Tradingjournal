@@ -9,6 +9,8 @@ function loadRiskDashboard() {
     loadAttributionPanel();
     loadKellyPanel();
     loadAlphaDecayPanel();
+    loadBlindspotsPanel();
+    loadSelfReviewPanel();
 }
 
 /* ── Shared helpers ─────────────────────────────────────────────────────── */
@@ -476,4 +478,166 @@ async function loadAlphaDecayPanel() {
         }
 
     } catch(e) { el.appendChild(_emptyState('Alpha decay calculation failed.')); }
+}
+
+
+/* ── 6. AI Blindspots ───────────────────────────────────────────────────── */
+async function loadBlindspotsPanel() {
+    const el = document.getElementById('risk-blindspots');
+    if (!el) return;
+    try {
+        while (el.firstChild) el.removeChild(el.firstChild);
+        const d = await fetch('/api/blindspots').then(r => r.json());
+        if (!d.ok || !d.data || !d.data.available) {
+            el.appendChild(_emptyState('Need more closed trades with AI analyses to surface blindspots.'));
+            return;
+        }
+        el.appendChild(_riskInsight(
+            'Phrases the AI uses confidently in its reasoning that DON\'T predict winners. ' +
+            'Lift = win rate minus baseline. Strongly negative lift = recurring false-confidence pattern.'
+        ));
+        // Phrase table
+        const phrases = d.data.phrases || [];
+        if (phrases.length) {
+            const tbl = document.createElement('table');
+            tbl.className = 'tbl';
+            const thead = tbl.createTHead();
+            const hr = thead.insertRow();
+            ['Phrase','Times used','Actual WR','Lift vs baseline'].forEach(h => {
+                const th = document.createElement('th'); th.textContent = h; hr.appendChild(th);
+            });
+            const tbody = tbl.createTBody();
+            phrases.forEach(p => {
+                const tr = tbody.insertRow();
+                tr.insertCell().textContent = p.phrase;
+                tr.insertCell().textContent = p.n;
+                const wrCell = tr.insertCell();
+                wrCell.textContent = p.win_rate + '%';
+                const liftCell = tr.insertCell();
+                liftCell.textContent = (p.lift >= 0 ? '+' : '') + p.lift + 'pp';
+                liftCell.style.color = p.lift < -5 ? 'var(--red)' : (p.lift > 5 ? 'var(--accent3)' : 'var(--muted)');
+                liftCell.style.fontWeight = '600';
+            });
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'margin-bottom:14px';
+            const title = document.createElement('div');
+            title.style.cssText = 'font-size:.78rem;color:var(--muted);margin-bottom:6px';
+            title.textContent = 'TOP PHRASES BY LIFT';
+            wrap.appendChild(title);
+            wrap.appendChild(tbl);
+            el.appendChild(wrap);
+        }
+        // Feature calibration: show only the most-spread groups
+        const feats = d.data.features || {};
+        const groupKeys = Object.keys(feats).filter(k => (feats[k] || []).length >= 2);
+        if (groupKeys.length) {
+            const featTitle = document.createElement('div');
+            featTitle.style.cssText = 'font-size:.78rem;color:var(--muted);margin:14px 0 6px';
+            featTitle.textContent = 'FEATURE CALIBRATION — empirical WR by feature value';
+            el.appendChild(featTitle);
+            const ftbl = document.createElement('table');
+            ftbl.className = 'tbl';
+            const fhead = ftbl.createTHead();
+            const fhr = fhead.insertRow();
+            ['Feature','Best value','n','Worst value','n','Spread'].forEach(h => {
+                const th = document.createElement('th'); th.textContent = h; fhr.appendChild(th);
+            });
+            const ftbody = ftbl.createTBody();
+            const ranked = groupKeys.map(k => {
+                const arr = feats[k];
+                const wrs = arr.map(e => e.win_rate);
+                return { key: k, entries: arr, spread: Math.max(...wrs) - Math.min(...wrs) };
+            }).sort((a, b) => b.spread - a.spread).slice(0, 8);
+            ranked.forEach(g => {
+                const top = g.entries[g.entries.length - 1];
+                const bot = g.entries[0];
+                const tr = ftbody.insertRow();
+                tr.insertCell().textContent = g.key;
+                const tv = tr.insertCell();
+                tv.textContent = top.value + ' (' + top.win_rate + '%)';
+                tv.style.color = 'var(--accent3)';
+                tr.insertCell().textContent = top.n;
+                const bv = tr.insertCell();
+                bv.textContent = bot.value + ' (' + bot.win_rate + '%)';
+                bv.style.color = 'var(--red)';
+                tr.insertCell().textContent = bot.n;
+                const sp = tr.insertCell();
+                sp.textContent = g.spread.toFixed(1) + 'pp';
+                sp.style.fontWeight = '600';
+            });
+            el.appendChild(ftbl);
+        }
+    } catch (e) {
+        el.appendChild(_emptyState('Failed to load blindspots: ' + e.message));
+    }
+}
+
+/* ── 7. AI Self-Review wishlist ─────────────────────────────────────────── */
+async function loadSelfReviewPanel() {
+    const el = document.getElementById('risk-self-review');
+    if (!el) return;
+    try {
+        while (el.firstChild) el.removeChild(el.firstChild);
+        const d = await fetch('/api/self-review/wishlist').then(r => r.json());
+        if (!d.ok) {
+            el.appendChild(_emptyState('Wishlist API failed.'));
+            return;
+        }
+        const wl = (d.data && d.data.wishlist) || [];
+        el.appendChild(_riskInsight(
+            'After each significant alpha-leak trade, the AI is asked "what one signal would ' +
+            'have flipped your call?". Signals that recur ≥2× across reviews show up here. ' +
+            'Use them to decide which indicators to add to the confluence stack.'
+        ));
+        if (!wl.length) {
+            const msg = document.createElement('div');
+            msg.style.cssText = 'color:var(--muted);font-size:.85rem';
+            msg.textContent = 'Wishlist is empty — either no recurring patterns yet (each unique suggestion needs 2+ mentions) or self-review hasn\'t run yet. Click "Run now" above to process the next 5 alpha-leak trades.';
+            el.appendChild(msg);
+            return;
+        }
+        const tbl = document.createElement('table');
+        tbl.className = 'tbl';
+        const thead = tbl.createTHead();
+        const hr = thead.insertRow();
+        ['Missing signal','Mentions','Common TFs','Sample threshold'].forEach(h => {
+            const th = document.createElement('th'); th.textContent = h; hr.appendChild(th);
+        });
+        const tbody = tbl.createTBody();
+        wl.forEach(w => {
+            const tr = tbody.insertRow();
+            const sigCell = tr.insertCell();
+            sigCell.textContent = w.sig;
+            sigCell.style.fontWeight = '600';
+            sigCell.style.textTransform = 'capitalize';
+            tr.insertCell().textContent = w.n + 'x';
+            tr.insertCell().textContent = w.tfs || '?';
+            tr.insertCell().textContent = (w.thresholds || '').split(',')[0];
+        });
+        el.appendChild(tbl);
+    } catch (e) {
+        el.appendChild(_emptyState('Failed to load wishlist: ' + e.message));
+    }
+}
+
+async function runSelfReviewNow() {
+    const btn = document.getElementById('btn-self-review-run');
+    const el  = document.getElementById('risk-self-review');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Running...'; }
+    try {
+        const d = await fetch('/api/self-review/run?limit=5', { method: 'POST' }).then(r => r.json());
+        if (!d.ok) throw new Error(d.error || 'unknown error');
+        const n = (d.data && d.data.reviewed) || 0;
+        if (btn) { btn.textContent = `✓ Reviewed ${n}`; }
+        // Refresh the wishlist panel
+        await loadSelfReviewPanel();
+        setTimeout(() => { if (btn) { btn.disabled = false; btn.textContent = '⚡ Run now'; } }, 3000);
+    } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = '⚡ Run now'; }
+        if (el) { const err = document.createElement('div');
+            err.style.cssText = 'color:var(--red);margin-top:8px;font-size:.8rem';
+            err.textContent = 'Run failed: ' + e.message;
+            el.appendChild(err);
+        }
+    }
 }

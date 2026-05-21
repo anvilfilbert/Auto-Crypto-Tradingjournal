@@ -820,6 +820,27 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
         <div id="risk-alpha-decay" style="padding:16px">Loading...</div>
       </div>
+
+      <!-- AI Blindspots — phrase miner + feature calibration -->
+      <div class="table-card" style="margin-top:20px">
+        <div class="table-header">
+          <span style="font-weight:600">🔍 AI Blindspots — phrases that mislead the model</span>
+          <span style="font-size:.75rem;color:var(--muted)">Mined from your closed trades · phrases the AI cited that didn't predict winners</span>
+        </div>
+        <div id="risk-blindspots" style="padding:16px">Loading...</div>
+      </div>
+
+      <!-- AI Self-Review Wishlist + manual trigger -->
+      <div class="table-card" style="margin-top:20px">
+        <div class="table-header">
+          <span style="font-weight:600">🧠 AI Self-Review Wishlist — signals the AI says it's missing</span>
+          <span style="font-size:.75rem;color:var(--muted)">
+            Daily auto-run on alpha-leak trades · recurring suggestions surface as wishlist
+            <button class="btn btn-sm" id="btn-self-review-run" style="margin-left:10px" onclick="runSelfReviewNow()" title="Process the next 5 alpha-leak trades now. Uses cascade providers if Anthropic is dry.">⚡ Run now</button>
+          </span>
+        </div>
+        <div id="risk-self-review" style="padding:16px">Loading...</div>
+      </div>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════ -->
@@ -2027,7 +2048,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/14-scanner.js?v=4.2"></script>
 <script src="/static/js/15-hindsight.js?v=3.0"></script>
 <script src="/static/js/16-settings.js?v=2.7"></script>
-<script src="/static/js/17-risk.js?v=2.1"></script>
+<script src="/static/js/17-risk.js?v=2.2"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">
   <button class="bottom-nav-item" data-tab="trades">
