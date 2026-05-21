@@ -209,12 +209,23 @@ def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
     except Exception:
         pass
 
+    # Sanity bound: some position rows have size_usdt populated with the raw
+    # contract count instead of USDT notional (e.g. 1000BONK at 100,000 units).
+    # We can't fix the upstream sync from here — clamp anything obviously
+    # outsized for retail and count how many we dropped so the UI can warn.
+    MAX_REASONABLE_SIZE_USDT = 10_000
     alpha_pnl = beta_pnl = total_pnl = 0.0
     attributed = 0
+    skipped_bad_size = 0
     for r in rows:
         pnl  = float(r["realized_pnl"])
         size = float(r["size_usdt"])
         total_pnl += pnl
+        if size > MAX_REASONABLE_SIZE_USDT:
+            # Treat as pure alpha — can't compute beta without trustworthy size
+            alpha_pnl += pnl
+            skipped_bad_size += 1
+            continue
         if btc_close.empty:
             alpha_pnl += pnl
             continue
@@ -242,6 +253,7 @@ def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
     return {"alpha_pnl": round(alpha_pnl, 2), "beta_pnl": round(beta_pnl, 2),
             "total_pnl": round(total_pnl, 2), "alpha_pct": alpha_pct,
             "sample_size": len(rows), "attributed": attributed,
+            "skipped_bad_size": skipped_bad_size,
             "available": attributed > 0, "lookback_days": lookback_days}
 
 
