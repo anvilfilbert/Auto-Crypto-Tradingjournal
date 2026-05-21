@@ -89,3 +89,49 @@ def api_risk_alpha_decay():
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)
+
+
+@bp.route("/api/blindspots")
+def api_blindspots():
+    """GET /api/blindspots — phrase miner + feature calibration from closed trades."""
+    try:
+        import ai_blindspots
+        from database import db_conn
+        with db_conn() as conn:
+            phrases = ai_blindspots.mine_phrase_blindspots()
+            features = ai_blindspots.compute_feature_calibration()
+        return _ok({
+            "phrases":  phrases,
+            "features": features,
+            "available": bool(phrases or features),
+        })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/self-review/run", methods=["POST"])
+def api_self_review_run():
+    """POST /api/self-review/run?limit=5 — process pending alpha-leak trades."""
+    try:
+        from database import db_conn
+        import ai_self_review
+        limit = int(request.args.get("limit", "5"))
+        with db_conn() as conn:
+            return _ok(ai_self_review.run_pending_reviews(conn, limit=limit))
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/self-review/wishlist")
+def api_self_review_wishlist():
+    """GET /api/self-review/wishlist — recurring missed-signal suggestions."""
+    try:
+        from database import db_conn
+        import ai_self_review
+        with db_conn() as conn:
+            return _ok({"wishlist": ai_self_review.aggregate_wishlist(conn)})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)

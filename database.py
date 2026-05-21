@@ -372,6 +372,25 @@ def init_db():
     """)
     _apply(40, "volume_baseline", "SELECT 1")  # mark migration applied
 
+    # ── ai_self_review ──────────────────────────────────────────────────────
+    # Stores AI retrospective on closed trades where prediction disagreed with
+    # outcome. Used to surface recurring "missed signal" suggestions back into
+    # the prompt as an AI wishlist. See ai_self_review.py.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS ai_self_review (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            call_id       INTEGER NOT NULL UNIQUE,
+            missed_signal TEXT,
+            threshold     TEXT,
+            timeframe     TEXT,
+            weight        TEXT,
+            why           TEXT,
+            raw_response  TEXT,
+            created_at    TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    _apply(41, "ai_self_review", "SELECT 1")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

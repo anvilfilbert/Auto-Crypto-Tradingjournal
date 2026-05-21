@@ -95,6 +95,28 @@ def build_stable_prefix(conn, exchange_filter: str = None) -> str:
         strengths = ai_pattern_detector.get_top_strengths_for_prompt(conn)
         if strengths:
             sections.append(strengths[:remaining])
+            remaining -= len(strengths[:remaining])
+
+    # Blindspot block — phrase mining + feature calibration from closed trades
+    if remaining > 200:
+        try:
+            import ai_blindspots
+            bs = ai_blindspots.mine_and_format_for_prompt()
+            if bs:
+                sections.append(bs[:remaining])
+                remaining -= len(bs[:remaining])
+        except Exception:
+            pass
+
+    # AI self-review wishlist — recurring "missed signal" suggestions
+    if remaining > 150:
+        try:
+            import ai_self_review
+            wl = ai_self_review.format_for_prompt(conn)
+            if wl:
+                sections.append(wl[:remaining])
+        except Exception:
+            pass
 
     return "\n\n".join(sections)
 
