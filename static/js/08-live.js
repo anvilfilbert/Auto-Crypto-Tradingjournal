@@ -251,11 +251,12 @@ function renderPositionCards(positions, waitingLimits) {
           <div style="font-size:.7rem;${isLoss?'color:var(--red)':'color:var(--accent3)'}">${p.unrealized_pct>=0?'+':''}${p.unrealized_pct}%</div>
         </div>
         <div class="pos-stat">
-          <div class="pos-stat-label">TP / SL</div>
+          <div class="pos-stat-label">TP / SL <span id="tp-ladder-toggle-${i}" style="cursor:pointer;opacity:0.6;font-size:.7rem" onclick="event.stopPropagation();loadTpLadder(${i})" title="Click to load full TP ladder from exchange">⛓</span></div>
           <div class="pos-stat-val" style="font-size:.8rem">
             <span style="color:var(--accent3)">${p.take_profit || '—'}</span> /
             <span style="color:var(--red)">${p.stop_loss || '—'}</span>
           </div>
+          <div id="tp-ladder-${i}" style="font-size:.65rem;color:var(--muted);margin-top:2px"></div>
         </div>
         <div class="pos-stat">
           <div class="pos-stat-label">Open</div>
@@ -622,5 +623,57 @@ async function loadPortfolioRisk() {
         el.appendChild(tbl);
     } catch(e) {
         if (el) el.textContent = 'Could not load portfolio risk.';
+    }
+}
+
+
+// ── Multi-TP ladder loader ────────────────────────────────────────────────────
+// Fetched lazily on the ⛓ click — keeps the position-card render fast and
+// avoids burning Bitget plan-order quota when the user isn't looking at it.
+async function loadTpLadder(cardIdx) {
+    const target = document.getElementById('tp-ladder-' + cardIdx);
+    const toggle = document.getElementById('tp-ladder-toggle-' + cardIdx);
+    if (!target) return;
+    // livePositionsCache holds the currently-open positions straight from the
+    // exchange — they have no journal positions.id (that row only exists on
+    // close). Use the live endpoint that queries the exchange directly.
+    const pos = (typeof livePositionsCache !== 'undefined') && livePositionsCache[cardIdx];
+    if (!pos) { target.textContent = '(no position data)'; return; }
+    target.textContent = 'loading…';
+    if (toggle) toggle.style.opacity = '1';
+    try {
+        const params = new URLSearchParams({
+            symbol:    pos.symbol || '',
+            direction: pos.direction || 'Long',
+            entry:     pos.entry_price || '',
+            sl:        pos.stop_loss   || '',
+            exchange:  pos.exchange    || 'bitget',
+        });
+        const res = await fetch('/api/live/tps?' + params.toString()).then(r => r.json());
+        if (!res.ok || !res.data) { target.textContent = '(failed)'; return; }
+        const d = res.data;
+        if (!d.tps || !d.tps.length) {
+            target.textContent = 'No multi-TP ladder set on exchange (only the single ' +
+                                  'TP shown above).';
+            return;
+        }
+        const chips = d.tps.map((t, i) =>
+            '<span style="display:inline-block;margin:1px 3px 1px 0;padding:1px 5px;' +
+            'border-radius:3px;background:' + (t.hit ? 'rgba(38,217,107,.2)'
+                                                     : 'rgba(38,217,107,.06)') +
+            ';color:' + (t.hit ? 'var(--accent3)' : 'var(--text-2,#aeb6cc)') + '" ' +
+            'title="' + (t.hit ? 'Hit at ' + (t.hit_at || '?') : 'Pending') + '">' +
+            (i + 1) + '· ' + t.price + (t.hit ? ' ✓' : '') + '</span>'
+        ).join('');
+        const rrLine = (d.first_tp_rr != null || d.last_tp_rr != null)
+            ? '<div style="margin-top:2px">R:R ladder: ' +
+              (d.first_tp_rr != null ? 'first ' + d.first_tp_rr : '') +
+              (d.first_tp_rr != null && d.last_tp_rr != null ? ' · ' : '') +
+              (d.last_tp_rr != null ? 'last ' + d.last_tp_rr : '') + '</div>'
+            : '';
+        target.innerHTML = 'Ladder (' + d.tps.length + ' TPs · source: ' + d.source + '):<br>' +
+                          chips + rrLine;
+    } catch (e) {
+        target.textContent = '(error: ' + e.message + ')';
     }
 }

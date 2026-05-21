@@ -267,3 +267,76 @@ def api_wallet_history():
         """).fetchall()]
     step = max(1, len(rows) // 300)
     return _ok(rows[::step])
+
+
+@bp.route("/api/positions/<int:pos_id>/tps")
+def api_position_tps(pos_id: int):
+    """GET /api/positions/<id>/tps — fetch the multi-TP ladder for a position.
+    Returns {tps:[...], first_tp_rr, last_tp_rr, source}. Source is 'live' when
+    we pulled from the exchange right now, 'cached' when we returned what's
+    already stored on the row (older but free)."""
+    try:
+        import tp_ladder, json as _json
+        with db_conn() as conn:
+            row = conn.execute("""
+                SELECT id, symbol, direction, entry_price, sl_price,
+                       exchange, tps_json, first_tp_rr, last_tp_rr, status
+                FROM positions WHERE id = ?
+            """, (pos_id,)).fetchone()
+            if not row:
+                return _err("position not found", 404)
+            r = dict(row)
+            is_long = (r["direction"] or "Long").lower().startswith("l")
+            live = r["status"] == "open"
+            ladder = []
+            source = "cached"
+            if live and r["entry_price"]:
+                ladder = tp_ladder.get_ladder(
+                    r["symbol"], r["direction"], r["entry_price"],
+                    exchange=(r["exchange"] or "bitget"),
+                )
+                if ladder:
+                    source = "live"
+                    first_rr, last_rr = tp_ladder.compute_rr_extremes(
+                        r["entry_price"], r["sl_price"], ladder, is_long,
+                    )
+                    conn.execute("""
+                        UPDATE positions SET tps_json=?, first_tp_rr=?, last_tp_rr=?
+                        WHERE id=?
+                    """, (tp_ladder.serialise(ladder), first_rr, last_rr, pos_id))
+                    conn.commit()
+                    return _ok({"tps": ladder, "first_tp_rr": first_rr,
+                                "last_tp_rr": last_rr, "source": source})
+            # Cached fallback
+            ladder = tp_ladder.deserialise(r["tps_json"])
+            return _ok({"tps": ladder,
+                        "first_tp_rr": r["first_tp_rr"],
+                        "last_tp_rr":  r["last_tp_rr"],
+                        "source": source})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/live/tps")
+def api_live_tps():
+    """GET /api/live/tps?symbol=BTCUSDT&direction=Long&entry=68000&exchange=bitget
+    — live TP ladder for a currently-open position (not yet in positions table).
+    Always pulls fresh from the exchange; no caching."""
+    try:
+        import tp_ladder
+        symbol    = (request.args.get("symbol") or "").upper().strip()
+        direction = request.args.get("direction") or "Long"
+        entry     = float(request.args.get("entry") or 0)
+        sl        = float(request.args.get("sl") or 0)
+        exchange  = (request.args.get("exchange") or "bitget").lower()
+        if not symbol or not entry:
+            return _err("symbol and entry are required")
+        ladder = tp_ladder.get_ladder(symbol, direction, entry, exchange=exchange)
+        is_long = direction.lower().startswith("l")
+        first_rr, last_rr = tp_ladder.compute_rr_extremes(entry, sl or None, ladder, is_long)
+        return _ok({"tps": ladder, "first_tp_rr": first_rr,
+                    "last_tp_rr": last_rr, "source": "live"})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)

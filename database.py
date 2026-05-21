@@ -391,6 +391,21 @@ def init_db():
     """)
     _apply(41, "ai_self_review", "SELECT 1")
 
+    # ── tps_json + ladder R:R columns ────────────────────────────────────────
+    # Multi-TP ladder (Task B, 2026-05-21). Existing tp1_price/tp2_price stays
+    # as the AI's STRATEGIC baseline. tps_json holds the full exchange-set
+    # ladder (up to ~7 TPs) as JSON: [{"price": float, "size_pct": float,
+    # "hit": bool, "hit_at": str|None}, ...]. first_tp_rr / last_tp_rr are
+    # derived but cached so the UI doesn't recompute on every render.
+    _apply(42, "positions.tps_json",
+           "ALTER TABLE positions ADD COLUMN tps_json TEXT DEFAULT NULL")
+    _apply(43, "positions.first_tp_rr",
+           "ALTER TABLE positions ADD COLUMN first_tp_rr REAL DEFAULT NULL")
+    _apply(44, "positions.last_tp_rr",
+           "ALTER TABLE positions ADD COLUMN last_tp_rr REAL DEFAULT NULL")
+    _apply(45, "pending_limits.tps_json",
+           "ALTER TABLE pending_limits ADD COLUMN tps_json TEXT DEFAULT NULL")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here
