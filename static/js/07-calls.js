@@ -392,8 +392,12 @@ async function saveCurrentCall() {
   }
 }
 
+// When true, the list also shows 'expired' and 'invalidated' (stale scanner setups).
+let _showStaleCalls = false;
+
 async function loadSavedCalls() {
-  const res = await api('/api/calls/saved');
+  const url = '/api/calls/saved' + (_showStaleCalls ? '?include_stale=1' : '');
+  const res = await api(url);
   if (!res.ok) return;
   const calls = res.data;
   const section = document.getElementById('saved-calls-section');
@@ -429,6 +433,7 @@ async function loadSavedCalls() {
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:rgba(108,99,255,.12);color:var(--accent);border:1px solid rgba(108,99,255,.3)" onclick="viewCallDetails(${c.id})" title="See the AI's reasoning, key conditions, and annotated chart">🔍 View Details</button>
         ${c.status !== 'closed' ? `<button class="btn btn-sm" style="background:rgba(79,195,247,.12);color:var(--accent2);border:1px solid rgba(79,195,247,.3)" onclick="openLimitModal(null,{call_id:${c.id},symbol:'${c.symbol}',direction:'${c.direction}',sl_price:${c.sl_price||'null'},tp1_price:${c.tp1_price||'null'},tp2_price:${c.tp2_price||'null'},entry_price:${c.entry_price||'null'},total_notional:${c.total_notional||'null'},analyst:'${(c.analyst||'').replace(/\\/g,"\\\\").replace(/'/g,"\\'")}',leverage:${c.leverage||10}})">⏳ Set Limit</button>` : ''}
         ${(c.status === 'matched' || c.status === 'closed') && !c.outcome ? `<button class="btn btn-secondary btn-sm" onclick="openOutcomeModal(${c.id})">📊 Record Outcome</button>` : ''}
         ${c.status === 'matched' ? `<button class="btn btn-secondary btn-sm" onclick="closeCall(${c.id})">Mark Closed</button>` : ''}
@@ -446,6 +451,165 @@ async function deleteCall(id) {
 async function closeCall(id) {
   await api('/api/calls/' + id + '/close', 'POST');
   loadSavedCalls();
+}
+
+// Toggle whether the saved-calls list also shows 'expired' and 'invalidated'
+// scanner setups. Off by default to keep the list actionable.
+function toggleStaleCalls() {
+  _showStaleCalls = !_showStaleCalls;
+  const btn = document.getElementById('btn-toggle-stale');
+  if (btn) {
+    btn.textContent = _showStaleCalls
+      ? '👁 Hide stale (expired/invalidated)'
+      : '👁 Show stale (expired/invalidated)';
+  }
+  loadSavedCalls();
+}
+
+// Manual trigger for the stale-marker pass (the scanner scheduler also runs
+// this automatically every 30 min). Useful right after you abandon a setup.
+async function invalidateStaleCalls() {
+  const btn = document.getElementById('btn-invalidate-stale');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
+  try {
+    const r = await api('/api/calls/invalidate-stale', 'POST');
+    if (!r.ok) throw new Error(r.error || 'failed');
+    const d = r.data;
+    notify(`Marked ${d.invalidated} invalidated, ${d.expired} expired`, 'ok');
+    loadSavedCalls();
+  } catch (e) {
+    notify('Invalidator failed: ' + e.message, 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🧹 Mark stale now'; }
+  }
+}
+
+// View Details modal — shows the AI's reasoning, key conditions, and the
+// annotated chart for any saved call. Built from server-returned analysis_json
+// fields; no innerHTML interpolation of user-controlled strings.
+async function viewCallDetails(id) {
+  // Open the modal shell first so the user sees immediate feedback
+  let modal = document.getElementById('call-details-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'call-details-modal';
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  }
+  // Build modal body fresh
+  while (modal.firstChild) modal.removeChild(modal.firstChild);
+  const card = document.createElement('div');
+  card.className = 'modal';
+  card.style.cssText = 'max-width:880px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px';
+  const close = document.createElement('button');
+  close.className = 'btn btn-secondary btn-sm';
+  close.textContent = '× Close';
+  close.style.cssText = 'align-self:flex-end;position:sticky;top:0;z-index:2';
+  close.onclick = () => modal.remove();
+  card.appendChild(close);
+  const loading = document.createElement('div');
+  loading.textContent = 'Loading…';
+  loading.style.color = 'var(--muted)';
+  card.appendChild(loading);
+  modal.appendChild(card);
+
+  try {
+    const res = await api('/api/calls/' + id + '/details');
+    if (!res.ok) throw new Error(res.error || 'failed to load');
+    const d = res.data || {};
+    const a = d.analysis || {};
+    card.removeChild(loading);
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px;align-items:baseline';
+    const title = document.createElement('h2');
+    title.style.cssText = 'margin:0;font-size:1.25rem';
+    title.textContent = `${d.symbol || '?'} · ${d.direction || '?'} · Score ${d.setup_score || '—'}/10`;
+    hdr.appendChild(title);
+    if (d.status) {
+      const chip = document.createElement('span');
+      chip.style.cssText = 'font-size:.72rem;padding:2px 8px;border-radius:20px;background:rgba(108,99,255,.15);color:var(--accent)';
+      chip.textContent = d.status;
+      hdr.appendChild(chip);
+    }
+    card.appendChild(hdr);
+
+    // Meta line
+    const meta = document.createElement('div');
+    meta.style.cssText = 'font-size:.78rem;color:var(--muted);line-height:1.5';
+    const parts = [];
+    if (d.created_at) parts.push('Saved ' + fmtLocal(d.created_at, 'datetime'));
+    if (d.analyst)    parts.push('📡 ' + d.analyst);
+    if (d.entry_price)parts.push('Entry ' + d.entry_price);
+    if (d.sl_price)   parts.push('SL ' + d.sl_price);
+    if (d.tp1_price)  parts.push('TP1 ' + d.tp1_price);
+    if (d.tp2_price)  parts.push('TP2 ' + d.tp2_price);
+    if (d.rr_ratio)   parts.push('R:R ' + d.rr_ratio);
+    meta.textContent = parts.join(' · ');
+    card.appendChild(meta);
+
+    // Reasoning
+    const cot = d.cot_reasoning || a.cot_reasoning || a._rationale || '';
+    if (cot) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;line-height:1.6;font-size:.88rem;white-space:pre-wrap';
+      const h = document.createElement('div');
+      h.style.cssText = 'font-weight:600;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px';
+      h.textContent = 'AI reasoning';
+      const body = document.createElement('div');
+      body.textContent = cot;
+      wrap.appendChild(h);
+      wrap.appendChild(body);
+      card.appendChild(wrap);
+    }
+
+    // Key conditions
+    const kc = (a.key_conditions || []).filter(Boolean);
+    if (kc.length) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px';
+      const h = document.createElement('div');
+      h.style.cssText = 'font-weight:600;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px';
+      h.textContent = 'Key conditions cited';
+      const ul = document.createElement('ul');
+      ul.style.cssText = 'margin:0;padding-left:20px;font-size:.85rem;line-height:1.5';
+      kc.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = s;
+        ul.appendChild(li);
+      });
+      wrap.appendChild(h);
+      wrap.appendChild(ul);
+      card.appendChild(wrap);
+    }
+
+    // Chart
+    const png = a.chart_png_b64;
+    if (png) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px';
+      const img = document.createElement('img');
+      img.src = 'data:image/png;base64,' + png;
+      img.style.cssText = 'max-width:100%;height:auto;border-radius:4px';
+      img.alt = 'Annotated chart at call time';
+      wrap.appendChild(img);
+      card.appendChild(wrap);
+    } else {
+      const noChart = document.createElement('div');
+      noChart.style.cssText = 'font-size:.78rem;color:var(--muted);font-style:italic';
+      noChart.textContent = 'No annotated chart was generated for this call.';
+      card.appendChild(noChart);
+    }
+  } catch (e) {
+    if (loading.parentNode) loading.parentNode.removeChild(loading);
+    const err = document.createElement('div');
+    err.style.cssText = 'color:var(--red);padding:14px';
+    err.textContent = 'Failed: ' + e.message;
+    card.appendChild(err);
+  }
 }
 
 function toggleCallLegend() {

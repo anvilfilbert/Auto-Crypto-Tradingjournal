@@ -292,6 +292,19 @@ def _loop():
                 last_watcher_review = time.time()
             except Exception as e:
                 print(f"[Scanner Scheduler] Watcher review error: {e}")
+        # Invalidate stale scanner setups (older than 24h, or price moved
+        # >5% past entry the wrong way). Cheap SQL + live-price probes; runs
+        # on every scan cycle so Saved Calls stays tidy without a separate
+        # scheduler thread.
+        try:
+            if not journal_paused.is_paused():
+                import scanner_invalidator
+                r = scanner_invalidator.run_full_pass()
+                if (r.get("expired") or 0) + (r.get("invalidated") or 0) > 0:
+                    print(f"[Scanner Scheduler] invalidated {r['invalidated']}, "
+                          f"expired {r['expired']} stale setups", flush=True)
+        except Exception as e:
+            print(f"[Scanner Scheduler] Invalidator error: {e}")
         time.sleep(INTERVAL)
 
 

@@ -1144,8 +1144,20 @@ select:focus,input:focus{border-color:var(--accent)}
 
       <!-- Saved calls list (full width, below the grid) -->
       <div class="saved-calls-list" id="saved-calls-section" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div class="page-subtitle" style="margin:0">Saved Call Analyses</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-secondary" id="btn-toggle-stale"
+                    onclick="toggleStaleCalls()"
+                    title="By default the list hides scanner setups that aged out (>24h) or invalidated (price moved >5% past entry the wrong way). They stay in the DB for analytics.">
+              👁 Show stale (expired/invalidated)
+            </button>
+            <button class="btn btn-sm btn-secondary" id="btn-invalidate-stale"
+                    onclick="invalidateStaleCalls()"
+                    title="Run the stale-marker pass right now. The scanner scheduler also runs this automatically every 30 min.">
+              🧹 Mark stale now
+            </button>
+          </div>
         </div>
         <div id="saved-calls-list"></div>
       </div>
@@ -2081,7 +2093,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/04-deep-edge.js?v=3.2"></script>
 <script src="/static/js/05-advisor.js?v=2.8"></script>
 <script src="/static/js/06-import.js?v=2.8"></script>
-<script src="/static/js/07-calls.js?v=2.9"></script>
+<script src="/static/js/07-calls.js?v=3.0"></script>
 <script src="/static/js/08-live.js?v=3.5"></script>
 <script src="/static/js/08b-live-calls.js?v=2.9"></script>
 <script src="/static/js/09-analysis.js?v=3.7"></script>

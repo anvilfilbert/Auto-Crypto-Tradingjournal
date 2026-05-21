@@ -65,16 +65,61 @@ def api_calls_analyze():
 
 @bp.route("/api/calls/saved", methods=["GET"])
 def api_calls_saved():
+    """GET /api/calls/saved?include_stale=1 — list saved calls.
+    By default, hides 'expired' and 'invalidated' rows (stale scanner setups
+    that aren't actionable any more). Pass include_stale=1 to see everything."""
+    include_stale = (request.args.get("include_stale") or "").lower() in ("1","true","yes")
+    where_clause = "" if include_stale else \
+        "WHERE status NOT IN ('expired', 'invalidated')"
     with db_conn() as conn:
-        rows = [dict(r) for r in conn.execute("""
+        rows = [dict(r) for r in conn.execute(f"""
             SELECT id, symbol, direction, trade_type, setup_score, setup_label,
                    rr_ratio, has_dca, has_candle_close_sl, sl_price, tp1_price, tp2_price,
                    entry_price, dca_price, avg_entry, total_notional, risk_pct,
                    status, matched_at, created_at,
                    analyst, outcome, outcome_pnl, hit_tp1, hit_tp2, hit_sl, outcome_at
-            FROM analyzed_calls ORDER BY created_at DESC
+            FROM analyzed_calls
+            {where_clause}
+            ORDER BY created_at DESC
         """).fetchall()]
     return _ok(rows)
+
+
+@bp.route("/api/calls/<int:call_id>/details", methods=["GET"])
+def api_call_details(call_id: int):
+    """GET /api/calls/<id>/details — full row including analysis_json and
+    chart_png_b64 for the View Details modal on Saved Calls."""
+    try:
+        with db_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM analyzed_calls WHERE id=?", (call_id,)
+            ).fetchone()
+            if not row:
+                return _err("call not found", 404)
+            d = dict(row)
+            # Unpack analysis_json so the client doesn't have to
+            aj_raw = d.pop("analysis_json", None)
+            try:
+                d["analysis"] = json.loads(aj_raw) if aj_raw else {}
+            except Exception:
+                d["analysis"] = {}
+            return _ok(d)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/calls/invalidate-stale", methods=["POST"])
+def api_calls_invalidate_stale():
+    """POST /api/calls/invalidate-stale — mark expired + invalidated scanner
+    setups. Safe to call repeatedly; idempotent on already-flagged rows.
+    Hooked into the scanner_scheduler periodic loop, also available manually."""
+    try:
+        import scanner_invalidator
+        return _ok(scanner_invalidator.run_full_pass())
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
 
 
 @bp.route("/api/calls/save", methods=["POST"])
