@@ -357,6 +357,21 @@ def init_db():
     _apply(39, "analyzed_calls.ml_win_prob",
            "ALTER TABLE analyzed_calls ADD COLUMN ml_win_prob REAL DEFAULT NULL")
 
+    # ── volume_baseline ──────────────────────────────────────────────────────
+    # Per-(symbol, timeframe) rolling volume samples. Used by volume_baseline.py
+    # to measure surges against each coin's own median pace rather than a flat
+    # 20-bar trailing window. Ported from Kaizen Tools (2026-05-21 audit).
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS volume_baseline (
+            symbol      TEXT NOT NULL,
+            timeframe   TEXT NOT NULL,
+            samples     TEXT NOT NULL,   -- JSON-encoded float[]
+            last_ts     REAL NOT NULL,
+            PRIMARY KEY (symbol, timeframe)
+        )
+    """)
+    _apply(40, "volume_baseline", "SELECT 1")  # mark migration applied
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

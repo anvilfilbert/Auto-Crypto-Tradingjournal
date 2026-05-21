@@ -147,15 +147,44 @@ def _wt_weight(wt: dict) -> float:
     return max(-0.5, min(0.5, wt1 / 60.0))
 
 
-def _volume_weight(inds: dict, directional_score: float) -> float:
+def _volume_weight(inds: dict, directional_score: float,
+                    symbol: str = "", timeframe: str = "") -> float:
     """
     Volume confirms the dominant direction.
     High volume (>1.5×) amplifies consensus by ±0.5.
     Low volume (<0.7×) dampens consensus by ∓0.25.
     Direction taken from the four other signals' net score.
+
+    When `symbol` and `timeframe` are supplied AND the per-symbol baseline is
+    mature (≥6 samples — see volume_baseline.py), the surge ratio is measured
+    against the symbol's own historical median pace instead of the chart's
+    20-bar trailing average. Falls back to the trailing ratio otherwise.
+
+    Also records the current bar's volume into the baseline ring buffer as a
+    side effect, so subsequent calls see a richer history.
     """
-    ratio = inds.get("volume", {}).get("ratio", 1.0)
-    sign  = 1 if directional_score > 0 else (-1 if directional_score < 0 else 0)
+    vol = inds.get("volume") or {}
+    ratio_raw = vol.get("ratio", 1.0)
+    current   = vol.get("current")
+
+    # Side-effect: keep the baseline learning. Throttled internally to 90s/sample.
+    if symbol and timeframe and current is not None:
+        try:
+            import volume_baseline
+            volume_baseline.record_sample(symbol, timeframe, current)
+            base_ratio, mature = volume_baseline.surge_ratio(symbol, timeframe, current)
+            if mature and base_ratio is not None:
+                # Blend: 70% baseline (the "true" signal), 30% trailing (guards
+                # against a stale median). Same blend ratio as Kaizen Tools.
+                ratio = base_ratio * 0.7 + ratio_raw * 0.3
+            else:
+                ratio = ratio_raw
+        except Exception:
+            ratio = ratio_raw
+    else:
+        ratio = ratio_raw
+
+    sign = 1 if directional_score > 0 else (-1 if directional_score < 0 else 0)
     if ratio > 1.5:
         return  0.5 * sign
     if ratio < 0.7:
@@ -299,7 +328,7 @@ def _get_tf_weights(ctx: dict, tf: str, symbol: str = "") -> list:
     _oscillator = max(-1.0, min(1.0, wt_w + mfi_w))
 
     base_score = _momentum + ema_w + adx_w + _oscillator + cvd_w + smt_w + smt_dir_w + of_w
-    vol_w = _volume_weight(inds, base_score)
+    vol_w = _volume_weight(inds, base_score, symbol=symbol, timeframe=tf)
 
     # Return as flat list for bull/bear totals (capped momentum and oscillator as single entries)
     return [_momentum, ema_w, adx_w, _oscillator, cvd_w, smt_w, smt_dir_w, of_w, vol_w]
@@ -319,13 +348,19 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
 
     total_score = 0.0
     details     = []
+    parts       = []   # human-readable strings for each contributing signal
+    # Capture per-TF weight tuples once so we don't recompute via _get_tf_weights
+    # later when summing bull_total / bear_total (was 2 extra calls per TF —
+    # 4× redundant indicator math in the common 2-TF case).
+    captured_weights: list[tuple] = []
 
     for tf in tfs:
         inds = ctx.get(tf, {}).get("indicators", {})
         if not inds.get("ok"):
             continue
 
-        rsi_w  = _rsi_weight(inds.get("rsi",  {}).get("value", 50))
+        rsi_val = (inds.get("rsi",  {}) or {}).get("value", 50)
+        rsi_w  = _rsi_weight(rsi_val)
         macd_w = _macd_weight(inds.get("macd", {}))
         ema_w  = _ema_weight(inds.get("ema",   {}))
         adx_w  = _adx_weight(inds.get("adx",   {}))
@@ -346,12 +381,45 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
         _oscillator = max(-1.0, min(1.0, _oscillator_raw))
 
         base_score = _momentum + ema_w + adx_w + _oscillator + cvd_w + smt_w + smt_dir_w + of_w
-        vol_w  = _volume_weight(inds, base_score)
+        vol_w  = _volume_weight(inds, base_score, symbol=symbol, timeframe=tf)
 
         tf_score = base_score + vol_w
         total_score += tf_score
 
+        # Collect human-readable contribution strings — emitted only for
+        # signals strong enough to matter (|w| >= 0.4). Used by prompt
+        # builder and UI tooltips so consumers see WHY a score is what it is.
+        if abs(rsi_w) >= 0.4:
+            parts.append(f"{tf} RSI {rsi_val:.0f} "
+                         f"{'overbought' if rsi_val > 70 else 'oversold' if rsi_val < 30 else 'bullish' if rsi_w > 0 else 'bearish'}")
+        if abs(macd_w) >= 0.4:
+            parts.append(f"{tf} MACD {inds.get('macd', {}).get('trend','?')}")
+        if abs(ema_w) >= 0.5:
+            al = inds.get('ema', {}).get('alignment', '')
+            if al:
+                parts.append(f"{tf} EMA {al}")
+        if abs(adx_w) >= 0.4:
+            adx_d = inds.get('adx', {}) or {}
+            adx_val_n = adx_d.get('value', 0)
+            parts.append(f"{tf} ADX {adx_val_n:.0f} {adx_d.get('direction','?')}")
+        if abs(_oscillator) >= 0.5:
+            parts.append(f"{tf} WaveTrend/MFI {'bullish' if _oscillator > 0 else 'bearish'}")
+        if abs(cvd_w) >= 0.3:
+            parts.append(f"{tf} CVD {inds.get('cvd', {}).get('trend','flat')}")
+        if abs(of_w) >= 0.1:
+            of_d = inds.get('order_flow', {}) or {}
+            parts.append(f"{tf} order-flow {of_d.get('label','?')}")
+        if abs(vol_w) >= 0.3:
+            vol_r = (inds.get('volume') or {}).get('ratio', 1.0)
+            # Tag whether this is from baseline or trailing window
+            tag = "vs baseline" if (symbol and tf) else "vs trailing"
+            parts.append(f"{tf} volume {vol_r:.1f}× {tag}")
+        if abs(smt_dir_w) >= 0.1:
+            parts.append(f"{tf} SMT divergence " +
+                         ('bullish' if smt_dir_w > 0 else 'bearish'))
+
         all_w = (_momentum, ema_w, adx_w, _oscillator, cvd_w, smt_w, smt_dir_w, of_w, vol_w)
+        captured_weights.append(all_w)
         pos = round(sum(w for w in all_w if w > 0), 1)
         neg = round(sum(w for w in all_w if w < 0), 1)
         details.append(f"{tf}: +{pos}/{neg}")
@@ -395,12 +463,12 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
     else:
         label = "Neutral"
 
-    bull_total = round(sum(w for tf in tfs
-                           for inds_w in [_get_tf_weights(ctx, tf, symbol)]
-                           for w in inds_w if w > 0), 1)
-    bear_total = round(abs(sum(w for tf in tfs
-                               for inds_w in [_get_tf_weights(ctx, tf, symbol)]
-                               for w in inds_w if w < 0)), 1)
+    # Reuse the weight tuples we already computed in the main loop (was 2× recompute)
+    bull_total = round(sum(w for tup in captured_weights for w in tup if w > 0), 1)
+    bear_total = round(abs(sum(w for tup in captured_weights for w in tup if w < 0)), 1)
+
+    if liq_w != 0.0:
+        parts.append(f"liquidation cluster {'support' if liq_w > 0 else 'overhead'}")
 
     return {
         "score":   round(total_score, 2),
@@ -409,5 +477,6 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
         "bearish": bear_total,
         "label":   label,
         "details": details,
+        "parts":   parts,    # human-readable signal contributions (Kaizen-style)
         "vix_regime_active": vix_mult != 1.0,
     }
