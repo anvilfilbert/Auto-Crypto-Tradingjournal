@@ -7,6 +7,60 @@ function _esc(s) {
   return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Timezone helpers ──────────────────────────────────────────────────────────
+// All DB timestamps are UTC ISO strings. fmtLocal converts them to a compact
+// Europe/Zurich display string for the user, who lives in CET/CEST. mode
+// controls precision: 'datetime' (default — 'YYYY-MM-DD HH:MM'), 'date',
+// 'time' (HH:MM), or 'short' ('Mon HH:MM' for today/yesterday-style).
+const _TZ_LOCAL = 'Europe/Zurich';
+
+function fmtLocal(ts, mode) {
+  if (!ts) return '';
+  // SQLite returns 'YYYY-MM-DD HH:MM:SS' with no zone marker — interpret as UTC
+  const s = String(ts).trim();
+  const utcStr = /Z$|[+-]\d\d:?\d\d$/.test(s)
+    ? s
+    : s.replace(' ', 'T') + 'Z';
+  const d = new Date(utcStr);
+  if (isNaN(d.getTime())) return ts;  // pass through if unparseable
+  const opts = {
+    datetime: { year:'numeric', month:'2-digit', day:'2-digit',
+                hour:'2-digit', minute:'2-digit', hour12:false },
+    date:     { year:'numeric', month:'2-digit', day:'2-digit' },
+    time:     { hour:'2-digit', minute:'2-digit', hour12:false },
+    short:    { month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false },
+  }[mode || 'datetime'];
+  try {
+    return new Intl.DateTimeFormat('de-CH', { timeZone: _TZ_LOCAL, ...opts })
+      .format(d).replace(',', '');
+  } catch (e) {
+    return ts;
+  }
+}
+
+// ── Dual clock (UTC + Europe/Zurich), ticks every 15s ────────────────────────
+function _renderDualClock() {
+  const el = document.getElementById('dual-clock');
+  if (!el) return;
+  const now = new Date();
+  const utc = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).format(now);
+  const cet = new Intl.DateTimeFormat('de-CH', {
+    timeZone: _TZ_LOCAL,
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(now);
+  // Detect CET vs CEST so the label reflects DST
+  const tzName = new Intl.DateTimeFormat('en', {
+    timeZone: _TZ_LOCAL, timeZoneName: 'short',
+  }).formatToParts(now).find(p => p.type === 'timeZoneName')?.value || 'CET';
+  el.textContent = `UTC ${utc} · ${tzName} ${cet}`;
+}
+setInterval(_renderDualClock, 15000);
+window.addEventListener('DOMContentLoaded', _renderDualClock);
+_renderDualClock();   // initial paint in case DOM already loaded
+
 // ── Notification toast ────────────────────────────────────────────────────────
 let _notifyTimer = null;
 function notify(msg, type) {

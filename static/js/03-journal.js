@@ -39,8 +39,8 @@ async function journalLoad(page) {
         ${t.exchange && t.exchange !== 'bitget' ? `<span style="font-size:.62rem;padding:1px 5px;border-radius:3px;background:rgba(79,195,247,.15);color:rgba(79,195,247,.9);margin-left:4px">${t.exchange}</span>` : ''}
       </td>
       <td><span class="badge ${t.direction.toLowerCase()}">${t.direction}</span></td>
-      <td>${t.open_time?.slice(0,16)}</td>
-      <td>${t.close_time?.slice(0,16)}</td>
+      <td title="UTC: ${t.open_time?.slice(0,16) || ''}">${fmtLocal(t.open_time, 'datetime')}</td>
+      <td title="UTC: ${t.close_time?.slice(0,16) || ''}">${fmtLocal(t.close_time, 'datetime')}</td>
       <td>${durFmt(t.duration_minutes)}</td>
       <td>${t.entry_price != null ? fmt(t.entry_price) : '—'}</td>
       <td>${t.close_price != null ? fmt(t.close_price) : '—'}</td>

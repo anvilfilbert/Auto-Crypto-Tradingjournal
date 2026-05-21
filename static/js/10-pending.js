@@ -133,7 +133,7 @@ async function openMatchModal(order) {
             Score: ${c.setup_score||'—'}/10 · ${c.trade_type||''} ·
             SL: ${c.sl_price||'—'} · TP1: ${c.tp1_price||'—'}
             ${c.analyst ? ' · 📡 '+escHtml(c.analyst) : ''}
-            · ${(c.created_at||'').slice(0,10)}
+            · ${fmtLocal(c.created_at, 'date')}
           </div>
         </div>
       </div>`;
@@ -445,8 +445,8 @@ function renderPendingLimitCard(lim) {
     ${(riskStr || rrStr || lim.notes || lim.triggered_at) ? `<div style="padding:0 18px 8px;font-size:.75rem;color:var(--muted)">
       ${riskStr}${rrStr}
       ${lim.notes ? `<span style="margin-left:8px">· ${escHtml(lim.notes)}</span>` : ''}
-      ${lim.triggered_at ? `<span style="margin-left:8px">· Triggered: ${lim.triggered_at.slice(0,16)}</span>` : ''}
-      <span style="margin-left:8px">· Added: ${(lim.created_at||'').slice(0,10)}</span>
+      ${lim.triggered_at ? `<span style="margin-left:8px">· Triggered: ${fmtLocal(lim.triggered_at, 'datetime')}</span>` : ''}
+      <span style="margin-left:8px">· Added: ${fmtLocal(lim.created_at, 'date')}</span>
     </div>` : ''}
     ${verdictHtml}
     ${lim.chart_png_b64 ? (() => {

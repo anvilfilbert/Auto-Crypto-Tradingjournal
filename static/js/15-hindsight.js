@@ -218,7 +218,7 @@ function renderHindsightTable(rows) {
     const delta     = hypPnl - (r.actual_pnl || 0);
     const deltaCol  = delta >= 0 ? 'var(--accent3)' : 'var(--red)';
     const sign      = v => v >= 0 ? '+' : '';
-    const dateStr   = (r.open_time || '').slice(0, 10);
+    const dateStr   = fmtLocal(r.open_time, 'date');
     const dirBadge  = r.direction === 'Long'
       ? '<span class="badge" style="background:rgba(38,217,107,.12);color:var(--accent3);font-size:.65rem">L</span>'
       : '<span class="badge" style="background:rgba(239,83,80,.12);color:var(--red);font-size:.65rem">S</span>';
