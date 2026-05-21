@@ -119,7 +119,22 @@ def format_for_prompt(symbol: str, indicators: dict, timeframe: str) -> str:
         else:
             zone_tag = "OB" if zone == "overbought" else ("OS" if zone == "oversold" else "")
             wt_str = f"WT {wt1v}{('('+zone_tag+')') if zone_tag else ''}"
+        # MFI lives inside wavetrend output — surface it explicitly so the AI
+        # can act on it (self-review wishlist 2026-05-21: MFI < 20 was the
+        # most-cited missing signal across alpha-leak trades).
+        mfi_v = wt.get("mfi")
+        if mfi_v is not None:
+            tag = "OB" if mfi_v > 50 else ("OS" if mfi_v < -50 else "")
+            wt_str += f" MFI{mfi_v:+.0f}" + (f"({tag})" if tag else "")
         parts.append(wt_str)
+
+    # Classic Stochastic — second-most-cited wishlist signal
+    if "stochastic" in indicators:
+        st = indicators["stochastic"]
+        k  = st.get("k")
+        if k is not None:
+            tag = "OB" if k > 80 else ("OS" if k < 20 else "")
+            parts.append(f"Stoch K{k:.0f}" + (f"({tag})" if tag else ""))
 
     if "support_resistance" in indicators:
         sr   = indicators["support_resistance"]

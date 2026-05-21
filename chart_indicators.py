@@ -263,6 +263,44 @@ def compute_stochrsi(df: pd.DataFrame) -> dict | None:
     }
 
 
+def compute_stochastic(df: pd.DataFrame, k_period: int = 14,
+                       d_period: int = 3) -> dict | None:
+    """
+    Classic Stochastic Oscillator (%K, %D) — the AI flagged this as a missing
+    signal across multiple self-review cycles (2026-05-21 wishlist). Distinct
+    from compute_stochrsi: this one is on raw price highs/lows, faster-reacting
+    and more useful as an entry-timing overlay on 1H/4H.
+
+    Returns {"k","d","signal"} or None when the data window is too small.
+    """
+    if len(df) < (k_period + d_period + 5):
+        return None
+    try:
+        stoch = ta.stoch(df["high"], df["low"], df["close"],
+                         k=k_period, d=d_period, smooth_k=3)
+    except Exception:
+        return None
+    if stoch is None or stoch.empty:
+        return None
+    k_cols = [c for c in stoch.columns if c.startswith("STOCHk")]
+    d_cols = [c for c in stoch.columns if c.startswith("STOCHd")]
+    if not (k_cols and d_cols):
+        return None
+    k_v = stoch[k_cols[0]].iloc[-1]
+    d_v = stoch[d_cols[0]].iloc[-1]
+    if pd.isna(k_v) or pd.isna(d_v):
+        return None
+    k, d = round(float(k_v), 1), round(float(d_v), 1)
+    return {
+        "k": k, "d": d,
+        "signal": (
+            "overbought (K>80)" if k > 80 else
+            "oversold (K<20)"   if k < 20 else
+            "neutral"
+        ),
+    }
+
+
 def compute_bollinger(df: pd.DataFrame) -> dict | None:
     """Bollinger Bands(20,2). Returns {"upper","mid","lower","position_pct","band_width","signal"} or None."""
     if len(df) < 30:
@@ -414,6 +452,11 @@ def compute_all_indicators(df: pd.DataFrame) -> dict:
     stochrsi = compute_stochrsi(df)
     if stochrsi:
         result["stoch_rsi"] = stochrsi
+
+    # Classic Stochastic Oscillator — AI self-review wishlist signal (2026-05-21)
+    stoch = compute_stochastic(df)
+    if stoch:
+        result["stochastic"] = stoch
 
     # MACD — rename "bias" → "trend", "histogram_growing" → "histogram_trend"
     macd = compute_macd(df)

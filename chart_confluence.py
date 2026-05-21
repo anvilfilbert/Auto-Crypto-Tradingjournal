@@ -198,6 +198,26 @@ def _cvd_weight(cvd: dict) -> float:
     return 0.4 if trend == "rising" else (-0.4 if trend == "falling" else 0.0)
 
 
+def _stoch_weight(stoch: dict) -> float:
+    """
+    Classic Stochastic — counter-trend mean-reversion signal.
+    Oversold (K<20) = +0.4 (potential reversal up), Overbought (K>80) = -0.4.
+    Added 2026-05-21 from AI self-review wishlist (recurring missed signal).
+    Grouped with WaveTrend + MFI under the oscillator cap so total
+    oscillator contribution stays bounded.
+    """
+    if not stoch:
+        return 0.0
+    k = stoch.get("k")
+    if k is None:
+        return 0.0
+    if k < 20:
+        return  0.4    # oversold → bullish reversal hint
+    if k > 80:
+        return -0.4    # overbought → bearish reversal hint
+    return 0.0
+
+
 def _smt_weight(inds: dict, symbol: str) -> float:
     """
     Cross-exchange divergence check (SMT-inspired).
@@ -318,6 +338,7 @@ def _get_tf_weights(ctx: dict, tf: str, symbol: str = "") -> list:
     adx_w  = _adx_weight(inds.get("adx",   {}))
     wt_w   = _wt_weight(inds.get("wavetrend", {}))
     mfi_w  = _mfi_weight(inds.get("wavetrend", {}))
+    stoch_w = _stoch_weight(inds.get("stochastic", {}))
     cvd_w  = _cvd_weight(inds.get("cvd", {}))
     smt_w     = _smt_weight(inds, symbol)
     smt_dir_w = _smt_direction_weight(inds, symbol)
@@ -325,7 +346,11 @@ def _get_tf_weights(ctx: dict, tf: str, symbol: str = "") -> list:
 
     # Cap correlated signal groups to prevent trend-inflation
     _momentum = max(-1.5, min(1.5, rsi_w + macd_w))
-    _oscillator = max(-1.0, min(1.0, wt_w + mfi_w))
+    # Three oscillators (WaveTrend + MFI + Stochastic) all measure short-term
+    # overextension. Group cap stays at ±1.0 — adding Stoch doesn't widen the
+    # bound, only adds redundancy that tilts the group when 2-3 oscillators
+    # agree (e.g. all 3 oversold). Self-review wishlist (2026-05-21).
+    _oscillator = max(-1.0, min(1.0, wt_w + mfi_w + stoch_w))
 
     base_score = _momentum + ema_w + adx_w + _oscillator + cvd_w + smt_w + smt_dir_w + of_w
     vol_w = _volume_weight(inds, base_score, symbol=symbol, timeframe=tf)
@@ -366,6 +391,7 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
         adx_w  = _adx_weight(inds.get("adx",   {}))
         wt_w   = _wt_weight(inds.get("wavetrend", {}))
         mfi_w  = _mfi_weight(inds.get("wavetrend", {}))
+        stoch_w = _stoch_weight(inds.get("stochastic", {}))
         cvd_w  = _cvd_weight(inds.get("cvd", {}))
         smt_w     = _smt_weight(inds, symbol)
         smt_dir_w = _smt_direction_weight(inds, symbol)
@@ -376,8 +402,10 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
         _momentum_raw = rsi_w + macd_w
         _momentum = max(-1.5, min(1.5, _momentum_raw))
 
-        # WaveTrend + MFI: both from VMC oscillator, cap combined contribution
-        _oscillator_raw = wt_w + mfi_w
+        # WaveTrend + MFI + Stochastic — three oscillators measuring short-term
+        # overextension. Group cap stays at ±1.0; adding Stoch tilts the group
+        # when 2-3 oscillators agree but doesn't widen the bound.
+        _oscillator_raw = wt_w + mfi_w + stoch_w
         _oscillator = max(-1.0, min(1.0, _oscillator_raw))
 
         base_score = _momentum + ema_w + adx_w + _oscillator + cvd_w + smt_w + smt_dir_w + of_w
@@ -403,7 +431,13 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
             adx_val_n = adx_d.get('value', 0)
             parts.append(f"{tf} ADX {adx_val_n:.0f} {adx_d.get('direction','?')}")
         if abs(_oscillator) >= 0.5:
-            parts.append(f"{tf} WaveTrend/MFI {'bullish' if _oscillator > 0 else 'bearish'}")
+            parts.append(f"{tf} WaveTrend/MFI/Stoch {'bullish' if _oscillator > 0 else 'bearish'}")
+        # Surface Stochastic explicitly when it's clearly extreme — separate
+        # from the grouped oscillator label so the AI can act on it.
+        st = inds.get("stochastic", {}) or {}
+        st_k = st.get("k")
+        if st_k is not None and (st_k < 20 or st_k > 80):
+            parts.append(f"{tf} Stochastic K={st_k} ({'oversold' if st_k < 20 else 'overbought'})")
         if abs(cvd_w) >= 0.3:
             parts.append(f"{tf} CVD {inds.get('cvd', {}).get('trend','flat')}")
         if abs(of_w) >= 0.1:
