@@ -1247,6 +1247,15 @@ select:focus,input:focus{border-color:var(--accent)}
         <div id="fai-risk-config" style="font-size:.85rem;line-height:1.7;color:var(--muted)">Loading…</div>
       </div>
 
+      <!-- AI-opened positions: open + recent closed -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px">
+        <div style="font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:10px">Open positions <span id="fai-open-count" style="color:var(--muted);font-weight:400"></span></div>
+        <div id="fai-open-positions" style="font-size:.82rem;line-height:1.5;color:var(--muted)">Loading…</div>
+
+        <div style="font-weight:600;font-size:.78rem;color:var(--text);margin:18px 0 10px">Recent closed <span id="fai-closed-count" style="color:var(--muted);font-weight:400"></span></div>
+        <div id="fai-closed-positions" style="font-size:.82rem;line-height:1.5;color:var(--muted)">—</div>
+      </div>
+
       <!-- Decision log -->
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px">
         <div style="font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:10px">Recent decisions</div>
@@ -2200,7 +2209,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/15-hindsight.js?v=3.1"></script>
 <script src="/static/js/16-settings.js?v=2.9"></script>
 <script src="/static/js/17-risk.js?v=2.2"></script>
-<script src="/static/js/18-futures-ai.js?v=1.0"></script>
+<script src="/static/js/18-futures-ai.js?v=1.1"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">
   <button class="bottom-nav-item" data-tab="trades">

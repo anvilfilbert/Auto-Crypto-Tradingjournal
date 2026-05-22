@@ -120,6 +120,156 @@ function _renderFuturesAI(d) {
   }
 
   _loadFuturesAILog();
+  _loadFuturesAIPositions();
+}
+
+
+async function _loadFuturesAIPositions() {
+  const openEl = document.getElementById('fai-open-positions');
+  const closedEl = document.getElementById('fai-closed-positions');
+  if (!openEl) return;
+  try {
+    const r = await api('/api/futures-ai/positions?closed=15');
+    if (!r.ok) throw new Error(r.error || 'failed');
+    const d = r.data;
+    const source = d.source;   // 'real' or 'paper'
+    const openRows = d.open || [];
+    const closedRows = d.recent_closed || [];
+
+    // Header counts
+    const openCount = document.getElementById('fai-open-count');
+    const closedCount = document.getElementById('fai-closed-count');
+    if (openCount) openCount.textContent = `(${openRows.length} ${source})`;
+    if (closedCount) closedCount.textContent = `(${closedRows.length} ${source})`;
+
+    // Open positions table
+    while (openEl.firstChild) openEl.removeChild(openEl.firstChild);
+    if (!openRows.length) {
+      openEl.textContent = 'No open auto-trader positions.';
+    } else {
+      openEl.appendChild(_buildOpenPositionsTable(openRows, source));
+    }
+
+    // Closed positions table
+    while (closedEl.firstChild) closedEl.removeChild(closedEl.firstChild);
+    if (!closedRows.length) {
+      closedEl.textContent = 'No closed auto-trader trades yet.';
+    } else {
+      closedEl.appendChild(_buildClosedPositionsTable(closedRows, source));
+    }
+  } catch (e) {
+    openEl.textContent = 'Failed: ' + e.message;
+  }
+}
+
+
+function _buildOpenPositionsTable(rows, source) {
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.8rem';
+  const thead = tbl.createTHead();
+  const hrow = thead.insertRow();
+  // Different columns for real (live data from Bitget) vs paper (DB)
+  const headers = source === 'real'
+    ? ['Symbol','Dir','Entry','Mark','% Move','Unrl P&L','Size','Lev','SL','TP']
+    : ['Symbol','Dir','Score','Archetype','Entry','SL','TP1','TP2','Notional','Lev'];
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;padding:5px 8px;border-bottom:1px solid var(--border)';
+    hrow.appendChild(th);
+  });
+  const tb = tbl.createTBody();
+  rows.forEach(p => {
+    const tr = tb.insertRow();
+    const cells = source === 'real' ? [
+      p.symbol,
+      p.direction,
+      _num(p.entry_price),
+      _num(p.mark_price),
+      ((p.unrealized_pct >= 0 ? '+' : '') + (p.unrealized_pct ?? 0).toFixed(2) + '%'),
+      ((p.unrealized_pnl >= 0 ? '+' : '') + '$' + (p.unrealized_pnl ?? 0).toFixed(2)),
+      _num(p.size_contracts),
+      p.leverage + 'x',
+      _num(p.preset_sl) || '—',
+      _num(p.preset_tp) || '—',
+    ] : [
+      p.symbol,
+      p.direction,
+      p.score_consensus + '/10',
+      p.archetype || '—',
+      _num(p.entry_price),
+      _num(p.current_sl),
+      _num(p.tp1_price),
+      _num(p.tp2_price),
+      '$' + (p.notional_usdt ?? 0).toFixed(2),
+      p.leverage + 'x',
+    ];
+    cells.forEach((v, i) => {
+      const td = tr.insertCell();
+      td.textContent = v;
+      let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
+      // Color the %-move and P&L cells
+      if (source === 'real' && (i === 4 || i === 5)) {
+        const val = i === 4 ? (p.unrealized_pct || 0) : (p.unrealized_pnl || 0);
+        cls += ';color:' + (val >= 0 ? 'var(--accent3)' : 'var(--red)');
+      }
+      td.style.cssText = cls;
+    });
+  });
+  return tbl;
+}
+
+
+function _buildClosedPositionsTable(rows, source) {
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem';
+  const thead = tbl.createTHead();
+  const hrow = thead.insertRow();
+  const headers = ['Symbol','Dir','Entry','Close','P&L','Reason','Opened','Closed'];
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--border)';
+    hrow.appendChild(th);
+  });
+  const tb = tbl.createTBody();
+  rows.forEach(p => {
+    const tr = tb.insertRow();
+    const pnl = p.realized_pnl ?? 0;
+    const closePrice = source === 'real' ? p.close_price : p.tp2_price;
+    const cells = [
+      p.symbol,
+      p.direction,
+      _num(p.entry_price),
+      _num(closePrice),
+      ((pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2)),
+      p.close_reason || (source === 'real' ? 'reconcile' : '—'),
+      (p.opened_at || '').slice(5, 16),
+      (p.closed_at || p.close_time || '').slice(5, 16),
+    ];
+    cells.forEach((v, i) => {
+      const td = tr.insertCell();
+      td.textContent = v;
+      let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
+      if (i === 4) {   // P&L column
+        cls += ';color:' + (pnl >= 0 ? 'var(--accent3)' : 'var(--red)');
+      }
+      td.style.cssText = cls;
+    });
+  });
+  return tbl;
+}
+
+
+// Helper: format a number to at most 6 significant digits, drop trailing zeros
+function _num(v) {
+  if (v == null || v === '') return '—';
+  const n = parseFloat(v);
+  if (isNaN(n)) return v;
+  // Adapt precision to magnitude
+  if (Math.abs(n) >= 100)   return n.toFixed(2);
+  if (Math.abs(n) >= 1)     return n.toPrecision(5);
+  return n.toPrecision(4);
 }
 
 async function _loadFuturesAILog() {

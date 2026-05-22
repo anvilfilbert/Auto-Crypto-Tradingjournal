@@ -85,6 +85,86 @@ def api_futures_ai_orchestrate_now():
         return _err("Internal server error", 500)
 
 
+@bp.route("/api/futures-ai/positions")
+def api_futures_ai_positions():
+    """
+    Returns the auto-trader's positions:
+      open:          live positions on Bitget (real mode) OR open paper
+                     rows (paper mode), enriched with current mark + unreal P&L
+      recent_closed: last N closed trades (paper or real depending on mode)
+    """
+    try:
+        from trading import config as fa_config
+        from trading import bitget_trader
+        with db_conn() as conn:
+            n_closed = int(request.args.get("closed", "10"))
+            n_closed = max(1, min(n_closed, 100))
+
+            if fa_config.is_real_mode():
+                # Live data from Bitget for currently-open positions
+                try:
+                    live = bitget_trader.get_open_positions()
+                except Exception:
+                    live = []
+                open_rows = []
+                for p in live:
+                    entry = float(p.get("entry_price") or 0)
+                    mark  = float(p.get("mark_price") or 0)
+                    is_long = (p.get("direction") or "").lower() == "long"
+                    sign = 1 if is_long else -1
+                    move_pct = ((mark - entry) / entry * 100 * sign) if entry else 0
+                    open_rows.append({
+                        "symbol":          p.get("symbol"),
+                        "direction":       p.get("direction"),
+                        "entry_price":     entry,
+                        "mark_price":      mark,
+                        "unrealized_pnl":  p.get("unrealized_pnl"),
+                        "unrealized_pct":  round(move_pct, 2),
+                        "size_contracts":  p.get("size_contracts"),
+                        "notional_usdt":   p.get("notional_usdt"),
+                        "leverage":        p.get("leverage"),
+                        "preset_sl":       p.get("preset_sl"),
+                        "preset_tp":       p.get("preset_tp"),
+                    })
+                closed = [dict(r) for r in conn.execute(
+                    "SELECT symbol, direction, entry_price, close_price, "
+                    "realized_pnl, open_time, close_time, setup_type, "
+                    "setup_score "
+                    "FROM positions WHERE chain='auto_ai' AND "
+                    "close_time IS NOT NULL AND close_time != '' "
+                    "ORDER BY close_time DESC LIMIT ?", (n_closed,)
+                ).fetchall()]
+                source = "real"
+            else:
+                # Paper mode — paper_positions table
+                open_rows = [dict(r) for r in conn.execute("""
+                    SELECT id, symbol, direction, score_consensus, entry_price,
+                           current_sl, tp1_price, tp2_price, notional_usdt,
+                           leverage, opened_at, tp1_hit, archetype
+                    FROM paper_positions
+                    WHERE status='open'
+                    ORDER BY opened_at DESC
+                """).fetchall()]
+                closed = [dict(r) for r in conn.execute("""
+                    SELECT id, symbol, direction, score_consensus, entry_price,
+                           tp2_price, realized_pnl, close_reason, opened_at,
+                           closed_at, archetype
+                    FROM paper_positions
+                    WHERE status='closed'
+                    ORDER BY closed_at DESC LIMIT ?
+                """, (n_closed,)).fetchall()]
+                source = "paper"
+
+        return _ok({
+            "source":         source,
+            "open":           open_rows,
+            "recent_closed":  closed,
+        })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
 @bp.route("/api/futures-ai/log")
 def api_futures_ai_log():
     """Last N decision log entries."""
