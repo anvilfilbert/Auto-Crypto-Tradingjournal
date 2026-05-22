@@ -72,6 +72,18 @@ function renderCallTargetsPanel(call, pos) {
   );
   const callKey = call.symbol + '_' + call.direction;
 
+  // Sanity check: the linked call's price scale must match the position's.
+  // When an analyst-feed parser misreads a number (e.g. captured a percentage
+  // as an absolute price) the call's TP/SL stay internally consistent but get
+  // attached to a totally different price level. Surfacing the gap stops the
+  // UI from showing misleading "+232% from mark" deltas.
+  const callEntryRef = parseFloat(call.avg_entry || call.entry_price || 0);
+  const posEntry     = parseFloat(pos.entry_price || 0);
+  const entryGap     = (callEntryRef > 0 && posEntry > 0)
+    ? Math.abs(callEntryRef - posEntry) / posEntry
+    : 0;
+  const scaleMismatch = entryGap > 0.20;   // >20% off price scale → not the same call
+
   function distRow(label, price, cls) {
     if (!price) return '';
     const p    = parseFloat(price);
@@ -103,7 +115,17 @@ function renderCallTargetsPanel(call, pos) {
         </button>
       </div>` : ''}
       <h4>📡 Linked Call — ${call.trade_type || ''} · ${call.setup_score || '?'}/10 ${call.setup_label || ''} · R:R ${call.rr_ratio || '—'}</h4>
-      <div class="targets-grid">
+      ${scaleMismatch ? `
+      <div style="font-size:.78rem;padding:8px 12px;margin-bottom:10px;
+                  background:rgba(255,69,69,.10);border:1px solid rgba(255,69,69,.35);
+                  border-radius:6px;color:var(--red);line-height:1.5">
+        ⚠ <strong>Linked call's entry price (${callEntryRef.toPrecision(5)}) differs from position entry (${posEntry.toPrecision(5)}) by ${(entryGap*100).toFixed(0)}%.</strong><br>
+        TP/SL values below are on a different price scale and likely do <em>not</em> apply to this trade — most likely the analyst-feed parser captured the wrong number. Consider unlinking the call.
+        <div style="margin-top:6px;display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="dismissMatch(${call.id});loadLiveTrades()">Unlink Call</button>
+        </div>
+      </div>` : ''}
+      <div class="targets-grid"${scaleMismatch ? ' style="opacity:.45"' : ''}>
         ${call.tp1_price ? distRow('Take Profit 1', call.tp1_price, 'target-tp') : ''}
         ${call.tp2_price ? distRow('Take Profit 2', call.tp2_price, 'target-tp') : ''}
         ${call.sl_price  ? distRow('Stop Loss',      call.sl_price,  'target-sl') : ''}
