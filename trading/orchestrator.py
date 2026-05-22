@@ -80,6 +80,13 @@ def on_scan_completed(scanner_state: dict) -> dict:
         "errors":                0,
     }
 
+    # Race-condition fix: track positions opened during THIS batch so the
+    # concurrent-position cap is honoured even when multiple setups would
+    # otherwise pass the same kill_switch read (each read sees the pre-batch
+    # state). Without this counter, 5 setups all see "0 open" and all open
+    # — the bug observed in paper mode at 16:59 today.
+    opened_this_batch = 0
+
     with db_conn() as conn:
         for setup in setups:
             try:
@@ -98,8 +105,17 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     continue
                 summary["evaluated"] += 1
 
-                # 1. kill switch
+                # 1. kill switch — augmented with the within-batch counter
+                # so the concurrent-position cap survives the loop's
+                # sequential reads of the DB state.
                 can_trade, reason = kill_switch.can_open_new_trade(conn)
+                if can_trade:
+                    n_after = kill_switch._open_position_count(conn) + opened_this_batch
+                    if n_after >= fa_config.MAX_CONCURRENT_POSITIONS:
+                        can_trade = False
+                        reason = (f"would exceed MAX_CONCURRENT_POSITIONS "
+                                  f"({n_after}/{fa_config.MAX_CONCURRENT_POSITIONS}) "
+                                  f"after {opened_this_batch} opens already in this batch")
                 if not can_trade:
                     summary["rejected_killswitch"] += 1
                     _log(conn, "rejected_killswitch", setup, reason)
@@ -164,11 +180,15 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     "ai":              verdict["ai"],
                 }
                 if fa_config.is_real_mode():
-                    _open_real(conn, signal, sizing)
+                    opened_ok = _open_real(conn, signal, sizing)
+                    if opened_ok:
+                        summary["opened"]    += 1
+                        opened_this_batch    += 1
                 else:
                     pid = paper.open_paper_trade(conn, signal, sizing)
                     if pid:
-                        summary["opened"] += 1
+                        summary["opened"]    += 1
+                        opened_this_batch    += 1
             except Exception as e:
                 summary["errors"] += 1
                 _log(conn, "orchestrator_error", setup, str(e)[:200])
@@ -227,14 +247,18 @@ def _mark_price_lookup(symbol: str) -> float:
 
 # ── Real-mode dispatcher (used when mode=real) ──────────────────────────────
 
-def _open_real(conn, signal: dict, sizing: dict) -> None:
-    """Dispatch to the real-mode executor. Built once paper is validated."""
+def _open_real(conn, signal: dict, sizing: dict) -> bool:
+    """Dispatch to the real-mode executor. Returns True if order placed."""
     try:
         from . import executor
-        executor.open_real_trade(conn, signal, sizing)
+        return bool(executor.open_real_trade(conn, signal, sizing))
     except ImportError:
         _log(conn, "real_open_blocked", signal,
              "executor.py not built yet — real mode dispatch unavailable")
+        return False
+    except Exception as e:
+        _log(conn, "real_open_error", signal, str(e)[:200])
+        return False
 
 
 def _close_all(conn, reason: str) -> dict:
