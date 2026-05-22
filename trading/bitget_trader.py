@@ -217,6 +217,57 @@ def get_mark_price(symbol: str) -> float:
     return 0.0
 
 
+# ── Contract metadata + price snapping ──────────────────────────────────────
+
+_CONTRACT_CACHE: dict[str, dict] = {}
+
+
+def get_contract_spec(symbol: str) -> dict:
+    """
+    Return contract metadata: tick size (pricePlace), min/max order
+    size, etc. Cached for the process lifetime — these don't change.
+
+    Bitget returns pricePlace = number of decimal places; tick =
+    10^(-pricePlace). E.g. pricePlace=4 → tick=0.0001.
+    """
+    if symbol in _CONTRACT_CACHE:
+        return _CONTRACT_CACHE[symbol]
+    try:
+        d = _request("GET", "/api/v2/mix/market/contracts", params={
+            "productType": PRODUCT_TYPE,
+            "symbol":      symbol,
+        })
+        rows = d if isinstance(d, list) else [d]
+        if rows and rows[0]:
+            spec = rows[0]
+            pp = int(spec.get("pricePlace") or 4)
+            vp = int(spec.get("volumePlace") or 0)
+            _CONTRACT_CACHE[symbol] = {
+                "tick_size":    10 ** (-pp),
+                "price_place":  pp,
+                "vol_place":    vp,
+                "size_step":    10 ** (-vp) if vp > 0 else 1,
+                "min_size":     float(spec.get("minTradeNum") or 0),
+            }
+            return _CONTRACT_CACHE[symbol]
+    except Exception as e:
+        # Fall through to default
+        pass
+    # Defensive default — 6 decimal places, no min
+    return {"tick_size": 0.000001, "price_place": 6, "vol_place": 4,
+            "size_step": 0.0001, "min_size": 0}
+
+
+def _snap_price(price: float, decimals: int) -> float:
+    """Snap a price to the symbol's tick grid by rounding to N decimal
+    places. Bitget rejects orders whose price/SL/TP aren't multiples of
+    the symbol's tick size; rounding to pricePlace decimals is the
+    canonical fix."""
+    if price is None or price == 0:
+        return price
+    return round(float(price), decimals)
+
+
 # ── Write methods — DEFENSIVE ────────────────────────────────────────────────
 
 def place_market_order(symbol: str, side: str, size_usdt: float,
@@ -264,7 +315,43 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
     mark = get_mark_price(symbol)
     if mark <= 0:
         raise TraderAPIError(f"can't fetch mark price for {symbol}")
-    size_contracts = round(size_usdt / mark, 6)
+
+    # Fetch symbol's contract spec for tick-size + size-step snapping.
+    # Cached after first lookup so this is essentially free.
+    spec = get_contract_spec(symbol)
+    pp   = spec["price_place"]
+    vp   = spec["vol_place"]
+
+    size_contracts = round(size_usdt / mark, vp)
+
+    # --- Pre-flight validation: TP must be on correct side of CURRENT mark ---
+    # When the market moved during the scanner's compute window, our
+    # pre-computed TP might now be on the wrong side of mark. Bitget
+    # rejects with error 40830. Bump it to a safe minimum (mark ± 0.5%)
+    # so the order can place; if the trade thesis stays valid the price
+    # will keep moving and we'll catch the bigger TP via the trail rule.
+    is_long = (side == "long")
+    if tp1_price:
+        if is_long and tp1_price <= mark:
+            tp1_price = mark * 1.005   # nudge above mark by 0.5%
+        if not is_long and tp1_price >= mark:
+            tp1_price = mark * 0.995
+    if sl_price:
+        # SL must be on the LOSING side of mark; if it's already past,
+        # refuse the order — placing it would mean instant stop-out.
+        if is_long and sl_price >= mark:
+            raise TraderAPIError(
+                f"SL {sl_price} is already past mark {mark} for long {symbol} — refusing"
+            )
+        if not is_long and sl_price <= mark:
+            raise TraderAPIError(
+                f"SL {sl_price} is already past mark {mark} for short {symbol} — refusing"
+            )
+
+    # --- Snap every price to the symbol's tick grid ---
+    sl_price  = _snap_price(sl_price,  pp)
+    tp1_price = _snap_price(tp1_price, pp)
+    tp2_price = _snap_price(tp2_price, pp)
 
     body = {
         "symbol":       symbol,
@@ -272,7 +359,7 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
         "marginMode":   "isolated",
         "marginCoin":   "USDT",
         "size":         str(size_contracts),
-        "side":         "buy" if side == "long" else "sell",
+        "side":         "buy" if is_long else "sell",
         "tradeSide":    "open",
         "orderType":    "market",
         "force":        "gtc",
