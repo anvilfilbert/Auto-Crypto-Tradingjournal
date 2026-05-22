@@ -233,7 +233,7 @@ def _score_finalists_with_agents(finalists: list, conn,
             # the model id rather than an archetype.
             try:
                 from scanner_prompts import _detect_archetype as _det_arch
-                archetype = _det_arch(ctx, direction)
+                archetype = _det_arch(ctx, direction, symbol=sym)
             except Exception:
                 archetype = ""
 

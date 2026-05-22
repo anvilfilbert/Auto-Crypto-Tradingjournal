@@ -21,37 +21,35 @@ from scanner_criteria import CRITERIA_DEFAULTS, _disabled_criteria_block
 logger = logging.getLogger(__name__)
 
 
-def _detect_archetype(ctx: dict, direction: str) -> str:
+def _detect_archetype(ctx: dict, direction: str, symbol: str = "") -> str:
     """
     Detect the most likely setup archetype from 4H indicators.
-    Returns: "reversal" | "breakout" | "continuation"
+    Returns one of: "breakout" | "reversal" | "continuation" |
+                    "range_bound" | "low_conviction"
 
-    Reversal: WaveTrend crossover at RSI extremes (price exhausted, about to turn)
-    Breakout: Volume spike + momentum RSI + rising ADX (price escaping consolidation)
-    Continuation: Default — trend is established, looking for pullback entry
+    Delegates to setup_classifier.classify_rules which uses:
+      - multi-signal voting (each archetype gets a 0..N score)
+      - WT-cross lookback over last 3 bars (fixes the "0 reversals"
+        blind spot where WT only fires on the exact crossover candle)
+      - 5-archetype taxonomy so 'continuation' stops being the
+        dump-bucket for everything else
+
+    Falls back to 'continuation' on classifier failure to preserve
+    behaviour for downstream rubric selection.
     """
-    inds = ctx.get("4H", {}).get("indicators", {}) or {}
-    wt       = inds.get("wavetrend", {}) or {}
-    rsi_val  = (inds.get("rsi",    {}) or {}).get("value",  50)
-    vol_ratio= (inds.get("volume", {}) or {}).get("ratio",   1.0)
-    adx_val  = (inds.get("adx",    {}) or {}).get("value",  20)
-
-    wt_signal = wt.get("signal", "")
-    is_long   = direction.lower() == "long"
-
-    # Reversal: WaveTrend crossover at RSI extremes
-    if wt_signal in ("gold_buy", "buy") and rsi_val < 38:
-        return "reversal"
-    if wt_signal == "sell" and rsi_val > 62:
-        return "reversal"
-
-    # Breakout: volume spike + RSI in momentum zone + some trend starting
-    if vol_ratio > 1.8 and adx_val > 18:
-        if is_long and 50 < rsi_val < 78:
-            return "breakout"
-        if not is_long and 22 < rsi_val < 50:
-            return "breakout"
-
+    try:
+        from setup_classifier import classify_rules
+        import chart_candles as _cc
+        # Try to re-use the candles the ctx fetcher already has. The ctx
+        # dict shape doesn't expose raw candles, so refetch — chart_candles
+        # has its own LRU cache so this is cheap.
+        # Symbol is required for the fetch; callers that don't have one
+        # can pass it explicitly via the new keyword arg.
+        if symbol:
+            df = _cc.get_candles(symbol, "4H", limit=200)
+            return classify_rules(symbol, direction, "", candles_df=df)["archetype"]
+    except Exception:
+        pass
     return "continuation"
 
 
@@ -194,7 +192,7 @@ def _build_prompt(symbol, ctx, conf, direction, mkt_str, history, rulebook_str, 
     rb_block   = f"\nTRADER RULEBOOK (known patterns — respect these):\n{rulebook_str}\n" if rulebook_str else ""
     macro_header = _build_macro_header(macro_ctx or {})
 
-    archetype = archetype or _detect_archetype(ctx, direction)
+    archetype = archetype or _detect_archetype(ctx, direction, symbol=symbol)
     rubric_block = _archetype_rubric(archetype, direction, min_score)
 
     return f"""{macro_header}You are a professional crypto futures analyst. Score the current {direction.upper()} setup for {symbol} on a 1-10 scale and provide specific trade parameters.
@@ -451,7 +449,7 @@ def _build_batch_prompt(finalists, histories, min_score=SCANNER_MIN_SCORE, crite
         conf_line = f"{conf['label']} ({conf['bullish']}↑/{conf['bearish']}↓)"
         ns      = (nansen_signals or {}).get(symbol, {})
         ns_line = f"\n{ns['prompt_line']}" if ns.get("ok") else ""
-        archetype = _detect_archetype(ctx, direction)
+        archetype = _detect_archetype(ctx, direction, symbol=symbol)
         atr_str = f"1H ATR:{atr_1h:.4g}  4H ATR:{atr_4h:.4g}" if atr_1h else f"4H ATR:{atr_4h:.4g}"
         pt_1h_block = f"\n{pt_1h}" if pt_1h else ""
 
