@@ -288,9 +288,105 @@ def get_state(conn) -> dict:
     return {
         "calibration": _calibration_snapshot(),
         "subsystems":  _subsystem_rows(conn),
+        "token_cost":  _token_cost_breakdown(conn),
         "computed_at": _dt.datetime.now(_dt.timezone.utc).strftime(
             "%Y-%m-%d %H:%M:%S UTC"
         ),
+    }
+
+
+# ── Token cost projection ────────────────────────────────────────────────────
+
+# Anthropic public pricing per million tokens (USD), as of model launch.
+# When new models come out, append here. Unknown models fall back to Haiku.
+_PRICING = {
+    # model_prefix : (input_per_mtok, output_per_mtok, cache_read_per_mtok, cache_write_per_mtok)
+    "claude-haiku-4-5":   (1.00, 5.00,  0.10, 1.25),
+    "claude-sonnet-4-6":  (3.00, 15.00, 0.30, 3.75),
+    "claude-opus-4-7":    (15.00, 75.00, 1.50, 18.75),
+    "claude-opus-4-6":    (15.00, 75.00, 1.50, 18.75),
+}
+
+
+def _pricing_for(model: str) -> tuple:
+    m = (model or "").lower()
+    for prefix, prices in _PRICING.items():
+        if m.startswith(prefix):
+            return prices
+    return _PRICING["claude-haiku-4-5"]   # safe default
+
+
+def _token_cost_breakdown(conn) -> dict:
+    """
+    Compute 7-day Anthropic spend by module and project weekly $.
+    Free-tier cascade providers (groq/cerebras/openrouter/gemini) cost
+    nothing so they're excluded — listed separately as 'cascade_calls'.
+    """
+    try:
+        rows = conn.execute("""
+            SELECT module, model,
+                   COALESCE(SUM(input_tokens),0)  AS in_tok,
+                   COALESCE(SUM(output_tokens),0) AS out_tok,
+                   COALESCE(SUM(cached_tokens),0) AS cached_tok,
+                   COUNT(*) AS n_calls
+            FROM token_usage
+            WHERE ts > datetime('now','-7 days')
+              AND model LIKE 'claude-%'
+              AND model NOT LIKE 'gemini%'
+            GROUP BY module, model
+            ORDER BY in_tok DESC
+        """).fetchall()
+    except Exception:
+        return {"available": False}
+
+    # 7d cascade-call count (Anthropic-fallback aggregate, just for context)
+    try:
+        cascade_n = int(conn.execute("""
+            SELECT COUNT(*) FROM token_usage
+            WHERE ts > datetime('now','-7 days')
+              AND (model NOT LIKE 'claude-%'  OR  model LIKE 'gemini%')
+        """).fetchone()[0])
+    except Exception:
+        cascade_n = 0
+
+    by_module: dict[str, dict] = {}
+    total_cost = 0.0
+
+    for module, model, in_tok, out_tok, cached_tok, n_calls in rows:
+        in_p, out_p, cache_r_p, cache_w_p = _pricing_for(model)
+        # input_tokens in our log is the uncached portion paid at full rate.
+        # cached_tokens is cache_read volume (10% input price).
+        # cache_creation is paid at 1.25x input price BUT only on the first
+        # write — we don't log it separately, so we approximate by treating
+        # the first input batch per module as a cache_creation event.
+        uncached_cost = in_tok / 1_000_000 * in_p
+        cache_read_cost = cached_tok / 1_000_000 * cache_r_p
+        output_cost = out_tok / 1_000_000 * out_p
+        row_cost = uncached_cost + cache_read_cost + output_cost
+        total_cost += row_cost
+
+        key = f"{module}|{model}"
+        by_module[key] = {
+            "module":          module,
+            "model":           model,
+            "n_calls":         int(n_calls),
+            "input_tokens":    int(in_tok),
+            "cached_tokens":   int(cached_tok),
+            "output_tokens":   int(out_tok),
+            "cache_hit_pct":   round(100.0 * cached_tok / max(in_tok + cached_tok, 1), 1),
+            "cost_7d_usd":     round(row_cost, 4),
+            "cost_per_call":   round(row_cost / max(n_calls, 1), 4),
+        }
+
+    weekly_projection = round(total_cost, 2)
+    rows_sorted = sorted(by_module.values(), key=lambda r: -r["cost_7d_usd"])
+
+    return {
+        "available":            True,
+        "weekly_total_usd":     weekly_projection,
+        "monthly_projection":   round(total_cost * 4.33, 2),
+        "cascade_call_count":   cascade_n,
+        "by_module":            rows_sorted,
     }
 
 

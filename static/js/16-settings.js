@@ -481,12 +481,77 @@ async function loadKnowledgeState() {
     });
     tblWrap.appendChild(tbl);
 
+    // Token cost breakdown
+    const costEl = _buildTokenCostPanel(d.token_cost || {});
+
     while (el.firstChild) el.removeChild(el.firstChild);
     el.appendChild(calEl);
     el.appendChild(tblWrap);
+    if (costEl) el.appendChild(costEl);
   } catch (e) {
     el.textContent = 'Failed: ' + e.message;
   }
+}
+
+
+function _buildTokenCostPanel(tc) {
+  if (!tc || !tc.available) return null;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:14px';
+
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:8px';
+  hdr.textContent = `Anthropic spend (7d) — $${tc.weekly_total_usd ?? 0} · projected monthly $${tc.monthly_projection ?? 0} · plus ${tc.cascade_call_count ?? 0} free-tier cascade calls`;
+  wrap.appendChild(hdr);
+
+  const rows = tc.by_module || [];
+  if (!rows.length) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size:.78rem;color:var(--muted)';
+    empty.textContent = 'No Anthropic calls in the last 7 days.';
+    wrap.appendChild(empty);
+    return wrap;
+  }
+
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem';
+  const thead = tbl.createTHead();
+  const hrow = thead.insertRow();
+  ['Module','Model','Calls','In tok','Cached','Out','Cache %','$ 7d','$/call'].forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--border)';
+    hrow.appendChild(th);
+  });
+  const tb = tbl.createTBody();
+  rows.forEach(r => {
+    const tr = tb.insertRow();
+    const cells = [
+      r.module,
+      (r.model || '').replace('claude-', '').replace('-20251001', ''),
+      r.n_calls,
+      (r.input_tokens || 0).toLocaleString(),
+      (r.cached_tokens || 0).toLocaleString(),
+      (r.output_tokens || 0).toLocaleString(),
+      (r.cache_hit_pct ?? 0) + '%',
+      '$' + (r.cost_7d_usd ?? 0).toFixed(4),
+      '$' + (r.cost_per_call ?? 0).toFixed(4),
+    ];
+    cells.forEach((v, i) => {
+      const td = tr.insertCell();
+      td.textContent = v;
+      // Highlight cache % column: green if >=50, yellow 20-50, red <20
+      let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
+      if (i === 6) {
+        const pct = r.cache_hit_pct || 0;
+        const c = pct >= 50 ? 'var(--accent3)' : pct >= 20 ? 'var(--yellow)' : 'var(--red)';
+        cls = `padding:4px 8px;border-bottom:1px solid var(--border);color:${c};font-weight:600`;
+      }
+      td.style.cssText = cls;
+    });
+  });
+  wrap.appendChild(tbl);
+  return wrap;
 }
 
 
