@@ -80,12 +80,11 @@ def on_scan_completed(scanner_state: dict) -> dict:
         "errors":                0,
     }
 
-    # Race-condition fix: track positions opened during THIS batch so the
-    # concurrent-position cap is honoured even when multiple setups would
-    # otherwise pass the same kill_switch read (each read sees the pre-batch
-    # state). Without this counter, 5 setups all see "0 open" and all open
-    # — the bug observed in paper mode at 16:59 today.
-    opened_this_batch = 0
+    # Concurrent-position cap is enforced via kill_switch._open_position_count
+    # which queries the relevant table (paper_positions in paper mode,
+    # positions WHERE chain='auto_ai' in real mode). Each open path
+    # commits before returning, so subsequent iterations see the
+    # updated count. No within-batch counter needed.
 
     with db_conn() as conn:
         for setup in setups:
@@ -105,17 +104,13 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     continue
                 summary["evaluated"] += 1
 
-                # 1. kill switch — augmented with the within-batch counter
-                # so the concurrent-position cap survives the loop's
-                # sequential reads of the DB state.
+                # 1. kill switch — _open_position_count already reflects
+                # newly-opened positions in this batch because each open
+                # path (paper.open_paper_trade / executor.open_real_trade)
+                # commits the INSERT before returning. The earlier
+                # opened_this_batch addition double-counted those, halving
+                # the effective cap. Now we trust the DB count alone.
                 can_trade, reason = kill_switch.can_open_new_trade(conn)
-                if can_trade:
-                    n_after = kill_switch._open_position_count(conn) + opened_this_batch
-                    if n_after >= fa_config.MAX_CONCURRENT_POSITIONS:
-                        can_trade = False
-                        reason = (f"would exceed MAX_CONCURRENT_POSITIONS "
-                                  f"({n_after}/{fa_config.MAX_CONCURRENT_POSITIONS}) "
-                                  f"after {opened_this_batch} opens already in this batch")
                 if not can_trade:
                     summary["rejected_killswitch"] += 1
                     _log(conn, "rejected_killswitch", setup, reason)
@@ -182,13 +177,11 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 if fa_config.is_real_mode():
                     opened_ok = _open_real(conn, signal, sizing)
                     if opened_ok:
-                        summary["opened"]    += 1
-                        opened_this_batch    += 1
+                        summary["opened"] += 1
                 else:
                     pid = paper.open_paper_trade(conn, signal, sizing)
                     if pid:
-                        summary["opened"]    += 1
-                        opened_this_batch    += 1
+                        summary["opened"] += 1
             except Exception as e:
                 summary["errors"] += 1
                 _log(conn, "orchestrator_error", setup, str(e)[:200])

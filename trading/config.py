@@ -54,7 +54,7 @@ RISK_SCORE_MULTIPLIERS = {7: 1.0, 8: 1.5, 9: 2.0, 10: 2.0}
 # Hard ceilings — order size never exceeds these regardless of score
 MAX_LEVERAGE              = 10
 MAX_NOTIONAL_USDT         = 25.0   # $25 notional per trade on $100 bankroll
-MAX_CONCURRENT_POSITIONS  = 3
+MAX_CONCURRENT_POSITIONS  = 5      # raised 3→5 (2026-05-22) — operator request
 
 # Circuit breakers (auto-trip → state goes to "circuit_breaker") — these
 # are CAPITAL-PRESERVATION rules only. Strategic rules (which day, which
