@@ -69,17 +69,55 @@ def _is_in_kill_zone(utc_hour: int = None) -> bool:
     return (7 <= h < 10) or (12 <= h < 15)
 
 
+# Hours where THIS trader's own data shows net losses despite decent WR.
+# Derived from 90d analytics: UTC 13 (-$52), 15 (-$145), 19 (-$143), 20 (-$26).
+# Combined = -$365 (60% of NY-session total loss). Entries opened in these
+# hours get score-capped so the AI can't surface fresh setups during the
+# trader's historically toxic windows.
+PERSONAL_BAD_HOURS_UTC: set[int] = {13, 15, 19, 20}
+PERSONAL_BAD_HOUR_CAP  = 5.5   # below SCANNER_MIN_SCORE=7 → effectively blocked
+
+
+def _is_in_personal_bad_hour(utc_hour: int = None) -> bool:
+    """
+    Per-trader rule: hours 13, 15, 19, 20 UTC have negative expectancy
+    in this trader's history. Not the same as institutional kill zones —
+    those flag *all* trades; this flags the trader's specific dead spots.
+    """
+    h = utc_hour if utc_hour is not None else datetime.datetime.utcnow().hour
+    return h in PERSONAL_BAD_HOURS_UTC
+
+
+def _apply_personal_bad_hour_cap(score: float, utc_hour: int = None
+                                  ) -> tuple[float, list[str]]:
+    """Cap score during the trader's known bad hours so the scanner can
+    not surface a fresh entry inside a -$285 leak window. Returns
+    (capped_score, warnings)."""
+    warnings: list[str] = []
+    if _is_in_personal_bad_hour(utc_hour) and score > PERSONAL_BAD_HOUR_CAP:
+        h = utc_hour if utc_hour is not None else datetime.datetime.utcnow().hour
+        warnings.append(
+            f"UTC hour {h:02d} is in personal bad-hour set "
+            f"{sorted(PERSONAL_BAD_HOURS_UTC)} (90d P&L -$365) — score capped at {PERSONAL_BAD_HOUR_CAP}"
+        )
+        score = min(score, PERSONAL_BAD_HOUR_CAP)
+    return score, warnings
+
+
 def _annotate_kill_zone(result: dict, utc_hour: int = None) -> dict:
     """
-    Append '⚠ Outside kill zone' to the urgency field when outside institutional windows.
-    No-op when inside a kill zone. Returns the result dict (mutated in place).
+    Append warnings to the urgency field:
+      - '⚠ Outside kill zone' when outside institutional London/NY-AM windows
+      - '⚠ Personal bad-hour window' when in the trader's known dead spots
     """
-    if _is_in_kill_zone(utc_hour):
+    notes: list[str] = []
+    if not _is_in_kill_zone(utc_hour):
+        notes.append("⚠ Outside kill zone")
+    if _is_in_personal_bad_hour(utc_hour):
+        notes.append("⛔ Personal bad-hour window")
+    if not notes:
         return result
-    warning = "⚠ Outside kill zone"
-    if "urgency" in result:
-        existing = result["urgency"]
-        result["urgency"] = (existing + " " + warning).strip() if existing else warning
-    else:
-        result["urgency"] = warning
+    warning = " ".join(notes)
+    existing = result.get("urgency") or ""
+    result["urgency"] = (existing + " " + warning).strip() if existing else warning
     return result

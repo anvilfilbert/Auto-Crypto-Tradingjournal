@@ -16,6 +16,7 @@ import time
 import bitget_client
 import telegram_notify
 import agent_orchestrator
+import position_risk_monitor
 from constants import MONITOR_INTERVAL, MONITOR_THRESHOLD_PCT, MONITOR_THRESHOLD_DURATION
 from database import db_conn
 
@@ -64,6 +65,20 @@ def _run_once():
 
     print(f"[Monitor] Checking {len(to_check)}/{len(positions)} positions", flush=True)
 
+    # Pass 1 — deterministic SL-discipline checks on EVERY open position,
+    # not just the filtered ones. These are cheap (single ATR_4H lookup)
+    # and idempotent. Fires per-position alerts on BE trigger / MAE breach.
+    for pos in positions:
+        try:
+            for alert in position_risk_monitor.check(pos) or []:
+                _send_risk_alert(alert)
+                print(f"[Monitor] {alert['kind']} {alert['symbol']}: "
+                      f"{alert['current_pct']}% (threshold {alert['threshold_pct']}%)",
+                      flush=True)
+        except Exception as e:
+            print(f"[Monitor] Risk-check error for {pos.get('symbol','?')}: {e}",
+                  flush=True)
+
     for pos in to_check:
         symbol = pos.get("symbol", "?")
         try:
@@ -102,6 +117,37 @@ def _monitor_alerts_enabled() -> bool:
         return (row is None) or (row[0] == '1')
     except Exception:
         return True
+
+
+def _send_risk_alert(alert: dict):
+    """Push a position_risk_monitor alert to Telegram + flag the linked
+    call so the UI shows the badge. Honors telegram_monitor_enabled."""
+    sym = alert.get("symbol", "?")
+    try:
+        with db_conn() as conn:
+            conn.execute(
+                """UPDATE analyzed_calls SET monitor_alert=1
+                   WHERE symbol=? AND status IN ('matched','saved')""",
+                (sym,),
+            )
+            conn.commit()
+    except Exception:
+        pass
+
+    if not _monitor_alerts_enabled():
+        return
+
+    emoji = "⚠" if alert["kind"] == "MAE_BREACH" else "🛡"
+    msg = (
+        f"{emoji} *{alert['title']}*\n"
+        f"{alert['body']}\n\n"
+        f"Entry: `{alert['entry']}`  Mark: `{alert['mark']}`  "
+        f"ATR_4H: {alert['atr_pct']}%"
+    )
+    try:
+        telegram_notify.send_message(msg)
+    except Exception as e:
+        print(f"[Monitor] Risk-alert Telegram failed: {e}", flush=True)
 
 
 def _send_monitor_alert(position: dict, result: dict):

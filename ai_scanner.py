@@ -195,6 +195,11 @@ def _score_finalists_with_agents(finalists: list, conn,
             score, macro_warnings = _apply_macro_cap(float(score), macro)
             if macro_warnings:
                 logger.info("macro cap applied to %s: %s", sym, "; ".join(macro_warnings))
+            # Apply per-trader bad-hour cap (UTC 13/15/19/20 = -$365 in 90d)
+            from scanner_criteria import _apply_personal_bad_hour_cap
+            score, bh_warnings = _apply_personal_bad_hour_cap(score)
+            if bh_warnings:
+                logger.info("bad-hour cap applied to %s: %s", sym, "; ".join(bh_warnings))
             if score < min_score:
                 continue
             entry_p = float(prep.get("entry_price", 0) or 0)
