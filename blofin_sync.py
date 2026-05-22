@@ -112,6 +112,23 @@ def _sync_positions(conn) -> int:
         except Exception:
             pass
 
+    # Populate MFE/MAE on newly inserted positions (1H candle window per trade).
+    if inserted > 0:
+        try:
+            import mfe_mae as _mfe
+            new_ids = [r[0] for r in conn.execute(
+                "SELECT id FROM positions WHERE mfe_pct IS NULL AND exchange='blofin' "
+                "ORDER BY id DESC LIMIT ?", (inserted,)
+            ).fetchall()]
+            done = 0
+            for pid in new_ids:
+                if _mfe.update_position(conn, pid):
+                    done += 1
+            if done:
+                conn.commit()
+        except Exception:
+            pass
+
     return inserted
 
 

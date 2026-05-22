@@ -32,4 +32,14 @@ DRAW_ON_LIQUIDITY_RULES = """TAKE-PROFIT TARGETING:
 Prefer TP targets that coincide with visible liquidity pools — equal highs/lows,
 prior swing highs/lows, previous ATH/ATL, or untested fair value gaps — rather
 than arbitrary R:R multiples. Name the specific level and why liquidity rests there.
-A TP at a swing high where stop-losses cluster is higher quality than a round-number TP.""".strip()
+A TP at a swing high where stop-losses cluster is higher quality than a round-number TP.
+
+TP1 MINIMUM DISTANCE — HARD RULE:
+TP1 must be at LEAST 1.0 × ATR_4H away from entry. A TP1 closer than 1×ATR will
+print on noise alone — empirically that pattern produces a 96% hit rate but
+average winners ~$10 against average losers ~$21 (1:2 R:R against the trader).
+If the nearest valid liquidity level is closer than 1×ATR, either:
+  - move TP1 to the NEXT structural level past 1×ATR, or
+  - keep TP1 there but explicitly justify why it's still a high-quality target
+    in tp1_rationale (e.g. 'pre-event close before macro release').
+TP2 should be at least 2.0 × ATR_4H to reward leaving runners on.""".strip()

@@ -17,7 +17,9 @@ NANSEN_CACHE_TTL       = 1800   # 30 min — Nansen smart money cache
 ACCURACY_TARGET        = 35     # calls needed for 85% statistical confidence
 
 # ── Scanner pipeline ──────────────────────────────────────────────────────────
-SCANNER_MIN_SCORE         = 6
+SCANNER_MIN_SCORE         = 7   # raised from 6: hindsight showed score-6 = 50/50,
+                                # score 7-8 = 86.5% TP rate. Scanner shouldn't
+                                # surface borderline setups it can't predict.
 SCANNER_FULL_DETAIL_TOP_N = 6   # was 12 — halved to fit free-tier 30 RPM cascade burst budget (2026-05-20)
 SCANNER_MAX_WORKERS       = 4   # ThreadPoolExecutor — tuned to Pi 4-core CPU
 

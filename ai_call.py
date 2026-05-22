@@ -23,6 +23,7 @@ from helpers import strip_fence, build_cached_messages
 import market_context
 import prompt_builder
 import trade_utils
+import chart_context
 import gemini_client
 import agent_orchestrator
 
@@ -331,6 +332,34 @@ def analyze_call(call_text: str, account_equity: float,
                                    or result.get("tp2_price")
                                    or result.get("tp2") or 0.0)
     result["rr_ratio"]          = analysis.get("rr_ratio") or result.get("rr_ratio") or 0.0
+
+    # Enforce TP1 ≥ 1× ATR_4H, TP2 ≥ 2× ATR_4H from entry. The prompt rule
+    # is informational; this is the hard guard. Looks up ATR_4H via the
+    # chart context that was already fetched upstream; if unavailable
+    # (network blip etc.) the floor is skipped rather than mis-adjusting.
+    try:
+        ctx_4h = (chart_context.get_chart_context(symbol, ["4H"]) or {}).get("4H", {})
+        atr_4h = (ctx_4h.get("indicators", {}).get("atr", {}) or {}).get("value", 0)
+        if atr_4h:
+            new_tp1, new_tp2, tp_notes = trade_utils.enforce_tp_floor(
+                result["entry_price"], result["direction"],
+                result["tp1_price"], result["tp2_price"], atr_4h,
+            )
+            if tp_notes:
+                result["tp1_price"] = new_tp1
+                result["tp2_price"] = new_tp2
+                result["_tp_adjustments"] = tp_notes
+                # Reflect into bitget_settings so the routes layer sees the floor too
+                bs = result.get("bitget_settings", {}) or {}
+                tp1_blk = bs.get("take_profit_1", {}) or {}
+                tp2_blk = bs.get("take_profit_2", {}) or {}
+                tp1_blk["price"] = new_tp1
+                tp2_blk["price"] = new_tp2
+                bs["take_profit_1"] = tp1_blk
+                bs["take_profit_2"] = tp2_blk
+                result["bitget_settings"] = bs
+    except Exception:
+        pass
 
     result["_call_text"]        = call_text
     result["_history"]          = {}

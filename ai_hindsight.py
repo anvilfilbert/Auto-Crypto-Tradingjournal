@@ -38,7 +38,10 @@ from helpers import strip_fence, build_cached_messages
 import chart_context
 import ai_rulebook
 
-ENTER_THRESHOLD = 6   # score ≥ 6 = ENTER; score 5 = NEUTRAL borderline; score < 5 = SKIP
+ENTER_THRESHOLD = 7   # raised from 6 after hindsight showed score-6 was 50/50:
+                      # score 6: 8 TP / 8 FP (50% WR — coin flip)
+                      # score 7-8: 32 TP / 5 FP (86.5% WR — real edge)
+                      # ≥7 ENTER, 5-6 NEUTRAL, <5 SKIP
 
 # ── Batch scan state ───────────────────────────────────────────────────────────
 
@@ -240,20 +243,21 @@ def _compute_comparison(result: dict, trade: dict) -> dict:
     # to avoid crediting phantom direction agreement.
     direction_match = (rec_dir == actual_dir) if rec_dir else bool(would_enter)
 
-    # hypothetical P&L
+    # hypothetical P&L. Threshold raised to 7 — scores 5-6 now both
+    # treated as NEUTRAL borderline since 6 was empirically 50/50.
     if score < 5:
         hyp_pnl = 0.0               # clear SKIP
-    elif score == 5:
+    elif score in (5, 6):
         hyp_pnl = actual_pnl        # borderline neutral — include as-is
     elif would_enter and direction_match:
-        hyp_pnl = actual_pnl        # entered same trade
+        hyp_pnl = actual_pnl        # entered same trade (score ≥ 7)
     elif would_enter and not direction_match:
         hyp_pnl = 0.0               # direction conflict, skip
     else:
         hyp_pnl = 0.0               # SKIP
 
-    # verdict — score 5 is borderline NEUTRAL; ≥6 and <5 generate real signals
-    if score == 5:
+    # verdict — scores 5 and 6 are NEUTRAL; ≥7 and <5 generate real signals
+    if score in (5, 6):
         verdict = "NEUTRAL"
     elif would_enter and direction_match and actual_pnl > 0:
         verdict = "TP"

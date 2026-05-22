@@ -177,6 +177,27 @@ def _sync_positions(conn) -> int:
         except Exception:
             pass
 
+    # Compute MFE/MAE on newly inserted positions. Each call fetches 1H
+    # candles for the trade window so we cap to recent rows that lack
+    # the values to avoid hammering the candles API on every sync.
+    if inserted > 0:
+        try:
+            import mfe_mae as _mfe
+            new_ids = [r[0] for r in cur.execute(
+                "SELECT id FROM positions WHERE mfe_pct IS NULL "
+                "ORDER BY id DESC LIMIT ?", (inserted,)
+            ).fetchall()]
+            done = 0
+            for pid in new_ids:
+                if _mfe.update_position(conn, pid):
+                    done += 1
+            if done:
+                conn.commit()
+                print(f"[Sync] Populated MFE/MAE for {done}/{len(new_ids)} new positions",
+                      flush=True)
+        except Exception as e:
+            print(f"[Sync] MFE/MAE step failed: {e}", flush=True)
+
     return inserted
 
 

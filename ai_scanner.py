@@ -205,6 +205,23 @@ def _score_finalists_with_agents(finalists: list, conn,
             urgency = ("Now" if score >= 9 else
                        "1-4h" if score >= 8 else
                        "Today" if score >= 7 else "1-3 days")
+
+            # Enforce TP1 ≥ 1× ATR_4H, TP2 ≥ 2× ATR_4H. The agent pipeline
+            # historically produced very tight TPs that printed on noise.
+            tp1_raw = prep.get("tp1_price", 0)
+            tp2_raw = prep.get("tp2_price", 0)
+            try:
+                import trade_utils as _tu
+                atr_4h = ((ctx.get("4H", {}).get("indicators", {})
+                                       .get("atr") or {}).get("value", 0))
+                if atr_4h:
+                    tp1_raw, tp2_raw, _tp_notes = _tu.enforce_tp_floor(
+                        entry_p, direction, tp1_raw, tp2_raw, atr_4h)
+                else:
+                    _tp_notes = []
+            except Exception:
+                _tp_notes = []
+
             setup = {
                 "_symbol":        sym,
                 "symbol":         sym,
@@ -214,8 +231,9 @@ def _score_finalists_with_agents(finalists: list, conn,
                 "entry_zone":     {"low": entry_p, "high": entry_p,
                                    "rationale": "Agent pipeline entry level"},
                 "sl_price":       prep.get("sl_price", 0),
-                "tp1_price":      prep.get("tp1_price", 0),
-                "tp2_price":      prep.get("tp2_price", 0),
+                "tp1_price":      tp1_raw,
+                "tp2_price":      tp2_raw,
+                "_tp_adjustments": _tp_notes,
                 "rr_ratio":       prep.get("rr_ratio", 0),
                 "key_conditions": prep.get("key_conditions", []),
                 "chart_png_b64":  prep.get("chart_png_b64", ""),

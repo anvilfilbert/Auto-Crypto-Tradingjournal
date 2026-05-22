@@ -310,19 +310,31 @@ def auto_match_calls(conn, exchange: str = "bitget") -> int:
         # Look up candidate calls (newest first) and accept the first one whose
         # reference price is within 20% of the position's entry. Without this,
         # an analyst-feed parser misread can attach a wildly off-scale call.
-        candidates = cur.execute("""
+        #
+        # Includes 'matched' calls that aren't yet linked to any position: the
+        # live check-matches endpoint promotes calls to status='matched' while
+        # the position is still open (no DB row exists yet), so by the time
+        # the position closes there's an orphan-matched call waiting for the
+        # call_id link. Without including 'matched' here, 99% of positions
+        # stayed unlinked and setup_type tagging never fired.
+        already_linked_clause = (
+            "AND id NOT IN (SELECT call_id FROM positions "
+            "               WHERE call_id IS NOT NULL AND id != ?)"
+        )
+        candidates = cur.execute(f"""
             SELECT id, avg_entry, entry_price
             FROM analyzed_calls
             WHERE symbol    = ?
               AND direction LIKE ?
-              AND status    = 'saved'
+              AND status    IN ('saved','matched')
               AND entry_price IS NOT NULL
               AND sl_price    IS NOT NULL
               AND created_at >= datetime(?, '-30 days')
               AND created_at <= ?
+              {already_linked_clause}
             ORDER BY created_at DESC
             LIMIT 5
-        """, (symbol, dir_filter + "%", open_time or "9999", open_time or "9999")).fetchall()
+        """, (symbol, dir_filter + "%", open_time or "9999", open_time or "9999", pos_id)).fetchall()
 
         call = None
         for c in candidates:

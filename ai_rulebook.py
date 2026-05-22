@@ -255,6 +255,10 @@ def _collect_stats(conn) -> dict:
         FROM positions WHERE setup_type IS NOT NULL AND setup_type != ''
         GROUP BY setup_type HAVING n >= 5 ORDER BY n DESC
     """)
+    # Sort by total_pnl (expectancy proxy) instead of win_rate — a day with 69%
+    # WR but -$105 P&L is worse than one with 75% WR and +$166. The miner used
+    # to pick rules off WR alone, which produced misleading 'avoid Monday'
+    # rules where Monday's WR was actually fine; the real signal is expectancy.
     by_weekday = rows("""
         SELECT CASE strftime('%w',close_time)
                  WHEN '0' THEN 'Sunday' WHEN '1' THEN 'Monday' WHEN '2' THEN 'Tuesday'
@@ -262,8 +266,9 @@ def _collect_stats(conn) -> dict:
                  ELSE 'Saturday' END AS day,
                COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
-               ROUND(AVG(realized_pnl),2) AS avg_pnl
-        FROM positions GROUP BY day HAVING n >= 5 ORDER BY win_rate DESC
+               ROUND(AVG(realized_pnl),2) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions GROUP BY day HAVING n >= 5 ORDER BY total_pnl DESC
     """)
     by_session = rows("""
         SELECT CASE
@@ -274,8 +279,9 @@ def _collect_stats(conn) -> dict:
                END AS session,
                COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
-               ROUND(AVG(realized_pnl),2) AS avg_pnl
-        FROM positions GROUP BY session HAVING n >= 5 ORDER BY win_rate DESC
+               ROUND(AVG(realized_pnl),2) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions GROUP BY session HAVING n >= 5 ORDER BY total_pnl DESC
     """)
     by_direction = rows("""
         SELECT direction, COUNT(*) AS n,
@@ -294,9 +300,10 @@ def _collect_stats(conn) -> dict:
                END AS bucket,
                COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
-               ROUND(AVG(realized_pnl),2) AS avg_pnl
+               ROUND(AVG(realized_pnl),2) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
         FROM positions WHERE duration_minutes IS NOT NULL
-        GROUP BY bucket HAVING n >= 5 ORDER BY win_rate DESC
+        GROUP BY bucket HAVING n >= 5 ORDER BY total_pnl DESC
     """)
     by_grade = rows("""
         SELECT execution_grade AS grade, COUNT(*) AS n,
@@ -393,6 +400,13 @@ def _ask_claude(stats: dict, total: int) -> list:
         "  strength    — winning pattern to exploit more\n"
         "  habit       — execution discipline note (positive or negative)\n"
         "  calibration — note about how accurate setup scores have been\n\n"
+        "PRIORITISATION RULES (IMPORTANT):\n"
+        "  - Optimise rules on EXPECTANCY (total_pnl or avg_pnl × n), NOT on win_rate alone.\n"
+        "  - A bucket with 70% WR but negative total_pnl is a *loser* — the wins are too small "
+        "or the losses too large. Treat it as a warning, not a strength.\n"
+        "  - Conversely, a 50% WR bucket with strongly positive total_pnl IS a strength "
+        "(the R:R compensates for the lower hit rate).\n"
+        "  - Always cite both win_rate AND total_pnl when justifying a day/session/setup rule.\n\n"
         "Only write rules supported by the data (min 5 trades per pattern). "
         "Skip categories with insufficient data.\n\n"
         "Return ONLY valid JSON. No markdown. No prose outside the JSON array.\n"

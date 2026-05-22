@@ -40,6 +40,68 @@ def atr_sl_warning(symbol: str, entry: float, sl: float) -> str:
     return ""
 
 
+# TP minimum distance enforcement. Hindsight (60d, n=225 scanner setups)
+# showed a 96% TP1 hit rate but avg_win $10 vs avg_loss $21 — TPs were
+# printing on noise alone. 1× ATR_4H floor stops the AI from setting TP1
+# inside the bar's expected range.
+TP1_MIN_ATR_MULTIPLE = 1.0
+TP2_MIN_ATR_MULTIPLE = 2.0
+
+
+def enforce_tp_floor(entry: float, direction: str, tp1: float, tp2: float,
+                      atr_4h: float) -> tuple[float, float, list[str]]:
+    """
+    Returns (tp1_adjusted, tp2_adjusted, notes). Bumps TP1/TP2 to the
+    minimum ATR-based distance from entry when the AI returned values
+    inside the noise floor. Each adjustment is recorded in notes so the
+    caller can surface why the TP changed.
+
+    Direction-aware: TP must be on the correct side of entry (above for
+    Long, below for Short) before the floor applies.
+    """
+    notes: list[str] = []
+    try:
+        entry   = float(entry or 0)
+        tp1     = float(tp1 or 0)
+        tp2     = float(tp2 or 0)
+        atr_4h  = float(atr_4h or 0)
+    except (TypeError, ValueError):
+        return tp1, tp2, notes
+    if entry <= 0 or atr_4h <= 0:
+        return tp1, tp2, notes
+
+    is_long = (direction or "").strip().lower() == "long"
+    min_tp1_dist = atr_4h * TP1_MIN_ATR_MULTIPLE
+    min_tp2_dist = atr_4h * TP2_MIN_ATR_MULTIPLE
+
+    def _floor(tp: float, min_dist: float, label: str) -> float:
+        if tp <= 0:
+            return tp
+        dist = (tp - entry) if is_long else (entry - tp)
+        if dist >= min_dist:
+            return tp
+        # AI placed TP too tight (or wrong side). Push to minimum.
+        new_tp = (entry + min_dist) if is_long else (entry - min_dist)
+        notes.append(
+            f"{label} bumped from {tp:.6g} to {new_tp:.6g} — was within "
+            f"{min_dist/atr_4h:.1f}× ATR_4H ({atr_4h:.4f}) of entry"
+        )
+        return round(new_tp, 6)
+
+    tp1_new = _floor(tp1, min_tp1_dist, "TP1")
+    tp2_new = _floor(tp2, min_tp2_dist, "TP2")
+
+    # If TP1 got bumped, make sure TP2 stays beyond TP1 (preserve laddering)
+    if tp2_new > 0 and ((is_long and tp2_new <= tp1_new) or
+                        (not is_long and tp2_new >= tp1_new)):
+        tp2_floor_for_ladder = (tp1_new + atr_4h) if is_long else (tp1_new - atr_4h)
+        if tp2_new != tp2_floor_for_ladder:
+            notes.append(f"TP2 pushed to {tp2_floor_for_ladder:.6g} to preserve TP1<TP2 ladder")
+            tp2_new = round(tp2_floor_for_ladder, 6)
+
+    return tp1_new, tp2_new, notes
+
+
 def normalize_symbol(s: str) -> str:
     """BTC/USDT, btc-usdt → BTCUSDT.""",
     return (s or '').upper().replace('/', '').replace('-', '').replace('_', '').strip()
