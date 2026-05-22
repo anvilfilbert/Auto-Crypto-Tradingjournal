@@ -137,11 +137,15 @@ def classify_rules(symbol: str, direction: str, open_time: str,
     if not is_long and 22 <= rsi <= 45:                 scores["breakout"] += 1
 
     # --- REVERSAL ---
-    # RSI gates widened from <=35/>=65 to <=40/>=60 — the strict thresholds
-    # missed 10 of 26 real reversals per AI ground truth (they ended up in
-    # low_conviction because nothing else hit floor either).
-    if is_long     and rsi <= 40:                       scores["reversal"] += 2
-    if not is_long and rsi >= 60:                       scores["reversal"] += 2
+    # RSI gates kept at <=35/>=60 after run #2 showed the widened bands
+    # (40/60) backfired: combined with the higher confidence floor, more
+    # trades qualified for ALL archetypes which made continuation/breakout
+    # outscore reversal more often. Recall AND precision both regressed.
+    # Reverted to the original strict gates — accepting lower recall (rule
+    # finds the strong reversals only) for higher precision (when it does
+    # call reversal, it's almost always right).
+    if is_long     and rsi <= 35:                       scores["reversal"] += 2
+    if not is_long and rsi >= 65:                       scores["reversal"] += 2
     if wt_recent is not None:                           scores["reversal"] += 2
     if wt_zone == ("oversold" if is_long else "overbought"):
                                                         scores["reversal"] += 1
