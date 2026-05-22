@@ -2,6 +2,15 @@ import os
 
 VERSION                = "1.6.0"
 
+# KNOWLEDGE_VERSION — bumps whenever we change a calibration that affects
+# how stored data (hindsight verdicts, setup_type labels, rulebook rules,
+# etc.) was computed. Subsystems record this version with their outputs
+# so /api/system/health can flag historical rows that need re-running
+# under the current logic. Format: YYYY-MM-DD.N (N counts within-day
+# bumps). Bump when you change ENTER_THRESHOLD, classifier taxonomy,
+# TP/SL multipliers, score caps, or the rulebook prompt.
+KNOWLEDGE_VERSION      = "2026-05-22.7"
+
 # ── Anthropic models ──────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY      = os.environ.get("ANTHROPIC_API_KEY", "")
 MODEL                  = "claude-sonnet-4-6"

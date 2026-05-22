@@ -13,6 +13,50 @@ import scanner_scheduler
 bp = Blueprint("sync", __name__)
 
 
+# ── System health + refresh ──────────────────────────────────────────────────
+
+@bp.route("/api/system/health")
+def api_system_health():
+    """Returns every subsystem's last-update + status, plus current
+    calibration constants. Used by the Knowledge State panel to flag
+    stored data that no longer aligns with current code."""
+    try:
+        import system_state
+        with db_conn() as conn:
+            return _ok(system_state.get_state(conn))
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/system/refresh-all", methods=["POST"])
+def api_system_refresh_all():
+    """One-click pipeline that re-runs every dependent backfill in the
+    right order. Use after changing a calibration constant. Pass
+    {\"ai_classify\":true} to also re-classify all setup_type labels
+    via Haiku (costs ~110 calls)."""
+    try:
+        import system_state
+        body = request.get_json(silent=True) or {}
+        ai_classify = bool(body.get("ai_classify", False))
+        with db_conn() as conn:
+            result = system_state.refresh_all(conn, run_ai_classify=ai_classify)
+        return _ok(result)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/system/refresh-state")
+def api_system_refresh_state():
+    """Poll while refresh-all is running."""
+    try:
+        import system_state
+        return _ok(system_state.get_refresh_state())
+    except Exception:
+        return _err("Internal server error", 500)
+
+
 @bp.route("/api/sync", methods=["POST"])
 def api_sync():
     try:

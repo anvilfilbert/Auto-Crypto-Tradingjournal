@@ -1806,6 +1806,32 @@ select:focus,input:focus{border-color:var(--accent)}
       <div class="page-title">Settings</div>
       <div class="page-subtitle">Exchange API credentials and connection status</div>
       <div id="settings-content" style="max-width:700px"></div>
+
+      <!-- Knowledge State — surfaces alignment between persisted data and current code -->
+      <div style="margin-top:32px;max-width:900px">
+        <div class="section-title">Knowledge State</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">
+          Each subsystem's last update + status against the current calibration constants.
+          When you change code (thresholds, rubric, classifier taxonomy), stored data
+          generated under the old logic shows yellow/red here. Use "Refresh all" to
+          run every dependent backfill in correct order.
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="btn btn-secondary btn-sm" onclick="loadKnowledgeState()">↻ Reload state</button>
+          <button class="btn btn-sm" style="background:rgba(108,99,255,.12);color:var(--accent);border:1px solid rgba(108,99,255,.3)"
+                  onclick="refreshAllSubsystems(false)" title="Re-runs invalidator, hindsight verdicts, feedback, self-review, rulebook">
+            ⚡ Refresh all (~1 min)
+          </button>
+          <button class="btn btn-sm" style="background:rgba(255,179,0,.10);color:var(--yellow);border:1px solid rgba(255,179,0,.3)"
+                  onclick="refreshAllSubsystems(true)" title="Same as above + AI re-classify all setup_type labels (~110 Haiku calls, ~5 min)">
+            ⚡ + AI re-classify
+          </button>
+        </div>
+        <div id="knowledge-state-content"
+             style="font-size:.85rem;line-height:1.5;color:var(--muted)">
+          Click "Reload state" to load.
+        </div>
+      </div>
     </div>
 
   </main>
@@ -2105,7 +2131,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/13-init.js?v=2.8"></script>
 <script src="/static/js/14-scanner.js?v=4.2"></script>
 <script src="/static/js/15-hindsight.js?v=3.1"></script>
-<script src="/static/js/16-settings.js?v=2.8"></script>
+<script src="/static/js/16-settings.js?v=2.9"></script>
 <script src="/static/js/17-risk.js?v=2.2"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">

@@ -381,3 +381,132 @@ async function runScannerCalibration() {
     if (lbl) { lbl.textContent = '✗ ' + e.message; lbl.style.color = 'var(--red)'; }
   }
 }
+
+
+// ── Knowledge State panel ────────────────────────────────────────────────────
+
+const _STATUS_COLOR = {
+  green:   'var(--accent3)',
+  yellow:  'var(--yellow)',
+  red:     'var(--red)',
+  unknown: 'var(--muted)',
+};
+
+const _STATUS_ICON = {
+  green: '✓', yellow: '⚠', red: '✗', unknown: '?',
+};
+
+function _fmtAge(min) {
+  if (min == null || min < 0) return 'never';
+  if (min < 1)   return 'just now';
+  if (min < 60)  return Math.round(min) + 'm ago';
+  if (min < 1440) return (min/60).toFixed(1) + 'h ago';
+  return (min/1440).toFixed(1) + 'd ago';
+}
+
+async function loadKnowledgeState() {
+  const el = document.getElementById('knowledge-state-content');
+  if (!el) return;
+  el.textContent = 'Loading…';
+  try {
+    const r = await api('/api/system/health');
+    if (!r.ok) throw new Error(r.error || 'failed');
+    const d = r.data;
+
+    const cal = d.calibration || {};
+    const calEl = document.createElement('div');
+    calEl.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px';
+    const calHdr = document.createElement('div');
+    calHdr.style.cssText = 'font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:8px';
+    calHdr.textContent = 'Calibration · knowledge ' + (cal.knowledge_version || '?') + ' · computed ' + (d.computed_at || '?');
+    calEl.appendChild(calHdr);
+    const calGrid = document.createElement('div');
+    calGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 16px;font-size:.78rem';
+    const calRows = [
+      ['SCANNER_MIN_SCORE',     cal.scanner_min_score],
+      ['ENTER_THRESHOLD',       cal.enter_threshold],
+      ['TP1_MIN_ATR',           cal.tp1_min_atr],
+      ['TP2_MIN_ATR',           cal.tp2_min_atr],
+      ['BE_ATR',                cal.be_atr],
+      ['MAE_ATR',               cal.mae_atr],
+      ['TRAIL_ATR',             cal.trail_atr],
+      ['REVERSAL_CAP',          cal.reversal_cap],
+      ['BAD_HOURS_UTC',         (cal.personal_bad_hours_utc || []).join(',')],
+      ['Archetypes',            (cal.classifier_archetypes || []).length + ' classes'],
+      ['Confidence floor',      cal.classifier_floor],
+    ];
+    calRows.forEach(([k, v]) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:2px 0';
+      const lbl = document.createElement('span'); lbl.style.color='var(--muted)'; lbl.textContent = k;
+      const val = document.createElement('span'); val.style.fontWeight='600'; val.style.color='var(--text)'; val.textContent = (v != null ? v : '—');
+      row.appendChild(lbl); row.appendChild(val);
+      calGrid.appendChild(row);
+    });
+    calEl.appendChild(calGrid);
+
+    const tblWrap = document.createElement('div');
+    tblWrap.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px';
+    const sysHdr = document.createElement('div');
+    sysHdr.style.cssText = 'font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:8px';
+    sysHdr.textContent = 'Subsystem freshness';
+    tblWrap.appendChild(sysHdr);
+
+    const tbl = document.createElement('table');
+    tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem';
+    const thead = tbl.createTHead();
+    const hrow = thead.insertRow();
+    ['', 'Subsystem', 'Last update', 'Age', 'Note', 'Manual refresh'].forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--border)';
+      hrow.appendChild(th);
+    });
+    const tbody = tbl.createTBody();
+    (d.subsystems || []).forEach(s => {
+      const tr = tbody.insertRow();
+      const cells = [
+        {v: _STATUS_ICON[s.status] || '?', cls: 'color:' + (_STATUS_COLOR[s.status] || 'var(--muted)') + ';font-weight:700'},
+        {v: s.name},
+        {v: s.last_update || '—', cls: 'color:var(--muted)'},
+        {v: _fmtAge(s.age_min), cls: 'color:var(--muted)'},
+        {v: s.note || ''},
+        {v: s.refresh_cmd || '', cls: 'color:var(--muted);font-family:monospace;font-size:.72rem'},
+      ];
+      cells.forEach(({v, cls}) => {
+        const td = tr.insertCell();
+        td.textContent = v;
+        td.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--border);' + (cls || '');
+      });
+    });
+    tblWrap.appendChild(tbl);
+
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.appendChild(calEl);
+    el.appendChild(tblWrap);
+  } catch (e) {
+    el.textContent = 'Failed: ' + e.message;
+  }
+}
+
+
+async function refreshAllSubsystems(aiClassify) {
+  const ok = confirm(aiClassify
+    ? 'Run full refresh INCLUDING AI re-classification of all 111 setup_type labels?\n\n'
+      + 'This costs ~110 Haiku calls (~$0.20) and takes ~5 minutes. Continue?'
+    : 'Run full refresh (invalidator → hindsight verdicts → feedback → self-review → rulebook)?\n\n'
+      + 'Takes ~30-60 seconds. Continue?');
+  if (!ok) return;
+  const el = document.getElementById('knowledge-state-content');
+  if (el) el.textContent = aiClassify
+    ? 'Running full refresh + AI classify… (5-10 min, no UI updates during this)'
+    : 'Running full refresh…';
+  try {
+    const r = await api('/api/system/refresh-all', 'POST', { ai_classify: !!aiClassify });
+    if (!r.ok) throw new Error(r.error || 'failed');
+    notify('Refresh complete — reloading state', 'ok');
+    loadKnowledgeState();
+  } catch (e) {
+    if (el) el.textContent = 'Refresh failed: ' + e.message;
+  }
+}
