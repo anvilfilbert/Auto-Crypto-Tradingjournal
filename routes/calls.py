@@ -66,11 +66,22 @@ def api_calls_analyze():
 @bp.route("/api/calls/saved", methods=["GET"])
 def api_calls_saved():
     """GET /api/calls/saved?include_stale=1 — list saved calls.
-    By default, hides 'expired' and 'invalidated' rows (stale scanner setups
-    that aren't actionable any more). Pass include_stale=1 to see everything."""
+
+    Default filter hides three classes of unactionable rows:
+      - 'expired'      — scanner setups older than 24h that aged out
+      - 'invalidated'  — setups where price moved past entry the wrong way
+      - 'closed' with no linked position — the call's lifecycle ended without
+        the trader ever entering; keep them in the DB for analytics but don't
+        clutter the Saved Calls feed. Closed rows that DO have a linked
+        position (closed trades) stay visible as a post-trade record.
+
+    Pass include_stale=1 to see everything regardless of these filters."""
     include_stale = (request.args.get("include_stale") or "").lower() in ("1","true","yes")
-    where_clause = "" if include_stale else \
-        "WHERE status NOT IN ('expired', 'invalidated')"
+    where_clause = "" if include_stale else (
+        "WHERE status NOT IN ('expired', 'invalidated') "
+        "  AND NOT (status = 'closed' AND id NOT IN "
+        "    (SELECT call_id FROM positions WHERE call_id IS NOT NULL))"
+    )
     with db_conn() as conn:
         rows = [dict(r) for r in conn.execute(f"""
             SELECT id, symbol, direction, trade_type, setup_score, setup_label,
