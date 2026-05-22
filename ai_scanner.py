@@ -342,13 +342,17 @@ def _scan_thread(symbols: list, min_score: int = SCANNER_MIN_SCORE, criteria: di
             stage_detail=f"Fast-scoring {len(finalists)} finalist{'s' if len(finalists)!=1 else ''} with Haiku…",
             stage_progress=0,
         )
-        shared_prefix = _build_shared_prefix(mkt_str, rulebook_str, min_score, criteria=cr)
+        # Split cacheable stable_prefix from variable mkt_str. Anthropic caches
+        # the stable block across all 30 symbol calls in this cycle (~10x cheaper
+        # on input tokens after the 1st miss).
+        stable_prefix = _build_scanner_stable(rulebook_str, min_score, criteria=cr)
         quick_results = []
         qs_done = [0]
         qs_total = len(finalists)
         with ThreadPoolExecutor(max_workers=10) as ex:
             fq = {
-                ex.submit(_quick_score, sym, ctx, conf, dir_, shared_prefix, quick_threshold): (sym, ctx, conf, dir_)
+                ex.submit(_quick_score, sym, ctx, conf, dir_,
+                          stable_prefix, mkt_str, quick_threshold): (sym, ctx, conf, dir_)
                 for sym, ctx, conf, dir_ in finalists
             }
             for f in as_completed(fq):

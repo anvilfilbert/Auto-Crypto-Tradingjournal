@@ -34,7 +34,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from ai_client import send as ai_send
 from database import db_conn
 from trade_history import get_symbol_summary
-from helpers import strip_fence
+from helpers import strip_fence, build_cached_messages
 import chart_context
 import ai_rulebook
 
@@ -76,54 +76,12 @@ def _to_ms(iso_str: str) -> int:
 
 # ── Prompt ─────────────────────────────────────────────────────────────────────
 
-def _build_prompt(trade: dict, ctx: dict, conf: dict, history: dict,
-                  rulebook_str: str) -> str:
-    sym       = trade["symbol"]
-    direction = trade["direction"]
-    entry_px  = trade.get("entry_price", 0)
-    open_time = trade.get("open_time", "")[:16]  # "YYYY-MM-DD HH:MM"
-
-    inds_4h = ctx.get("4H", {}).get("indicators", {})
-    sr_4h   = inds_4h.get("support_resistance", [])
-    sr_text = "\n".join(
-        f"  {l['type'].upper():12s} {l['price']:.6g} "
-        f"(strength {l.get('strength',1)}, {l.get('touches',1)} touches)"
-        for l in sorted(sr_4h, key=lambda x: -x.get("touches", 1))[:6]
-    ) or "  None detected"
-
-    pt_4h = ctx.get("4H", {}).get("prompt_text", "No 4H data")
-    pt_1d = ctx.get("1D", {}).get("prompt_text", "No 1D data")
-    conf_line = (
-        f"{conf['label']} ({conf['score']:+.2f}/{conf['max']} — "
-        f"{conf['bullish']} bullish / {conf['bearish']} bearish signals)"
-    ) if conf else "N/A"
-
-    hist_txt  = json.dumps(history) if history.get("trades") else "No prior trades on this symbol"
-    rb_block  = f"\nTRADER RULEBOOK (patterns known before this trade):\n{rulebook_str}\n" if rulebook_str else ""
-
-    return f"""You are reviewing a historical trade setup AS IT APPEARED AT ENTRY TIME.
+# Stable across every trade in a batch — rubric, schema, task instructions.
+# Sent as cache_control=ephemeral so the 2nd…N-th call in a batch only pays
+# ~10% of the input price on this block.
+_HINDSIGHT_RUBRIC = """You are reviewing a historical trade setup AS IT APPEARED AT ENTRY TIME.
 
 IMPORTANT: This is a hindsight review. Score the setup BLIND — pretend you have NOT seen what happened after entry. Your goal is to evaluate the quality of the setup at the moment the trader entered.
-
-TRADE BEING REVIEWED:
-Symbol:    {sym}
-Direction: {direction} (what the trader did)
-Entry time (UTC): {open_time}
-Entry price: {entry_px}
-
-TECHNICAL PICTURE AT ENTRY TIME (reconstructed from historical candles):
-{pt_4h}
-{pt_1d}
-
-CONFLUENCE AT ENTRY: {conf_line}
-
-KEY S/R LEVELS AT ENTRY (4H):
-{sr_text}
-
-TRADER'S HISTORY ON {sym} BEFORE THIS TRADE:
-{hist_txt}
-{rb_block}
-NOTE: Historical funding rates / Fear & Greed are unavailable — base your score on technicals only.
 
 SCORE CALIBRATION (use these labels exactly):
 - 1: Terrible — no valid setup, counter-trend into strong resistance
@@ -148,23 +106,89 @@ YOUR TASK:
 Respond with ONLY valid JSON (no markdown, no code fences):
 
 If ENTER:
-{{"setup_score":8,"setup_label":"Strong","would_enter":true,"rec_direction":"{direction}",
-  "entry_zone":{{"low":0.0,"high":0.0,"rationale":"one sentence"}},
+{"setup_score":8,"setup_label":"Strong","would_enter":true,"rec_direction":"Long",
+  "entry_zone":{"low":0.0,"high":0.0,"rationale":"one sentence"},
   "rec_sl":0.0,"sl_rationale":"structural reason","rec_tp1":0.0,"rec_tp2":0.0,"rec_rr":"1:X.X",
   "key_conditions":["condition 1","condition 2","condition 3"],
   "risks":["risk 1","risk 2"],
-  "summary":"2-3 sentence honest assessment of the setup quality at entry time"}}
+  "summary":"2-3 sentence honest assessment of the setup quality at entry time"}
 
 If SKIP:
-{{"setup_score":4,"setup_label":"Weak","would_enter":false,"rec_direction":null,
+{"setup_score":4,"setup_label":"Weak","would_enter":false,"rec_direction":null,
   "skip_reason":"one sentence explaining why this was not worth entering",
-  "key_conditions":[],"risks":[],"summary":"brief assessment"}}"""
+  "key_conditions":[],"risks":[],"summary":"brief assessment"}
+
+NOTE: Historical funding rates / Fear & Greed are unavailable — base your score on technicals only.
+"""
+
+
+def _build_stable_prefix(rulebook_str: str) -> str:
+    """Rulebook + rubric — same across every trade in a hindsight batch."""
+    rb_block  = f"TRADER RULEBOOK (patterns known across all reviewed trades):\n{rulebook_str}\n\n" if rulebook_str else ""
+    return rb_block + _HINDSIGHT_RUBRIC
+
+
+def _build_prompt(trade: dict, ctx: dict, conf: dict, history: dict,
+                  rulebook_str: str = None) -> str:
+    """
+    Per-trade variable block. The rubric + rulebook lives in _build_stable_prefix
+    (sent as cache_control=ephemeral). This function only emits what changes
+    per trade so the cached prefix stays identical across the batch.
+
+    rulebook_str kept for backwards compatibility with any older caller; it is
+    now ignored here because the rulebook is part of stable_prefix.
+    """
+    sym       = trade["symbol"]
+    direction = trade["direction"]
+    entry_px  = trade.get("entry_price", 0)
+    open_time = trade.get("open_time", "")[:16]  # "YYYY-MM-DD HH:MM"
+
+    inds_4h = ctx.get("4H", {}).get("indicators", {})
+    sr_4h   = inds_4h.get("support_resistance", [])
+    sr_text = "\n".join(
+        f"  {l['type'].upper():12s} {l['price']:.6g} "
+        f"(strength {l.get('strength',1)}, {l.get('touches',1)} touches)"
+        for l in sorted(sr_4h, key=lambda x: -x.get("touches", 1))[:6]
+    ) or "  None detected"
+
+    pt_4h = ctx.get("4H", {}).get("prompt_text", "No 4H data")
+    pt_1d = ctx.get("1D", {}).get("prompt_text", "No 1D data")
+    conf_line = (
+        f"{conf['label']} ({conf['score']:+.2f}/{conf['max']} — "
+        f"{conf['bullish']} bullish / {conf['bearish']} bearish signals)"
+    ) if conf else "N/A"
+
+    hist_txt  = json.dumps(history) if history.get("trades") else "No prior trades on this symbol"
+
+    return f"""TRADE BEING REVIEWED:
+Symbol:    {sym}
+Direction: {direction} (what the trader did)
+Entry time (UTC): {open_time}
+Entry price: {entry_px}
+
+TECHNICAL PICTURE AT ENTRY TIME (reconstructed from historical candles):
+{pt_4h}
+{pt_1d}
+
+CONFLUENCE AT ENTRY: {conf_line}
+
+KEY S/R LEVELS AT ENTRY (4H):
+{sr_text}
+
+TRADER'S HISTORY ON {sym} BEFORE THIS TRADE:
+{hist_txt}
+
+Output the JSON now (use "rec_direction":"{direction}" if you ENTER, or null if you SKIP):"""
 
 
 # ── Core per-trade analysis ────────────────────────────────────────────────────
 
-def _analyze_one(trade: dict, rulebook_str: str) -> dict | None:
-    """Analyze one trade retroactively. Opens its own DB connection."""
+def _analyze_one(trade: dict, stable_prefix: str) -> dict | None:
+    """Analyze one trade retroactively. Opens its own DB connection.
+
+    stable_prefix is the rulebook + rubric block built once per batch and
+    cached by Anthropic (ephemeral cache_control on the leading block).
+    """
     try:
         end_ms = _to_ms(trade["open_time"])
         ctx    = chart_context.get_historical_context(trade["symbol"], ["4H", "1D"], end_ms)
@@ -173,10 +197,15 @@ def _analyze_one(trade: dict, rulebook_str: str) -> dict | None:
         with db_conn() as conn:
             hist = get_symbol_summary(trade["symbol"], conn, before_iso=trade["open_time"])
 
-        prompt  = _build_prompt(trade, ctx, conf, hist, rulebook_str)
+        per_trade = _build_prompt(trade, ctx, conf, hist)
+        messages  = build_cached_messages(
+            context        = "",
+            prompt         = per_trade,
+            stable_prefix  = stable_prefix,
+        )
         raw_text, _cached = ai_send(
             "hindsight", FAST_MODEL,   # retroactive blind scoring = classification task
-            [{"role": "user", "content": prompt}],
+            messages,
             max_tokens=512,
         )
         result = json.loads(strip_fence(raw_text.strip()))
@@ -296,9 +325,13 @@ def _batch_thread(n: int):
 
         _update(total=len(trades))
 
+        # Build the cacheable prefix once for the whole batch. Anthropic returns
+        # it from cache on every call after the first (~10x cheaper input).
+        stable_prefix = _build_stable_prefix(rulebook_str)
+
         done = 0
         with ThreadPoolExecutor(max_workers=5) as ex:
-            fs = {ex.submit(_analyze_one, trade, rulebook_str): trade for trade in trades}
+            fs = {ex.submit(_analyze_one, trade, stable_prefix): trade for trade in trades}
 
             for f in as_completed(fs):
                 trade = fs[f]

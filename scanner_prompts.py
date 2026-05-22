@@ -288,9 +288,13 @@ def _build_shared_prefix(mkt_str: str, rulebook_str: str,
 def _build_scanner_stable(rulebook_str: str, min_score: int = SCANNER_MIN_SCORE,
                            criteria: dict = None) -> str:
     """
-    Cacheable scanner prefix: rulebook + scoring scale + criteria.
-    No market data — stable across scan runs (changes only when rulebook updates).
+    Cacheable scanner prefix: rulebook + scoring scale + rule fragments + playbook.
+    Stable across scan runs (changes only when rulebook updates).
     Pass as stable_prefix to build_cached_messages() so Anthropic caches it.
+
+    Size target: ≥ 1024 tokens (~4096 chars) — Haiku 4.5's cache_control minimum.
+    The playbook block is what gets us past the threshold AND improves Haiku's
+    scoring quality at the same time (it makes scoring decisions less arbitrary).
     """
     cr       = criteria or CRITERIA_DEFAULTS
     rb_block = f"TRADER RULEBOOK:\n{rulebook_str}\n\n" if rulebook_str else ""
@@ -307,15 +311,56 @@ def _build_scanner_stable(rulebook_str: str, min_score: int = SCANNER_MIN_SCORE,
         + "5=Mod(borderline), 6=Accept(R:R≥2), 7=Good(R:R≥2.5), "
         + "8=Strong(R:R≥3), 9=Excellent(multi-TF,R:R≥3.5), 10=Perfect(R:R≥4)\n"
         + f"Score <{min_score} if: {cap_str}.{dis_part}\n\n"
-        + DRAW_ON_LIQUIDITY_RULES
+        + LEVEL_PROXIMITY_RULES + "\n\n"
+        + MARKET_CONTEXT_RULES + "\n\n"
+        + DRAW_ON_LIQUIDITY_RULES + "\n\n"
+        + SCANNER_PLAYBOOK
     )
 
 
+# Inlined into stable_prefix so it counts toward the cache_control 1024-token
+# minimum. Doubles as a scoring rubric the AI can lean on instead of inventing
+# its own each call. ~1700 chars; brings the stable block to ~5000 chars total.
+SCANNER_PLAYBOOK = """SETUP ARCHETYPES (use the one that matches the technical picture):
+
+REVERSAL — WaveTrend crossover at RSI extreme (oversold-bounce or overbought-fade).
+  Best when: 4H RSI <30 (long) or >70 (short), volume spike at the turn, S/R confluence.
+  Score boost: +1 if 1H confirms with same-direction WaveTrend cross.
+  Score cap: 7 unless higher TF (1D) is also at extreme — pure 4H reversals tend to fail.
+
+BREAKOUT — Range escape with volume + momentum.
+  Best when: volume ratio >1.8x, ADX rising past 18-20, price closing above prior swing high (long) or below low (short).
+  Score boost: +1 if 1D context confirms (1D above EMA20 for long breakouts).
+  Score cap: 7 if entry is mid-range — wait for retest or confirmed close beyond level.
+
+CONTINUATION — Trend pullback to structural level.
+  Best when: 4H + 1D EMA stack agrees with direction, 1H pullback into 4H S/R, RSI reset to 40-55 (long) or 45-60 (short).
+  Score boost: +1 if pullback bounces with WaveTrend reset (rising from low for long).
+  Score cap: 8 — this is the highest-conviction archetype when alignment is clean.
+
+COMMON DOWNGRADES (apply these against your initial score):
+- Counter-trend on 1D: -2 (e.g. long when 1D is below EMA50 falling)
+- ADX < 15 on 4H: -1 (no trend, momentum signals less reliable)
+- Volume ratio < 0.8x: -1 (low participation = poor follow-through)
+- RSI > 75 (long) or < 25 (short): -1 (already extended, late entry)
+- 4H + 1H disagree on direction: -1 (TF conflict)
+- Price within ATR×0.5 of major resistance (long) or support (short): -1 (no room to TP)
+
+QUALITY OVER QUANTITY: a 5 with one strong factor beats a 7 you can't justify. If you can't name 3 concrete factors driving the score in one sentence, score it ≤5.
+"""
+
+
 def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
-                 shared_prefix: str, min_score: int = SCANNER_MIN_SCORE) -> dict | None:
+                 stable_prefix: str, mkt_str: str,
+                 min_score: int = SCANNER_MIN_SCORE) -> dict | None:
     """
     Pass 1 — cheap Haiku call returning only a score (0-10) and confirmed direction.
     Returns None if score < min_score or on any error.
+
+    stable_prefix: rulebook + scoring scale + rules (cached across calls within
+        a scan cycle, as long as it clears the Anthropic minimum cache size).
+    mkt_str: market context — same across all symbols of one scan cycle but
+        varies between cycles; NOT cached (would bust the cache key every cycle).
     """
     pt_4h = ctx.get("4H", {}).get("prompt_text", "")
     pt_1h = ctx.get("1H", {}).get("prompt_text", "")
@@ -348,12 +393,18 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
     )
 
     try:
+        # build_cached_messages tags stable_prefix with cache_control=ephemeral
+        # when it clears PROMPT_CACHE_MIN_CHARS, so within-cycle reads cost ~10%
+        # of the input price instead of full price.
+        mkt_block = f"MARKET CONTEXT:\n{mkt_str}\n" if mkt_str else ""
+        messages  = build_cached_messages(
+            context        = mkt_block,
+            prompt         = variable,
+            stable_prefix  = stable_prefix,
+        )
         msg_text, _cached = ai_send(
             "scanner_quick", FAST_MODEL,
-            [{"role": "user", "content": [
-                {"type": "text", "text": shared_prefix},
-                {"type": "text", "text": variable},
-            ]}],
+            messages,
             max_tokens=120,
         )
         r = json.loads(strip_fence(msg_text.strip()))
