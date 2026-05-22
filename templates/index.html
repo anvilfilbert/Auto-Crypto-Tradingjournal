@@ -395,6 +395,11 @@ select:focus,input:focus{border-color:var(--accent)}
     <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
       <span class="nav-icon">🏠</span><span>Dashboard</span>
     </div>
+    <div class="nav-sep">Trade</div>
+    <div class="nav-item" onclick="showPage('futuresai')" id="nav-futuresai">
+      <span class="nav-icon">🤖</span><span>Futures-AI</span>
+      <span id="nav-futuresai-badge" style="margin-left:auto;font-size:.6rem;padding:1px 5px;border-radius:8px;background:rgba(108,99,255,.15);color:var(--accent);display:none">…</span>
+    </div>
     <div class="nav-item" onclick="showPage('trades')" id="nav-trades">
       <span class="nav-icon">⚡</span><span>Live Trades</span>
     </div>
@@ -436,6 +441,7 @@ select:focus,input:focus{border-color:var(--accent)}
     <div class="nav-item" onclick="showPage('import')" id="nav-import">
       <span class="nav-icon">⬆️</span><span>Import Data</span>
     </div>
+    <div class="nav-sep">Docs</div>
     <div class="nav-item" onclick="showPage('sources')" id="nav-sources">
       <span class="nav-icon">🗂️</span><span>Data Sources</span>
     </div>
@@ -451,6 +457,16 @@ select:focus,input:focus{border-color:var(--accent)}
     <span id="sync-label">Connecting…</span>
     <button class="btn-sync" id="btn-sync" onclick="triggerSync()">⟳ Sync Now</button>
     <span class="sync-equity" id="sync-equity"></span>
+    <!-- AUTO-TRADER badge — visible only when the Futures-AI chain is enabled.
+         Click to jump to the Futures-AI page. -->
+    <span id="autotrader-badge" onclick="showPage('futuresai')"
+          style="display:none;margin-left:10px;padding:3px 9px;border-radius:12px;
+                 font-size:.7rem;font-weight:700;letter-spacing:.05em;cursor:pointer;
+                 background:rgba(108,99,255,.15);color:var(--accent);
+                 border:1px solid rgba(108,99,255,.4)"
+          title="Autonomous Bitget trader chain is active. Click to open the Futures-AI page.">
+      🤖 AUTO-TRADER
+    </span>
     <!-- Dual clock: UTC (reference) + Europe/Zurich (your local) -->
     <span id="dual-clock" style="margin-left:14px;font-family:ui-monospace,monospace;font-size:.78rem;color:var(--muted);letter-spacing:.04em" title="UTC reference + your Europe/Zurich local time. Updated every 15s."></span>
     <!-- Global exchange filter — applies to all pages -->
@@ -1187,6 +1203,57 @@ select:focus,input:focus{border-color:var(--accent)}
     <!-- ══════════════════════════════════════════════════════════════════ -->
     <!-- 6. LIVE TRADES                                                     -->
     <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- ── Futures-AI ────────────────────────────────────────────────────────── -->
+    <div id="page-futuresai" class="page-view">
+      <div class="page-title">🤖 Futures-AI</div>
+      <div class="page-subtitle">Autonomous trader on a separate Bitget chain · scanner + AI consensus required · all decisions logged</div>
+
+      <!-- Status + controls strip -->
+      <div id="fai-status-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:18px;align-items:center">
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Status</div>
+          <div id="fai-status-badge" style="font-size:1.05rem;font-weight:700;color:var(--muted)">—</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Mode</div>
+          <div id="fai-mode" style="font-size:1.05rem;font-weight:700">—</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Equity</div>
+          <div id="fai-equity" style="font-size:1.05rem;font-weight:700">—</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Open / Cap</div>
+          <div id="fai-positions" style="font-size:1.05rem;font-weight:700">—</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">24h P&L</div>
+          <div id="fai-pnl-24h" style="font-size:1.05rem;font-weight:700">—</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="loadFuturesAI()">↻ Refresh</button>
+          <button class="btn btn-sm" style="background:rgba(38,217,107,.12);color:var(--accent3);border:1px solid rgba(38,217,107,.3)"
+                  onclick="setFuturesAIState('active')" id="fai-btn-active">▶ Activate</button>
+          <button class="btn btn-sm" style="background:rgba(255,179,0,.12);color:var(--yellow);border:1px solid rgba(255,179,0,.3)"
+                  onclick="setFuturesAIState('pause_after_close')" id="fai-btn-pauseafter">⏸ Pause after close</button>
+          <button class="btn btn-sm" style="background:rgba(239,83,80,.12);color:var(--red);border:1px solid rgba(239,83,80,.3)"
+                  onclick="setFuturesAIState('pause_now')" id="fai-btn-pausenow">⏹ Pause now (close all)</button>
+        </div>
+      </div>
+
+      <!-- Risk caps + circuit breakers -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px">
+        <div style="font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:10px">Risk caps · Circuit breakers</div>
+        <div id="fai-risk-config" style="font-size:.85rem;line-height:1.7;color:var(--muted)">Loading…</div>
+      </div>
+
+      <!-- Decision log -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px">
+        <div style="font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:10px">Recent decisions</div>
+        <div id="fai-decisions" style="font-size:.85rem;line-height:1.5;color:var(--muted)">Loading…</div>
+      </div>
+    </div>
+
     <div id="page-trades" class="page-view">
       <div class="live-header">
         <div>
@@ -2133,6 +2200,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/15-hindsight.js?v=3.1"></script>
 <script src="/static/js/16-settings.js?v=2.9"></script>
 <script src="/static/js/17-risk.js?v=2.2"></script>
+<script src="/static/js/18-futures-ai.js?v=1.0"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">
   <button class="bottom-nav-item" data-tab="trades">

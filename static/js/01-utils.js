@@ -386,6 +386,7 @@ function showPage(name) {
   if (name === 'edge')      loadEdge();
   if (name === 'risk')      loadRiskDashboard();
   if (name === 'import')    loadImportLog();
+  if (name === 'futuresai') loadFuturesAI();
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

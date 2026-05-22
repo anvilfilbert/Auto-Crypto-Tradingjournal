@@ -406,6 +406,24 @@ def init_db():
     _apply(45, "pending_limits.tps_json",
            "ALTER TABLE pending_limits ADD COLUMN tps_json TEXT DEFAULT NULL")
 
+    # Futures-AI auto-trader audit log
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS futures_ai_log (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts           TEXT    DEFAULT (datetime('now')),
+            event        TEXT    NOT NULL,
+            symbol       TEXT,
+            direction    TEXT,
+            score        INTEGER,
+            payload_json TEXT
+        )
+    """)
+    cur.execute(
+        "CREATE INDEX IF NOT EXISTS idx_futures_ai_log_ts "
+        "ON futures_ai_log(ts DESC)"
+    )
+    _apply(46, "futures_ai_log", "SELECT 1")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

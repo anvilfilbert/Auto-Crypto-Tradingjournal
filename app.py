@@ -27,6 +27,7 @@ from routes.hindsight import bp as hindsight_bp
 from routes.settings  import bp as settings_bp
 from routes.backtest  import bp as backtest_bp
 from routes.risk      import bp as risk_bp
+from routes.futures_ai import bp as futures_ai_bp
 
 # ── app setup ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ app.register_blueprint(hindsight_bp)
 app.register_blueprint(settings_bp)
 app.register_blueprint(backtest_bp)
 app.register_blueprint(risk_bp)
+app.register_blueprint(futures_ai_bp)
 
 
 @app.route("/")
