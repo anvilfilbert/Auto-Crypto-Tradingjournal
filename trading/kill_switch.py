@@ -117,11 +117,19 @@ def _open_position_count(conn) -> int:
 
 # ── Public decision functions ────────────────────────────────────────────────
 
-def can_open_new_trade(conn) -> tuple[bool, str]:
+def can_open_new_trade(conn, scanner_score: int = 0) -> tuple[bool, str]:
     """
     True/False + reason for the next would-be trade. Called BEFORE every
     signal evaluation so we never even score a setup when the chain is
     halted.
+
+    scanner_score: raw scanner score (pre-consensus). When this hits the
+    ELITE_BYPASS_SCORE (10), the concurrent-position soft cap is lifted
+    up to MAX_ELITE_POSITIONS — the rationale being that scanner-10
+    setups are rare and worth letting through to consensus even when the
+    book is full. Sonnet consensus is still applied normally downstream;
+    if it disagrees, the trade is rejected there. All other breakers
+    (daily DD, total DD, consec loss, state, env switch) still apply.
     """
     if not config.is_enabled():
         return False, "FUTURES_AI_ENABLED=0 (env-level off switch)"
@@ -149,10 +157,21 @@ def can_open_new_trade(conn) -> tuple[bool, str]:
         _trip_breaker(conn, f"{nl} consecutive losses")
         return False, f"consecutive-loss breaker tripped ({nl} losses)"
 
-    # Concurrent positions — pure safety cap (capital-preservation)
+    # Concurrent positions — pure safety cap (capital-preservation).
+    # A scanner-verified 10/10 setup may bypass the soft cap up to
+    # MAX_ELITE_POSITIONS so we never pass on the rarest signals.
     n_open = _open_position_count(conn)
-    if n_open >= config.MAX_CONCURRENT_POSITIONS:
-        return False, f"already at MAX_CONCURRENT_POSITIONS ({n_open}/{config.MAX_CONCURRENT_POSITIONS})"
+    is_elite = scanner_score >= config.ELITE_BYPASS_SCORE
+    effective_cap = (config.MAX_ELITE_POSITIONS if is_elite
+                     else config.MAX_CONCURRENT_POSITIONS)
+    if n_open >= effective_cap:
+        if is_elite:
+            return False, (f"at MAX_ELITE_POSITIONS hard cap "
+                           f"({n_open}/{config.MAX_ELITE_POSITIONS}) "
+                           f"even with scanner 10/10")
+        return False, (f"already at MAX_CONCURRENT_POSITIONS "
+                       f"({n_open}/{config.MAX_CONCURRENT_POSITIONS}) "
+                       f"— scanner score {scanner_score}/10, need 10 to bypass")
 
     # NOTE: No day-of-week, symbol, or direction filters here. Strategic
     # decisions (when, where, what to trade) belong in the scoring system

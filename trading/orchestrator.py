@@ -110,7 +110,10 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 # commits the INSERT before returning. The earlier
                 # opened_this_batch addition double-counted those, halving
                 # the effective cap. Now we trust the DB count alone.
-                can_trade, reason = kill_switch.can_open_new_trade(conn)
+                # Pass scanner_score so the elite bypass (scanner==10) can
+                # let rare setups through even when the soft cap is full.
+                can_trade, reason = kill_switch.can_open_new_trade(
+                    conn, scanner_score=score)
                 if not can_trade:
                     summary["rejected_killswitch"] += 1
                     _log(conn, "rejected_killswitch", setup, reason)
@@ -127,6 +130,22 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     if not verdict["approved"]:
                         summary["rejected_consensus"] += 1
                         # consensus.evaluate already logged the rejection
+                        continue
+                    # Elite-bypass guard — scanner==10 admitted this setup
+                    # past a full soft cap on the promise of being a true
+                    # 10/10. If Sonnet didn't verify it at 10, re-apply
+                    # the normal cap so a non-elite trade can't sneak
+                    # through the elite slot.
+                    n_open_now = kill_switch._open_position_count(conn)
+                    used_bypass = (score >= fa_config.ELITE_BYPASS_SCORE
+                                   and n_open_now >= fa_config.MAX_CONCURRENT_POSITIONS)
+                    if used_bypass and verdict["consensus_score"] < fa_config.ELITE_BYPASS_SCORE:
+                        summary["rejected_killswitch"] += 1
+                        _log(conn, "rejected_killswitch", setup,
+                             f"elite bypass revoked — scanner {score}/10 but "
+                             f"consensus {verdict['consensus_score']}/10 not "
+                             f"verified, soft cap {fa_config.MAX_CONCURRENT_POSITIONS} "
+                             f"applies")
                         continue
                 else:
                     # Build a synthetic verdict so downstream sizing/open

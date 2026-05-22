@@ -56,6 +56,15 @@ MAX_LEVERAGE              = 10
 MAX_NOTIONAL_USDT         = 25.0   # $25 notional per trade on $100 bankroll
 MAX_CONCURRENT_POSITIONS  = 5      # raised 3→5 (2026-05-22) — operator request
 
+# Elite-setup bypass — a "verified 10/10" setup (scanner==10 AND Sonnet
+# consensus==10) is rare enough that we will not pass on it even when
+# the soft cap (MAX_CONCURRENT_POSITIONS) is full. The hard ceiling
+# MAX_ELITE_POSITIONS bounds total simultaneous risk: 7 × 2% per-trade
+# risk = 14% if every stop fires together, sitting right under the
+# -15% total-DD breaker so the elite bypass can't put us over.
+ELITE_BYPASS_SCORE        = 10
+MAX_ELITE_POSITIONS       = 7
+
 # Circuit breakers (auto-trip → state goes to "circuit_breaker") — these
 # are CAPITAL-PRESERVATION rules only. Strategic rules (which day, which
 # symbol, which direction) belong in the scoring system, NOT here. The
@@ -159,6 +168,8 @@ def snapshot() -> dict:
         "max_leverage":               MAX_LEVERAGE,
         "max_notional_usdt":          MAX_NOTIONAL_USDT,
         "max_concurrent_positions":   MAX_CONCURRENT_POSITIONS,
+        "max_elite_positions":        MAX_ELITE_POSITIONS,
+        "elite_bypass_score":         ELITE_BYPASS_SCORE,
         "consensus_min_score":        CONSENSUS_MIN_SCORE,
         "consensus_model":            CONSENSUS_MODEL,
         "daily_dd_breaker_pct":       DAILY_DD_BREAKER_PCT,
