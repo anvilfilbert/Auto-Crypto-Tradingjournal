@@ -416,7 +416,9 @@ def get_setup_type_stats(filters=None, conn=None) -> list:
                 SUM(CASE WHEN realized_pnl > 0 THEN realized_pnl ELSE 0 END) /
                 NULLIF(ABS(SUM(CASE WHEN realized_pnl < 0 THEN realized_pnl ELSE 0 END)), 0),
                 2
-            ) AS profit_factor
+            ) AS profit_factor,
+            ROUND(AVG(mfe_pct), 2) AS avg_mfe_pct,
+            ROUND(AVG(mae_pct), 2) AS avg_mae_pct
         FROM positions
         {where}
         GROUP BY setup_type

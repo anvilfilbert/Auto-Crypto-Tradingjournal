@@ -134,11 +134,24 @@ def _sync_positions(conn) -> int:
         funding      = _f(r.get("totalFunding"), 0)
         total_fees   = (opening_fee or 0) + (closing_fee or 0) + funding
 
-        if size_usdt is None and close_price and size_raw:
-            try:
-                size_usdt = float(size_raw) * close_price
-            except Exception:
-                pass
+        # size_usdt sanity: closeTotalPos is supposed to be USDT notional but
+        # Bitget sometimes returns the contract count for low-price coins
+        # (BONK-style 1000-units-per-contract). When the value looks like it
+        # could be a contract count (no decimals AND > 1000), recompute from
+        # contracts × close_price. Also clamp absurd values (>1M) which are
+        # always sync glitches for this trader's size profile.
+        try:
+            contracts = float(size_raw) if size_raw else None
+        except (ValueError, TypeError):
+            contracts = None
+
+        if close_price and contracts:
+            recomputed = contracts * close_price
+            if size_usdt is None or size_usdt > 1_000_000 or size_usdt == contracts:
+                size_usdt = recomputed
+            elif abs(size_usdt - recomputed) / max(recomputed, 1) > 5:
+                # Bitget value is >5× off from contracts×price → trust the recomputation
+                size_usdt = recomputed
 
         cur.execute("""
             INSERT INTO positions

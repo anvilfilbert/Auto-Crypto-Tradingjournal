@@ -95,8 +95,8 @@ SCORE CALIBRATION (use these labels exactly):
 - 6: Acceptable — clear bias + valid level, SL structural, R:R ≥ 1.5:1 — tradeable
 - 7: Good — multiple aligned signals, structural entry + SL, R:R ≥ 2:1
 - 8: Strong — ≥3 signals, clean structure, R:R ≥ 2.5:1, no rulebook conflict
-- 9: Excellent — near-ideal, multi-TF alignment, R:R ≥ 3:1
-- 10: Perfect — textbook pattern, volume confirmation, ideal entry, R:R ≥ 4:1
+- 9: Excellent — strong setup, ≥3 aligned signals across 2+ TFs, R:R ≥ 3:1, no rulebook conflict
+- 10: Conviction — score-9 criteria PLUS volume confirmation OR break of a multi-month structural level
 Use the full range. Most setups should land 4-7.
 
 YOUR TASK:

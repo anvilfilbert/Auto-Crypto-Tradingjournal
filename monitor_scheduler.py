@@ -17,8 +17,14 @@ import bitget_client
 import telegram_notify
 import agent_orchestrator
 import position_risk_monitor
+import exposure_monitor
 from constants import MONITOR_INTERVAL, MONITOR_THRESHOLD_PCT, MONITOR_THRESHOLD_DURATION
 from database import db_conn
+
+# Idempotency for portfolio-level exposure alerts. Keyed by the (kind,
+# sorted symbol tuple) so the same alert only fires once per portfolio
+# shape — fires again when symbols change.
+_exposure_alerted: set[tuple] = set()
 
 FIRST_DELAY = int(os.environ.get("MONITOR_FIRST_DELAY", "120"))   # 2 min
 
@@ -79,6 +85,24 @@ def _run_once():
             print(f"[Monitor] Risk-check error for {pos.get('symbol','?')}: {e}",
                   flush=True)
 
+    # Pass 1b — portfolio-level exposure / correlation alerts
+    try:
+        for alert in exposure_monitor.check(positions) or []:
+            key = (alert["kind"], tuple(sorted(alert.get("symbols") or [])))
+            if key in _exposure_alerted:
+                continue
+            _exposure_alerted.add(key)
+            _send_exposure_alert(alert)
+            print(f"[Monitor] {alert['kind']}: {alert['title']}", flush=True)
+    except Exception as e:
+        print(f"[Monitor] Exposure-check error: {e}", flush=True)
+    # Drop stale alert keys for symbols that are no longer open
+    open_syms = {p.get("symbol") for p in positions}
+    _exposure_alerted.intersection_update({
+        k for k in _exposure_alerted
+        if set(k[1]).issubset(open_syms)
+    })
+
     for pos in to_check:
         symbol = pos.get("symbol", "?")
         try:
@@ -137,7 +161,9 @@ def _send_risk_alert(alert: dict):
     if not _monitor_alerts_enabled():
         return
 
-    emoji = "⚠" if alert["kind"] == "MAE_BREACH" else "🛡"
+    emoji = ("⚠" if alert["kind"] == "MAE_BREACH"
+             else "🎯" if alert["kind"] == "TRAIL_TRIGGER"
+             else "🛡")
     msg = (
         f"{emoji} *{alert['title']}*\n"
         f"{alert['body']}\n\n"
@@ -148,6 +174,23 @@ def _send_risk_alert(alert: dict):
         telegram_notify.send_message(msg)
     except Exception as e:
         print(f"[Monitor] Risk-alert Telegram failed: {e}", flush=True)
+
+
+def _send_exposure_alert(alert: dict):
+    """Telegram-only push for portfolio-level exposure alerts. No DB
+    badge — these are portfolio observations, not per-call signals."""
+    if not _monitor_alerts_enabled():
+        return
+    syms = ", ".join(alert.get("symbols") or [])
+    msg = (
+        f"🧮 *{alert['title']}*\n"
+        f"{alert['body']}\n\n"
+        f"Symbols: `{syms}`"
+    )
+    try:
+        telegram_notify.send_message(msg)
+    except Exception as e:
+        print(f"[Monitor] Exposure-alert Telegram failed: {e}", flush=True)
 
 
 def _send_monitor_alert(position: dict, result: dict):

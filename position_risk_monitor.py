@@ -25,18 +25,27 @@ from typing import Optional
 
 import chart_context
 
-# Triggers
+# Triggers — tightened after the 90d R:R audit. Avg win $10 vs avg loss
+# $26 (1:2.64 against), and 39% of losers reached +2% MFE before reversing.
+# Two new alerts added on top of BE_TRIGGER + MAE_BREACH:
+#   TRAIL_TRIGGER fires when price reaches +2× ATR favorable, prompting a
+#     trail-stop to lock in part of the move (avoids the give-back pattern
+#     where MFE 5.23% on winners becomes only ~2% captured).
+#   MAE_BREACH tightened from 1.5× → 1.0× ATR — the 0.5× ATR window we
+#     were leaving below structural SL was the main grade-D leak driver.
 BE_ATR_MULTIPLE      = 1.0
-MAE_ATR_MULTIPLE     = 1.5
-# Cap percentages so we don't never-fire on coins with absurd ATR values
+MAE_ATR_MULTIPLE     = 1.0    # was 1.5 — tighter cut on Grade-D bleed
+TRAIL_ATR_MULTIPLE   = 2.0
 BE_MIN_PCT           = 1.0    # never under +1%
-MAE_MIN_PCT          = -2.0   # never under -2%
+MAE_MIN_PCT          = -1.5   # was -2.0 — pair with the tighter ATR mult
+TRAIL_MIN_PCT        = 2.5
 
 # Idempotency state — keyed by (symbol, open_time_iso). Lives for the
 # process lifetime; restarting the service may re-fire one alert, which
 # is acceptable (better than missing the trigger entirely).
 _alerted_be:        set[tuple[str, str]] = set()
 _alerted_mae:       set[tuple[str, str]] = set()
+_alerted_trail:     set[tuple[str, str]] = set()
 _lock = threading.Lock()
 
 
@@ -87,8 +96,9 @@ def check(position: dict) -> list[dict]:
         return []
     atr_pct = (atr_4h / entry) * 100.0   # ATR_4H as a % of entry
 
-    be_threshold  = max(atr_pct * BE_ATR_MULTIPLE,   BE_MIN_PCT)
-    mae_threshold = min(-atr_pct * MAE_ATR_MULTIPLE, MAE_MIN_PCT)
+    be_threshold    = max(atr_pct * BE_ATR_MULTIPLE,    BE_MIN_PCT)
+    mae_threshold   = min(-atr_pct * MAE_ATR_MULTIPLE,   MAE_MIN_PCT)
+    trail_threshold = max(atr_pct * TRAIL_ATR_MULTIPLE,  TRAIL_MIN_PCT)
 
     key = (sym, open_iso)
     alerts: list[dict] = []
@@ -115,6 +125,33 @@ def check(position: dict) -> list[dict]:
                 ),
             })
 
+        # --- Trail trigger (lock partial after +2× ATR) ---
+        # Without this, winners average +5.23% MFE but realized P&L
+        # is much smaller — the give-back gap.
+        if current_pct >= trail_threshold and key not in _alerted_trail:
+            _alerted_trail.add(key)
+            # Suggest a trail SL halfway between BE and current — keeps
+            # ~50% of the current favorable move while still leaving room.
+            sign = 1 if is_long else -1
+            trail_sl = entry + sign * (atr_pct * 0.5 / 100.0 * entry)
+            alerts.append({
+                "kind":            "TRAIL_TRIGGER",
+                "symbol":          sym,
+                "direction":       direction.title(),
+                "entry":           entry,
+                "mark":            mark,
+                "atr_pct":         round(atr_pct, 2),
+                "current_pct":     round(current_pct, 2),
+                "threshold_pct":   round(trail_threshold, 2),
+                "title":           f"Trail SL on {sym} — lock partial winner",
+                "body":            (
+                    f"{sym} {direction.title()} is +{current_pct:.2f}% in favor "
+                    f"(threshold +{trail_threshold:.2f}% = {TRAIL_ATR_MULTIPLE}× ATR_4H). "
+                    f"Move SL to {trail_sl:.6g} (BE + 0.5× ATR) to lock partial profit. "
+                    "Historical winners reached avg 5.23% MFE but most got given back."
+                ),
+            })
+
         # --- MAE breach ---
         if current_pct <= mae_threshold and key not in _alerted_mae:
             _alerted_mae.add(key)
@@ -127,12 +164,13 @@ def check(position: dict) -> list[dict]:
                 "atr_pct":         round(atr_pct, 2),
                 "current_pct":     round(current_pct, 2),
                 "threshold_pct":   round(mae_threshold, 2),
-                "title":           f"MAE breach on {sym} — consider cutting",
+                "title":           f"MAE breach on {sym} — cut now",
                 "body":            (
                     f"{sym} {direction.title()} is {current_pct:.2f}% against "
                     f"(threshold {mae_threshold:.2f}% = {MAE_ATR_MULTIPLE}× ATR_4H). "
-                    "Grade-D trades that exceeded this threshold averaged -$22 each "
-                    f"and rarely recovered. Entry {entry:.6g}, mark {mark:.6g}."
+                    "Tightened from 1.5× to 1.0× ATR — the 0.5× ATR window we "
+                    "were leaving below structural SL was the main grade-D leak. "
+                    f"Entry {entry:.6g}, mark {mark:.6g}."
                 ),
             })
 
@@ -144,3 +182,4 @@ def reset_for_test() -> None:
     with _lock:
         _alerted_be.clear()
         _alerted_mae.clear()
+        _alerted_trail.clear()

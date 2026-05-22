@@ -8,8 +8,9 @@ SCORING_SCALE = """SCORING SCALE:
 6 — Acceptable: clear bias + valid level, SL structural, R:R ≥ 2:1
 7 — Good: multiple aligned signals, structural entry + SL, R:R ≥ 2.5:1
 8 — Strong: ≥3 signals aligned, clean S/R entry, structural SL, R:R ≥ 3:1
-9 — Excellent: near-ideal — all criteria met, multi-TF alignment, R:R ≥ 3.5:1
-10 — Perfect: textbook chart pattern, volume confirmation, ideal entry timing, R:R ≥ 4:1""".strip()
+9 — Excellent: strong setup — ≥3 signals aligned across 2+ timeframes, R:R ≥ 3:1, no rulebook conflict
+10 — Conviction: same as 9 plus volume confirmation OR a clean break of a multi-month level
+USE THE FULL RANGE — score 9-10 was never used in our 111-trade history because the previous rubric required 'textbook' / 'near-ideal' which is unfalsifiable. The new bar is achievable: if the setup has multi-TF alignment + structural anchor + R:R ≥ 3, that's a 9.""".strip()
 
 LEVEL_PROXIMITY_RULES = """LEVEL PROXIMITY DEFINITIONS (use when scoring):
 - Entry ≤ 0.5× ATR from structural level → strong anchor, no penalty

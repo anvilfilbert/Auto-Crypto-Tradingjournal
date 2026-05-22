@@ -246,6 +246,33 @@ def _collect_stats(conn) -> dict:
     def rows(sql):
         return [dict(r) for r in conn.execute(sql).fetchall()]
 
+    # Recent-30d slices alongside lifetime — exposes regime shifts. A rule
+    # that held over 6 months may be irrelevant in the last month if the
+    # market regime flipped (the 'last 20 deteriorating' Q4 finding showed
+    # exactly this). The prompt below instructs the AI to weight recent
+    # more when the two windows diverge.
+    by_weekday_30d = rows("""
+        SELECT CASE strftime('%w',close_time)
+                 WHEN '0' THEN 'Sunday' WHEN '1' THEN 'Monday' WHEN '2' THEN 'Tuesday'
+                 WHEN '3' THEN 'Wednesday' WHEN '4' THEN 'Thursday' WHEN '5' THEN 'Friday'
+                 ELSE 'Saturday' END AS day,
+               COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE close_time >= datetime('now','-30 days')
+        GROUP BY day HAVING n >= 3 ORDER BY total_pnl DESC
+    """)
+    by_setup_30d = rows("""
+        SELECT setup_type, COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE close_time >= datetime('now','-30 days')
+          AND setup_type IS NOT NULL AND setup_type != ''
+        GROUP BY setup_type HAVING n >= 3 ORDER BY total_pnl DESC
+    """)
+
     by_setup = rows("""
         SELECT setup_type, COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
@@ -344,6 +371,7 @@ def _collect_stats(conn) -> dict:
         "overall": overall, "recent_20": recent,
         "by_setup": by_setup, "by_weekday": by_weekday, "by_session": by_session,
         "by_direction": by_direction, "by_duration": by_duration, "by_grade": by_grade,
+        "by_weekday_30d": by_weekday_30d, "by_setup_30d": by_setup_30d,
         "worst_symbols": worst, "best_symbols": best,
         "score_calibration": get_calibration_data(conn),
     }
@@ -363,8 +391,10 @@ def _ask_claude(stats: dict, total: int) -> list:
     sections.append(f"RECENT 20: {r20.get('win_rate')}% WR, {r20.get('total_pnl')} USDT P&L")
 
     for label, key in [
-        ("BY SETUP TYPE", "by_setup"),
-        ("BY DAY", "by_weekday"),
+        ("BY SETUP TYPE (lifetime)", "by_setup"),
+        ("BY SETUP TYPE (last 30d) — recent regime",  "by_setup_30d"),
+        ("BY DAY (lifetime)",         "by_weekday"),
+        ("BY DAY (last 30d) — recent regime", "by_weekday_30d"),
         ("BY SESSION", "by_session"),
         ("BY DURATION", "by_duration"),
         ("BY EXECUTION GRADE", "by_grade"),
@@ -402,6 +432,12 @@ def _ask_claude(stats: dict, total: int) -> list:
         "  habit       — execution-discipline observation (timing, sizing, hold duration, etc.)\n"
         "  calibration — note about how accurate their setup scores have been\n\n"
         "STRICT EVIDENCE RULES (non-negotiable):\n"
+        "  0. PREFER RECENT DATA WHEN IT DIVERGES FROM LIFETIME. When the\n"
+        "     '(last 30d)' slice disagrees with the lifetime slice for the\n"
+        "     same dimension (e.g. Tuesday was +EV lifetime but -EV last\n"
+        "     30d), the rule should describe the recent state and flag the\n"
+        "     shift. Markets change regime; rules that describe a dead\n"
+        "     regime mislead the trader. Mention both numbers in the rule.\n"
         "  1. Optimise on EXPECTANCY (total_pnl, avg_pnl × n) — NOT on win_rate alone.\n"
         "     A 70% WR with negative total_pnl is a loser. A 50% WR with strongly positive "
         "total_pnl is a winner. Win_rate without P&L context is misleading.\n"

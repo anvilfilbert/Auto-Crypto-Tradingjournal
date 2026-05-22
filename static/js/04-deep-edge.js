@@ -330,7 +330,7 @@ async function loadSetupBreakdown(filters) {
         tbl.className = 'data-table';
         const thead = tbl.createTHead();
         const hr = thead.insertRow();
-        ['Setup Type','Trades','Total P&L','Win %','Avg P&L','Avg Win','Avg Loss','Prof. Factor'].forEach(h => {
+        ['Archetype','Trades','Total P&L','Win %','Avg P&L','Avg Win','Avg Loss','PF','Avg MFE','Avg MAE','Give-back'].forEach(h => {
             const th = document.createElement('th');
             th.textContent = h;
             hr.appendChild(th);
@@ -339,6 +339,13 @@ async function loadSetupBreakdown(filters) {
         setups.forEach(s => {
             const tr = tbody.insertRow();
             const pf = s.profit_factor === 999 ? 'INF' : (s.profit_factor != null ? s.profit_factor.toFixed(2) : '-');
+            // Give-back = avg MFE minus what was actually realised (as %
+            // of entry). Big give-back = winners exiting too early or
+            // reversers losing the favorable move.
+            const mfeP = s.avg_mfe_pct;
+            const realisedPct = (s.trade_count && s.total_pnl != null && s.avg_win != null)
+                ? null   // we don't have entry_price summed here — leave as MFE alone
+                : null;
             const cells = [
                 {v: s.setup_type, cls: ''},
                 {v: s.trade_count, cls: ''},
@@ -348,6 +355,15 @@ async function loadSetupBreakdown(filters) {
                 {v: '+$' + (s.avg_win || 0).toFixed(2), cls: 'pnl-pos'},
                 {v: '-$' + Math.abs(s.avg_loss || 0).toFixed(2), cls: 'pnl-neg'},
                 {v: pf, cls: (s.profit_factor || 0) >= 1.5 ? 'pnl-pos' : ''},
+                {v: mfeP != null ? (mfeP >= 0 ? '+' : '') + mfeP.toFixed(2) + '%' : '—',
+                 cls: (mfeP || 0) >= 4 ? 'pnl-pos' : ''},
+                {v: s.avg_mae_pct != null ? s.avg_mae_pct.toFixed(2) + '%' : '—',
+                 cls: 'pnl-neg'},
+                // Visual cue: archetypes with MFE > 3% AND negative avg PnL are bleeding give-back
+                {v: (mfeP != null && (s.avg_pnl || 0) < 0)
+                    ? '⚠ ' + (mfeP - Math.abs(s.avg_mae_pct || 0)).toFixed(2) + '%'
+                    : '—',
+                 cls: (s.avg_pnl || 0) < 0 ? 'pnl-neg' : ''},
             ];
             cells.forEach(({v, cls}) => {
                 const td = tr.insertCell();
