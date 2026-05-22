@@ -14,7 +14,8 @@ Runs as a systemd service on a Raspberry Pi 5 (<Pi-IP>). Accessible from any bro
 ## Database
 - **Mode:** SQLite WAL — safe for concurrent reads during sync
 - **Migrations:** database.py::init_db() — ALL must be idempotent
-- **Tables:** positions, orders, wallet_snapshots, analyzed_calls, pending_limits, trader_rulebook, trade_hindsight, settings, import_log, token_usage, schema_version
+- **Tables:** positions, orders, wallet_snapshots, analyzed_calls, pending_limits, trader_rulebook, trade_hindsight, settings, import_log, token_usage, schema_version, paper_positions, futures_ai_log
+- **Two-chain isolation:** `positions.chain TEXT DEFAULT 'manual'` (migration 47). Values: `'manual'` (operator + Bitget sync) or `'auto_ai'` (Futures-AI auto-trader). Per-trader queries MUST filter on this column; shared queries (scanner, indicators, macro) MUST NOT.
 
 ## Import Graph (safe edit order)
 constants.py, prompt_fragments.py, trade_history.py, chart_sr.py, chart_indicators.py — no internal deps, edit freely
@@ -28,8 +29,18 @@ prompt_builder.py — imports chart_context, ai_rulebook, ai_pattern_detector, n
 agent_types.py — TypedDicts + empty_interpreter/empty_sentiment/empty_reviewer factories
 ai_*.py — import ai_client + prompt_builder + trade_history
 scanner_watchlist.py — symbol lists; scanner_criteria.py — CRITERIA_DEFAULTS + kill-zone; scanner_prompts.py — prompt builders; scanner_stages.py — Stage 1/2
-ai_scanner.py — thin: _state, scan thread, Stage 3, public API (imports scanner_* modules)
-routes/*.py — import helpers + ai_* modules
+ai_scanner.py — thin: _state, scan thread, Stage 3, public API (imports scanner_* modules). Stage 3 now also runs `trade_utils.enforce_tp_floor` AND `trade_utils.enforce_sl_floor` on each agent-prepared setup so wrong-side / pathological levels are repaired upstream of the executor.
+trading/ — auto-trader chain. Import order:
+  trading/config.py (env knobs + state machine, no internal deps)
+  trading/kill_switch.py (imports config)
+  trading/risk_budget.py (imports config)
+  trading/signal_consensus.py (imports ai_client + config + chart_context)
+  trading/bitget_trader.py (HMAC-signed Bitget V2 write client, imports config + chart_context for ATR repair)
+  trading/paper.py + trading/executor.py (import kill_switch + risk_budget + bitget_trader)
+  trading/learner.py (imports ai_client + config)
+  trading/orchestrator.py — driver, imports everything in trading/ + ai_scanner hooks
+routes/*.py — import helpers + ai_* modules; routes/futures_ai.py exposes the auto-trader API
+monitor_scheduler.py — now fetches BOTH bitget_client.get_open_positions() AND (real-mode only) trading.bitget_trader.get_open_positions(), tags each with `chain`, passes the combined list to exposure_monitor.check so concentration alerts cover both books
 
 ## AI Pipeline
 - Sonnet (claude-sonnet-4-6): call analyzer, advisor, scanner, rulebook, pattern detector, grader
@@ -107,8 +118,19 @@ SMT_PAIRS = {BTC↔ETH, SOL→ETH, BNB→BTC, XRP→BTC}
 - Validate status fields against VALID_STATUSES allowlist before DB writes (see routes/limits.py)
 
 ## Deployment (IMPORTANT)
-- **Never rsync *.db files to Pi** — production DB lives on Pi only, local has none
-- rsync exclude flags: --exclude="*.db" --exclude="*.db-wal" --exclude="*.db-shm" --exclude=".agents"
+- **Never rsync `*.db` or `.env` files to Pi** — both contain Pi-only state that local doesn't have.
+- The Pi's `.env` carries auto-trader credentials that the Mac never has: `FUTURES_AI_ENABLED`, `FUTURES_AI_MODE`, `FUTURES_AI_STARTING_EQUITY`, `BITGET_TRADER_API_KEY` / `_SECRET_KEY` / `_PASSPHRASE`. Overwriting `.env` silently disables the auto-trader.
+- **Always invoke rsync via a bash wrapper, never directly from `expect spawn`.** Tcl word-splitting strips the quotes around `--exclude="*.db"` style args and the pattern silently fails to match — verified 2026-05-23 incident.
+- Canonical exclude block (use ALL of these):
+  ```bash
+  rsync -avz \
+    --exclude='*.db' --exclude='*.db-wal' --exclude='*.db-shm' \
+    --exclude='.env' --exclude='.env.*' \
+    --exclude='.agents' --exclude='.git' --exclude='__pycache__' \
+    --exclude='.venv' --exclude='*.joblib' --exclude='.remember' \
+    <local>/ fbauer@<Pi-IP>:/home/<user>/trading-journal/
+  ```
+- Before any real deploy: dry-run with `-n` and grep the file list for `\.env|trading_journal\.db` — both must be absent.
 - Always backup before restart: `bash ~/trading-journal/scripts/backup_db.sh`
 - Backups auto-run via ExecStopPost on every systemctl stop/restart (7-day rolling, in backups/)
 - Daily cron backup at 04:00 Pi time
@@ -296,3 +318,45 @@ hermes gateway status
 hermes gateway start / stop
 journalctl --user -u hermes-gateway -f
 ```
+
+## Futures-AI Auto-Trader (`trading/` package)
+
+Lives on its own Bitget subaccount (auto-trader subaccount). Activated by setting `FUTURES_AI_ENABLED=1` and `FUTURES_AI_MODE=real` in the Pi `.env`. Below env-level the runtime state (`active` / `pause_after_close` / `pause_now` / `circuit_breaker`) persists in `settings.futures_ai_state` and is toggled by the UI / Telegram. The Futures-AI page is at `/?#futuresai`.
+
+### Pipeline
+`ai_scanner.on_scan_completed` → `trading.orchestrator.process_setups` → for each setup: `kill_switch.can_open_new_trade(conn, scanner_score)` → `signal_consensus.evaluate` (if score ≥ CONSENSUS_MIN_SCORE) → `risk_budget.size_trade` → `executor.open_real_trade` (or `paper.open_paper_trade`). 10-min `on_monitor_cycle` reconciles via `bitget_trader.get_position_history` last 24h.
+
+### Risk caps (config.py constants — change requires code + redeploy)
+- `RISK_PER_TRADE_PCT = 0.02` (Kelly-scaled by score: 7→1.0×, 8→1.5×, 9→2.0×, 10→2.0×)
+- `MAX_NOTIONAL_USDT = 25.0`
+- `MAX_LEVERAGE = 10`
+- `MAX_CONCURRENT_POSITIONS = 5` (soft cap)
+- `MAX_ELITE_POSITIONS = 7` + `ELITE_BYPASS_SCORE = 10` — scanner-verified 10/10 bypasses the soft cap up to the hard cap. Bounded so 7 × 2% = 14% < -15% total-DD breaker.
+- `DAILY_DD_BREAKER_PCT = -0.05`, `TOTAL_DD_BREAKER_PCT = -0.15`, `CONSECUTIVE_LOSS_BREAKER = 3`
+
+### Env-driven knobs (Pi `.env`)
+- `FUTURES_AI_ENABLED=0|1` — env-level kill switch
+- `FUTURES_AI_MODE=paper|real`
+- `FUTURES_AI_STARTING_EQUITY=100` — fallback if Bitget balance call fails
+- `FUTURES_AI_CONSENSUS_MIN_SCORE=8` — Sonnet skipped below this (budget knob)
+- `FUTURES_AI_CONSENSUS_MODEL=sonnet|haiku`
+- `BITGET_TRADER_API_KEY` / `BITGET_TRADER_SECRET_KEY` / `BITGET_TRADER_PASSPHRASE` — subaccount creds (NOT the main `BITGET_*` keys)
+
+### Bitget V2 quirks (`trading/bitget_trader.py`)
+- SL/TP do NOT live on the position record — they're separate plan orders. Read via `/api/v2/mix/order/orders-plan-pending`, NOT the position object. `bitget_trader.get_open_positions()` enriches positions with their plan-order SL/TP automatically.
+- Set leverage BEFORE place-order — `set-leverage` returns 40037 "already at Nx" when no change is needed; the trader treats this as success.
+- The actual leverage Bitget records may differ from the requested value when the symbol has a higher minimum leverage. `place_market_order` queries the position post-fill and returns `leverage_requested` + `leverage_actual` + `set_leverage_result`. Mismatch logged as `lev_mismatch` in `futures_ai_log`.
+- Tick-size snapping required — Bitget rejects prices not on the symbol's `pricePlace` decimal grid (40430). The trader caches per-symbol specs.
+- SL/TP wrong-side or pathological → ATR repair: SL = entry ∓ 1× ATR_4H, TP = entry ± 2× ATR_4H. Mirrored in `scripts/fix_all_unsane_tpsl.py` for retroactive cleanup.
+
+### Two-chain query patterns
+```sql
+-- Operator's book (manual + Bitget sync)
+WHERE chain='manual'
+-- Auto-trader's book (auto-trader subaccount)
+WHERE chain='auto_ai'
+```
+Tables that respect chain: `positions`, `trade_hindsight`, `trader_rulebook`, `futures_ai_log`. Tables that are shared (no chain column): `analyzed_calls`, scanner state, indicators, `wallet_snapshots` (main account only), `pending_limits`.
+
+### Decision log (`futures_ai_log`)
+Every accept/reject lands here with `(ts, event, payload_json)`. Events: `state_change`, `rejected_killswitch`, `rejected_consensus`, `rejected_sizing`, `consensus_skipped`, `consensus_approved`, `paper_open`, `real_open`, `lev_mismatch`, `paper_close`, `real_close`, `breaker_tripped`. The Futures-AI page reads this for the "Recent decisions" panel.

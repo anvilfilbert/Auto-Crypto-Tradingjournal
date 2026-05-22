@@ -679,6 +679,80 @@ If no setups are found in a scan cycle, no message is sent — alerts are signal
 
 ---
 
+## Futures-AI (Auto-Trader)
+
+The 🤖 **Futures-AI** tab in the left nav runs the autonomous trader. It operates on a separate Bitget subaccount (auto-trader subaccount) so its capital is isolated from your manual trading. All decisions are logged with the reason behind them.
+
+### Page layout
+
+**Status strip (top):** State badge · Mode (real/paper) · Live equity · Open / Cap · 24h P&L · controls.
+
+Three control buttons:
+- ▶ **Activate** — start consuming scanner output and placing trades
+- ⏸ **Pause after close** — finish managing existing positions, then stop opening new ones
+- ⏹ **Pause now (close all)** — flatten everything immediately
+
+The header AUTO-TRADER badge appears whenever the chain is enabled — click it to jump back here from anywhere.
+
+**Risk caps · Circuit breakers panel:** shows the current config (risk-per-trade, score multipliers, notional cap, leverage cap, soft cap, elite cap, breaker thresholds).
+
+**Open positions / Recent closed:** AI-opened trades from this subaccount. The same trade history lives in `positions` with `chain='auto_ai'` so it doesn't pollute your manual Deep Dive.
+
+**Recent decisions log:** every accept/reject decision (consensus_approved, rejected_killswitch, rejected_consensus, paper_open, real_open, lev_mismatch, etc.), newest first.
+
+### How a trade gets opened
+
+1. Setup Scanner finds a candidate (score ≥ `SCANNER_MIN_SCORE`).
+2. Killswitch checks env enabled, runtime state, daily DD, total DD, consecutive losses, concurrent-cap.
+3. If score ≥ `CONSENSUS_MIN_SCORE` (default 8), Sonnet runs the second-opinion call. `consensus_score = min(scanner, ai)`. Below 7 or wrong direction → rejected.
+4. `risk_budget` sizes the trade: 2% risk per trade × score multiplier (7→1.0, 8→1.5, 9→2.0, 10→2.0), capped at $25 notional and 10× leverage.
+5. Executor places the market order on Bitget, sets leverage, attaches ATR-based SL plan order (-1× ATR_4H) and TP plan order (+2× ATR_4H, R:R 1:2).
+6. Reconciler hits Bitget every 10 min to detect closures and write `close_time` / `close_price` / `realized_pnl`.
+7. Learner runs post-trade reflection via Sonnet — the lessons feed the *auto* rulebook, never the manual one.
+
+### Risk envelope (default)
+| Limit | Value |
+|---|---|
+| Risk per trade | 2% × score multiplier |
+| Max notional | $25 |
+| Max leverage | 10× |
+| Concurrent positions (soft cap) | 5 |
+| Concurrent positions (elite cap, scanner+consensus = 10) | 7 |
+| Daily drawdown breaker | -5% |
+| Total drawdown breaker | -15% |
+| Consecutive-loss breaker | 3 |
+
+### Elite-setup bypass
+
+A **scanner-verified 10/10** setup (raw scanner 10 AND Sonnet consensus 10) bypasses the 5-position soft cap up to a 7-position hard cap. These setups are rare and the cost of missing one outweighs the cost of running the book one slot heavier. The hard cap is bounded by the -15% total-DD breaker (7 × 2% per-trade risk = 14% if every stop fires simultaneously), so the bypass cannot put the AI over its own circuit breaker.
+
+If a scanner-10 setup gets admitted past a full soft cap but Sonnet consensus disagrees (drops to 8 or 9), the soft cap is reapplied and the trade is rejected with reason `"elite bypass revoked"`. The decision log shows it.
+
+### Circuit breaker
+
+When any DD breaker fires, the runtime state transitions to `circuit_breaker` (persisted in `settings.futures_ai_state`) and no new orders open until the operator manually returns the state to `active` via the UI. Existing positions are still managed by the monitor (BE/Trail/MAE), they just don't get added to.
+
+### Where to look when something doesn't open
+
+1. **Futures-AI page → Recent decisions** — shows the reason for the most recent reject.
+2. Common reasons:
+   - `state=pause_now` — operator paused; click ▶ Activate
+   - `FUTURES_AI_ENABLED=0` — env-level kill switch; check `.env` on the Pi
+   - `already at MAX_CONCURRENT_POSITIONS` — book is full, wait for a TP/SL
+   - `daily DD breaker tripped` — equity dropped ≥5% in 24h; manual review required
+   - `consensus rejected` — Sonnet disagreed with the scanner
+   - `rejected_sizing` — SL too tight or score below floor
+
+### Two-chain isolation
+
+The journal keeps manual and AI trades in the same `positions` table but distinguished by `chain`:
+- `chain='manual'` (default) — your trades, Bitget sync from main account
+- `chain='auto_ai'` — AI-opened trades, auto-trader subaccount
+
+Reports that should be per-trader (Deep Dive, Edge Lab, hindsight, rulebook, lessons) filter by chain. Reports that are operator-wide (Dominance Dashboard, scanner, indicators, macro) are shared. The cross-chain exposure monitor warns about sector clustering across both books combined.
+
+---
+
 ## Common Workflows
 
 ### Analyzing a new analyst call
@@ -847,7 +921,21 @@ High accuracy means the setup scoring system genuinely predicts your outcomes. I
 
 ---
 
-## New in v1.1.0 (current)
+## New in 2026-05-22 → 2026-05-23 (Futures-AI)
+
+**Auto-trader live** — the 🤖 **Futures-AI** tab runs an autonomous trader on a dedicated Bitget subaccount. Risk envelope: 2% per trade, $25 notional cap, 10× max leverage, 5 concurrent positions soft cap (7 with elite bypass). Circuit breakers: -5% daily DD, -15% total DD, 3 consecutive losses. All decisions logged in `futures_ai_log` and surfaced in the page's "Recent decisions" panel.
+
+**Elite-setup bypass (2026-05-23)** — scanner-verified 10/10 setups (raw scanner 10 AND Sonnet consensus 10) bypass the 5-position soft cap up to a 7-position hard cap, so the rarest signals are never missed. If Sonnet drops the score below 10 after admission, the bypass is revoked and the trade rejected with reason `"elite bypass revoked"`. Hard cap bounded by the -15% total-DD breaker.
+
+**Scanner SL floor (2026-05-23)** — wrong-side / too-tight / too-wide SLs get repaired at scoring time via `trade_utils.enforce_sl_floor`, mirroring the existing `enforce_tp_floor`. The journal now records sane levels without relying on the executor's last-mile ATR repair.
+
+**Cross-chain exposure monitor (2026-05-23)** — sector clustering and directional-overload alerts now combine the operator's manual positions with the auto-trader's positions, so concentration risk on the operator's full book is visible regardless of which subaccount holds each position.
+
+**Leverage logging (2026-05-23)** — every real-mode order now records `leverage_requested` and `leverage_actual` separately; mismatches surface as a `lev_mismatch` event in the Recent decisions feed so the operator can see when Bitget enforced a higher symbol minimum.
+
+---
+
+## New in v1.1.0
 
 **7-Agent AI Pipeline** — the AI stack is now built from 7 specialized agents with typed contracts. Each agent has one job and can be tested independently:
 

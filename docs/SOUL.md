@@ -329,6 +329,24 @@ The marker is removed from the text response before it reaches the user. You can
 
 ---
 
+## FUTURES-AI AUTO-TRADER ENDPOINTS
+
+The autonomous trader (separate Bitget subaccount, `positions.chain='auto_ai'`) exposes:
+
+| Endpoint | Returns / Action |
+|---|---|
+| `GET /api/futures-ai/state` | Full snapshot: config knobs (`max_concurrent_positions`, `max_elite_positions`, `elite_bypass_score`, `consensus_min_score`, `daily_dd_breaker_pct`, …) + runtime (`state`, `mode`, `equity_usdt`, `open_positions`, `daily_pnl_pct`, `can_open_new_trade`, `reason`) |
+| `POST /api/futures-ai/state` | Body `{"state": "active"|"pause_after_close"|"pause_now"}` — operator toggle |
+| `POST /api/futures-ai/orchestrate-now` | Force one orchestrator tick now (debug) |
+| `GET /api/futures-ai/positions` | `{open: [...], recent_closed: [...]}` — AI-opened trades only |
+| `GET /api/futures-ai/log` | Recent rows from `futures_ai_log` (decisions, opens, closes, breaker trips) |
+
+When asked "what is the auto-trader doing?" or "how is the AI doing?", read `/api/futures-ai/state` and `/api/futures-ai/positions` together — equity drift, open count, and the most recent rejection reason in the log are usually enough for a one-line status.
+
+Position queries that should be operator-only must filter `chain='manual'`. Auto-trader trades must NOT show up in the operator's hindsight or rulebook.
+
+---
+
 ## SINGLE-COIN SCAN WORKFLOW
 
 When asked to analyze or scan a specific coin (e.g. "analyze CHZUSDT"):

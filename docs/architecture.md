@@ -1,6 +1,6 @@
 # Trading Journal — Architecture & Data Flow
 
-*v1.6.0 · Updated 2026-05-18*
+*v1.6.0 + Futures-AI · Updated 2026-05-23*
 
 ---
 
@@ -76,6 +76,118 @@ max_per_tf = 5.55 (non-SMT) / 5.85 (SMT) + 0.20 symbol-level conditional
 
 ### Scanner Timeframe Normalization (`static/js/14-scanner.js`)
 Normalizes `setup.timeframe` against a `_VALID_TF` set before building the chart URL. Converts `"Multi-TF (1D/4H/1H)"` display labels to a valid Bitget granularity string, preventing "no candle data" errors on scanner-generated chart popups.
+
+---
+
+## Futures-AI Auto-Trader (2026-05-22 → present)
+
+Autonomous trading chain that consumes scanner output and places real Bitget orders without operator intervention. Lives in the `trading/` package and runs on a dedicated subaccount (auto-trader subaccount) so its risk envelope is isolated from the operator's main book.
+
+### Two-chain DB isolation (migration 47)
+`positions` gained a `chain TEXT DEFAULT 'manual'` column. The auto-trader writes `chain='auto_ai'`; the manual operator/sync paths keep the default. Every chain-scoped query — kill_switch position counts, equity_now, hindsight, learner, rulebook — filters on this column so:
+- Manual hindsight, lessons, and rulebook stay 100% operator-driven
+- Auto-trader breakers compute against the AI's own DD, not the operator's history
+- Market data, scanner output, indicators, baselines, and macro caps are **shared** (no point duplicating)
+
+The Futures-AI page (`#page-futuresai`, JS in `static/js/18-futures-ai.js`) shows the AI's open positions and recent decisions; the operator's main book continues on Live Trades / Journal / Deep Dive.
+
+### Module map
+| Module | Responsibility |
+|---|---|
+| `trading/config.py` | Env-driven knobs (`FUTURES_AI_ENABLED`, `FUTURES_AI_MODE`, `FUTURES_AI_STARTING_EQUITY`, `FUTURES_AI_CONSENSUS_MIN_SCORE`, `FUTURES_AI_CONSENSUS_MODEL`) + runtime state machine persisted in `settings.futures_ai_state`: `active` / `pause_after_close` / `pause_now` / `circuit_breaker`. `snapshot()` exposes calibration for the UI and `/api/system/health`. |
+| `trading/orchestrator.py` | Two entry points: `on_scan_completed(setups)` (scanner hook) and `on_monitor_cycle()` (10-min tick). Walks setups through kill_switch → consensus → sizing → dispatch. Per-setup `futures_ai_log` rows record every accept/reject decision with reason. |
+| `trading/kill_switch.py` | Capital-preservation gate. Checks env switch, runtime state, daily DD breaker, total DD breaker, consecutive-loss breaker, then concurrent-position cap (soft 5 / elite 7). Tripped breakers transition state → `circuit_breaker` and persist via `config.set_state`. |
+| `trading/signal_consensus.py` | Sonnet second-opinion. Returns `{approved, consensus_score, scanner, ai}`. Approval requires AI score ≥ 7 AND direction match. `consensus_score = min(scanner, ai)`. |
+| `trading/risk_budget.py` | Kelly-scaled position sizing. `notional = (equity × 0.02 × multiplier) / sl_distance_pct`, capped at `MAX_NOTIONAL_USDT` ($25). Score multipliers: 7→1.0×, 8→1.5×, 9→2.0×, 10→2.0×. Leverage = ceil(notional / (equity × 0.10)), capped at `MAX_LEVERAGE` (10). |
+| `trading/bitget_trader.py` | Bitget V2 REST write client (HMAC-SHA256). Tick-size snapping via cached `pricePlace`. ATR-based SL/TP repair for wrong-side or pathological levels. Plan-order attach via `/api/v2/mix/order/place-tpsl-order` (planType=`loss_plan` / `profit_plan`). Reads SL/TP from `/orders-plan-pending`, not the position record. Returns `leverage_requested` / `leverage_actual` / `set_leverage_result`. |
+| `trading/executor.py` | Real-mode dispatch. `open_real_trade()` → `bitget_trader.place_market_order()` → INSERT `positions` row with `chain='auto_ai'`. `manage_real_positions()` reconciles via `bitget_trader.get_position_history(last_24h)` and updates `close_time` / `close_price` / `realized_pnl`. |
+| `trading/paper.py` | Paper-mode simulator. Price-walk fills against 1-min candles, identical accounting/SL/TP to real mode. Used during initial validation; gated by `FUTURES_AI_MODE=paper`. |
+| `trading/learner.py` | Post-trade reflection. Sends closed-trade summary + chart context to Sonnet, persists lessons into `trade_hindsight` and feeds the chain-scoped rulebook. |
+
+### Pipeline flow
+```
+ai_scanner.on_scan_completed
+        │
+        ▼ (per setup, score >= SCANNER_MIN_SCORE)
+trading/orchestrator
+        │
+        ├─► kill_switch.can_open_new_trade(conn, scanner_score=N)
+        │     ├─ env enabled? state active? breakers untripped?
+        │     └─ effective_cap = ELITE if scanner==10 else SOFT
+        │
+        ├─► signal_consensus.evaluate(setup)
+        │     └─ Sonnet rates the same setup; min(scanner, ai) = consensus_score
+        │
+        ├─► [elite re-check] if scanner==10 admitted past full cap
+        │   but consensus_score < 10 → reject (bypass revoked)
+        │
+        ├─► risk_budget.size_trade(score, entry, sl, equity)
+        │     └─ returns notional, leverage, contracts
+        │
+        └─► executor.open_real_trade  (or paper.open_paper_trade)
+              └─► bitget_trader.place_market_order
+                    ├─ set leverage (logged)
+                    ├─ market entry
+                    ├─ ATR-repaired SL plan order
+                    └─ ATR-repaired TP plan order
+```
+
+### Risk envelope
+| Knob | Value | Source |
+|---|---|---|
+| Risk per trade | 2% of equity (Kelly-scaled by score) | `RISK_PER_TRADE_PCT` |
+| Notional cap | $25 | `MAX_NOTIONAL_USDT` |
+| Leverage cap | 10× | `MAX_LEVERAGE` |
+| Concurrent cap (soft) | 5 | `MAX_CONCURRENT_POSITIONS` |
+| Concurrent cap (elite, scanner+consensus = 10) | 7 | `MAX_ELITE_POSITIONS` |
+| Daily DD breaker | -5% | `DAILY_DD_BREAKER_PCT` |
+| Total DD breaker | -15% | `TOTAL_DD_BREAKER_PCT` |
+| Consecutive losses breaker | 3 | `CONSECUTIVE_LOSS_BREAKER` |
+
+7 elite positions × 2% per-trade risk = 14% — sitting right under the -15% total-DD breaker, so the elite bypass cannot put the AI over its own circuit breaker even in the worst case.
+
+### Elite-setup bypass (2026-05-23)
+Scanner-verified 10/10 setups bypass the 5-position soft cap up to a 7-position hard cap. Mechanics:
+1. `kill_switch.can_open_new_trade(conn, scanner_score)` uses `effective_cap = MAX_ELITE_POSITIONS` when `scanner_score >= ELITE_BYPASS_SCORE` (10), else `MAX_CONCURRENT_POSITIONS`.
+2. Orchestrator passes `scanner_score=setup["setup_score"]` to the killswitch call.
+3. After consensus runs, if the bypass was used (`scanner==10 AND n_open >= soft_cap`) but `consensus_score < 10`, the soft cap is reapplied and the trade is rejected with reason `"elite bypass revoked"`. This prevents a non-elite trade from sneaking through the elite slot.
+
+All other breakers (env switch, state, daily DD, total DD, consec losses) still apply unconditionally — the bypass only lifts the concurrent-position cap.
+
+### SL/TP enforcement (2026-05-23)
+- **Scanner side** (`ai_scanner._score_finalists_with_agents`):
+  - `trade_utils.enforce_tp_floor` — TP1 ≥ 1× ATR_4H, TP2 ≥ 2× ATR_4H, wrong-side repair
+  - `trade_utils.enforce_sl_floor` — SL on correct side, 0.5×–8× ATR_4H envelope, default 1× ATR_4H repair when missing/pathological
+  - Adjustments recorded in `setup._tp_adjustments` / `setup._sl_adjustments`
+- **Executor side** (`bitget_trader.place_market_order`):
+  - Pre-flight tick-size snap via cached `pricePlace`
+  - If incoming SL/TP fails sanity on the Bitget side, ATR-based repair recomputes from 4H ATR
+  - Plan orders submitted separately via `/api/v2/mix/order/place-tpsl-order` (no `presetStopLossPrice` on the order body)
+  - SL/TP read back from `/orders-plan-pending`, NOT the position record (Bitget V2 keeps SL/TP on plan orders, not on the position)
+
+### Cross-chain exposure monitor (2026-05-23)
+`monitor_scheduler._run_once()` now fetches both:
+- `bitget_client.get_open_positions()` — manual chain (operator's main book)
+- `bitget_trader.get_open_positions()` — auto chain (auto-trader subaccount)
+
+Each position is tagged with `chain` and the combined list is passed to `exposure_monitor.check()`. Alert keys include the `chains` tuple so a manual-only and auto-only alert with the same symbol set don't collide. The operator's *total* concentration risk (sector clusters, directional overload) is now visible regardless of which book opened the position.
+
+### Auto-trader logging
+Every decision lands in `futures_ai_log` with `(ts, event, payload_json)`. Events:
+| Event | When |
+|---|---|
+| `state_change` | UI/Telegram pause/resume |
+| `rejected_killswitch` | Killswitch denied (with reason) |
+| `rejected_consensus` | Sonnet disagreed |
+| `rejected_sizing` | risk_budget returned None |
+| `consensus_skipped` | Score below `CONSENSUS_MIN_SCORE` (budget knob) |
+| `consensus_approved` | Sonnet agreed |
+| `paper_open` / `real_open` | Trade opened |
+| `lev_mismatch` | Bitget set a different leverage than requested |
+| `paper_close` / `real_close` | Trade closed (with reason: tp1/tp2/sl/manual) |
+| `breaker_tripped` | A circuit breaker fired |
+
+The Futures-AI page reads this table for the "Recent decisions" panel.
 
 ---
 

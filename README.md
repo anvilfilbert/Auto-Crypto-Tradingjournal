@@ -38,6 +38,8 @@ Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI
 - **Chart Legend Panel** — `?` button in every chart popup opens a toggleable reference panel explaining all abbreviations (S/R, Fib, WaveTrend, liquidation, trendlines, etc.) with color-coded visual indicators
 - **Scanner Stale-Alert Guard** — 4-layer price proximity filter drops setups where entry is missing, >20% from current price, >5% directional drift, or price fetch fails; fixes false Telegram alerts on stale scanner setups
 - **Pending Orders UX** — pop-out button on chart thumbnail opens full interactive chart; AI verdict JSON display fix with retry hint on truncated Gemini responses
+- **Futures-AI Auto-Trader** — autonomous Bitget chain (separate subaccount) consuming scanner output. Pipeline: scanner → Sonnet consensus → kill-switch → Kelly-scaled sizing → live Bitget order with ATR-based SL/TP plan orders → BE/Trail/MAE lifecycle → post-trade reflection. Two-chain DB isolation (`positions.chain = 'manual' | 'auto_ai'`) keeps manual hindsight/rulebook/learnings separate from AI ones while sharing market data, scanner, and baselines.
+- **Auto-Trader Risk Envelope** — 2% risk-per-trade (Kelly-scaled 1.0×/1.5×/2.0× by score), $25 notional cap, 10× max leverage, 5 concurrent positions (soft cap), 7 hard cap when a scanner-verified 10/10 setup unlocks the elite-bypass slot. Circuit breakers: -5% daily DD, -15% total DD, 3 consecutive losses. All decisions land in `futures_ai_log` with full audit trail.
 
 ---
 
@@ -73,6 +75,16 @@ Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI
 - `signal_scorer.py` — XGBoost win-probability from historical analyzed_calls
 - `backtest_quality.py` — PBO + Deflated Sharpe + Bootstrap CI (Bailey et al. 2014)
 - Hermes agent — `~/.hermes/` on Pi; `hermes-gateway.service` (user systemd)
+- `trading/` package — auto-trader chain:
+  - `trading/config.py` — knobs (env-driven) + runtime state machine (active / pause_after_close / pause_now / circuit_breaker)
+  - `trading/orchestrator.py` — scan-hook + monitor-tick driver wiring kill_switch → consensus → sizing → dispatch
+  - `trading/kill_switch.py` — capital-preservation gate; daily/total DD, consec-loss, soft+elite concurrent caps, state machine
+  - `trading/signal_consensus.py` — Sonnet second-opinion (`consensus_score = min(scanner, ai)`)
+  - `trading/risk_budget.py` — Kelly-scaled position sizing (2% risk × score multiplier, capped at notional + leverage limits)
+  - `trading/bitget_trader.py` — V2 REST write client (HMAC-SHA256, tick-size snapping, ATR-based SL/TP repair, plan-order attach)
+  - `trading/executor.py` — real-mode order placement + Bitget history reconciliation
+  - `trading/paper.py` — paper-mode simulator (price-walk fills, identical accounting)
+  - `trading/learner.py` — Sonnet post-trade reflection feeding rulebook
 
 ---
 
@@ -86,6 +98,11 @@ Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI
 - **Structured agent prompts** — 6-section analyst template + risk decision rubric in agent_trade_prep.py
 - **Browser baseline** — 16/16 tabs clean, 42 aria-label fixes, 4/4 pages 100% accessibility score
 - **467 tests** — up from 351 at v1.5.0; +25 since v1.6.0 (Gemini fallback + scanner price filter)
+- **Futures-AI auto-trader (2026-05-22)** — live on a dedicated Bitget auto-trader subaccount, real-mode trading at 2% risk/trade. New `trading/` package, two-chain DB (`positions.chain`), AI-opened trades surfaced on the Futures-AI page.
+- **Elite-setup bypass (2026-05-23)** — scanner-verified 10/10 setups bypass the 5-position soft cap up to a 7-position hard cap, so the rarest signals are never missed. Hard cap is bounded by the -15% total-DD breaker (7 × 2% risk = 14% if every stop fires simultaneously).
+- **Scanner SL floor (2026-05-23)** — `trade_utils.enforce_sl_floor` repairs wrong-side / too-tight / too-wide SLs upstream so the journal records sane levels without relying on the executor's last-mile ATR repair.
+- **Cross-chain exposure monitor (2026-05-23)** — `monitor_scheduler` now feeds combined manual + auto_ai positions to `exposure_monitor.check`, so sector clustering and directional-overload alerts cover the operator's full book.
+- **Leverage logging (2026-05-23)** — `bitget_trader.place_market_order` returns `leverage_requested` / `leverage_actual` / `set_leverage_result`; mismatches surface as `lev_mismatch` events in `futures_ai_log` for audit.
 
 ---
 

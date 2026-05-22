@@ -234,6 +234,12 @@ Every setup is evaluated across eight factors. Each factor contributes to the fi
 
 **These setups are rare by definition.** If a 10/10 appears more than 2–3 times per month, the scoring is too generous.
 
+### 10/10 and the auto-trader elite bypass
+
+The auto-trader (`trading/` package) treats a scanner-verified 10/10 setup as **the only signal allowed to bypass the 5-position concurrent cap**. The bypass uplifts the cap to a 7-position hard ceiling, so the rarest signals are never dropped because the book is full. "Verified" means **both** the scanner output AND the Sonnet consensus call return 10 — if Sonnet drops the score to 8 or 9, the bypass is revoked and the trade rejected (logged as `"elite bypass revoked"` in `futures_ai_log`).
+
+Other breakers (daily DD, total DD, consec loss, state, env switch) still apply unconditionally — the bypass only lifts the concurrent cap. See **architecture.md → Futures-AI Auto-Trader** and **USER_GUIDE.md → Futures-AI** for the full pipeline.
+
 ---
 
 ## Factor Breakdown by Score
