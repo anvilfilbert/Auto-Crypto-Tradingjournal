@@ -137,15 +137,18 @@ def classify_rules(symbol: str, direction: str, open_time: str,
     if not is_long and 22 <= rsi <= 45:                 scores["breakout"] += 1
 
     # --- REVERSAL ---
-    # RSI gates kept at <=35/>=60 after run #2 showed the widened bands
-    # (40/60) backfired: combined with the higher confidence floor, more
-    # trades qualified for ALL archetypes which made continuation/breakout
-    # outscore reversal more often. Recall AND precision both regressed.
-    # Reverted to the original strict gates — accepting lower recall (rule
-    # finds the strong reversals only) for higher precision (when it does
-    # call reversal, it's almost always right).
-    if is_long     and rsi <= 35:                       scores["reversal"] += 2
-    if not is_long and rsi >= 65:                       scores["reversal"] += 2
+    # RSI gates 40/60. Three-run A/B/A test against Haiku ground truth:
+    #   #1 (RSI 35/65, floor 3, 5 archetypes): 44% agreement
+    #   #2 (RSI 40/60, floor 4, 4 archetypes): 49% agreement  ← BEST
+    #   #3 (RSI 35/65, floor 4, 4 archetypes): 47% agreement
+    # Reversal precision regressed in #2 vs #1, but the wider gates produce
+    # a more accurate OVERALL picture because borderline trades fall into a
+    # cleaner low_conviction bucket (71% precision vs 38% with strict gates).
+    # The rule classifier can't compete with AI on reversal recall without
+    # access to S/R structure, divergence, or 1H confluence — that's a
+    # ceiling, not a threshold problem.
+    if is_long     and rsi <= 40:                       scores["reversal"] += 2
+    if not is_long and rsi >= 60:                       scores["reversal"] += 2
     if wt_recent is not None:                           scores["reversal"] += 2
     if wt_zone == ("oversold" if is_long else "overbought"):
                                                         scores["reversal"] += 1
