@@ -391,11 +391,33 @@ def _scan_thread(symbols: list, min_score: int = SCANNER_MIN_SCORE, criteria: di
         quick_results = []
         qs_done = [0]
         qs_total = len(finalists)
+
+        # Cache warm-up: fire ONE call sequentially before the parallel batch
+        # so Anthropic's prompt-cache write completes before the others read.
+        # Without this, 10 concurrent workers all race the cache and every
+        # call registers as a miss (observed 0/132k tokens cached in 24h).
+        if finalists:
+            warm_sym, warm_ctx, warm_conf, warm_dir = finalists[0]
+            try:
+                warm_r = _quick_score(warm_sym, warm_ctx, warm_conf, warm_dir,
+                                       stable_prefix, mkt_str, quick_threshold)
+                if warm_r is not None:
+                    quick_results.append((warm_sym, warm_ctx, warm_conf, warm_dir,
+                                          warm_r["score"], warm_r.get("reason", "")))
+                qs_done[0] = 1
+                _update(stage_detail=f"Haiku scoring: 1 / {qs_total} symbols (cache warmed)",
+                        stage_progress=int(1 / qs_total * 100))
+            except Exception as e:
+                logger.warning("scanner_quick warm-up failed for %s: %s", warm_sym, e)
+            remaining_finalists = finalists[1:]
+        else:
+            remaining_finalists = []
+
         with ThreadPoolExecutor(max_workers=10) as ex:
             fq = {
                 ex.submit(_quick_score, sym, ctx, conf, dir_,
                           stable_prefix, mkt_str, quick_threshold): (sym, ctx, conf, dir_)
-                for sym, ctx, conf, dir_ in finalists
+                for sym, ctx, conf, dir_ in remaining_finalists
             }
             for f in as_completed(fq):
                 if _cancel_event.is_set():
