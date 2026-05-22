@@ -26,12 +26,11 @@ from constants import MODEL
 from ai_client import send as ai_send
 from database import get_conn
 
-# Patterns to suppress from rulebook regeneration. When the AI synthesises a
-# rule whose title or body matches any of these (case-insensitive), it is
-# dropped before storage and prompt-injection. Configured via env:
-#   RULEBOOK_SUPPRESS_PATTERNS="short trade,avoid short,reduce short"
-# Used to pause specific learnings (e.g. user wants short trades surfaced
-# despite historical underperformance — see 2026-05-20).
+# Escape hatch only — by default the rulebook is purely data-driven. This env
+# var lets the operator drop synthesised rules whose title/body matches any
+# comma-separated pattern (case-insensitive). Use sparingly — suppression
+# adds personal bias on top of the data and should be reserved for cases
+# where a model failure (not a market truth) produces misleading rules.
 _SUPPRESS_RAW = os.environ.get("RULEBOOK_SUPPRESS_PATTERNS", "").strip()
 _RULEBOOK_SUPPRESS = [p.strip().lower() for p in _SUPPRESS_RAW.split(",") if p.strip()]
 
@@ -392,23 +391,28 @@ def _ask_claude(stats: dict, total: int) -> list:
         ))
 
     prompt = (
-        f"Build a personalised trading rulebook for this crypto futures trader ({total} closed trades).\n\n"
+        f"Analyse this crypto futures trader's record purely from the data ({total} closed trades).\n\n"
         + "\n\n".join(sections) + "\n\n"
-        "Extract 5-10 concise, actionable rules. Each rule must cite specific numbers from the data.\n"
+        "Your job: tell the trader what they're doing *well* and what they're doing *badly*, "
+        "strictly based on the numbers above. You are an unbiased coach reporting evidence, "
+        "not a strategist with opinions about which directions or symbols 'should' work.\n\n"
         "Rule types:\n"
-        "  warning     — losing pattern the trader must stop\n"
-        "  strength    — winning pattern to exploit more\n"
-        "  habit       — execution discipline note (positive or negative)\n"
-        "  calibration — note about how accurate setup scores have been\n\n"
-        "PRIORITISATION RULES (IMPORTANT):\n"
-        "  - Optimise rules on EXPECTANCY (total_pnl or avg_pnl × n), NOT on win_rate alone.\n"
-        "  - A bucket with 70% WR but negative total_pnl is a *loser* — the wins are too small "
-        "or the losses too large. Treat it as a warning, not a strength.\n"
-        "  - Conversely, a 50% WR bucket with strongly positive total_pnl IS a strength "
-        "(the R:R compensates for the lower hit rate).\n"
-        "  - Always cite both win_rate AND total_pnl when justifying a day/session/setup rule.\n\n"
-        "Only write rules supported by the data (min 5 trades per pattern). "
-        "Skip categories with insufficient data.\n\n"
+        "  warning     — a behaviour or condition where the data shows the trader loses money\n"
+        "  strength    — a behaviour or condition where the data shows the trader makes money\n"
+        "  habit       — execution-discipline observation (timing, sizing, hold duration, etc.)\n"
+        "  calibration — note about how accurate their setup scores have been\n\n"
+        "STRICT EVIDENCE RULES (non-negotiable):\n"
+        "  1. Optimise on EXPECTANCY (total_pnl, avg_pnl × n) — NOT on win_rate alone.\n"
+        "     A 70% WR with negative total_pnl is a loser. A 50% WR with strongly positive "
+        "total_pnl is a winner. Win_rate without P&L context is misleading.\n"
+        "  2. NO PRIOR BIAS. Do not assume long is safer than short, that a specific session "
+        "is bad, or that any market regime is 'risky'. The data decides. If shorts show "
+        "positive expectancy, label them a strength. If Friday Asia-session trades make money, "
+        "say so. Never write a rule that contradicts the numbers in front of you.\n"
+        "  3. Every rule must cite specific numbers from the data above. No generic advice.\n"
+        "  4. Cover both technicals (setup, day, session, duration, score-bucket) AND behaviour "
+        "(execution_grade, hold time vs outcome, MFE captured vs left on table when present).\n"
+        "  5. Min 5 trades per pattern. Skip categories with insufficient data — do not invent.\n\n"
         "Return ONLY valid JSON. No markdown. No prose outside the JSON array.\n"
         '[{"type":"warning|strength|habit|calibration","title":"max 7 words",'
         '"rule":"1-2 sentences with specific numbers","confidence":"high|medium|low","data_points":0}]'
