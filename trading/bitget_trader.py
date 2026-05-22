@@ -187,6 +187,10 @@ def get_open_positions() -> list:
                 continue
             mark = float(r.get("markPrice") or 0)
             entry = float(r.get("openPriceAvg") or 0)
+            # The active SL/TP are reported in `stopLoss` / `takeProfit`
+            # (NOT presetStopLossPrice). Empty string means none attached.
+            sl_raw = r.get("stopLoss") or ""
+            tp_raw = r.get("takeProfit") or ""
             out.append({
                 "symbol":         r.get("symbol"),
                 "direction":      "Long" if r.get("holdSide") == "long" else "Short",
@@ -196,8 +200,10 @@ def get_open_positions() -> list:
                 "notional_usdt":  total * mark if mark else 0,
                 "leverage":       int(float(r.get("leverage") or 1)),
                 "unrealized_pnl": float(r.get("unrealizedPL") or 0),
-                "preset_sl":      float(r.get("presetStopLossPrice") or 0) or None,
-                "preset_tp":      float(r.get("presetStopProfitPrice") or 0) or None,
+                "preset_sl":      float(sl_raw) if sl_raw else None,
+                "preset_tp":      float(tp_raw) if tp_raw else None,
+                "liquidation":    float(r.get("liquidationPrice") or 0) or None,
+                "break_even":     float(r.get("breakEvenPrice") or 0) or None,
             })
         except Exception:
             continue
@@ -375,16 +381,142 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
 
     data = _request("POST", "/api/v2/mix/order/place-order", body=body)
     order_id = data.get("orderId") or data.get("clientOid")
+
+    # Bitget v2 IGNORED the presetStopLossPrice / presetStopSurplusPrice
+    # fields on market-order entries — observed via /all-position dump:
+    # stopLoss and takeProfit came back empty even though we passed them.
+    # Fix: attach SL/TP as SEPARATE plan orders via place-tpsl-order
+    # immediately after the entry fills.
+    attached_sl  = False
+    attached_tp1 = False
+    if sl_price:
+        attached_sl = _try_place_tpsl(symbol, side, sl_price,
+                                       size_contracts, plan_type="loss_plan")
+    if tp1_price:
+        attached_tp1 = _try_place_tpsl(symbol, side, tp1_price,
+                                        size_contracts, plan_type="profit_plan")
+
     return {
-        "order_id":       order_id,
-        "size_contracts": size_contracts,
-        "size_usdt":      size_usdt,
-        "leverage":       leverage,
-        "mark_at_entry":  mark,
-        "sl":             sl_price,
-        "tp1":            tp1_price,
-        "tp2":            tp2_price,
+        "order_id":        order_id,
+        "size_contracts":  size_contracts,
+        "size_usdt":       size_usdt,
+        "leverage":        leverage,
+        "mark_at_entry":   mark,
+        "sl":              sl_price,
+        "tp1":             tp1_price,
+        "tp2":             tp2_price,
+        "attached_sl":     attached_sl,
+        "attached_tp1":    attached_tp1,
     }
+
+
+def _try_place_tpsl(symbol: str, side: str, trigger_price: float,
+                     size_contracts: float, plan_type: str) -> bool:
+    """
+    Attach a position-level SL or TP plan order.
+      plan_type='loss_plan'    → stop-loss
+      plan_type='profit_plan'  → take-profit
+    Returns True if Bitget accepted the order.
+    """
+    side = side.lower()
+    body = {
+        "symbol":        symbol,
+        "productType":   PRODUCT_TYPE,
+        "marginMode":    "isolated",
+        "marginCoin":    "USDT",
+        "planType":      plan_type,
+        "triggerPrice":  str(trigger_price),
+        "triggerType":   "fill_price",
+        "executePrice":  "",                  # market-close on trigger
+        "holdSide":      side,
+        "size":          str(size_contracts), # close 100% of position
+    }
+    try:
+        _request("POST", "/api/v2/mix/order/place-tpsl-order", body=body)
+        return True
+    except TraderAPIError as e:
+        # Log via Python logging — caller's order_id is still valid even
+        # if SL/TP attach fails. Operator alerted via the futures_ai_log
+        # 'real_tpsl_failed' event from the caller side.
+        import logging
+        logging.getLogger(__name__).warning(
+            "Failed to attach %s on %s @ %s: %s",
+            plan_type, symbol, trigger_price, str(e)[:200]
+        )
+        return False
+
+
+def attach_sl_tp_to_existing(symbol: str, side: str,
+                               sl_price: Optional[float] = None,
+                               tp_price: Optional[float] = None) -> dict:
+    """
+    Retro-attach SL/TP to an already-open position. Used when a previous
+    entry didn't attach the levels (e.g. the now-fixed Bitget V2 preset
+    bug) and the operator needs to remediate.
+    """
+    positions = get_open_positions()
+    match = next((p for p in positions
+                  if p["symbol"] == symbol
+                  and p["direction"].lower() == side.lower()), None)
+    if not match:
+        raise TraderAPIError(f"no open {side} position on {symbol}")
+    size = float(match["size_contracts"])
+
+    # Re-snap to tick
+    spec = get_contract_spec(symbol)
+    pp = spec["price_place"]
+    sl_price = _snap_price(sl_price, pp) if sl_price else None
+    tp_price = _snap_price(tp_price, pp) if tp_price else None
+
+    result = {"symbol": symbol, "side": side, "size_contracts": size}
+    if sl_price:
+        result["attached_sl"] = _try_place_tpsl(symbol, side, sl_price,
+                                                  size, "loss_plan")
+    if tp_price:
+        result["attached_tp"] = _try_place_tpsl(symbol, side, tp_price,
+                                                  size, "profit_plan")
+    return result
+
+
+def get_position_history(start_ms: int, end_ms: int,
+                           symbol: Optional[str] = None,
+                           limit: int = 20) -> list:
+    """
+    Closed position history. Used by the executor's reconcile path to
+    fill in the realized_pnl for auto-trader trades that closed via
+    Bitget's preset SL/TP.
+    """
+    params = {
+        "productType": PRODUCT_TYPE,
+        "startTime":   str(start_ms),
+        "endTime":     str(end_ms),
+        "pageSize":    str(limit),
+    }
+    if symbol:
+        params["symbol"] = symbol
+    d = _request("GET", "/api/v2/mix/position/history-position", params=params)
+    if isinstance(d, dict) and "list" in d:
+        rows = d.get("list") or []
+    else:
+        rows = d if isinstance(d, list) else []
+    out = []
+    for r in rows:
+        out.append({
+            "symbol":          r.get("symbol"),
+            "direction":       "Long" if r.get("holdSide") == "long" else "Short",
+            "open_price":      float(r.get("openAvgPrice") or 0),
+            "close_price":     float(r.get("closeAvgPrice") or 0),
+            "size_contracts":  float(r.get("closeTotalPos") or r.get("openTotalPos") or 0),
+            "open_ms":         int(r.get("ctime") or 0),
+            "close_ms":        int(r.get("utime") or 0),
+            "pnl":             float(r.get("pnl") or 0),
+            "net_profit":      float(r.get("netProfit") or 0),
+            "open_fee":        float(r.get("openFee") or 0),
+            "close_fee":       float(r.get("closeFee") or 0),
+            "total_funding":   float(r.get("totalFunding") or 0),
+            "position_id":     r.get("positionId"),
+        })
+    return out
 
 
 def modify_position_sl(symbol: str, side: str, new_sl_price: float) -> dict:

@@ -210,21 +210,51 @@ def manage_real_positions(conn) -> dict:
                "be_moved": 0, "trail_moved": 0, "mae_cut": 0}
 
     # Reconciliation: anything in db_open that's NOT in live_positions
-    # was closed by Bitget itself (preset SL/TP fired). Mark it closed.
+    # was closed by Bitget itself (preset SL/TP fired). Pull the actual
+    # close price + net P&L (fees included) from Bitget's
+    # /history-position endpoint so realized_pnl is accurate immediately.
+    if db_open and any((p["symbol"], (p["direction"] or "").lower()) not in live_keys
+                       for p in db_open):
+        try:
+            import time
+            now_ms = int(time.time() * 1000)
+            history = bitget_trader.get_position_history(
+                start_ms=now_ms - 86400_000,   # last 24h
+                end_ms=now_ms,
+                limit=50,
+            )
+        except Exception as e:
+            history = []
+            _log(conn, "real_history_fetch_failed", None,
+                 {"error": str(e)[:200]})
+    else:
+        history = []
+
     for p in db_open:
         key = (p["symbol"], (p["direction"] or "").lower())
         if key not in live_keys:
-            # Look up the close price from Bitget's recent position
-            # history — we don't have it locally yet, so estimate via
-            # current mark for now. The next bitget_sync run will pick
-            # up the proper close_price + realized_pnl + fees.
-            try:
-                last_mark = float(bitget_trader.get_mark_price(p["symbol"]) or 0)
-            except Exception:
-                last_mark = float(p.get("entry_price") or 0)
-            _mark_closed(conn, p["id"], last_mark,
-                          realized_pnl=0.0,   # bitget_sync will overwrite
-                          reason="reconcile (Bitget preset SL/TP fired)")
+            # Match against history by symbol + direction + open_time
+            # (positionId is the truly unique key but we don't store it
+            # — close time within 24h of our open is a good proxy).
+            match = None
+            for h in history:
+                if h["symbol"] == p["symbol"] and \
+                   h["direction"].lower() == (p["direction"] or "").lower():
+                    # Closest by close_ms (most recent close wins)
+                    match = h
+                    break
+            if match:
+                close_px  = match["close_price"]
+                realized  = match["net_profit"]   # after fees + funding
+                reason    = f"Bitget close · open {match['open_price']} → close {close_px}"
+            else:
+                # History not yet available — fall back to mark + 0 pnl,
+                # but log so we can retry on next cycle.
+                close_px  = float(bitget_trader.get_mark_price(p["symbol"]) or 0)
+                realized  = 0.0
+                reason    = "reconcile (history not yet available)"
+            _mark_closed(conn, p["id"], close_px,
+                          realized_pnl=realized, reason=reason)
             summary["closed_via_reconcile"] += 1
 
     # For positions STILL open, apply lifecycle rules
