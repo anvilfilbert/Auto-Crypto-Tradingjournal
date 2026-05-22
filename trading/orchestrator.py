@@ -105,12 +105,36 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     _log(conn, "rejected_killswitch", setup, reason)
                     continue
 
-                # 2. consensus
-                verdict = signal_consensus.evaluate(setup, conn)
-                if not verdict["approved"]:
-                    summary["rejected_consensus"] += 1
-                    # consensus.evaluate already logged the rejection
-                    continue
+                # 2. consensus — gated by CONSENSUS_MIN_SCORE for cost.
+                # Setups between SCANNER_MIN_SCORE and CONSENSUS_MIN_SCORE
+                # skip the Sonnet second-opinion entirely and feed paper
+                # directly. This is a budget knob during paper validation;
+                # bump CONSENSUS_MIN_SCORE down to 7 once Anthropic credit
+                # has runway.
+                if score >= fa_config.CONSENSUS_MIN_SCORE:
+                    verdict = signal_consensus.evaluate(setup, conn)
+                    if not verdict["approved"]:
+                        summary["rejected_consensus"] += 1
+                        # consensus.evaluate already logged the rejection
+                        continue
+                else:
+                    # Build a synthetic verdict so downstream sizing/open
+                    # sees the same shape. consensus_score = scanner score
+                    # since there's no AI second opinion.
+                    _log(conn, "consensus_skipped", setup,
+                         f"score {score} < CONSENSUS_MIN_SCORE "
+                         f"{fa_config.CONSENSUS_MIN_SCORE}")
+                    verdict = {
+                        "approved":        True,
+                        "consensus_score": score,
+                        "reason":          "consensus skipped (budget knob)",
+                        "scanner":         {
+                            "score": score,
+                            "direction": setup.get("direction"),
+                            "archetype": setup.get("trade_type") or "—",
+                        },
+                        "ai":              None,
+                    }
 
                 # 3. sizing
                 from trading.kill_switch import _equity_now

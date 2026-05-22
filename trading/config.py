@@ -29,6 +29,17 @@ _FUTURES_AI_MODE = (os.environ.get("FUTURES_AI_MODE", "paper")
 # when the Bitget account balance is unreachable (e.g. during outage).
 _STARTING_EQUITY = float(os.environ.get("FUTURES_AI_STARTING_EQUITY", "100"))
 
+# Cost-control knobs.
+#   CONSENSUS_MIN_SCORE — only run the Sonnet consensus call on scanner
+#     setups at or above this score. Setups with score >= SCANNER_MIN_SCORE
+#     but below this threshold skip consensus entirely and feed paper
+#     directly. Defaults to 8 — saves ~50% of consensus spend during the
+#     paper-validation period. Bump down to 7 once budget allows.
+#   CONSENSUS_MODEL — 'sonnet' (default, recommended) or 'haiku'. Haiku
+#     consensus costs ~80% less but loses reasoning quality.
+CONSENSUS_MIN_SCORE = int(os.environ.get("FUTURES_AI_CONSENSUS_MIN_SCORE", "8"))
+CONSENSUS_MODEL     = os.environ.get("FUTURES_AI_CONSENSUS_MODEL", "sonnet").lower()
+
 
 # ── risk caps (constants — bumping these requires a code change + redeploy) ──
 
