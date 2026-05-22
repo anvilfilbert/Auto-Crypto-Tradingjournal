@@ -4,7 +4,7 @@ import traceback
 from flask import Blueprint, request
 
 from database import db_conn
-from trade_utils import normalize_symbol, normalize_direction
+from trade_utils import normalize_symbol, normalize_direction, price_scale_matches
 from helpers import _ok, _err
 from analytics import get_deep_stats
 import ai_call as ai_call_analyzer
@@ -228,6 +228,13 @@ def api_calls_check_matches():
             if (normalize_symbol(call["symbol"])  == normalize_symbol(pos["symbol"]) and
                     normalize_direction(call["direction"]) == normalize_direction(pos["direction"])):
 
+                # Price-scale guard: refuse to auto-link when the call's reference
+                # entry is more than 20% off the position's actual entry. Catches
+                # analyst-feed parser misreads (XPLUSDT 0.287 vs 0.090 incident).
+                call_ref = call.get("avg_entry") or call.get("entry_price")
+                if not price_scale_matches(call_ref, pos.get("entry_price")):
+                    continue
+
                 # Auto-confirm if: (a) scanner-generated signal, or (b) position closed+reopened
                 is_scanner = (call.get("analyst") or "") == "scanner"
                 is_closed  = call["status"] == "closed"
@@ -259,10 +266,28 @@ def api_calls_check_matches():
 def api_calls_confirm_match(call_id):
     d        = request.get_json(silent=True) or {}
     pos_id   = d.get("position_id")
+    force    = bool(d.get("force"))   # caller can override the price guard
     exchange = (d.get("exchange") or "bitget").lower()
     if exchange not in ("bitget", "blofin"):
         exchange = "bitget"
     with db_conn() as conn:
+        # Price-scale guard for manual confirmation too. Unlike the auto path
+        # this returns an error so the UI can show *why* and offer ?force=1.
+        if pos_id and not force:
+            row = conn.execute(
+                "SELECT a.avg_entry, a.entry_price, p.entry_price AS pos_entry "
+                "FROM analyzed_calls a LEFT JOIN positions p ON p.id=? "
+                "WHERE a.id=?",
+                (pos_id, call_id)
+            ).fetchone()
+            if row:
+                call_ref = row["avg_entry"] or row["entry_price"]
+                if not price_scale_matches(call_ref, row["pos_entry"]):
+                    return _err(
+                        f"Refusing to link: call's entry ({call_ref}) is more than 20% off "
+                        f"the position's entry ({row['pos_entry']}). Pass force=true to override.",
+                        409,
+                    )
         # Record exchange so auto-close only fires from the right exchange's sync
         conn.execute(
             "UPDATE analyzed_calls SET status='matched', matched_at=datetime('now'), exchange=? WHERE id=?",

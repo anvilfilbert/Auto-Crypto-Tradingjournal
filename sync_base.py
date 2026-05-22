@@ -9,6 +9,8 @@ import time
 from datetime import datetime, timezone
 from typing import Protocol, runtime_checkable
 
+from trade_utils import price_scale_matches
+
 
 # ── Settings helpers (was duplicated in both sync files) ───────────────────────
 
@@ -298,8 +300,18 @@ def auto_match_calls(conn, exchange: str = "bitget") -> int:
     for pos_id, symbol, direction, open_time in positions:
         dir_filter = "Long" if "long" in (direction or "").lower() else "Short"
 
-        call = cur.execute("""
-            SELECT id
+        # Pull the position's entry_price so we can apply the price-scale guard.
+        # Recent positions table change: entry_price is on the row already.
+        pos_entry_row = cur.execute(
+            "SELECT entry_price FROM positions WHERE id=?", (pos_id,)
+        ).fetchone()
+        pos_entry = (pos_entry_row[0] if pos_entry_row else None)
+
+        # Look up candidate calls (newest first) and accept the first one whose
+        # reference price is within 20% of the position's entry. Without this,
+        # an analyst-feed parser misread can attach a wildly off-scale call.
+        candidates = cur.execute("""
+            SELECT id, avg_entry, entry_price
             FROM analyzed_calls
             WHERE symbol    = ?
               AND direction LIKE ?
@@ -309,10 +321,20 @@ def auto_match_calls(conn, exchange: str = "bitget") -> int:
               AND created_at >= datetime(?, '-30 days')
               AND created_at <= ?
             ORDER BY created_at DESC
-            LIMIT 1
-        """, (symbol, dir_filter + "%", open_time or "9999", open_time or "9999")).fetchone()
+            LIMIT 5
+        """, (symbol, dir_filter + "%", open_time or "9999", open_time or "9999")).fetchall()
+
+        call = None
+        for c in candidates:
+            call_ref = c[1] or c[2]
+            if price_scale_matches(call_ref, pos_entry):
+                call = c
+                break
 
         if not call:
+            if candidates:
+                print(f"[Sync] Skipped {symbol} {dir_filter} — {len(candidates)} candidate call(s) "
+                      f"but none within 20% of position entry {pos_entry}", flush=True)
             continue
 
         call_id = call[0]

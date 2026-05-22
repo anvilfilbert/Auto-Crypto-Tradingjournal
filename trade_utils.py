@@ -51,3 +51,28 @@ def normalize_direction(s: str) -> str:
     if d in ('long', 'buy', 'open_long'):  return 'Long'
     if d in ('short', 'sell', 'open_short'): return 'Short'
     return s
+
+
+# Default tolerance for linking a call to a position. 20% covers a few candles
+# of natural drift between call creation and position entry without admitting
+# the analyst-feed parser misreads we saw on XPLUSDT (3.2x off scale).
+PRICE_SCALE_MATCH_THRESHOLD = 0.20
+
+
+def price_scale_matches(call_entry, pos_entry,
+                         threshold: float = PRICE_SCALE_MATCH_THRESHOLD) -> bool:
+    """
+    True when a call's reference price is within ±threshold of the position's
+    actual entry. Guards against linking a call whose analyst-feed parser
+    captured a wrong number (e.g. 0.287 attached to an XPLUSDT position at
+    0.0901). Returns True when either side is missing — calling sites should
+    decide separately whether to require a price to be present.
+    """
+    try:
+        c = float(call_entry or 0)
+        p = float(pos_entry or 0)
+    except (TypeError, ValueError):
+        return True
+    if c <= 0 or p <= 0:
+        return True
+    return abs(c - p) / p <= threshold
