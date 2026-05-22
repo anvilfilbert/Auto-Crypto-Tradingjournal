@@ -115,6 +115,26 @@ if __name__ == "__main__":
     import self_review_scheduler
     self_review_scheduler.start()
 
+    # Futures-AI orchestrator hook — fires after EVERY scan completion
+    # (forced API scans AND periodic scheduler scans). Registered here
+    # unconditionally so it works even when scanner_scheduler.start()
+    # short-circuits because Telegram isn't configured.
+    try:
+        import ai_scanner
+        from trading import orchestrator as _fa_orch
+        def _on_scan_completed_fa(setups):
+            try:
+                scan_state = ai_scanner.get_state()
+                summary = _fa_orch.on_scan_completed(scan_state)
+                if summary and not summary.get("skipped"):
+                    _log.info("[Futures-AI] orchestrator: %s", summary)
+            except Exception as e:
+                _log.exception("[Futures-AI] orchestrator hook failed: %s", e)
+        ai_scanner.register_completion_hook(_on_scan_completed_fa)
+        _log.info("[Futures-AI] orchestrator hook registered on ai_scanner")
+    except Exception as e:
+        _log.warning("[Futures-AI] could not register orchestrator hook: %s", e)
+
     port = int(os.environ.get("PORT", 8082))
     _log.info("[App] Trading Journal running on http://0.0.0.0:%d", port)
     app.run(host="0.0.0.0", port=port, debug=False)
