@@ -103,6 +103,24 @@ def _run_once():
         if set(k[1]).issubset(open_syms)
     })
 
+    # Futures-AI: tick the orchestrator so paper / real positions get
+    # their BE-trigger / trail / MAE-breach lifecycle managed. Cheap when
+    # the chain is disabled — orchestrator self-skips.
+    try:
+        from trading import orchestrator as fa_orch
+        fa_result = fa_orch.on_monitor_cycle()
+        if fa_result and not fa_result.get("skipped"):
+            checked = fa_result.get("checked", 0)
+            closed  = fa_result.get("closed", 0)
+            evs     = fa_result.get("events") or []
+            if checked or closed or evs:
+                print(f"[Futures-AI] monitor: checked={checked} closed={closed} "
+                      f"events={len(evs)}", flush=True)
+                for ev in evs[:5]:
+                    print(f"  {ev}", flush=True)
+    except Exception as e:
+        print(f"[Futures-AI] monitor hook error: {e}", flush=True)
+
     for pos in to_check:
         symbol = pos.get("symbol", "?")
         try:

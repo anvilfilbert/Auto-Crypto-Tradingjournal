@@ -298,7 +298,8 @@ def force_close_all(conn, get_mark_price, reason: str = "manual") -> int:
 
 def _close_position(conn, p: dict, exit_price: float, close_reason: str,
                      reason: str = "") -> dict:
-    """Common close-out: compute realized P&L, mark closed, log."""
+    """Common close-out: compute realized P&L, mark closed, log,
+    then trigger the learner reflection."""
     is_long = (p["direction"] or "").lower() == "long"
     entry = float(p["entry_price"])
     notional = float(p["notional_usdt"] or 0)
@@ -324,6 +325,15 @@ def _close_position(conn, p: dict, exit_price: float, close_reason: str,
          p["score_consensus"],
          json.dumps({"exit": exit_price, "pnl": realized,
                      "reason": close_reason, "note": reason}))
+
+    # Fire-and-forget learner reflection. Failures here mustn't block
+    # the close path — wrapped wide on the learner side too.
+    try:
+        from . import learner
+        learner.reflect_on_paper_close(conn, p["id"])
+    except Exception:
+        pass
+
     return {"id": p["id"], "symbol": p["symbol"], "kind": "close",
             "reason": close_reason, "pnl": realized}
 

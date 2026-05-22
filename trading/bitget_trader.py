@@ -1,0 +1,359 @@
+"""
+trading.bitget_trader — isolated write-enabled Bitget V2 client.
+
+Uses BITGET_TRADER_* env vars (separate from BITGET_* used by the
+read-only journal client). Every method is defensive about Elite-account
+restrictions — when an endpoint returns "not authorized" we log and
+degrade gracefully rather than crash the scheduler.
+
+Methods (only what the auto-trader actually needs):
+
+  read:
+    get_balance()          → {available, equity, margin_used}
+    get_open_positions()   → list of position dicts
+    get_mark_price(symbol) → float
+    test_connection()      → {ok, latency_ms, error?}
+
+  write:
+    place_market_order(symbol, side, size_usdt, leverage,
+                       sl_price, tp1_price, tp2_price)
+                          → {order_id, filled_price, sizing}
+    modify_position_sl(symbol, side, new_sl_price)
+                          → {ok, modified}
+    close_position(symbol, side, percentage=100)
+                          → {ok, exit_price, realized_pnl}
+    cancel_all_orders(symbol=None)
+                          → {cancelled_count}
+
+All write calls require FUTURES_AI_ENABLED=1 AND is_real_mode() AND
+state=='active' — checked at the dispatcher level (executor.py), not
+here. This module trusts the caller.
+
+Idempotency: each place_market_order accepts a client_oid so the
+caller can retry safely.
+"""
+from __future__ import annotations
+
+import base64
+import hashlib
+import hmac as _hmac
+import json
+import os
+import socket
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from typing import Optional
+
+
+BASE_URL     = "https://api.bitget.com"
+API_KEY      = os.environ.get("BITGET_TRADER_API_KEY", "")
+SECRET_KEY   = os.environ.get("BITGET_TRADER_SECRET_KEY", "")
+PASSPHRASE   = os.environ.get("BITGET_TRADER_PASSPHRASE", "")
+PRODUCT_TYPE = "USDT-FUTURES"
+
+
+class TraderAPIError(Exception):
+    """Raised on any Bitget API failure for the trader chain."""
+
+
+# ── Signing + transport ──────────────────────────────────────────────────────
+
+def _sign(ts: str, method: str, path: str, body_or_qs: str = "") -> str:
+    msg = ts + method.upper() + path + body_or_qs
+    return base64.b64encode(
+        _hmac.new(SECRET_KEY.encode(), msg.encode(),
+                  hashlib.sha256).digest()
+    ).decode()
+
+
+def _headers(ts: str, sig: str) -> dict:
+    return {
+        "ACCESS-KEY":        API_KEY,
+        "ACCESS-SIGN":       sig,
+        "ACCESS-TIMESTAMP":  ts,
+        "ACCESS-PASSPHRASE": PASSPHRASE,
+        "Content-Type":      "application/json",
+        "locale":            "en-US",
+    }
+
+
+def _request(method: str, path: str, params: Optional[dict] = None,
+             body: Optional[dict] = None, timeout: int = 15) -> dict:
+    if not API_KEY or not SECRET_KEY or not PASSPHRASE:
+        raise TraderAPIError(
+            "BITGET_TRADER_* env vars not set — refusing to call API"
+        )
+
+    method = method.upper()
+    ts     = str(int(time.time() * 1000))
+
+    qs = urllib.parse.urlencode(params or {}) if params else ""
+    body_str = json.dumps(body, separators=(",", ":")) if body else ""
+
+    # Signing differs: GET signs the query string with leading "?",
+    # POST signs the body string.
+    if method == "GET":
+        sig_payload = ("?" + qs) if qs else ""
+    else:
+        sig_payload = body_str
+
+    sig = _sign(ts, method, path, sig_payload)
+    url = BASE_URL + path + (("?" + qs) if qs else "")
+
+    req = urllib.request.Request(
+        url, headers=_headers(ts, sig),
+        method=method,
+        data=body_str.encode("utf-8") if body_str else None,
+    )
+
+    socket.setdefaulttimeout(timeout)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            resp = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        txt = ""
+        try: txt = e.read().decode("utf-8", errors="replace")[:300]
+        except Exception: pass
+        raise TraderAPIError(f"HTTP {e.code} on {method} {path}: {txt}")
+    except (urllib.error.URLError, socket.timeout, ConnectionError) as e:
+        raise TraderAPIError(f"network failure on {method} {path}: {e}")
+
+    code = resp.get("code", "")
+    if code != "00000":
+        msg = resp.get("msg") or resp.get("message") or ""
+        raise TraderAPIError(f"Bitget code={code} on {method} {path}: {msg}")
+    return resp.get("data", {})
+
+
+# ── Read methods ─────────────────────────────────────────────────────────────
+
+def test_connection() -> dict:
+    """Verify creds work + endpoint reachable + measure latency.
+    Used by the Futures-AI page health probe before the chain activates."""
+    if not API_KEY:
+        return {"ok": False, "error": "BITGET_TRADER_API_KEY not set"}
+    t0 = time.time()
+    try:
+        d = _request("GET", "/api/v2/mix/account/account", params={
+            "symbol":      "BTCUSDT",
+            "productType": PRODUCT_TYPE,
+            "marginCoin":  "USDT",
+        })
+        return {
+            "ok":             True,
+            "latency_ms":     int((time.time() - t0) * 1000),
+            "account_id":     d.get("userId"),
+            "margin_coin":    d.get("marginCoin"),
+            "available":     float(d.get("available", 0) or 0),
+            "locked":        float(d.get("locked", 0) or 0),
+        }
+    except TraderAPIError as e:
+        return {"ok": False, "error": str(e)[:200]}
+
+
+def get_balance() -> dict:
+    """Total USDT equity + free margin on the trader subaccount."""
+    d = _request("GET", "/api/v2/mix/account/accounts", params={
+        "productType": PRODUCT_TYPE,
+    })
+    rows = d if isinstance(d, list) else []
+    for r in rows:
+        if r.get("marginCoin") == "USDT":
+            return {
+                "available":   float(r.get("available", 0) or 0),
+                "equity":      float(r.get("accountEquity") or
+                                     r.get("equity", 0) or 0),
+                "margin_used": float(r.get("locked", 0) or 0),
+                "unrealized_pnl": float(r.get("unrealizedPL", 0) or 0),
+            }
+    return {"available": 0.0, "equity": 0.0, "margin_used": 0.0,
+            "unrealized_pnl": 0.0}
+
+
+def get_open_positions() -> list:
+    """All open positions on the trader subaccount, normalised shape."""
+    d = _request("GET", "/api/v2/mix/position/all-position", params={
+        "productType": PRODUCT_TYPE,
+        "marginCoin":  "USDT",
+    })
+    rows = d if isinstance(d, list) else []
+    out = []
+    for r in rows:
+        try:
+            total = float(r.get("total") or 0)
+            if total <= 0:
+                continue
+            mark = float(r.get("markPrice") or 0)
+            entry = float(r.get("openPriceAvg") or 0)
+            out.append({
+                "symbol":         r.get("symbol"),
+                "direction":      "Long" if r.get("holdSide") == "long" else "Short",
+                "entry_price":    entry,
+                "mark_price":     mark,
+                "size_contracts": total,
+                "notional_usdt":  total * mark if mark else 0,
+                "leverage":       int(float(r.get("leverage") or 1)),
+                "unrealized_pnl": float(r.get("unrealizedPL") or 0),
+                "preset_sl":      float(r.get("presetStopLossPrice") or 0) or None,
+                "preset_tp":      float(r.get("presetStopProfitPrice") or 0) or None,
+            })
+        except Exception:
+            continue
+    return out
+
+
+def get_mark_price(symbol: str) -> float:
+    """Live mark price for a symbol. Used by paper.manage to step
+    open positions in sync mode without rate-limiting Bitget."""
+    d = _request("GET", "/api/v2/mix/market/ticker", params={
+        "symbol":      symbol,
+        "productType": PRODUCT_TYPE,
+    })
+    rows = d if isinstance(d, list) else [d]
+    if rows and rows[0]:
+        return float(rows[0].get("markPrice") or rows[0].get("lastPr") or 0)
+    return 0.0
+
+
+# ── Write methods — DEFENSIVE ────────────────────────────────────────────────
+
+def place_market_order(symbol: str, side: str, size_usdt: float,
+                        leverage: int,
+                        sl_price: Optional[float] = None,
+                        tp1_price: Optional[float] = None,
+                        tp2_price: Optional[float] = None,
+                        client_oid: Optional[str] = None) -> dict:
+    """
+    Place a market entry with preset SL + TP. Bitget V2 lets you bundle
+    SL/TP into the place-order request as preset fields — saves us
+    making 3 round-trips on every entry.
+
+    Returns {order_id, sizing}. Caller is responsible for verifying the
+    position appears via get_open_positions() — Bitget Elite accounts
+    sometimes reject the order silently.
+
+    NB: this is the ONE method that takes real money action. Wrap every
+    call in a try/except at the caller and log the outcome.
+    """
+    side = side.lower()
+    if side not in ("long", "short"):
+        raise TraderAPIError(f"invalid side {side!r}")
+
+    # Set the leverage first (Bitget requires leverage be configured
+    # on the symbol/hold-side BEFORE the order). Best-effort —
+    # ignore "already at this leverage" errors.
+    try:
+        _request("POST", "/api/v2/mix/account/set-leverage", body={
+            "symbol":      symbol,
+            "productType": PRODUCT_TYPE,
+            "marginCoin":  "USDT",
+            "leverage":    str(int(leverage)),
+            "holdSide":    side,
+        })
+    except TraderAPIError as e:
+        # Continue — leverage may already be set. Real failures will surface
+        # on the order placement itself.
+        if "already" not in str(e).lower() and "same" not in str(e).lower():
+            # Re-raise unexpected errors so we don't silently fail
+            raise
+
+    # Compute size in base units (contracts). Bitget expects "size" in
+    # contract units, not USDT. Get mark price for the conversion.
+    mark = get_mark_price(symbol)
+    if mark <= 0:
+        raise TraderAPIError(f"can't fetch mark price for {symbol}")
+    size_contracts = round(size_usdt / mark, 6)
+
+    body = {
+        "symbol":       symbol,
+        "productType":  PRODUCT_TYPE,
+        "marginMode":   "isolated",
+        "marginCoin":   "USDT",
+        "size":         str(size_contracts),
+        "side":         "buy" if side == "long" else "sell",
+        "tradeSide":    "open",
+        "orderType":    "market",
+        "force":        "gtc",
+    }
+    if client_oid:
+        body["clientOid"] = client_oid
+    if sl_price:
+        body["presetStopLossPrice"]   = str(sl_price)
+    if tp1_price:
+        body["presetStopSurplusPrice"] = str(tp1_price)
+    # NB: Bitget only supports ONE preset TP via this endpoint. TP2 needs
+    # to be added as a separate plan order after the position is open.
+
+    data = _request("POST", "/api/v2/mix/order/place-order", body=body)
+    order_id = data.get("orderId") or data.get("clientOid")
+    return {
+        "order_id":       order_id,
+        "size_contracts": size_contracts,
+        "size_usdt":      size_usdt,
+        "leverage":       leverage,
+        "mark_at_entry":  mark,
+        "sl":             sl_price,
+        "tp1":            tp1_price,
+        "tp2":            tp2_price,
+    }
+
+
+def modify_position_sl(symbol: str, side: str, new_sl_price: float) -> dict:
+    """
+    Move the position's preset SL. Called by the BE-trigger and trail
+    rules. Bitget expects we replace the existing preset SL plan order.
+    """
+    side = side.lower()
+    body = {
+        "symbol":      symbol,
+        "productType": PRODUCT_TYPE,
+        "marginCoin":  "USDT",
+        "holdSide":    side,
+        "stopLossTriggerPrice": str(new_sl_price),
+        "stopLossTriggerType":  "fill_price",
+    }
+    data = _request("POST", "/api/v2/mix/order/modify-position-tpsl",
+                     body=body)
+    return {"ok": True, "modified": data}
+
+
+def close_position(symbol: str, side: str,
+                    percentage: float = 100.0) -> dict:
+    """Market-close (full or partial). Used by paper's force_close and
+    by MAE-breach auto-cuts."""
+    side = side.lower()
+    positions = get_open_positions()
+    match = next((p for p in positions
+                  if p["symbol"] == symbol and
+                  p["direction"].lower() == side), None)
+    if not match:
+        return {"ok": False, "reason": f"no open {side} position on {symbol}"}
+
+    qty = round(match["size_contracts"] * (percentage / 100.0), 6)
+    body = {
+        "symbol":       symbol,
+        "productType":  PRODUCT_TYPE,
+        "marginMode":   "isolated",
+        "marginCoin":   "USDT",
+        "size":         str(qty),
+        "side":         "sell" if side == "long" else "buy",
+        "tradeSide":    "close",
+        "orderType":    "market",
+        "force":        "gtc",
+    }
+    data = _request("POST", "/api/v2/mix/order/place-order", body=body)
+    return {"ok": True, "order_id": data.get("orderId"),
+            "closed_size_contracts": qty,
+            "exit_price_approx": match.get("mark_price")}
+
+
+def cancel_all_orders(symbol: Optional[str] = None) -> dict:
+    """Cancel all open plan/limit orders. Used when the chain pauses."""
+    body = {"productType": PRODUCT_TYPE, "marginCoin": "USDT"}
+    if symbol:
+        body["symbol"] = symbol
+    data = _request("POST", "/api/v2/mix/order/cancel-all-orders",
+                     body=body)
+    return {"ok": True, "cancelled": data}

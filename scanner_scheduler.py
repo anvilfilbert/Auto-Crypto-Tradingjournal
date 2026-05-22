@@ -305,6 +305,24 @@ def _loop():
                           f"expired {r['expired']} stale setups", flush=True)
         except Exception as e:
             print(f"[Scanner Scheduler] Invalidator error: {e}")
+
+        # Futures-AI: feed the just-completed scan into the orchestrator so
+        # high-score setups go through the consensus+sizing+open pipeline.
+        # No-op when the chain is disabled or paused — the orchestrator
+        # checks itself.
+        try:
+            import ai_scanner
+            from trading import orchestrator as fa_orch
+            scan_state = ai_scanner.get_state()
+            if scan_state and (scan_state.get("status") == "completed"):
+                summary = fa_orch.on_scan_completed(scan_state)
+                if summary and (summary.get("opened") or
+                                summary.get("rejected_consensus") or
+                                summary.get("rejected_killswitch")):
+                    print(f"[Futures-AI] scan-end: {summary}", flush=True)
+        except Exception as e:
+            print(f"[Futures-AI] scan-end hook error: {e}", flush=True)
+
         time.sleep(INTERVAL)
 
 
