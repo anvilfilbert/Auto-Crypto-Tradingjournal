@@ -77,10 +77,14 @@ def _err(msg, code=400):
 
 def _filters_from_args():
     exchange = request.args.get("exchange", "").strip().lower()
+    chain    = request.args.get("chain",    "").strip().lower()
     return {
         "symbol":    request.args.get("symbol",    "").strip() or None,
         "direction": request.args.get("direction", "").strip() or None,
         "date_from": request.args.get("date_from", "").strip() or None,
         "date_to":   request.args.get("date_to",   "").strip() or None,
         "exchange":  exchange if exchange in ("bitget", "blofin") else None,
+        # 'manual' (default — operator's record), 'auto_ai' (the bot's
+        # record), or 'all' (combined). Passing nothing → manual.
+        "chain":     chain if chain in ("manual", "auto_ai", "all") else "manual",
     }

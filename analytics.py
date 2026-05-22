@@ -44,6 +44,16 @@ def _build_where(filters):
         clauses.append("COALESCE(exchange, 'bitget') = ?")
         params.append(filters['exchange'])
 
+    # Chain isolation: every position belongs to exactly one trading
+    # chain (manual = operator-executed, auto_ai = Futures-AI bot).
+    # Default is 'manual' so legacy dashboards keep showing operator
+    # data only. Opt-in via filters['chain'] = 'auto_ai' or 'all'.
+    chain = (filters.get('chain') or 'manual').strip().lower()
+    if chain in ('manual', 'auto_ai'):
+        clauses.append("COALESCE(chain, 'manual') = ?")
+        params.append(chain)
+    # chain='all' → no clause (both chains combined)
+
     where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
     return where, params
 

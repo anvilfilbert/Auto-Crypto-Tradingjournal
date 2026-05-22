@@ -424,6 +424,14 @@ def init_db():
     )
     _apply(46, "futures_ai_log", "SELECT 1")
 
+    # Chain separation: every position belongs to exactly one trading
+    # 'chain' — manual (operator-executed) or auto_ai (Futures-AI bot).
+    # All existing rows default to 'manual' since that's all that exists
+    # pre-Futures-AI. AutoAI inserts use 'auto_ai'. This is the
+    # foundation for chain-scoped rulebook, hindsight, and analytics.
+    _apply(47, "positions.chain",
+           "ALTER TABLE positions ADD COLUMN chain TEXT DEFAULT 'manual'")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here
