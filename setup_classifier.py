@@ -36,8 +36,14 @@ import chart_candles
 import chart_indicators
 
 
-ARCHETYPES = ("breakout", "reversal", "continuation", "range_bound", "low_conviction")
-_MIN_CONFIDENCE_FLOOR = 3   # winner must reach this score, else low_conviction
+# 4-archetype taxonomy after the 22-05-2026 calibration. range_bound was
+# dropped because Haiku ground-truth used it 0/111 — every range-bound
+# trade collapsed into low_conviction in practice. Confidence floor raised
+# 3 → 4 because the AI ground truth showed 11/27 rule-continuations
+# (~40%) were really low_conviction setups that the rule classifier was
+# letting through with a 3-point score.
+ARCHETYPES = ("breakout", "reversal", "continuation", "low_conviction")
+_MIN_CONFIDENCE_FLOOR = 4   # winner must reach this score, else low_conviction
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -131,8 +137,11 @@ def classify_rules(symbol: str, direction: str, open_time: str,
     if not is_long and 22 <= rsi <= 45:                 scores["breakout"] += 1
 
     # --- REVERSAL ---
-    if is_long     and rsi <= 35:                       scores["reversal"] += 2
-    if not is_long and rsi >= 65:                       scores["reversal"] += 2
+    # RSI gates widened from <=35/>=65 to <=40/>=60 — the strict thresholds
+    # missed 10 of 26 real reversals per AI ground truth (they ended up in
+    # low_conviction because nothing else hit floor either).
+    if is_long     and rsi <= 40:                       scores["reversal"] += 2
+    if not is_long and rsi >= 60:                       scores["reversal"] += 2
     if wt_recent is not None:                           scores["reversal"] += 2
     if wt_zone == ("oversold" if is_long else "overbought"):
                                                         scores["reversal"] += 1
@@ -147,12 +156,8 @@ def classify_rules(symbol: str, direction: str, open_time: str,
     if not is_long and 40 <= rsi <= 60:                 scores["continuation"] += 1
     if 15 <= adx <= 35:                                 scores["continuation"] += 1
     if 0.7 <= vol <= 1.5:                               scores["continuation"] += 1
-
-    # --- RANGE BOUND ---
-    if adx < 15:                                        scores["range_bound"] += 2
-    if 0.5 <= vol <= 1.2:                               scores["range_bound"] += 1
-    if 38 <= rsi <= 62:                                 scores["range_bound"] += 1
-    if "mixed" in ema_align:                            scores["range_bound"] += 1
+    # range_bound dropped — AI never picked it (0/111). Trades with low ADX
+    # and mixed EMAs now correctly fall to low_conviction via the floor.
 
     # Pick the winner
     best = max(scores, key=scores.get)
@@ -190,8 +195,7 @@ CLASSIFY INTO EXACTLY ONE OF THESE ARCHETYPES:
 - breakout       : price escaping a consolidation/range with volume + momentum
 - reversal       : counter-trend bounce/fade at an exhaustion zone (RSI extreme, structural level, divergence)
 - continuation   : established trend, looking for a pullback or trend-follow entry
-- range_bound    : sideways market, no clear directional bias (low ADX, flat EMAs)
-- low_conviction : mixed signals, no clear pattern, would normally skip
+- low_conviction : mixed signals, sideways market, or no clear pattern — would normally skip
 
 SETUP:
 Symbol:    {symbol}
@@ -203,7 +207,7 @@ TECHNICAL PICTURE AT ENTRY (reconstructed from candles):
 {prompt_text_1h}
 
 Respond with ONLY a JSON object (no markdown, no code fences):
-{{"archetype":"breakout|reversal|continuation|range_bound|low_conviction",
+{{"archetype":"breakout|reversal|continuation|low_conviction",
   "confidence":0.0-1.0,
   "reasoning":"one sentence citing the specific technicals that drove the call"}}"""
 

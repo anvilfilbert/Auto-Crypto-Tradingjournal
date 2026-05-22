@@ -196,10 +196,26 @@ def _score_finalists_with_agents(finalists: list, conn,
             if macro_warnings:
                 logger.info("macro cap applied to %s: %s", sym, "; ".join(macro_warnings))
             # Apply per-trader bad-hour cap (UTC 13/15/19/20 = -$365 in 90d)
-            from scanner_criteria import _apply_personal_bad_hour_cap
+            from scanner_criteria import _apply_personal_bad_hour_cap, _apply_reversal_cap
             score, bh_warnings = _apply_personal_bad_hour_cap(score)
             if bh_warnings:
                 logger.info("bad-hour cap applied to %s: %s", sym, "; ".join(bh_warnings))
+            # Detect archetype early so we can apply the reversal cap before
+            # the threshold check. Reversal trades have 54% WR + 1.76% MFE
+            # historically — cap at 5.5 unless confluence is strong (>=3
+            # same-side signals).
+            try:
+                from scanner_prompts import _detect_archetype as _det_arch
+                archetype = _det_arch(ctx, direction, symbol=sym)
+            except Exception:
+                archetype = ""
+            score, rev_warnings = _apply_reversal_cap(
+                score, archetype,
+                bullish_signals=conf.get("bullish", 0),
+                bearish_signals=conf.get("bearish", 0),
+            )
+            if rev_warnings:
+                logger.info("reversal cap applied to %s: %s", sym, "; ".join(rev_warnings))
             if score < min_score:
                 continue
             entry_p = float(prep.get("entry_price", 0) or 0)
@@ -227,15 +243,7 @@ def _score_finalists_with_agents(finalists: list, conn,
             except Exception:
                 _tp_notes = []
 
-            # Surface the detected archetype so propagation can write it into
-            # positions.setup_type when the call gets linked. Without this the
-            # only field downstream sees is setup_label, which often contains
-            # the model id rather than an archetype.
-            try:
-                from scanner_prompts import _detect_archetype as _det_arch
-                archetype = _det_arch(ctx, direction, symbol=sym)
-            except Exception:
-                archetype = ""
+            # `archetype` was already detected above for the reversal-cap step.
 
             setup = {
                 "_symbol":        sym,

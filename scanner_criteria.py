@@ -88,6 +88,36 @@ def _is_in_personal_bad_hour(utc_hour: int = None) -> bool:
     return h in PERSONAL_BAD_HOURS_UTC
 
 
+# Reversal-archetype trades produced -$375 across 26 trades (54% WR,
+# avg MFE only 1.76% before reversing). Cap scores when the AI sees a
+# reversal setup unless there's strong confluence to justify it.
+REVERSAL_CAP                  = 5.5
+REVERSAL_CONFLUENCE_BYPASS    = 3   # >=3 confluence signals lifts the cap
+
+
+def _apply_reversal_cap(score: float, archetype: str,
+                         bullish_signals: int = 0, bearish_signals: int = 0
+                         ) -> tuple[float, list[str]]:
+    """
+    Cap reversal-archetype scores at 5.5 unless the confluence count is
+    strong (>=3 same-side signals). Reversals in this trader's history
+    only paid off when multiple signals lined up — pure RSI-extreme or
+    WT-cross plays bled money. Returns (capped_score, warnings).
+    """
+    warnings: list[str] = []
+    if archetype != "reversal" or score <= REVERSAL_CAP:
+        return score, warnings
+    same_side_signals = max(bullish_signals or 0, bearish_signals or 0)
+    if same_side_signals >= REVERSAL_CONFLUENCE_BYPASS:
+        return score, warnings
+    warnings.append(
+        f"Reversal archetype with only {same_side_signals} confluence signals "
+        f"(needs {REVERSAL_CONFLUENCE_BYPASS}+) — score capped at {REVERSAL_CAP}. "
+        f"Historical reversals 26 trades 54% WR -$375 total."
+    )
+    return min(score, REVERSAL_CAP), warnings
+
+
 def _apply_personal_bad_hour_cap(score: float, utc_hour: int = None
                                   ) -> tuple[float, list[str]]:
     """Cap score during the trader's known bad hours so the scanner can
