@@ -172,13 +172,44 @@ def get_balance() -> dict:
             "unrealized_pnl": 0.0}
 
 
+def get_pending_plan_orders(symbol: Optional[str] = None) -> list:
+    """Active TPSL plan orders (the actual SL/TP for our positions).
+    Returns normalised list of {symbol, plan_type, trigger_price,
+    direction, size, order_id, source}."""
+    try:
+        d = _request("GET", "/api/v2/mix/order/orders-plan-pending", params={
+            "productType": PRODUCT_TYPE,
+            "planType":    "profit_loss",
+        })
+        rows = (d or {}).get("entrustedList") or []
+    except Exception:
+        return []
+    out = []
+    for o in rows:
+        if symbol and o.get("symbol") != symbol:
+            continue
+        out.append({
+            "symbol":         o.get("symbol"),
+            "plan_type":      o.get("planType"),  # 'loss_plan' or 'profit_plan'
+            "trigger_price":  float(o.get("triggerPrice") or 0),
+            "direction":      "Long" if o.get("posSide") == "long" else "Short",
+            "size":           float(o.get("size") or 0),
+            "order_id":       o.get("orderId"),
+            "source":         o.get("enterPointSource"),
+        })
+    return out
+
+
 def get_open_positions() -> list:
-    """All open positions on the trader subaccount, normalised shape."""
+    """All open positions on the trader subaccount, normalised shape.
+    Enriched with the SL/TP trigger prices from pending plan orders."""
     d = _request("GET", "/api/v2/mix/position/all-position", params={
         "productType": PRODUCT_TYPE,
         "marginCoin":  "USDT",
     })
     rows = d if isinstance(d, list) else []
+    # Fetch all pending plans ONCE so we can match per position
+    plans = get_pending_plan_orders()
     out = []
     for r in rows:
         try:
@@ -187,21 +218,30 @@ def get_open_positions() -> list:
                 continue
             mark = float(r.get("markPrice") or 0)
             entry = float(r.get("openPriceAvg") or 0)
-            # The active SL/TP are reported in `stopLoss` / `takeProfit`
-            # (NOT presetStopLossPrice). Empty string means none attached.
-            sl_raw = r.get("stopLoss") or ""
-            tp_raw = r.get("takeProfit") or ""
+            # The position-level stopLoss/takeProfit fields are usually
+            # empty on Bitget V2 — SL/TP live as separate plan orders.
+            # Look them up from the plans list we fetched above.
+            sym       = r.get("symbol")
+            direction = "Long" if r.get("holdSide") == "long" else "Short"
+            sl_plan   = next((p for p in plans
+                              if p["symbol"] == sym
+                              and p["direction"] == direction
+                              and p["plan_type"] == "loss_plan"), None)
+            tp_plan   = next((p for p in plans
+                              if p["symbol"] == sym
+                              and p["direction"] == direction
+                              and p["plan_type"] == "profit_plan"), None)
             out.append({
-                "symbol":         r.get("symbol"),
-                "direction":      "Long" if r.get("holdSide") == "long" else "Short",
+                "symbol":         sym,
+                "direction":      direction,
                 "entry_price":    entry,
                 "mark_price":     mark,
                 "size_contracts": total,
                 "notional_usdt":  total * mark if mark else 0,
                 "leverage":       int(float(r.get("leverage") or 1)),
                 "unrealized_pnl": float(r.get("unrealizedPL") or 0),
-                "preset_sl":      float(sl_raw) if sl_raw else None,
-                "preset_tp":      float(tp_raw) if tp_raw else None,
+                "preset_sl":      sl_plan["trigger_price"] if sl_plan else None,
+                "preset_tp":      tp_plan["trigger_price"] if tp_plan else None,
                 "liquidation":    float(r.get("liquidationPrice") or 0) or None,
                 "break_even":     float(r.get("breakEvenPrice") or 0) or None,
             })
@@ -372,12 +412,12 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
     }
     if client_oid:
         body["clientOid"] = client_oid
-    if sl_price:
-        body["presetStopLossPrice"]   = str(sl_price)
-    if tp1_price:
-        body["presetStopSurplusPrice"] = str(tp1_price)
-    # NB: Bitget only supports ONE preset TP via this endpoint. TP2 needs
-    # to be added as a separate plan order after the position is open.
+    # IMPORTANT: don't pass presetStopLossPrice / presetStopSurplusPrice
+    # here. Bitget V2 creates SEPARATE plan orders for those, which then
+    # duplicate the ones we attach via place-tpsl-order below. Observed
+    # on the 23:46 RKLBUSDT trade: 4 plan orders existed (2 from preset,
+    # 2 from our explicit attach). Clean approach is to ONLY use the
+    # explicit attach path.
 
     data = _request("POST", "/api/v2/mix/order/place-order", body=body)
     order_id = data.get("orderId") or data.get("clientOid")
