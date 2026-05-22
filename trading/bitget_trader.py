@@ -370,21 +370,16 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
 
     size_contracts = round(size_usdt / mark, vp)
 
-    # --- Pre-flight validation: TP must be on correct side of CURRENT mark ---
-    # When the market moved during the scanner's compute window, our
-    # pre-computed TP might now be on the wrong side of mark. Bitget
-    # rejects with error 40830. Bump it to a safe minimum (mark ± 0.5%)
-    # so the order can place; if the trade thesis stays valid the price
-    # will keep moving and we'll catch the bigger TP via the trail rule.
+    # --- Pre-flight validation: SL + TP must be sensible ---
+    # Old approach: nudge invalid TP to mark*1.005. That produced 0.5%
+    # TPs with deep SLs → R:R 1:0.03 = catastrophic. New approach: when
+    # the scanner-supplied levels are invalid (TP on wrong side, or
+    # absent), REPLACE with ATR-based defaults so R:R stays sensible.
     is_long = (side == "long")
-    if tp1_price:
-        if is_long and tp1_price <= mark:
-            tp1_price = mark * 1.005   # nudge above mark by 0.5%
-        if not is_long and tp1_price >= mark:
-            tp1_price = mark * 0.995
+
+    # SL refusal: if scanner's SL is already past mark, the trade thesis
+    # is broken — refuse the order outright rather than rescue it.
     if sl_price:
-        # SL must be on the LOSING side of mark; if it's already past,
-        # refuse the order — placing it would mean instant stop-out.
         if is_long and sl_price >= mark:
             raise TraderAPIError(
                 f"SL {sl_price} is already past mark {mark} for long {symbol} — refusing"
@@ -393,6 +388,34 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
             raise TraderAPIError(
                 f"SL {sl_price} is already past mark {mark} for short {symbol} — refusing"
             )
+
+    # TP on wrong side → switch to ATR-based default (2× ATR_4H from mark).
+    # Keep the scanner SL if it's wider than 1× ATR (preserves operator
+    # intent on the risk side); otherwise widen to 1× ATR floor.
+    atr_4h = _fetch_atr_4h(symbol)
+    if atr_4h > 0:
+        # Repair TP if invalid
+        tp_invalid = (
+            not tp1_price or
+            (is_long and tp1_price <= mark) or
+            (not is_long and tp1_price >= mark)
+        )
+        if tp_invalid:
+            tp1_price = mark + (2 * atr_4h if is_long else -2 * atr_4h)
+        else:
+            # If TP would only fire on a microscopic move, replace it
+            # with a meaningful ATR-based target.
+            tp_distance_pct = abs(tp1_price - mark) / mark
+            if tp_distance_pct < 0.015:   # < 1.5% TP is suspect
+                tp1_price = mark + (2 * atr_4h if is_long else -2 * atr_4h)
+
+        # Repair SL if absent or too tight
+        if not sl_price:
+            sl_price = mark - (atr_4h if is_long else -atr_4h)
+        else:
+            sl_distance = abs(mark - sl_price)
+            if sl_distance < atr_4h * 0.5:    # tighter than 0.5× ATR = noise
+                sl_price = mark - (atr_4h if is_long else -atr_4h)
 
     # --- Snap every price to the symbol's tick grid ---
     sl_price  = _snap_price(sl_price,  pp)
