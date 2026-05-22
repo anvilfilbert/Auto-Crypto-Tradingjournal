@@ -397,8 +397,16 @@ def _populate_setup_type_from_call(conn, position_id: int, call_id: int) -> None
         if not row or not row[0]:
             return
         data = _json.loads(row[0])
-        trade_type = (data.get("trade_type") or data.get("setup_type")
-                      or data.get("setup_label") or "")
+        # Only use trade_type or setup_type (genuine archetype fields).
+        # setup_label was previously a fallback but it sometimes holds the
+        # model name (e.g. "claude-sonnet-4-6") or labels like "Strong" /
+        # "Quick score only" — none of which are useful archetypes. Leave
+        # setup_type empty rather than write garbage.
+        trade_type = (data.get("trade_type") or data.get("setup_type") or "")
+        # Guard against model-name leakage from older analysis_json schemas
+        if trade_type and any(s in trade_type.lower()
+                              for s in ("claude-", "haiku", "sonnet", "opus", "gpt-")):
+            trade_type = ""
         if trade_type:
             conn.execute(
                 "UPDATE positions SET setup_type=? WHERE id=? AND (setup_type IS NULL OR setup_type='')",

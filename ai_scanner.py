@@ -222,12 +222,23 @@ def _score_finalists_with_agents(finalists: list, conn,
             except Exception:
                 _tp_notes = []
 
+            # Surface the detected archetype so propagation can write it into
+            # positions.setup_type when the call gets linked. Without this the
+            # only field downstream sees is setup_label, which often contains
+            # the model id rather than an archetype.
+            try:
+                from scanner_prompts import _detect_archetype as _det_arch
+                archetype = _det_arch(ctx, direction)
+            except Exception:
+                archetype = ""
+
             setup = {
                 "_symbol":        sym,
                 "symbol":         sym,
                 "direction":      direction,
                 "setup_score":    score,
                 "setup_label":    prep.get("_model", ""),
+                "trade_type":     archetype,
                 "entry_zone":     {"low": entry_p, "high": entry_p,
                                    "rationale": "Agent pipeline entry level"},
                 "sl_price":       prep.get("sl_price", 0),
