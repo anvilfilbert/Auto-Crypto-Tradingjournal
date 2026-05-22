@@ -45,14 +45,15 @@ MAX_LEVERAGE              = 10
 MAX_NOTIONAL_USDT         = 25.0   # $25 notional per trade on $100 bankroll
 MAX_CONCURRENT_POSITIONS  = 3
 
-# Circuit breakers (auto-trip → state goes to "circuit_breaker")
+# Circuit breakers (auto-trip → state goes to "circuit_breaker") — these
+# are CAPITAL-PRESERVATION rules only. Strategic rules (which day, which
+# symbol, which direction) belong in the scoring system, NOT here. The
+# rulebook (data-driven, no priors) and the score caps (macro, bad-hour,
+# reversal) handle the strategic side; this module handles "stop me from
+# losing too much money no matter what the AI thinks".
 DAILY_DD_BREAKER_PCT      = -0.05  # -5% in 24h
 TOTAL_DD_BREAKER_PCT      = -0.15  # -15% from starting equity
 CONSECUTIVE_LOSS_BREAKER  = 3
-
-# Symbol + time blocklists derived from your data
-SYMBOL_BLOCKLIST          = {"BTCUSDT"}   # 8 trades, 37.5% WR, -$94 historical
-SHORTS_ALLOWED            = True   # data decides, not bias
 
 # Confirmed-invalidation rule — both must fire to auto-close
 INVALIDATION_REQUIRE_MAE_BREACH    = True
@@ -145,6 +146,4 @@ def snapshot() -> dict:
         "daily_dd_breaker_pct":       DAILY_DD_BREAKER_PCT,
         "total_dd_breaker_pct":       TOTAL_DD_BREAKER_PCT,
         "consecutive_loss_breaker":   CONSECUTIVE_LOSS_BREAKER,
-        "symbol_blocklist":           sorted(SYMBOL_BLOCKLIST),
-        "shorts_allowed":             SHORTS_ALLOWED,
     }

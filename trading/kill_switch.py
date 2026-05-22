@@ -110,24 +110,17 @@ def can_open_new_trade(conn) -> tuple[bool, str]:
         _trip_breaker(conn, f"{nl} consecutive losses")
         return False, f"consecutive-loss breaker tripped ({nl} losses)"
 
-    # Concurrent positions
+    # Concurrent positions — pure safety cap (capital-preservation)
     n_open = _open_position_count(conn)
     if n_open >= config.MAX_CONCURRENT_POSITIONS:
         return False, f"already at MAX_CONCURRENT_POSITIONS ({n_open}/{config.MAX_CONCURRENT_POSITIONS})"
 
-    # Day-of-week guard — no new opens Mon/Tue if ≥2 positions already open
-    wd = _dt.datetime.now(_dt.timezone.utc).weekday()   # 0=Mon, 1=Tue
-    if wd in (0, 1) and n_open >= 2:
-        return False, "Mon/Tue cap: ≥2 positions already open"
-
-    # Bad-hour cap reuses scanner_criteria — already enforced upstream when
-    # the scanner produces signals, but we double-check here for safety.
-    try:
-        from scanner_criteria import _is_in_personal_bad_hour
-        if _is_in_personal_bad_hour():
-            return False, "UTC bad-hour window (13/15/19/20)"
-    except Exception:
-        pass
+    # NOTE: No day-of-week, symbol, or direction filters here. Strategic
+    # decisions (when, where, what to trade) belong in the scoring system
+    # — the data-driven rulebook, macro caps, bad-hour score caps, and
+    # archetype caps all already see this trader's history and adjust
+    # scores accordingly. Adding hard filters at this layer would
+    # duplicate the bias the rulebook was just rewritten to remove.
 
     return True, ""
 

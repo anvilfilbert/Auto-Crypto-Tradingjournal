@@ -104,14 +104,9 @@ function _renderFuturesAI(d) {
       ' · ' + cl + ' consecutive losses',
     ]));
     rc.appendChild(_bold([
-      'Symbol blocklist: ',
-      (cfg.symbol_blocklist || []).join(', ') || '(none)',
-      '',
-    ]));
-    rc.appendChild(_bold([
-      'Shorts allowed: ',
-      cfg.shorts_allowed ? 'yes' : 'no',
-      ' · Bad hours: UTC 13/15/19/20 (already enforced by scanner)',
+      'Strategic filters: ',
+      'none at this layer',
+      ' — day/symbol/direction handled by the data-driven scoring + rulebook',
     ]));
 
     const reasonLine = document.createElement('div');
