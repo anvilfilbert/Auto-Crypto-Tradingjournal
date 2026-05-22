@@ -207,7 +207,19 @@ function renderHindsightTable(rows) {
     <div>Hyp. P&L</div>
     <div>Δ</div>
     <div title="True/False Positive/Negative — see legend above">Verdict <span style="color:var(--muted);font-size:.7em">ⓘ</span></div>
+    <div title="Key conditions the AI cited when scoring this setup (first 2 shown — hover for full)">Reasoning</div>
+    <div title="Risks the AI flagged (first 2 shown — hover for full)">Risks</div>
   </div>`;
+
+  const _safeArr = v => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v;
+    try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; }
+  };
+  // Truncate any single bullet so the row stays narrow but the title shows the full text on hover.
+  const _shortBullets = (arr, n = 2) => arr.slice(0, n)
+    .map(s => String(s).length > 70 ? String(s).slice(0, 67) + '…' : String(s))
+    .map(s => '• ' + s).join('\n');
 
   const bodyRows = rows.map(r => {
     const score     = r.setup_score || 0;
@@ -228,6 +240,19 @@ function renderHindsightTable(rows) {
     const verdBadge = _verdictBadge(r.verdict);
     const sym = (r.symbol || '').replace('USDT', '');
 
+    // Reasoning + risks come back as JSON arrays in r.key_conditions / r.risks.
+    // For a SKIP, the model puts the reason into r.skip_reason instead of key_conditions.
+    const conds  = _safeArr(r.key_conditions);
+    const risks  = _safeArr(r.risks);
+    const reasonText = conds.length
+      ? _shortBullets(conds)
+      : (r.skip_reason ? `SKIP: ${r.skip_reason}` : '—');
+    const reasonFull = conds.length
+      ? conds.map(s => '• ' + s).join('\n')
+      : (r.skip_reason || '');
+    const risksText = risks.length ? _shortBullets(risks) : '—';
+    const risksFull = risks.map(s => '• ' + s).join('\n');
+
     return `<div class="hindsight-row">
       <div>${dirBadge} <span style="font-weight:600">${sym}</span></div>
       <div style="font-size:.75rem;color:var(--muted)">${dateStr}</div>
@@ -237,10 +262,23 @@ function renderHindsightTable(rows) {
       <div style="color:${hypCol}">${hypPnl !== 0 ? sign(hypPnl)+fmtC(hypPnl) : '—'}</div>
       <div style="color:${deltaCol};font-size:.8rem">${delta !== 0 ? sign(delta)+fmtC(delta) : '—'}</div>
       <div>${verdBadge}</div>
+      <div class="hindsight-cell-text" title="${_escTitle(reasonFull)}">${_escHtml(reasonText)}</div>
+      <div class="hindsight-cell-text risks" title="${_escTitle(risksFull)}">${_escHtml(risksText)}</div>
     </div>`;
   }).join('');
 
   return `<div class="hindsight-table">${legend}${hdr}${bodyRows}</div>`;
+}
+
+// Escape user-facing HTML — reasoning/risks come from the AI's JSON output
+// and could contain HTML or quote characters.
+function _escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function _escTitle(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function _verdictBadge(v) {
