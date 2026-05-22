@@ -19,24 +19,51 @@ from . import config
 # ── Bankroll + recent P&L queries (DB-driven) ───────────────────────────────
 
 def _equity_now(conn) -> float:
-    """Latest equity reading from wallet_snapshots, or starting bankroll."""
+    """
+    Auto-trader equity. In real mode, queries the Bitget trader subaccount
+    directly so the operator's main-account equity (which lives in
+    wallet_snapshots) doesn't pollute the auto-trader's risk calculations.
+    In paper mode, uses starting bankroll + accumulated paper P&L.
+    """
+    if config.is_real_mode():
+        try:
+            from . import bitget_trader
+            bal = bitget_trader.get_balance() or {}
+            eq = float(bal.get("equity") or 0)
+            if eq > 0:
+                return eq
+        except Exception:
+            pass
+        return config.starting_equity()
+
+    # Paper mode — starting equity + sum of paper close P&L
     try:
         r = conn.execute(
-            "SELECT wallet_balance FROM wallet_snapshots "
-            "ORDER BY ts DESC LIMIT 1"
+            "SELECT COALESCE(SUM(realized_pnl),0) FROM paper_positions "
+            "WHERE status='closed'"
         ).fetchone()
-        return float(r[0]) if r and r[0] else config.starting_equity()
+        return config.starting_equity() + float(r[0] or 0)
     except Exception:
         return config.starting_equity()
 
 
 def _daily_pnl_pct(conn) -> float:
-    """Realized P&L over the last 24h as a fraction of starting equity."""
+    """
+    Auto-trader's realized P&L over the last 24h as a fraction of
+    starting equity. Restricted to auto_ai chain (real) or paper_positions
+    (paper) so manual trades cannot trip the auto-trader's breakers.
+    """
     try:
-        r = conn.execute(
-            "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
-            "WHERE close_time >= datetime('now','-24 hours')"
-        ).fetchone()
+        if config.is_real_mode():
+            r = conn.execute(
+                "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
+                "WHERE chain='auto_ai' AND close_time >= datetime('now','-24 hours')"
+            ).fetchone()
+        else:
+            r = conn.execute(
+                "SELECT COALESCE(SUM(realized_pnl),0) FROM paper_positions "
+                "WHERE status='closed' AND closed_at >= datetime('now','-24 hours')"
+            ).fetchone()
         pnl = float(r[0] or 0)
         return pnl / max(config.starting_equity(), 1)
     except Exception:
@@ -44,13 +71,20 @@ def _daily_pnl_pct(conn) -> float:
 
 
 def _consecutive_losses(conn) -> int:
-    """Count of consecutive losers up to the most recent close."""
+    """Count of consecutive auto-trader losers up to the most recent close."""
     try:
-        rows = conn.execute(
-            "SELECT realized_pnl FROM positions "
-            "WHERE close_time IS NOT NULL AND close_time != '' "
-            "ORDER BY close_time DESC LIMIT 10"
-        ).fetchall()
+        if config.is_real_mode():
+            rows = conn.execute(
+                "SELECT realized_pnl FROM positions "
+                "WHERE chain='auto_ai' AND close_time IS NOT NULL AND close_time != '' "
+                "ORDER BY close_time DESC LIMIT 10"
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT realized_pnl FROM paper_positions "
+                "WHERE status='closed' "
+                "ORDER BY closed_at DESC LIMIT 10"
+            ).fetchall()
         n = 0
         for (pnl,) in rows:
             if (pnl or 0) <= 0:
@@ -63,14 +97,19 @@ def _consecutive_losses(conn) -> int:
 
 
 def _open_position_count(conn) -> int:
-    """Current open positions (futures-AI chain). We piggyback on the
-    journal table — positions inserted by the executor get exchange='bitget_trader'
-    so they're separable from manual/journal trades."""
+    """Currently open auto-trader positions. Real mode counts chain='auto_ai'
+    in positions table; paper mode counts open paper_positions."""
     try:
-        r = conn.execute("""
-            SELECT COUNT(*) FROM positions
-            WHERE close_time IS NULL OR close_time = ''
-        """).fetchone()
+        if config.is_real_mode():
+            r = conn.execute("""
+                SELECT COUNT(*) FROM positions
+                WHERE chain='auto_ai' AND (close_time IS NULL OR close_time='')
+            """).fetchone()
+        else:
+            r = conn.execute("""
+                SELECT COUNT(*) FROM paper_positions
+                WHERE status='open'
+            """).fetchone()
         return int(r[0]) if r else 0
     except Exception:
         return 0
