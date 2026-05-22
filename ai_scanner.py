@@ -229,8 +229,16 @@ def _score_finalists_with_agents(finalists: list, conn,
 
             # Enforce TP1 ≥ 1× ATR_4H, TP2 ≥ 2× ATR_4H. The agent pipeline
             # historically produced very tight TPs that printed on noise.
+            # Also enforce SL is on the correct side of entry and within
+            # 0.5×-8× ATR_4H. Without the SL floor the executor was the
+            # only place that caught wrong-side stops (WLDUSDT had the AI
+            # publishing SL above entry on a Long; ATR repair at order
+            # time worked but the journal still recorded the bad level).
             tp1_raw = prep.get("tp1_price", 0)
             tp2_raw = prep.get("tp2_price", 0)
+            sl_raw  = prep.get("sl_price", 0)
+            _tp_notes: list[str] = []
+            _sl_notes: list[str] = []
             try:
                 import trade_utils as _tu
                 atr_4h = ((ctx.get("4H", {}).get("indicators", {})
@@ -238,10 +246,13 @@ def _score_finalists_with_agents(finalists: list, conn,
                 if atr_4h:
                     tp1_raw, tp2_raw, _tp_notes = _tu.enforce_tp_floor(
                         entry_p, direction, tp1_raw, tp2_raw, atr_4h)
-                else:
-                    _tp_notes = []
+                    sl_raw, _sl_notes = _tu.enforce_sl_floor(
+                        entry_p, direction, sl_raw, atr_4h)
+                    if _sl_notes:
+                        logger.info("SL floor applied to %s: %s",
+                                    sym, "; ".join(_sl_notes))
             except Exception:
-                _tp_notes = []
+                pass
 
             # `archetype` was already detected above for the reversal-cap step.
 
@@ -254,10 +265,11 @@ def _score_finalists_with_agents(finalists: list, conn,
                 "trade_type":     archetype,
                 "entry_zone":     {"low": entry_p, "high": entry_p,
                                    "rationale": "Agent pipeline entry level"},
-                "sl_price":       prep.get("sl_price", 0),
+                "sl_price":       sl_raw,
                 "tp1_price":      tp1_raw,
                 "tp2_price":      tp2_raw,
                 "_tp_adjustments": _tp_notes,
+                "_sl_adjustments": _sl_notes,
                 "rr_ratio":       prep.get("rr_ratio", 0),
                 "key_conditions": prep.get("key_conditions", []),
                 "chart_png_b64":  prep.get("chart_png_b64", ""),

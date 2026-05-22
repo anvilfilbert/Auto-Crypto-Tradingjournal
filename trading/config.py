@@ -145,7 +145,12 @@ def set_state(new_state: str, conn=None, reason: Optional[str] = None) -> str:
 
 def snapshot() -> dict:
     """Calibration snapshot for /api/system/health + Futures-AI page."""
+    try:
+        from constants import KNOWLEDGE_VERSION as _kv
+    except Exception:
+        _kv = "(unknown)"
     return {
+        "knowledge_version":          _kv,
         "enabled":                    _FUTURES_AI_ENABLED,
         "mode":                       _FUTURES_AI_MODE,
         "starting_equity_usdt":       _STARTING_EQUITY,
@@ -154,6 +159,8 @@ def snapshot() -> dict:
         "max_leverage":               MAX_LEVERAGE,
         "max_notional_usdt":          MAX_NOTIONAL_USDT,
         "max_concurrent_positions":   MAX_CONCURRENT_POSITIONS,
+        "consensus_min_score":        CONSENSUS_MIN_SCORE,
+        "consensus_model":            CONSENSUS_MODEL,
         "daily_dd_breaker_pct":       DAILY_DD_BREAKER_PCT,
         "total_dd_breaker_pct":       TOTAL_DD_BREAKER_PCT,
         "consecutive_loss_breaker":   CONSECUTIVE_LOSS_BREAKER,

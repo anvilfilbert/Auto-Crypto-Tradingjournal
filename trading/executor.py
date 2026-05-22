@@ -169,18 +169,32 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
 
     pos_id = _insert_open_position(conn, signal, sizing, result)
     _log(conn, "real_open", pos_id, {
-        "symbol":     sym,
-        "direction":  dir_,
-        "score":      signal.get("consensus_score"),
-        "entry":      result.get("mark_at_entry"),
-        "sl":         signal.get("sl_price"),
-        "tp1":        signal.get("tp1_price"),
-        "tp2":        signal.get("tp2_price"),
-        "notional":   result.get("size_usdt"),
-        "lev":        result.get("leverage"),
-        "order_id":   result.get("order_id"),
-        "client_oid": client_oid,
+        "symbol":         sym,
+        "direction":      dir_,
+        "score":          signal.get("consensus_score"),
+        "entry":          result.get("mark_at_entry"),
+        "sl":             signal.get("sl_price"),
+        "tp1":            signal.get("tp1_price"),
+        "tp2":            signal.get("tp2_price"),
+        "notional":       result.get("size_usdt"),
+        "lev_req":        result.get("leverage_requested"),
+        "lev_actual":     result.get("leverage_actual"),
+        "set_lev_result": result.get("set_leverage_result"),
+        "attached_sl":    result.get("attached_sl"),
+        "attached_tp1":   result.get("attached_tp1"),
+        "order_id":       result.get("order_id"),
+        "client_oid":     client_oid,
     })
+    # Surface leverage mismatch as its own log event so it shows up
+    # prominently in the UI decision feed.
+    if (result.get("leverage_actual") != result.get("leverage_requested")
+            and result.get("leverage_requested")):
+        _log(conn, "lev_mismatch", pos_id, {
+            "symbol":     sym,
+            "requested":  result.get("leverage_requested"),
+            "actual":     result.get("leverage_actual"),
+            "set_result": result.get("set_leverage_result"),
+        })
     return pos_id
 
 

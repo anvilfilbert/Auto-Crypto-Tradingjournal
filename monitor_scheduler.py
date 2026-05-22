@@ -65,11 +65,32 @@ def _run_once():
         print(f"[Monitor] Failed to fetch positions: {e}", flush=True)
         return
 
+    # Tag manual-chain positions for downstream alert routing
+    for p in positions:
+        p.setdefault("chain", "manual")
+
+    # Also fetch auto-chain (auto-trader subaccount) positions so the
+    # exposure monitor sees concentration risk across BOTH books, not
+    # just the operator's manual trades. This is best-effort — if the
+    # auto-trader creds are absent/invalid we silently skip and keep
+    # the manual-only monitor working.
+    auto_positions: list[dict] = []
+    try:
+        from trading import config as fa_config
+        if fa_config.is_real_mode():
+            from trading import bitget_trader as _bt
+            auto_positions = _bt.get_open_positions() or []
+            for p in auto_positions:
+                p["chain"] = "auto_ai"
+    except Exception as e:
+        print(f"[Monitor] auto-chain position fetch skipped: {e}", flush=True)
+
     to_check = [p for p in positions if _passes_filter(p)]
-    if not to_check:
+    if not to_check and not auto_positions:
         return
 
-    print(f"[Monitor] Checking {len(to_check)}/{len(positions)} positions", flush=True)
+    print(f"[Monitor] Checking {len(to_check)}/{len(positions)} manual "
+          f"+ {len(auto_positions)} auto positions", flush=True)
 
     # Pass 1 — deterministic SL-discipline checks on EVERY open position,
     # not just the filtered ones. These are cheap (single ATR_4H lookup)
@@ -85,19 +106,34 @@ def _run_once():
             print(f"[Monitor] Risk-check error for {pos.get('symbol','?')}: {e}",
                   flush=True)
 
-    # Pass 1b — portfolio-level exposure / correlation alerts
+    # Pass 1b — portfolio-level exposure / correlation alerts across
+    # BOTH chains. The operator's risk is the same regardless of which
+    # book opened the position, so concentration is checked on the
+    # combined set. Alert keys are tagged with the chain composition so
+    # a manual-only alert and an auto-only alert with the same symbols
+    # don't collide.
+    combined_positions = positions + auto_positions
     try:
-        for alert in exposure_monitor.check(positions) or []:
-            key = (alert["kind"], tuple(sorted(alert.get("symbols") or [])))
+        for alert in exposure_monitor.check(combined_positions) or []:
+            syms = tuple(sorted(alert.get("symbols") or []))
+            # Annotate alert with which chains the affected symbols belong to
+            chains = sorted({
+                p.get("chain", "manual")
+                for p in combined_positions
+                if p.get("symbol") in (alert.get("symbols") or [])
+            })
+            alert["chains"] = chains
+            key = (alert["kind"], syms, tuple(chains))
             if key in _exposure_alerted:
                 continue
             _exposure_alerted.add(key)
             _send_exposure_alert(alert)
-            print(f"[Monitor] {alert['kind']}: {alert['title']}", flush=True)
+            print(f"[Monitor] {alert['kind']} [{'+'.join(chains)}]: "
+                  f"{alert['title']}", flush=True)
     except Exception as e:
         print(f"[Monitor] Exposure-check error: {e}", flush=True)
     # Drop stale alert keys for symbols that are no longer open
-    open_syms = {p.get("symbol") for p in positions}
+    open_syms = {p.get("symbol") for p in combined_positions}
     _exposure_alerted.intersection_update({
         k for k in _exposure_alerted
         if set(k[1]).issubset(open_syms)

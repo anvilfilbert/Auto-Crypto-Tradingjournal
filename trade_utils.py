@@ -102,6 +102,71 @@ def enforce_tp_floor(entry: float, direction: str, tp1: float, tp2: float,
     return tp1_new, tp2_new, notes
 
 
+# SL sanity envelope. SL must be on the correct side of entry, not inside
+# 0.5× ATR_4H noise, and not absurdly wide (> 8× ATR_4H — that's a 16×
+# adverse range, basically a no-stop). Mirrors the envelope used by
+# scripts/fix_all_unsane_tpsl.py so scanner-side and exec-side agree.
+SL_MIN_ATR_MULTIPLE = 0.5
+SL_MAX_ATR_MULTIPLE = 8.0
+SL_DEFAULT_ATR_MULTIPLE = 1.0
+
+
+def enforce_sl_floor(entry: float, direction: str, sl: float,
+                      atr_4h: float) -> tuple[float, list[str]]:
+    """
+    Returns (sl_adjusted, notes). Repairs SL when AI placed it on the
+    wrong side of entry, inside ATR noise, or absurdly wide.
+
+    Direction-aware: for Long, SL must be BELOW entry; for Short, ABOVE.
+    Repairs use 1× ATR_4H from entry on the correct side — same default
+    the live-order placement uses, so the journal and Bitget agree.
+    """
+    notes: list[str] = []
+    try:
+        entry  = float(entry or 0)
+        sl     = float(sl or 0)
+        atr_4h = float(atr_4h or 0)
+    except (TypeError, ValueError):
+        return sl, notes
+    if entry <= 0 or atr_4h <= 0:
+        return sl, notes
+
+    is_long = (direction or "").strip().lower() == "long"
+    default_sl = (entry - atr_4h * SL_DEFAULT_ATR_MULTIPLE) if is_long \
+                 else (entry + atr_4h * SL_DEFAULT_ATR_MULTIPLE)
+
+    if sl <= 0:
+        notes.append(f"SL was missing — set to {default_sl:.6g} (entry ∓1× ATR_4H)")
+        return round(default_sl, 6), notes
+
+    # Wrong side of entry — repair to default
+    if is_long and sl >= entry:
+        notes.append(f"SL {sl:.6g} was at/above entry for Long — repaired to "
+                     f"{default_sl:.6g}")
+        return round(default_sl, 6), notes
+    if not is_long and sl <= entry:
+        notes.append(f"SL {sl:.6g} was at/below entry for Short — repaired to "
+                     f"{default_sl:.6g}")
+        return round(default_sl, 6), notes
+
+    sl_dist = abs(entry - sl)
+    min_dist = atr_4h * SL_MIN_ATR_MULTIPLE
+    max_dist = atr_4h * SL_MAX_ATR_MULTIPLE
+
+    if sl_dist < min_dist:
+        new_sl = (entry - min_dist) if is_long else (entry + min_dist)
+        notes.append(f"SL bumped from {sl:.6g} to {new_sl:.6g} — was "
+                     f"{sl_dist/atr_4h:.2f}× ATR_4H (need ≥{SL_MIN_ATR_MULTIPLE}×)")
+        return round(new_sl, 6), notes
+    if sl_dist > max_dist:
+        new_sl = (entry - max_dist) if is_long else (entry + max_dist)
+        notes.append(f"SL pulled in from {sl:.6g} to {new_sl:.6g} — was "
+                     f"{sl_dist/atr_4h:.2f}× ATR_4H (cap {SL_MAX_ATR_MULTIPLE}×)")
+        return round(new_sl, 6), notes
+
+    return sl, notes
+
+
 def normalize_symbol(s: str) -> str:
     """BTC/USDT, btc-usdt → BTCUSDT.""",
     return (s or '').upper().replace('/', '').replace('-', '').replace('_', '').strip()

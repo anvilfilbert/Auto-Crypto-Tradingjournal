@@ -339,8 +339,13 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
         raise TraderAPIError(f"invalid side {side!r}")
 
     # Set the leverage first (Bitget requires leverage be configured
-    # on the symbol/hold-side BEFORE the order). Best-effort —
-    # ignore "already at this leverage" errors.
+    # on the symbol/hold-side BEFORE the order). Log success/failure
+    # explicitly — silent failures here were causing trades to open at
+    # the account-default 10x instead of the Kelly-derived value
+    # (observed 22:28 batch: requested 3x, got 10x on 4 of 5 positions).
+    import logging
+    _log = logging.getLogger(__name__)
+    leverage_set_result = "untried"
     try:
         _request("POST", "/api/v2/mix/account/set-leverage", body={
             "symbol":      symbol,
@@ -349,12 +354,18 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
             "leverage":    str(int(leverage)),
             "holdSide":    side,
         })
+        leverage_set_result = "ok"
     except TraderAPIError as e:
-        # Continue — leverage may already be set. Real failures will surface
-        # on the order placement itself.
-        if "already" not in str(e).lower() and "same" not in str(e).lower():
-            # Re-raise unexpected errors so we don't silently fail
-            raise
+        emsg = str(e).lower()
+        if "already" in emsg or "same" in emsg:
+            leverage_set_result = f"already at {leverage}x"
+        else:
+            # Bitget refused — most common cause is symbol's minimum
+            # leverage > our request. Log + continue (the order will
+            # open at whatever leverage Bitget keeps for the symbol).
+            leverage_set_result = f"refused: {str(e)[:100]}"
+            _log.warning("[bitget_trader] set-leverage %s %sx %s failed: %s",
+                          symbol, leverage, side, str(e)[:120])
 
     # Compute size in base units (contracts). Bitget expects "size" in
     # contract units, not USDT. Get mark price for the conversion.
@@ -459,17 +470,41 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
         attached_tp1 = _try_place_tpsl(symbol, side, tp1_price,
                                         size_contracts, plan_type="profit_plan")
 
+    # Query the actual leverage Bitget recorded on the position so the
+    # caller knows whether set-leverage worked or fell back. Best-effort
+    # — if the position isn't visible yet (rare race), we report the
+    # requested value with a note.
+    actual_leverage = leverage
+    try:
+        live = get_open_positions()
+        match = next((p for p in live
+                      if p["symbol"] == symbol
+                      and p["direction"].lower() == side), None)
+        if match:
+            actual_leverage = int(match.get("leverage") or leverage)
+            if actual_leverage != leverage:
+                _log.warning(
+                    "[bitget_trader] leverage mismatch on %s: requested %sx, "
+                    "Bitget set %sx — likely symbol minimum > request",
+                    symbol, leverage, actual_leverage
+                )
+    except Exception:
+        pass
+
     return {
-        "order_id":        order_id,
-        "size_contracts":  size_contracts,
-        "size_usdt":       size_usdt,
-        "leverage":        leverage,
-        "mark_at_entry":   mark,
-        "sl":              sl_price,
-        "tp1":             tp1_price,
-        "tp2":             tp2_price,
-        "attached_sl":     attached_sl,
-        "attached_tp1":    attached_tp1,
+        "order_id":             order_id,
+        "size_contracts":       size_contracts,
+        "size_usdt":            size_usdt,
+        "leverage_requested":   leverage,
+        "leverage_actual":      actual_leverage,
+        "leverage":             actual_leverage,   # back-compat field
+        "set_leverage_result":  leverage_set_result,
+        "mark_at_entry":        mark,
+        "sl":                   sl_price,
+        "tp1":                  tp1_price,
+        "tp2":                  tp2_price,
+        "attached_sl":          attached_sl,
+        "attached_tp1":         attached_tp1,
     }
 
 
