@@ -129,7 +129,7 @@ def api_futures_ai_positions():
                 closed = [dict(r) for r in conn.execute(
                     "SELECT symbol, direction, entry_price, close_price, "
                     "realized_pnl, open_time, close_time, setup_type, "
-                    "setup_score "
+                    "setup_score, close_reason, is_hedge "
                     "FROM positions WHERE chain='auto_ai' AND "
                     "close_time IS NOT NULL AND close_time != '' "
                     "ORDER BY close_time DESC LIMIT ?", (n_closed,)

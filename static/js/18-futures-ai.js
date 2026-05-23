@@ -247,16 +247,56 @@ function _buildOpenPositionsTable(rows, source) {
 }
 
 
+// Friendly labels for the short close_reason codes the executor writes.
+// Anything not in this map is rendered verbatim (handles hedge_unwind: <r>
+// suffixes and any custom strings).
+const _CLOSE_REASON_LABELS = {
+  'SL':                'SL hit',
+  'TP':                'TP hit',
+  'TP1':               'TP1 hit',
+  'TP2':               'TP2 hit',
+  'BE':                'Break-even stop',
+  'MAE_cut':           'MAE auto-close',
+  'trail_stop':        'Trailing stop',
+  'manual_close':      'Manual close',
+  'early_close':       'Early/manual',
+  'hedge_unwind':      'Hedge unwound',
+  'pending_reconcile': 'Reconcile pending',
+  'unknown':           '—',
+};
+
+function _formatCloseReason(raw, source) {
+  if (!raw) return source === 'real' ? 'Reconcile pending' : '—';
+  // hedge_unwind:<reason> → "Hedge unwound: <reason>"
+  if (raw.startsWith('hedge_unwind:')) {
+    return 'Hedge unwound: ' + raw.slice('hedge_unwind:'.length).trim();
+  }
+  return _CLOSE_REASON_LABELS[raw] || raw;
+}
+
+
 function _buildClosedPositionsTable(rows, source) {
   const tbl = document.createElement('table');
-  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem';
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem;table-layout:fixed';
   const thead = tbl.createTHead();
   const hrow = thead.insertRow();
-  const headers = ['Symbol','Dir','Entry','Close','P&L','Reason','Opened','Closed'];
-  headers.forEach(h => {
+  // Explicit column widths so the Reason column has room to wrap legibly
+  // when a hedge unwind or other longer string lands there.
+  const headerSpec = [
+    ['Symbol',  '95px'],
+    ['Dir',     '50px'],
+    ['Entry',   '85px'],
+    ['Close',   '85px'],
+    ['P&L',     '80px'],
+    ['Reason',  'auto'],
+    ['Opened',  '95px'],
+    ['Closed',  '95px'],
+  ];
+  headerSpec.forEach(([h, w]) => {
     const th = document.createElement('th');
     th.textContent = h;
-    th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--border)';
+    th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;'
+      + 'padding:4px 8px;border-bottom:1px solid var(--border);width:' + w;
     hrow.appendChild(th);
   });
   const tb = tbl.createTBody();
@@ -264,22 +304,31 @@ function _buildClosedPositionsTable(rows, source) {
     const tr = tb.insertRow();
     const pnl = p.realized_pnl ?? 0;
     const closePrice = source === 'real' ? p.close_price : p.tp2_price;
+    const isHedge = !!p.is_hedge;
+    const symbolLabel = isHedge ? `${p.symbol} 🛡` : p.symbol;
     const cells = [
-      p.symbol,
+      symbolLabel,
       p.direction,
       _num(p.entry_price),
       _num(closePrice),
       ((pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2)),
-      p.close_reason || (source === 'real' ? 'reconcile' : '—'),
+      _formatCloseReason(p.close_reason, source),
       (p.opened_at || p.open_time || '').slice(5, 16),
       (p.closed_at || p.close_time || '').slice(5, 16),
     ];
+    const baseStyle = 'padding:4px 8px;border-bottom:1px solid var(--border);'
+      + 'color:var(--muted);vertical-align:top';
     cells.forEach((v, i) => {
       const td = tr.insertCell();
       td.textContent = v;
-      let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
+      let cls = baseStyle;
       if (i === 4) {   // P&L column
         cls += ';color:' + (pnl >= 0 ? 'var(--accent3)' : 'var(--red)');
+        cls += ';white-space:nowrap';
+      } else if (i === 5) {   // Reason column — wrap long strings
+        cls += ';white-space:normal;word-break:break-word';
+      } else {
+        cls += ';white-space:nowrap';
       }
       td.style.cssText = cls;
     });

@@ -95,18 +95,74 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
     return cur.lastrowid
 
 
+def _categorize_close_reason(pnl: float, entry_px: float, close_px: float,
+                                direction: str, raw_reason: str = "") -> str:
+    """Turn a raw close-detection string into a short categorical tag the
+    UI can render compactly. Examples returned: 'TP', 'SL', 'BE', 'manual'.
+    Falls back to pending_reconcile / the raw string when uncategorizable.
+    """
+    # Lifecycle reasons pass through as-is when they're already short
+    raw_lower = (raw_reason or "").lower()
+    if "be_trigger" in raw_lower or "break-even" in raw_lower:
+        return "BE"
+    if "trail" in raw_lower:
+        return "trail_stop"
+    if "mae" in raw_lower:
+        return "MAE_cut"
+    if "hedge" in raw_lower:
+        # Already prefixed by hedge_manager — keep the suffix verbatim
+        return raw_reason if raw_reason.startswith("hedge_unwind") else "hedge_unwind"
+    if "manual" in raw_lower or "operator" in raw_lower:
+        return "manual_close"
+    if "history not yet available" in raw_lower or "pending" in raw_lower:
+        return "pending_reconcile"
+
+    # Bitget-closed path — categorise by direction of close vs entry
+    if entry_px and close_px and direction:
+        is_long = direction.strip().lower() == "long"
+        move_pct = (close_px - entry_px) / entry_px * (1 if is_long else -1)
+        # Big positive move with positive pnl → TP-style close
+        # Big negative move with negative pnl → SL-style close
+        # Small absolute move → manual/early close
+        if abs(move_pct) < 0.005:    # <0.5% — not a TP/SL fire
+            return "early_close"
+        if pnl > 0 and move_pct > 0:
+            return "TP"
+        if pnl <= 0 and move_pct < 0:
+            return "SL"
+        # Mixed signal (e.g. pnl positive but tiny move) — call it manual
+        return "manual_close"
+
+    # Nothing to categorise from — store the raw reason or a marker
+    return raw_reason[:40] if raw_reason else "unknown"
+
+
 def _mark_closed(conn, position_id: int, close_price: float,
                   realized_pnl: float, reason: str) -> None:
+    # Look up entry + direction so we can categorise the close reason
+    try:
+        row = conn.execute(
+            "SELECT entry_price, direction FROM positions WHERE id=?",
+            (position_id,),
+        ).fetchone()
+        entry_px = float(row["entry_price"] or 0) if row else 0
+        direction = (row["direction"] if row else "") or ""
+    except Exception:
+        entry_px, direction = 0, ""
+    short_reason = _categorize_close_reason(
+        realized_pnl, entry_px, close_price, direction, reason)
     conn.execute("""
         UPDATE positions
         SET close_time   = datetime('now'),
             close_price  = ?,
-            realized_pnl = ?
+            realized_pnl = ?,
+            close_reason = ?
         WHERE id = ?
-    """, (close_price, realized_pnl, position_id))
+    """, (close_price, realized_pnl, short_reason, position_id))
     conn.commit()
     _log(conn, "auto_close", position_id,
-         {"close_price": close_price, "pnl": realized_pnl, "reason": reason})
+         {"close_price": close_price, "pnl": realized_pnl,
+          "reason": short_reason, "raw_reason": reason})
 
 
 def _log(conn, event: str, position_id: Optional[int], payload: dict) -> None:

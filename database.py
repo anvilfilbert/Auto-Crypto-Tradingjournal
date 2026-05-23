@@ -441,6 +441,20 @@ def init_db():
     _apply(48, "positions.is_hedge",
            "ALTER TABLE positions ADD COLUMN is_hedge INTEGER DEFAULT 0")
 
+    # 'close_reason' — short categorical tag explaining why a position
+    # closed. Used by the Futures-AI page "Recent closed" table and by
+    # hindsight categorisation. Values:
+    #   SL                — stop loss hit
+    #   TP1 / TP2         — take profit hit
+    #   BE                — break-even trigger fired
+    #   MAE_cut           — max adverse excursion auto-close
+    #   trail_stop        — trailing stop hit
+    #   manual_close      — operator force-closed via UI
+    #   hedge_unwind: <r> — catastrophe hedge unwound (reason in suffix)
+    #   pending_reconcile — Bitget history not yet available, retry next cycle
+    _apply(49, "positions.close_reason",
+           "ALTER TABLE positions ADD COLUMN close_reason TEXT DEFAULT NULL")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here
