@@ -2,6 +2,14 @@
 
 *v1.6.0 + Futures-AI + trader-sheet integration · Updated 2026-05-23 (afternoon)*
 
+## See also (dedicated pages)
+- [**DATA_SOURCES.md**](DATA_SOURCES.md) — every external data source, auth, cadence
+- [**AI_ARCHITECTURE.md**](AI_ARCHITECTURE.md) — 7-agent pipeline + 5-provider cascade + model routing
+- [**SCANNER_PIPELINE.md**](SCANNER_PIPELINE.md) — scanner main + backup paths, stages 1-7
+- [**MODULE_MAP.md**](MODULE_MAP.md) — module index, ~120 files
+- [**USER_GUIDE.md**](USER_GUIDE.md) — per-page user-facing walkthrough
+- [**SCORING_GUIDE.md**](SCORING_GUIDE.md) — what each score (1-10) means
+
 ---
 
 ## v1.6.0 additions (2026-05-17)

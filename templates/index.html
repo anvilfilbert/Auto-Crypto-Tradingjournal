@@ -1884,6 +1884,207 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
       </div>
 
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- AI ARCHITECTURE — 7-agent pipeline + 5-provider cascade            -->
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#ffb300"></div>
+          <div class="src-layer-title">AI Architecture — Pipeline &amp; Cascade</div>
+          <div class="src-layer-sub">How models are routed and what runs when</div>
+        </div>
+
+        <!-- 7-agent flow -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:12px">7-Agent Pipeline (Trade Analysis)</div>
+          <div style="font-size:.8rem;line-height:1.7;color:var(--muted);margin-bottom:14px">
+            Each agent has one responsibility, returns a typed contract, and can be tested independently.
+            Data fans in once, indicators compute deterministically, then a single Sonnet call assembles
+            the verdict. Failures at any stage return empty defaults instead of crashing the pipeline.
+          </div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:.72rem;line-height:1.55;color:var(--text);background:var(--bg3,#0f1419);border-radius:6px;padding:14px;overflow-x:auto;white-space:pre">
+1. DataCollector       → parallel fetch from 15 sources    (no AI)
+2. DataInterpreter     → indicators + S/R + confluence     (no AI — pure math)
+3. MarketSentiment     → macro verdict + crowd contra     (Haiku)
+4. DataReviewer        → quality gate + backtest context  (Haiku)
+5. RiskManagement      → Kelly sizing + correlation       (no AI — math)
+6. TradePrep           → final score + SL/TP + rationale  (Sonnet 4.6) ★
+7. TradeMonitor        → open-position management         (Haiku, every 10 min)
+          </div>
+          <div style="font-size:.74rem;color:var(--muted);margin-top:10px">★ The Sonnet call uses prompt caching (ephemeral, ≥1024-token stable prefix) — measured 74% hit rate within a single scan batch.</div>
+        </div>
+
+        <!-- 5-provider cascade -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">5-Provider Fallback Cascade</div>
+          <div style="font-size:.8rem;line-height:1.6;color:var(--muted);margin-bottom:12px">
+            When Anthropic returns an APIError (rate limit / outage / credit depleted),
+            <code>ai_client.send()</code> walks this cascade sequentially. Each entry is skipped if it's in cooldown.
+            All modules get fallback transparently — no per-module code changes.
+          </div>
+          <table style="width:100%;font-size:.78rem;border-collapse:collapse">
+            <thead>
+              <tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--border)">
+                <th style="padding:6px 8px;width:40px">#</th>
+                <th style="padding:6px 8px">Provider</th>
+                <th style="padding:6px 8px">Model</th>
+                <th style="padding:6px 8px">Why this position</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px;color:var(--accent3);font-weight:700">0</td><td style="padding:8px;font-weight:600">Anthropic</td><td style="padding:8px">Sonnet 4.6 / Haiku 4.5</td><td style="padding:8px;color:var(--muted)">Primary — best quality, prompt caching, structured JSON</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px">1</td><td style="padding:8px">Groq</td><td style="padding:8px;font-family:ui-monospace,monospace;font-size:.72rem">llama-4-scout-17b</td><td style="padding:8px;color:var(--muted)">LPU = sub-second latency, free tier (~14,400 RPD)</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px">2</td><td style="padding:8px">Cerebras</td><td style="padding:8px;font-family:ui-monospace,monospace;font-size:.72rem">qwen-3-235b</td><td style="padding:8px;color:var(--muted)">235B-param quality at free-tier cost</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px">3</td><td style="padding:8px">Cerebras</td><td style="padding:8px;font-family:ui-monospace,monospace;font-size:.72rem">llama3.1-8b</td><td style="padding:8px;color:var(--muted)">Smaller fallback when Qwen is rate-limited</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px">4</td><td style="padding:8px">OpenRouter</td><td style="padding:8px;font-family:ui-monospace,monospace;font-size:.72rem">deepseek-v4-flash:free</td><td style="padding:8px;color:var(--muted)">Free, reasonable quality</td></tr>
+              <tr><td style="padding:8px">5</td><td style="padding:8px">Gemini</td><td style="padding:8px;font-family:ui-monospace,monospace;font-size:.72rem">2.0-flash</td><td style="padding:8px;color:var(--muted)">Last-resort; has its own internal 4-model cascade</td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:.74rem;color:var(--muted);margin-top:10px">Production reality: ~33% of scanner-quick calls served by free providers when Anthropic rate-limits — system stays 100% functional. Logged in <code>token_usage</code> as <code>{module}+{provider}</code>.</div>
+        </div>
+
+        <!-- Model routing table -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">Model Routing — Which Task Uses Which Model</div>
+          <table style="width:100%;font-size:.76rem;border-collapse:collapse">
+            <thead>
+              <tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--border)">
+                <th style="padding:6px 8px">Task</th>
+                <th style="padding:6px 8px">Model</th>
+                <th style="padding:6px 8px;text-align:right">Max tokens</th>
+                <th style="padding:6px 8px">Rationale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Call Analyzer (deep analysis)</td><td style="padding:6px 8px;color:var(--accent2)">Sonnet 4.6</td><td style="padding:6px 8px;text-align:right">4096</td><td style="padding:6px 8px;color:var(--muted)">Multi-input synthesis, reasoning needed</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Scanner Stage 3b (TradePrep)</td><td style="padding:6px 8px;color:var(--accent2)">Sonnet 4.6</td><td style="padding:6px 8px;text-align:right">1200</td><td style="padding:6px 8px;color:var(--muted)">Final scoring, must be consistent</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Futures-AI Consensus</td><td style="padding:6px 8px;color:var(--accent2)">Sonnet 4.6</td><td style="padding:6px 8px;text-align:right">1200</td><td style="padding:6px 8px;color:var(--muted)">Second-opinion before real money trades</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">AI Advisor</td><td style="padding:6px 8px;color:var(--accent2)">Sonnet 4.6</td><td style="padding:6px 8px;text-align:right">4096</td><td style="padding:6px 8px;color:var(--muted)">Live position management</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Rulebook updater</td><td style="padding:6px 8px;color:var(--accent2)">Sonnet 4.6</td><td style="padding:6px 8px;text-align:right">2048</td><td style="padding:6px 8px;color:var(--muted)">Pattern extraction from trade history</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Scanner Stage 3a (quick-score)</td><td style="padding:6px 8px;color:var(--accent)">Haiku 4.5</td><td style="padding:6px 8px;text-align:right">120</td><td style="padding:6px 8px;color:var(--muted)">Cheap pre-filter (~$0.0035/call)</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Live trade monitor</td><td style="padding:6px 8px;color:var(--accent)">Haiku 4.5</td><td style="padding:6px 8px;text-align:right">768</td><td style="padding:6px 8px;color:var(--muted)">Frequent (10 min) calls, simple verdict</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Hindsight grader</td><td style="padding:6px 8px;color:var(--accent)">Haiku 4.5</td><td style="padding:6px 8px;text-align:right">512</td><td style="padding:6px 8px;color:var(--muted)">Batch — quantity over depth</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">Setup-type classifier</td><td style="padding:6px 8px;color:var(--accent)">Haiku 4.5</td><td style="padding:6px 8px;text-align:right">350</td><td style="padding:6px 8px;color:var(--muted)">Short classification task</td></tr>
+              <tr><td style="padding:6px 8px">Cross-check (validation)</td><td style="padding:6px 8px;color:var(--yellow,#ffb300)">Opus 4.7</td><td style="padding:6px 8px;text-align:right">4096</td><td style="padding:6px 8px;color:var(--muted)">Highest-quality baseline for accuracy audits</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- SCANNER PIPELINE — main + backup paths                              -->
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#4fc3f7"></div>
+          <div class="src-layer-title">Scanner Pipeline — 7 stages, every 30 min</div>
+          <div class="src-layer-sub">From ~300 raw symbols to a ranked list of A+ setups</div>
+        </div>
+
+        <!-- The funnel -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:12px">The Funnel</div>
+          <div style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:.7rem;line-height:1.55;color:var(--text);background:var(--bg3,#0f1419);border-radius:6px;padding:14px;overflow-x:auto;white-space:pre">
+   ~314 USDT-M symbols (scanner_watchlist.SYMBOLS)
+              │
+              ▼   STAGE 1 — Confluence filter (no AI, ~1s/sym)
+   ~30 candidates  (confluence ≥ SCANNER_MIN_SCORE)
+              │
+              ▼   STAGE 2 — Quality gate (1H enrichment, no AI)
+   ~30 finalists   (sorted by abs(confluence))
+              │
+              ▼   STAGE 3a — Haiku quick-score      ◄── BACKUP PATH
+   ~30 quick-scored ($0.0035 each, ~3-5s total with cascade)
+              │
+              ├── top 6 (SCANNER_FULL_DETAIL_TOP_N)
+              │      │
+              │      ▼  STAGE 3b — Sonnet full analysis  ◄── MAIN PATH
+              │   ~6 setups (Sonnet via 7-agent pipeline, ~$0.014 each)
+              │
+              └── rest (~24): quick_score_only, shown on UI
+              │
+              ▼   STAGE 4 — Modifiers (PO3 + bear-phase + RSI mastery)
+              ▼   STAGE 5 — Strategic caps (macro / personal hour / reversal)
+              ▼   STAGE 6 — Threshold filter (score &lt; min_score → drop)
+              ▼   STAGE 7 — Orchestrator → consensus → sizing → open
+          </div>
+          <div style="font-size:.74rem;color:var(--muted);margin-top:10px">Total scan duration: <b>5-8 minutes</b>. Service stays responsive throughout (background threads). Operator can cancel mid-scan; in-flight calls complete but no new ones queue.</div>
+        </div>
+
+        <!-- Main path vs Backup path -->
+        <div class="src-grid" style="margin-bottom:14px">
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr">
+              <div class="src-icon">⭐</div>
+              <div><div class="src-name">Main Path — Sonnet Full Analysis</div><div class="src-provider">Stage 3b · top 6 finalists per scan</div></div>
+            </div>
+            <div class="src-row"><span class="src-row-label">Model</span><span class="src-row-val">Sonnet 4.6 via the full 7-agent pipeline</span></div>
+            <div class="src-row"><span class="src-row-label">Cost</span><span class="src-row-val">~$0.014/setup (~$0.005 with cache hit)</span></div>
+            <div class="src-row"><span class="src-row-label">Latency</span><span class="src-row-val">~1.8s per call · 74% cache hit rate within batch</span></div>
+            <div class="src-row"><span class="src-row-label">Returns</span><span class="src-row-val">score · direction · entry/SL/TP · R:R · key_conditions · chart_pattern · pattern_warnings</span></div>
+            <div class="src-row"><span class="src-row-label">Used in</span>
+              <span class="src-row-val">
+                <span class="src-tag used">Setup Scanner top setups</span>
+                <span class="src-tag used">Telegram alerts</span>
+                <span class="src-tag used">Auto-trader (Futures-AI) input</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#4fc3f7">
+            <div class="src-card-hdr">
+              <div class="src-icon">⚡</div>
+              <div><div class="src-name">Backup Path — Haiku Quick-Score</div><div class="src-provider">Stage 3a · ALL 30 finalists per scan</div></div>
+            </div>
+            <div class="src-row"><span class="src-row-label">Model</span><span class="src-row-val">Haiku 4.5 (with 5-provider cascade fallback)</span></div>
+            <div class="src-row"><span class="src-row-label">Cost</span><span class="src-row-val">~$0.0035/symbol (~$0 when served by Groq cascade)</span></div>
+            <div class="src-row"><span class="src-row-label">Latency</span><span class="src-row-val">~0.4s per call · 30 in parallel</span></div>
+            <div class="src-row"><span class="src-row-label">Returns</span><span class="src-row-val">score (0-10) · short one-line rationale</span></div>
+            <div class="src-row"><span class="src-row-label">Used in</span>
+              <span class="src-row-val">
+                <span class="src-tag used">Pre-filter for top 6 → Sonnet</span>
+                <span class="src-tag used">Quick-score-only display for non-top setups</span>
+                <span class="src-tag used">Fallback when Sonnet fails (JSON parse / API)</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 4 modifiers + Stage 5 caps -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">Stage 4 — Direction-Aware Modifiers (after Sonnet, before caps)</div>
+          <table style="width:100%;font-size:.76rem;border-collapse:collapse">
+            <thead><tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--border)">
+              <th style="padding:6px 8px">Modifier</th>
+              <th style="padding:6px 8px">Magnitude</th>
+              <th style="padding:6px 8px">Logic</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px;font-weight:600">Premium / Discount</td><td style="padding:6px 8px">±0.3</td><td style="padding:6px 8px;color:var(--muted)">Long in discount (bottom 1/3 of swing) = +0.3 · Long in premium = -0.3 · mirror for Shorts</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px;font-weight:600">FVG (Fair Value Gap)</td><td style="padding:6px 8px">±0.3</td><td style="padding:6px 8px;color:var(--muted)">Same-direction unfilled FVG support = +0.3 · opposing FVG within 3% = -0.3 (can sum)</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px;font-weight:600">Kill zone</td><td style="padding:6px 8px">-0.2 to +0.3</td><td style="padding:6px 8px;color:var(--muted)">Silver Bullet 13:30-14:30 UTC = +0.3 · London/NY AM = +0.2 · NY PM = +0.15 · Dead hour 16:30-17:30 = -0.2</td></tr>
+              <tr><td style="padding:6px 8px;font-weight:600">Bear-phase alignment</td><td style="padding:6px 8px">±0.3</td><td style="padding:6px 8px;color:var(--muted)">Setup direction agrees with classified phase (distribution/decline/capitulation/recovery) = +0.3 · fights it = -0.3</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">Stage 5 — Strategic Caps (hard ceilings, override modifiers)</div>
+          <table style="width:100%;font-size:.76rem;border-collapse:collapse">
+            <thead><tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--border)">
+              <th style="padding:6px 8px">Cap</th>
+              <th style="padding:6px 8px">Trigger</th>
+              <th style="padding:6px 8px">Effect</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px;font-weight:600">Macro cap</td><td style="padding:6px 8px;color:var(--muted)">VIX &gt; 35 · Macro event &lt;24h · F&amp;G extremes</td><td style="padding:6px 8px;color:var(--muted)">Score capped at 6.0 to 7.5 depending on severity</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px;font-weight:600">Personal bad-hour</td><td style="padding:6px 8px;color:var(--muted)">UTC hour ∈ {13, 15, 19, 20}</td><td style="padding:6px 8px;color:var(--muted)">Score capped at 5.5 (kills setup since below SCANNER_MIN_SCORE)</td></tr>
+              <tr><td style="padding:6px 8px;font-weight:600">Reversal cap</td><td style="padding:6px 8px;color:var(--muted)">archetype = "reversal" + &lt; 3 same-side signals</td><td style="padding:6px 8px;color:var(--muted)">Score capped at 5.5 — reversal trades historically lose money without strong confluence</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── Settings ──────────────────────────────────────────────────────────── -->
