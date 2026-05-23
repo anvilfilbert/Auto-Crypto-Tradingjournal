@@ -111,6 +111,44 @@ Context tags (no direct score, surfaced in `parts` for Sonnet to read):
   - unfilled FVG count (bullish/bearish, 4H) via `chart_fvg.detect_unfilled_fvgs`
   - RSI regime (bullish/bearish/range) tag from `chart_rsi.classify_regime`
 
+## Catastrophe Hedge (`trading/hedge_manager.py`, 2026-05-23)
+Defensive BTC perpetual SHORT that opens automatically when the auto-trader
+basket bleeds rapidly during a market-wide flush (the 2026-05-22 23:53
+"5 simultaneous stop-out" pattern).
+
+Trigger — ALL three must be true:
+- basket unrealised P&L ≤ -3% of equity
+- BTC 1h change ≤ -2%
+- ≥70% of open notional is Long
+- (and no active hedge already open)
+
+Action:
+- Opens 1 BTC short, notional = 50% of net long notional, leverage 3×, no SL/TP
+- Position is flagged `is_hedge=1` so it doesn't count in MAX_CONCURRENT_POSITIONS,
+  consec-loss breaker, or win-streak progression
+- Position uses cross margin (already configured) so it offsets margin against longs
+
+Unwind — ANY of:
+- BTC recovers to within 1% of its level when hedge opened
+- 2 consecutive green BTC 15m candles
+- 24h elapsed (safety cap)
+
+Config knobs (all env-tunable):
+- `FUTURES_AI_HEDGE_ENABLED=1|0` — master switch (default ON)
+- `HEDGE_TRIGGER_UNREAL_PCT`, `HEDGE_TRIGGER_BTC_DROP_PCT`,
+  `HEDGE_TRIGGER_LONG_BIAS_PCT`, `HEDGE_RATIO`, `HEDGE_LEVERAGE`,
+  `HEDGE_UNWIND_RECOVERY_PCT`, `HEDGE_MAX_DURATION_HOURS` — see config.py
+
+Runs from `orchestrator.on_monitor_cycle()` every 10 min (real mode only).
+State persisted in `settings.futures_ai_active_hedge` (JSON) so it survives
+restarts. Active hedge surfaced in `kill_switch.evaluate()` snapshot as
+`runtime.active_hedge`.
+
+New events in futures_ai_log: `hedge_opened`, `hedge_closed`,
+`hedge_open_failed`, `hedge_close_failed`, `hedge_skipped`.
+
+DB migration 48: `positions.is_hedge INTEGER DEFAULT 0`.
+
 ## Bear Market Strategy (2026-05-23)
 Two pieces from the bear-market framework, scoped to what makes sense
 for an intraday futures auto-trader (the spot DCA / portfolio sections

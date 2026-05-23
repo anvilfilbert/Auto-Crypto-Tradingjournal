@@ -52,7 +52,7 @@ def _consecutive_wins(conn=None) -> int:
             if reset_at:
                 rows = conn.execute(
                     "SELECT realized_pnl FROM positions "
-                    "WHERE chain='auto_ai' "
+                    "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0)"
                     "AND close_time IS NOT NULL AND close_time != '' "
                     "AND close_time > ? "
                     "ORDER BY close_time DESC LIMIT 10",
@@ -61,7 +61,7 @@ def _consecutive_wins(conn=None) -> int:
             else:
                 rows = conn.execute(
                     "SELECT realized_pnl FROM positions "
-                    "WHERE chain='auto_ai' AND close_time IS NOT NULL AND close_time != '' "
+                    "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0) AND close_time IS NOT NULL AND close_time != '' "
                     "ORDER BY close_time DESC LIMIT 10"
                 ).fetchall()
         else:

@@ -432,6 +432,15 @@ def init_db():
     _apply(47, "positions.chain",
            "ALTER TABLE positions ADD COLUMN chain TEXT DEFAULT 'manual'")
 
+    # 'is_hedge' — flags catastrophe-hedge positions opened by the
+    # auto-trader's hedge_manager. Hedges are defensive insurance against
+    # rapid downside moves and MUST NOT count toward MAX_CONCURRENT_POSITIONS,
+    # consecutive-loss breakers, or the win-streak progression. Their P&L
+    # still affects equity (real Bitget money) but they're excluded from
+    # all "trade quality" metrics.
+    _apply(48, "positions.is_hedge",
+           "ALTER TABLE positions ADD COLUMN is_hedge INTEGER DEFAULT 0")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

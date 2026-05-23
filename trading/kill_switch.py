@@ -67,7 +67,7 @@ def _daily_pnl_pct(conn, *, since_reset: bool = False) -> float:
             if reset_at:
                 r = conn.execute(
                     "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
-                    "WHERE chain='auto_ai' "
+                    "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0)"
                     "AND close_time >= datetime('now','-24 hours') "
                     "AND close_time > ?",
                     (reset_at,),
@@ -75,7 +75,7 @@ def _daily_pnl_pct(conn, *, since_reset: bool = False) -> float:
             else:
                 r = conn.execute(
                     "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
-                    "WHERE chain='auto_ai' AND close_time >= datetime('now','-24 hours')"
+                    "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0) AND close_time >= datetime('now','-24 hours')"
                 ).fetchone()
         else:
             if reset_at:
@@ -112,7 +112,7 @@ def _consecutive_losses(conn, *, since_reset: bool = False) -> int:
             if reset_at:
                 rows = conn.execute(
                     "SELECT realized_pnl FROM positions "
-                    "WHERE chain='auto_ai' "
+                    "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0)"
                     "AND close_time IS NOT NULL AND close_time != '' "
                     "AND close_time > ? "
                     "ORDER BY close_time DESC LIMIT 10",
@@ -121,7 +121,7 @@ def _consecutive_losses(conn, *, since_reset: bool = False) -> int:
             else:
                 rows = conn.execute(
                     "SELECT realized_pnl FROM positions "
-                    "WHERE chain='auto_ai' AND close_time IS NOT NULL AND close_time != '' "
+                    "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0) AND close_time IS NOT NULL AND close_time != '' "
                     "ORDER BY close_time DESC LIMIT 10"
                 ).fetchall()
         else:
@@ -156,7 +156,7 @@ def _open_position_count(conn) -> int:
         if config.is_real_mode():
             r = conn.execute("""
                 SELECT COUNT(*) FROM positions
-                WHERE chain='auto_ai' AND (close_time IS NULL OR close_time='')
+                WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0) AND (close_time IS NULL OR close_time='')
             """).fetchone()
         else:
             r = conn.execute("""
@@ -275,6 +275,13 @@ def evaluate(conn) -> dict:
         wins = 0
         streak_mult = 1.0
 
+    # Catastrophe hedge — active state surfaced for UI / status endpoints
+    try:
+        from trading.hedge_manager import get_active_hedge
+        active_hedge = get_active_hedge(conn) or None
+    except Exception:
+        active_hedge = None
+
     return {
         "state":                       config.get_state(conn),
         "can_open_new_trade":          can_trade,
@@ -290,4 +297,5 @@ def evaluate(conn) -> dict:
         "open_positions":              n_open,
         "max_concurrent":              config.MAX_CONCURRENT_POSITIONS,
         "breaker_reset_at":            config.breaker_reset_at(conn),
+        "active_hedge":                active_hedge,
     }

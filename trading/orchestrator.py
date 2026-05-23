@@ -229,10 +229,21 @@ def on_monitor_cycle() -> dict:
         if fa_config.is_real_mode():
             # real-mode executor manages real Bitget positions
             try:
-                from . import executor
-                return executor.manage_real_positions(conn)
+                from . import executor, hedge_manager
+                result = executor.manage_real_positions(conn)
+                # Catastrophe hedge manager — runs every cycle in real mode
+                # only. Order matters: manage_active first (close hedge if
+                # storm passed), then check_and_open (open new hedge if
+                # storm just started). Both are no-ops when conditions
+                # aren't met or HEDGE_ENABLED=0.
+                hedge_closed  = hedge_manager.manage_active_hedge(conn)
+                hedge_opened  = hedge_manager.check_and_open_hedge(conn)
+                if hedge_closed or hedge_opened:
+                    if isinstance(result, dict):
+                        result["hedge_action"] = (
+                            "closed" if hedge_closed else "opened")
+                return result
             except ImportError:
-                # executor not implemented yet — defensive no-op
                 return {"skipped": "executor not yet built"}
         else:
             # paper mode — needs a mark-price lookup

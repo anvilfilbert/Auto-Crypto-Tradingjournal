@@ -71,6 +71,26 @@ COMPOUND_STREAK_ENABLED   = os.environ.get(
 MAX_STREAK_MULTIPLIER     = int(os.environ.get(
     "FUTURES_AI_MAX_STREAK_MULT", "3"))   # cap at 3× by default
 
+# Catastrophe hedge — opens a single BTC perpetual SHORT to neutralise
+# the basket's downside during rapid sell-offs (the "23:53 simultaneous
+# stop-out" pattern from 2026-05-22). Defensive only — never extends
+# upside. Disabled with FUTURES_AI_HEDGE_ENABLED=0 in env.
+HEDGE_ENABLED             = os.environ.get(
+    "FUTURES_AI_HEDGE_ENABLED", "1").strip() == "1"
+# Trigger when total unrealised across auto_ai longs drops below this
+# % of equity within HEDGE_TRIGGER_WINDOW_MIN minutes AND BTC drops at
+# least HEDGE_TRIGGER_BTC_DROP_PCT in the same window.
+HEDGE_TRIGGER_UNREAL_PCT       = -0.03   # -3% unrealised
+HEDGE_TRIGGER_BTC_DROP_PCT     = -0.02   # -2% BTC 1h move
+HEDGE_TRIGGER_LONG_BIAS_PCT    = 0.70    # 70%+ of notional must be Long
+HEDGE_RATIO                    = 0.50    # hedge = 50% of net long notional
+HEDGE_LEVERAGE                 = 3       # conservative — ride out the storm
+# Unwind: any of {BTC recovers to within HEDGE_UNWIND_RECOVERY_PCT of
+# its level when hedge opened, 2 consecutive green 15m BTC candles, or
+# 24h elapsed}
+HEDGE_UNWIND_RECOVERY_PCT      = 0.010   # within 1% of hedge-open BTC price
+HEDGE_MAX_DURATION_HOURS       = 24
+
 # Elite-setup bypass — a "verified 10/10" setup (scanner==10 AND Sonnet
 # consensus==10) is rare enough that we will not pass on it even when
 # the soft cap (MAX_CONCURRENT_POSITIONS) is full. The hard ceiling
@@ -229,6 +249,11 @@ def snapshot() -> dict:
         "max_notional_pct":           MAX_NOTIONAL_PCT,
         "compound_streak_enabled":    COMPOUND_STREAK_ENABLED,
         "max_streak_multiplier":      MAX_STREAK_MULTIPLIER,
+        "hedge_enabled":              HEDGE_ENABLED,
+        "hedge_trigger_unreal_pct":   HEDGE_TRIGGER_UNREAL_PCT,
+        "hedge_trigger_btc_drop_pct": HEDGE_TRIGGER_BTC_DROP_PCT,
+        "hedge_ratio":                HEDGE_RATIO,
+        "hedge_leverage":             HEDGE_LEVERAGE,
         "consensus_min_score":        CONSENSUS_MIN_SCORE,
         "consensus_model":            CONSENSUS_MODEL,
         "daily_dd_breaker_pct":       DAILY_DD_BREAKER_PCT,
