@@ -38,6 +38,8 @@ import json
 import threading
 from typing import Optional
 
+from trading import config as fa_config
+
 
 # ── DB schema (lazy-create on first use) ────────────────────────────────────
 
@@ -256,20 +258,25 @@ def manage_paper_positions(conn, get_mark_price) -> dict:
                                  "current_pct": cur_pct}))
                 continue
 
-        # BE trigger
+        # BE trigger — SL placed slightly past entry (fee+slippage buffer) so
+        # a fill at that level nets the trader ≥ $0 instead of locking a small
+        # taker-fee loss. See trading/config.py::be_price_for.
         if cur_pct >= atr_pct * 1.0:
-            move = (is_long and entry > cur_sl) or (not is_long and entry < cur_sl)
+            be_sl = fa_config.be_price_for(entry, is_long)
+            move = (is_long and be_sl > cur_sl) or (not is_long and be_sl < cur_sl)
             if move:
                 conn.execute(
                     "UPDATE paper_positions SET current_sl=? WHERE id=?",
-                    (entry, p["id"]),
+                    (be_sl, p["id"]),
                 )
                 conn.commit()
                 ev = {"id": p["id"], "symbol": sym, "kind": "be_move",
-                      "msg": f"SL → BE {entry:.6g} (at +1× ATR)"}
+                      "msg": f"SL → BE {be_sl:.6g} (entry+{fa_config.BE_BUFFER_PCT*100:.2f}%, at +1× ATR)"}
                 events.append(ev)
                 _log(conn, "paper_be", sym, p["direction"], p["score_consensus"],
-                     json.dumps({"new_sl": entry, "atr_pct": atr_pct}))
+                     json.dumps({"new_sl": be_sl, "entry": entry,
+                                 "buffer_pct": fa_config.BE_BUFFER_PCT,
+                                 "atr_pct": atr_pct}))
 
     return {"checked": len(rows), "closed": closed, "events": events}
 

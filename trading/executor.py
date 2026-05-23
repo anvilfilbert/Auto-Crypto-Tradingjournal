@@ -111,16 +111,41 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
     return cur.lastrowid
 
 
+def _had_be_move(conn, position_id) -> bool:
+    """Did this position ever have its SL moved to break-even? Reads the
+    decision log. Returns False on any error (best-effort detection)."""
+    if not conn or not position_id:
+        return False
+    try:
+        row = conn.execute("""
+            SELECT 1 FROM futures_ai_log
+            WHERE event='real_be'
+              AND json_extract(payload_json, '$.position_id') = ?
+            LIMIT 1
+        """, (position_id,)).fetchone()
+        return row is not None
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _categorize_close_reason(pnl: float, entry_px: float, close_px: float,
-                                direction: str, raw_reason: str = "") -> str:
+                                direction: str, raw_reason: str = "",
+                                conn=None, position_id=None) -> str:
     """Turn a raw close-detection string into a short categorical tag the
-    UI can render compactly. Examples returned: 'TP', 'SL', 'BE', 'manual'.
-    Falls back to pending_reconcile / the raw string when uncategorizable.
+    UI can render compactly. Examples returned: 'TP', 'SL', 'BE_stop',
+    'manual_close'. Falls back to pending_reconcile / the raw string when
+    uncategorizable.
+
+    `conn` + `position_id` enable a richer detection path: if the SL was
+    previously moved to break-even (`real_be` event in `futures_ai_log`)
+    AND the actual close happened near the entry price, we tag the close
+    as `BE_stop` — "stop-loss fired at the break-even level" — instead of
+    misreporting as early_close / manual_close.
     """
     # Lifecycle reasons pass through as-is when they're already short
     raw_lower = (raw_reason or "").lower()
     if "be_trigger" in raw_lower or "break-even" in raw_lower:
-        return "BE"
+        return "BE_stop"
     if "trail" in raw_lower:
         return "trail_stop"
     if "mae" in raw_lower:
@@ -137,6 +162,17 @@ def _categorize_close_reason(pnl: float, entry_px: float, close_px: float,
     if entry_px and close_px and direction:
         is_long = direction.strip().lower() == "long"
         move_pct = (close_px - entry_px) / entry_px * (1 if is_long else -1)
+
+        # ── BE-stop detection ────────────────────────────────────────────
+        # If this position had a prior `real_be` event AND the close landed
+        # near the entry (within ~0.6% — covers the be_buffer + a bit of
+        # slippage), it's a stop-out at the BE-moved level. Without this
+        # check, a +0.15% close on a Long with ~$0 pnl falls into
+        # 'early_close' which is the wrong story — it WAS a stop, just at
+        # the safer level we'd moved it to.
+        if abs(move_pct) <= 0.006 and _had_be_move(conn, position_id):
+            return "BE_stop"
+
         # Big positive move with positive pnl → TP-style close
         # Big negative move with negative pnl → SL-style close
         # Small absolute move → manual/early close
@@ -166,7 +202,8 @@ def _mark_closed(conn, position_id: int, close_price: float,
     except Exception:
         entry_px, direction = 0, ""
     short_reason = _categorize_close_reason(
-        realized_pnl, entry_px, close_price, direction, reason)
+        realized_pnl, entry_px, close_price, direction, reason,
+        conn=conn, position_id=position_id)
     conn.execute("""
         UPDATE positions
         SET close_time   = datetime('now'),
@@ -447,15 +484,22 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
         return actions
 
     # BE move — +1× ATR
+    # SL must NOT be placed at raw entry: hitting it would still cost the
+    # round-trip taker fee (~0.12% on Bitget) + a slippage allowance, locking
+    # in a small loss. fa_config.be_price_for() applies the buffer.
     if current_pct >= atr_pct * 1.0:
-        if (is_long and entry > current_sl) or (not is_long and entry < current_sl):
+        be_sl = fa_config.be_price_for(entry, is_long)
+        be_is_tighter = (be_sl > current_sl) if is_long else (be_sl < current_sl)
+        if be_is_tighter:
             try:
                 result = bitget_trader.modify_position_sl(
-                    live["symbol"], live["direction"].lower(), entry
+                    live["symbol"], live["direction"].lower(), be_sl
                 )
                 if result.get("ok"):
                     _log(conn, "real_be", db_pos["id"], {
-                        "symbol": live["symbol"], "old_sl": current_sl, "new_sl": entry,
+                        "symbol": live["symbol"], "old_sl": current_sl,
+                        "new_sl": be_sl, "entry": entry,
+                        "buffer_pct": fa_config.BE_BUFFER_PCT,
                         "result": result,
                     })
                     actions.append("be_moved")

@@ -72,6 +72,34 @@ TP_SPLITS = {
 MIN_TP_SLICE_USDT = float(os.environ.get("FUTURES_AI_MIN_TP_SLICE_USDT", "5.0"))
 
 
+# ── Break-even SL buffer ─────────────────────────────────────────────────────
+#
+# When the lifecycle moves SL to "break-even" we cannot snap it to the raw
+# entry price — hitting an SL at exactly entry locks in a SMALL LOSS because
+# we still owe the closing taker fee and a small slippage allowance. The
+# buffer is small but compounding: 0.12% × 100 trades = 12% of account.
+#
+# Defaults (operator-tunable via env):
+#   - Bitget USDT-M futures taker fee:  0.06% (open) + 0.06% (close) = 0.12%
+#   - Slippage allowance on close:       0.03%
+#   - Total round-trip buffer:           0.15%
+#
+# Applied direction-aware: Long → SL placed ABOVE entry; Short → BELOW entry.
+BE_BUFFER_PCT = float(os.environ.get("FUTURES_AI_BE_BUFFER_PCT", "0.0015"))
+
+
+def be_price_for(entry: float, is_long: bool, buffer_pct: float = None) -> float:
+    """Return the break-even SL price that covers round-trip fees + slippage.
+
+    For a Long, returns entry × (1 + buffer) so an SL fill exits net ≥ $0.
+    For a Short, returns entry × (1 - buffer).
+    """
+    if not entry:
+        return entry
+    buf = buffer_pct if buffer_pct is not None else BE_BUFFER_PCT
+    return entry * (1.0 + buf) if is_long else entry * (1.0 - buf)
+
+
 def pick_max_tp_count(notional_usdt: float, ideal: int = 3) -> int:
     """Return the largest tp_count from TP_SPLITS where the SMALLEST slice
     is ≥ MIN_TP_SLICE_USDT, capped at `ideal`. Used to clamp Opus's suggested
