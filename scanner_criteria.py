@@ -69,6 +69,71 @@ def _is_in_kill_zone(utc_hour: int = None) -> bool:
     return (7 <= h < 10) or (12 <= h < 15)
 
 
+# Extended PO3 kill-zone map (Power-of-3 / ICT framework). All windows in
+# UTC. Roughly matches the NY-session institutional rhythm:
+#   London     07:00–10:00 UTC (= 02:00–05:00 NY)
+#   NY AM      12:00–16:00 UTC (= 07:00–11:00 NY)
+#   Silver Bullet 13:30–14:30 UTC (= 08:30–09:30 NY, peak NY AM)
+#   NY PM      18:30–21:00 UTC (= 13:30–16:00 NY)
+#   Dead hour  16:30–17:30 UTC (= 11:30–12:30 NY, lunch chop)
+# Score modifier applied per zone — institutional volume / volatility is
+# empirically higher inside these windows, so setups appearing here have
+# slightly better follow-through statistics in crypto since ETF launch.
+KILL_ZONE_MULTIPLIERS = {
+    "silver_bullet":  +0.3,   # peak NY AM, highest probability window
+    "ny_am":          +0.2,
+    "london":         +0.2,
+    "ny_pm":          +0.15,
+    "dead_hour":      -0.2,   # NY lunch chop — avoid
+}
+
+
+def _classify_session(utc_hour: int = None, utc_minute: int = None) -> str:
+    """
+    Returns the current session bucket name. Used by the kill-zone modifier.
+    Silver Bullet window is checked at minute-precision; others at hour.
+    """
+    now = datetime.datetime.utcnow()
+    h = utc_hour if utc_hour is not None else now.hour
+    m = utc_minute if utc_minute is not None else now.minute
+    # Silver Bullet first (most specific): 13:30–14:30 UTC
+    if (h == 13 and m >= 30) or (h == 14 and m < 30):
+        return "silver_bullet"
+    if 7 <= h < 10:
+        return "london"
+    if 12 <= h < 16:
+        return "ny_am"
+    if (h == 16 and m >= 30) or (h == 17 and m < 30):
+        return "dead_hour"
+    if (h == 18 and m >= 30) or (19 <= h < 21):
+        return "ny_pm"
+    return "off_hours"
+
+
+def _apply_kill_zone_modifier(score: float, utc_hour: int = None,
+                                utc_minute: int = None
+                                ) -> tuple[float, list[str]]:
+    """
+    Apply the PO3 kill-zone score modifier. Boosts setups appearing during
+    institutional windows; lightly penalises NY-lunch chop. Returns
+    (adjusted_score, warnings). Does NOT interact with the personal bad-hour
+    cap — that runs separately and takes precedence (the cap clamps the
+    final value, so this modifier can boost into a hard ceiling but never
+    past one). Applied in scanner Stage 3 before the personal bad-hour cap.
+    """
+    warnings: list[str] = []
+    session = _classify_session(utc_hour, utc_minute)
+    mult = KILL_ZONE_MULTIPLIERS.get(session, 0.0)
+    if mult == 0.0:
+        return score, warnings
+    new_score = max(0.0, min(10.0, score + mult))
+    warnings.append(
+        f"PO3 session '{session}' → score {mult:+.1f} "
+        f"({score:.2f} → {new_score:.2f})"
+    )
+    return new_score, warnings
+
+
 # Hours where THIS trader's own data shows net losses despite decent WR.
 # Derived from 90d analytics: UTC 13 (-$52), 15 (-$145), 19 (-$143), 20 (-$26).
 # Combined = -$365 (60% of NY-session total loss). Entries opened in these

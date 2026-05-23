@@ -216,6 +216,55 @@ def _score_finalists_with_agents(finalists: list, conn,
             )
             if rev_warnings:
                 logger.info("reversal cap applied to %s: %s", sym, "; ".join(rev_warnings))
+
+            # ── PO3 modifiers (added 2026-05-23) ─────────────────────────
+            # Direction-aware: Premium/Discount + nearest unfilled FVG +
+            # institutional session timing (kill zones). Each can shift the
+            # score by ±0.3. Applied AFTER the strategic caps so the personal
+            # bad-hour cap (5.5) still wins when it triggers.
+            range_label = ""
+            fvg_label   = ""
+            kz_label    = ""
+            try:
+                from chart_candles import get_candles
+                from chart_confluence import range_position, directional_range_weight
+                from chart_fvg import nearest_fvg_signal
+                from scanner_criteria import _apply_kill_zone_modifier
+                df_4h_for_po3 = get_candles(sym, "4H", limit=40)
+                if df_4h_for_po3 is not None and len(df_4h_for_po3) >= 3:
+                    # Premium/Discount — directional modifier
+                    range_info = range_position(df_4h_for_po3, lookback=40)
+                    rng_w = directional_range_weight(range_info, direction)
+                    if rng_w != 0:
+                        score = max(0.0, min(10.0, score + rng_w))
+                        range_label = (f"PO3 range: {range_info.get('label')} "
+                                       f"({range_info.get('pct',0)*100:.0f}%) "
+                                       f"→ {rng_w:+.1f}")
+                        logger.info("range mod applied to %s: %s", sym, range_label)
+                    elif range_info:
+                        range_label = (f"PO3 range: {range_info.get('label')} "
+                                       f"({range_info.get('pct',0)*100:.0f}%)")
+
+                    # FVG — directional modifier
+                    cur_px = float(df_4h_for_po3["close"].iloc[-1])
+                    fvg_sig = nearest_fvg_signal(df_4h_for_po3, cur_px, direction)
+                    if fvg_sig.get("weight"):
+                        score = max(0.0, min(10.0, score + fvg_sig["weight"]))
+                        fvg_label = f"FVG: {fvg_sig['label']} → {fvg_sig['weight']:+.2f}"
+                        logger.info("FVG mod applied to %s: %s", sym, fvg_label)
+
+                # Kill-zone session modifier — independent of direction
+                score, kz_warnings = _apply_kill_zone_modifier(score)
+                if kz_warnings:
+                    kz_label = kz_warnings[0]
+                    logger.info("kill zone mod applied to %s: %s", sym, kz_label)
+            except Exception as e:
+                logger.debug("PO3 modifier error on %s: %s", sym, e)
+
+            # Re-apply personal bad-hour cap AFTER kill-zone boost — the cap
+            # is a hard ceiling that must not be exceeded by any boost.
+            score, _bh_post = _apply_personal_bad_hour_cap(score)
+
             if score < min_score:
                 continue
             entry_p = float(prep.get("entry_price", 0) or 0)
@@ -256,6 +305,21 @@ def _score_finalists_with_agents(finalists: list, conn,
 
             # `archetype` was already detected above for the reversal-cap step.
 
+            # Compose a single PO3 summary line for Sonnet's consensus call.
+            # Pulled from the labels we built earlier; empty when nothing
+            # fired. Reads like: "PO3 [silver_bullet · range:discount(22%) ·
+            # FVG support 1.8%]" — terse enough to fit alongside the
+            # existing rationale without bloating the prompt.
+            _po3_bits = []
+            if kz_label:    _po3_bits.append(kz_label.replace("PO3 session ", "").replace("'", ""))
+            if range_label: _po3_bits.append(range_label.replace("PO3 range: ", "range:"))
+            if fvg_label:   _po3_bits.append(fvg_label.replace("FVG: ", "FVG:"))
+            _po3_summary = f"PO3 [{' · '.join(_po3_bits)}]" if _po3_bits else ""
+
+            base_summary = " · ".join(prep.get("key_conditions", [])[:2])
+            full_summary = (base_summary + " · " + _po3_summary).strip(" ·") \
+                            if _po3_summary else base_summary
+
             setup = {
                 "_symbol":        sym,
                 "symbol":         sym,
@@ -270,10 +334,13 @@ def _score_finalists_with_agents(finalists: list, conn,
                 "tp2_price":      tp2_raw,
                 "_tp_adjustments": _tp_notes,
                 "_sl_adjustments": _sl_notes,
+                "_po3_range":     range_label,
+                "_po3_fvg":       fvg_label,
+                "_po3_session":   kz_label,
                 "rr_ratio":       prep.get("rr_ratio", 0),
                 "key_conditions": prep.get("key_conditions", []),
                 "chart_png_b64":  prep.get("chart_png_b64", ""),
-                "summary":        " · ".join(prep.get("key_conditions", [])[:2]),
+                "summary":        full_summary,
                 "_quick_score":   quick_score,
                 "_rationale":     rationale,
                 "confluence_summary": conf.get("label", ""),

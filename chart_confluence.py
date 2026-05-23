@@ -198,6 +198,67 @@ def _cvd_weight(cvd: dict) -> float:
     return 0.4 if trend == "rising" else (-0.4 if trend == "falling" else 0.0)
 
 
+def range_position(df, lookback: int = 40) -> dict:
+    """
+    Premium/Discount/Equilibrium classification of current price relative to
+    the recent swing range (ICT Power-of-3 framework). Buy in discount,
+    sell in premium — equilibrium is fair value, no edge in either direction.
+
+    Args:
+        df: pandas DataFrame with 'high', 'low', 'close' (chronological).
+        lookback: bars to define the swing range (40 = ~7 days on 4H).
+
+    Returns: {"label": str, "pct": float, "swing_high": float,
+              "swing_low": float, "current": float} or {} if insufficient data.
+
+    pct is 0.0 at swing low, 1.0 at swing high. Thresholds:
+    >0.67 = premium (sell zone), <0.33 = discount (buy zone), else equilibrium.
+    """
+    if df is None or len(df) < lookback:
+        return {}
+    try:
+        window = df.iloc[-lookback:]
+        swing_high = float(window["high"].max())
+        swing_low  = float(window["low"].min())
+        current    = float(df["close"].iloc[-1])
+        rng = swing_high - swing_low
+        if rng <= 0:
+            return {}
+        pct = (current - swing_low) / rng
+        if pct >= 0.67:
+            label = "premium"
+        elif pct <= 0.33:
+            label = "discount"
+        else:
+            label = "equilibrium"
+        return {
+            "label":      label,
+            "pct":        round(pct, 3),
+            "swing_high": round(swing_high, 8),
+            "swing_low":  round(swing_low, 8),
+            "current":    round(current, 8),
+        }
+    except Exception:
+        return {}
+
+
+def directional_range_weight(range_info: dict, direction: str) -> float:
+    """
+    Score modifier for a directional trade at a given range position.
+    Long in discount = +0.3 (buying low). Long in premium = -0.3 (chasing).
+    Short in premium = +0.3. Short in discount = -0.3. Equilibrium = 0.
+    """
+    if not range_info or not direction:
+        return 0.0
+    is_long = direction.strip().lower() == "long"
+    label = range_info.get("label", "")
+    if label == "discount":
+        return +0.3 if is_long else -0.3
+    if label == "premium":
+        return -0.3 if is_long else +0.3
+    return 0.0
+
+
 # ── Smart-flow quadrant (OI × CVD × Price) ───────────────────────────────────
 # Open-interest change is fetched from Coinalyze and TTL-cached per symbol so
 # we don't repeat the call inside a single scan. 5-minute TTL aligns with the
@@ -553,11 +614,13 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
     # get_chart_context() doesn't carry the raw df in its return value.
     smart_flow_w = 0.0
     smart_flow_label = ""
+    range_info: dict = {}
+    fvg_count = 0
     try:
         inds_4h = ctx.get("4H", {}).get("indicators", {})
         if inds_4h.get("ok"):
             from chart_candles import get_candles
-            df_4h = get_candles(symbol, "4H", limit=4)
+            df_4h = get_candles(symbol, "4H", limit=40)
             if df_4h is not None and len(df_4h) >= 2:
                 close_now  = float(df_4h["close"].iloc[-1])
                 close_prev = float(df_4h["close"].iloc[-2])
@@ -572,6 +635,29 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
                         parts.append(f"smart-flow {smart_flow_label} "
                                      f"(OI {oi_change_4h:+.1f}% / CVD {cvd_trend} / "
                                      f"px {price_change_4h:+.2f}%)")
+
+                # Premium/Discount classification — context only (direction-
+                # aware score modifier is applied later in scanner stage 3
+                # where the trade direction is known).
+                range_info = range_position(df_4h, lookback=40)
+                if range_info:
+                    parts.append(f"4H range position: {range_info['label']} "
+                                 f"({range_info['pct']*100:.0f}% of swing high-low)")
+
+                # FVG context — surface count of unfilled bullish/bearish FVGs
+                # so Sonnet sees the local imbalance picture. Direction-aware
+                # weight is applied later in scanner stage 3.
+                try:
+                    from chart_fvg import detect_unfilled_fvgs
+                    fvgs = detect_unfilled_fvgs(df_4h, lookback=30)
+                    fvg_count = len(fvgs)
+                    if fvgs:
+                        bull_fvgs = [f for f in fvgs if f["type"] == "bullish"]
+                        bear_fvgs = [f for f in fvgs if f["type"] == "bearish"]
+                        parts.append(f"unfilled FVGs (4H): "
+                                     f"{len(bull_fvgs)} bullish, {len(bear_fvgs)} bearish")
+                except Exception:
+                    pass
     except Exception:
         pass
 

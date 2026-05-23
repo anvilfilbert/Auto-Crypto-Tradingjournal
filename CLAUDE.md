@@ -101,6 +101,29 @@ TF-level: RSI, MACD (grouped momentum cap ±1.5), EMA, ADX,
           _smt_direction_weight (24h directional divergence vs correlated pair ±0.15)
 Symbol-level: liquidation wall ±0.20 (conditional — short-squeeze/cascade within 3%),
               smart-flow quadrant ±0.5/±0.2 (OI × CVD × Price, 4H window; +0.5 New Longs / +0.2 Short Covering / -0.5 New Shorts / -0.2 Long Liquidation; needs Coinalyze OI history — returns 0 when key missing)
+Context tags (no direct score, surfaced in `parts` for Sonnet to read):
+  - 4H range position (premium/equilibrium/discount) via `range_position()`
+  - unfilled FVG count (bullish/bearish, 4H) via `chart_fvg.detect_unfilled_fvgs`
+
+## PO3 Score Modifiers (applied in ai_scanner Stage 3, after caps)
+Direction-aware modifiers added 2026-05-23 from the trader research
+"Power of 3" framework. Each can shift the setup_score by ±0.3 and runs
+after the macro / personal-bad-hour / reversal caps. The personal bad-hour
+cap is then re-applied as a hard ceiling so the PO3 boosts can't punch
+through it.
+
+- **Premium/Discount** (`chart_confluence.directional_range_weight`): Long
+  in discount (bottom 1/3 of 40-bar swing) = +0.3; Long in premium = -0.3;
+  mirror for Shorts; equilibrium = 0.
+- **FVG** (`chart_fvg.nearest_fvg_signal`): same-direction unfilled FVG
+  acting as support = +0.3; opposing FVG within 3% acting as resistance =
+  -0.3 (can sum to ±0.0/0.3/0.6/-0.3).
+- **Kill zone** (`scanner_criteria._apply_kill_zone_modifier`): Silver
+  Bullet 13:30-14:30 UTC = +0.3; London 07-10 / NY AM 12-16 = +0.2;
+  NY PM 18:30-21 = +0.15; Dead hour 16:30-17:30 UTC = -0.2; off-hours = 0.
+
+Setup dict gains `_po3_range`, `_po3_fvg`, `_po3_session` fields and the
+PO3 line is appended to `summary` so the Sonnet consensus call sees it.
 VIX multiplier: score × 0.80 when VIX > 30 (5-min cached)
 SMT_SYMBOLS = {BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT}
 SMT_PAIRS = {BTC↔ETH, SOL→ETH, BNB→BTC, XRP→BTC}
