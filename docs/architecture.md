@@ -1,6 +1,6 @@
 # Trading Journal — Architecture & Data Flow
 
-*v1.6.0 + Futures-AI + trader-sheet integration · Updated 2026-05-23 (afternoon)*
+*v1.6.0 + Futures-AI + trader-sheet integration · Updated 2026-05-24*
 
 ## See also (dedicated pages)
 - [**DATA_SOURCES.md**](DATA_SOURCES.md) — every external data source, auth, cadence
@@ -9,6 +9,21 @@
 - [**MODULE_MAP.md**](MODULE_MAP.md) — module index, ~120 files
 - [**USER_GUIDE.md**](USER_GUIDE.md) — per-page user-facing walkthrough
 - [**SCORING_GUIDE.md**](SCORING_GUIDE.md) — what each score (1-10) means
+- [**dodex/**](dodex/) — Phase 0+1 prep for the upcoming Acki Nacki / DODEX dark-order DEX module (7 knowledge files + Node sidecar probe + upstream watcher)
+
+## What's new since the 2026-05-23 afternoon snapshot
+
+Single-day sprint, in commit order:
+- Opus 4.7 swapped in as the futures-ai consensus model (was Sonnet 4.6) — empirical hindsight win
+- Multi-TP ladder Phase 1: schema v50 `positions.tp_levels`, default 3 TPs (40/40/20), TP3 synthesis fallback, notional-aware clamping (Bitget min-slice ≥ $5)
+- Skill-provenance tagging: schema v52-57 adds 6 columns; `analytics.get_deep_stats` returns 6 new aggregations; AI Advisor prompt extended with `skill_insights` JSON field
+- Shadow logs: every `consensus_*` event now embeds the full setup snapshot (entry/SL/TP/scanner_score/ai_score/PO3/bear_phase/rationale)
+- BE fee+slippage buffer (`FUTURES_AI_BE_BUFFER_PCT=0.0015`); new `BE_stop` close_reason; live-entry source for the BE calc; 0.05% epsilon guard against tick-rounding double-fires
+- Live `/chart` popup renders all Bitget plan-order TPs (multi-TP for HYPE et al)
+- Fibonacci role-based palette: anchors white · shallow blues · 0.5 gold · 0.618 orange · 0.66 OTE red · 0.786 deep-red · extensions green
+- Scanner watchlist 304 → 500 cap (env-tunable via `SCANNER_MAX_SYMBOLS`); new `scanner_event_trigger.py` daemon polls BTC + ETH 15m and force-scans on ≥2% moves with a 30-min cooldown
+- Topbar scan-timer pill (countdown to next scan / stopwatch while running)
+- DODEX/Acki Nacki Phase 0+1 prep: docs/dodex/ knowledge base + Phase 1 read-only Node sidecar probe + upstream watcher script + in-app nav page + `dodex-research` skill
 
 ---
 

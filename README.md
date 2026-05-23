@@ -57,21 +57,42 @@ Full history across both exchanges with rich filters: search · symbol · direct
 
 </td>
 </tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🧠 AI Architecture
+
+7-agent pipeline + 5-provider fallback cascade + model-to-task routing. **Opus 4.7 consensus gate** for real-money trades, **multi-TP ladders** (3-7 tiers), notional-aware slicing, and **shadow logs** that snapshot every decision for cohort analysis.
+
+<img src="docs/images/showcase/06-ai-architecture.png" alt="AI Architecture docs page" width="100%">
+
+</td>
+<td width="50%" valign="top">
+
+### 💱 DODEX Integration (preparation)
+
+Persistent reminder + documentation hub for the planned [Acki Nacki / DODEX](https://www.dex.do/) dark-order DEX module. Phase tracker, locked-in decisions, installed components (Node sidecar probe + upstream watcher), open questions, and cross-links to the canonical references in [`docs/dodex/`](docs/dodex/).
+
+<img src="docs/images/showcase/05-dodex.png" alt="Acki Nacki / DODEX Integration page" width="100%">
+
+</td>
+</tr>
 </table>
 
 <details>
 <summary><b>📊 What else is in the box</b> (click to expand)</summary>
 
 - **Dashboard** — KPIs, monthly target tracker, equity curve, wallet history, current streak, recent trades
-- **Deep Dive Analytics** — breakdown by symbol / month / hour / setup type; worst-symbol identification
+- **Deep Dive Analytics** — breakdown by symbol / month / hour / setup type / **skill cohort** (consensus model · bear phase · archetype · PO3 stacking · TP-count)
 - **Edge Lab** — setup-type analysis, execution-grade impact, AI pattern detector, planned-vs-realized R:R
-- **Chart Explorer** — LightweightCharts popup with S/R overlay, WaveTrend pane, at-level highlights, FVG zones
+- **Chart Explorer** — LightweightCharts popup with S/R overlay, WaveTrend pane, at-level highlights, FVG zones, **multi-TP ladder** rendering (one line per Bitget plan order)
 - **Call Analyzer** — paste an analyst call → instant 7-agent AI scoring + annotated chart
 - **Hindsight Analysis** — retroactive trade re-scoring with full chart context at entry time
 - **Pending Limit Orders** — pop-out chart per order + AI verdict with retry hint on truncated responses
 - **Live Sync** — Bitget USDT-M + Blofin every 5 min; CSV import for historical
-- **Data Sources** — interactive reference of all 14 fan-in clients (Coinalyze, Nansen, CoinGecko, CoinMetrics, etc.)
+- **Docs section** — three dedicated reference pages: Data Sources, AI Architecture, Scanner Pipeline, plus the new Acki Nacki — DoDEX prep page
 - **Settings** — token-usage dashboard with per-module spend, prompt-cache hit rate, runway estimate
+- **Topbar scan timer** — countdown to next scan / stopwatch while running, next to the dual clock
 
 > Numbers shown in screenshots are illustrative — wired to local demo data, not real account state.
 
@@ -156,6 +177,21 @@ Full history across both exchanges with rich filters: search · symbol · direct
 ---
 
 ## Recent Additions
+
+**2026-05-23 / 2026-05-24 sprint (single-day, ~20 commits):**
+
+- **Opus 4.7 consensus gate** — futures-ai consensus model switched from Sonnet → Opus (`FUTURES_AI_CONSENSUS_MODEL=opus`) after a hindsight pass found Opus correctly approved 5/5 score-6 setups that Sonnet rejected (4 of 5 hit TP). Sub-agents (sentiment/reviewer = Haiku) stay on their cheaper models — only TradePrep upgrades. Cost: +$40/mo at ~26 consensus calls/day. (commit `4e84922`)
+- **Multi-TP ladder (Phase 1)** — Opus can now emit 3-7 TPs per setup. New `positions.tp_levels` JSON column stores the full ladder; `agent_chart_draw` renders all levels colour-coded. **Default: 3 TPs (40/40/20 split)**. Orchestrator synthesises TP3 from TP1→TP2 gap when Opus omits the ladder so every approved trade shows ≥3 TPs. Notional-aware clamping (smallest slice ≥ $5 Bitget min). (commits `72e9105`, `b015afd`)
+- **Skill provenance tagging** — 6 new `positions` columns (`consensus_model_used`, `bear_phase_at_open`, `archetype_at_open`, `po3_total`, `opus_had_overrides`, `tp_levels_count`) populated at trade-open. 6 new analytics aggregations + AI Advisor prompt extension — Advisor can now cite *skills* (e.g. *"low-conviction archetype: 0% WR over 7 trades — stop accepting"*) not just symbols/hours. (commit `73e1ea1`)
+- **Shadow logs on every consensus event** — `consensus_rejected` / `consensus_approved` / orchestrator rejections embed the full setup snapshot (entry/SL/TP/scanner_score/ai_score/po3_*/bear_phase/rationale). Lets hindsight cohort analysis run without joining against the lossy `analyzed_calls` dedup. (commit `7b435fd`)
+- **BE fee+slippage buffer** — break-even SL placed at entry × (1 + 0.15%) for Long / × (1 − 0.15%) for Short — covers Bitget's 0.12% round-trip taker fee + ~0.03% slippage. Hitting a BE SL now nets ≥ $0 instead of locking a sub-cent loss. New `BE_stop` close_reason categorises these correctly. Live-entry source + 0.05% epsilon guard prevent spurious double-fires from tick-rounding mismatch. (commits `2444bba`, `e333295`)
+- **Live chart multi-TP** — `bitget_client.get_open_positions()` now fetches plan orders + groups by position so the live `/chart` popup renders **every TP plan order** Bitget knows about (HYPE et al). Fallback to single `takeProfit` when no ladder exists. (commit `87072d9`)
+- **Fibonacci role-based palette** — anchors white, shallow retracements blue, equilibrium gold, golden pocket orange, OTE 0.66 red, last-defence 0.786 deep red, extensions green-family. Key entry zones thicker. Per-level color/weight/dash carried on each fib JSON entry. (commit `6d9b5f2`)
+- **Watchlist 500-cap + event-driven mini-scans** — chosen as the cheap alternative to a 15-min cadence (+87% cost). Watchlist expanded 304 → 500 symbols (env-tunable). New `scanner_event_trigger.py` daemon polls BTC + ETH 15m and force-scans when either moves ≥2% (30-min cooldown). Combined cost impact +$15/mo (5.6%) vs +$235/mo for halving the cadence. (commit `5de0571`)
+- **Scan-timer pill in topbar** — countdown to next scheduled scan / stopwatch while running. Auto-switches mode based on `/api/scanner/status`. (commit `25f542a`)
+- **DODEX / Acki Nacki Phase 0+1 prep** — 7 knowledge docs in [`docs/dodex/`](docs/dodex/), Phase 1 read-only Node sidecar probe installed on Pi (not active), upstream watcher script for protocol change detection, new in-app nav section + dashboard page, `dodex-research` skill for cheap session re-entry. (commits `722ebc6`, `64cd697`)
+
+**Earlier this week:**
 
 - **12-signal confluence engine** — order flow delta (12th signal), liquidation wall (11th signal)
 - **HMM market regime** — 3-state GaussianHMM (trending/ranging/volatile), injected into every prompt
