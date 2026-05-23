@@ -123,8 +123,12 @@ def main(argv: list[str] | None = None) -> int:
         tp_levels_json = json.dumps(tp_levels)
 
         if args.verbose:
+            tier_summary = " · ".join(
+                f"TP{lvl['idx']} {lvl['price']} ({lvl['pct']:.0f}%)"
+                for lvl in tp_levels
+            )
             print(f"  pid={pid} {sym} ({p['direction']}) notional=${notional} "
-                  f"→ {allowed} TPs: {[f'{l[\"price\"]} ({l[\"pct\"]}%)' for l in tp_levels]}")
+                  f"→ {allowed} TPs: {tier_summary}")
 
         if not args.dry_run:
             conn.execute(
