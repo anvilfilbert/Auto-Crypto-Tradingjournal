@@ -114,6 +114,14 @@ if __name__ == "__main__":
     monitor_scheduler.start()
     import self_review_scheduler
     self_review_scheduler.start()
+    # Event-driven mini-scan trigger — kicks off an out-of-cycle scan when
+    # BTC/ETH posts a sharp 15m move. Cheap insurance for the 30-min
+    # scheduled cadence. Toggleable via SCANNER_EVENT_TRIGGER=off.
+    try:
+        import scanner_event_trigger
+        scanner_event_trigger.start()
+    except Exception as e:
+        print(f"[boot] scanner_event_trigger failed to start: {e}", flush=True)
 
     # Futures-AI orchestrator hook — fires after EVERY scan completion
     # (forced API scans AND periodic scheduler scans). Registered here

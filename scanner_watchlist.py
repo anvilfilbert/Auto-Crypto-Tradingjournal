@@ -71,16 +71,33 @@ _DYNAMIC_TTL = 24 * 3600  # 24 hours in seconds
 _dynamic_cache: dict = {"symbols": None, "ts": 0.0}
 
 
+# Operator-tunable defaults (env-overridable, evaluated at module load).
+# Bumped from 330 → 500 on 2026-05-23 as the cost-cheap alternative to a
+# 15-min scanner cadence — adding more symbols to Stage 1 confluence
+# screening (no AI) gives broader coverage with negligible token-cost impact
+# (Stages 3a/3b still cap at top-30 / top-6 by abs(confluence)).
+import os as _os
+_DEFAULT_MAX_SYMBOLS = int(_os.environ.get("SCANNER_MAX_SYMBOLS",  "500"))
+_DEFAULT_MIN_VOL_USD = float(_os.environ.get("SCANNER_MIN_VOL_USD", "3000000"))
+_DEFAULT_MIN_OI_USD  = float(_os.environ.get("SCANNER_MIN_OI_USD",  "1500000"))
+
+
 def _get_dynamic_watchlist(
-    max_symbols: int = 330,
-    min_vol_usd: float = 5_000_000,
-    min_oi_usd: float = 2_000_000,
+    max_symbols: int = None,
+    min_vol_usd: float = None,
+    min_oi_usd: float = None,
 ) -> list:
     """
     Return up to max_symbols liquid USDT-M symbols, refreshed every 24h.
     Filters: 24h volume >= min_vol_usd AND open interest >= min_oi_usd.
     Falls back to _get_extended_watchlist() on any API error.
+
+    Defaults come from env vars SCANNER_MAX_SYMBOLS (500), SCANNER_MIN_VOL_USD
+    (3M), SCANNER_MIN_OI_USD (1.5M). Passing explicit args overrides.
     """
+    if max_symbols is None: max_symbols = _DEFAULT_MAX_SYMBOLS
+    if min_vol_usd is None: min_vol_usd = _DEFAULT_MIN_VOL_USD
+    if min_oi_usd  is None: min_oi_usd  = _DEFAULT_MIN_OI_USD
     import time as _time
     now = _time.time()
     if _dynamic_cache["symbols"] is not None and (now - _dynamic_cache["ts"]) < _DYNAMIC_TTL:
