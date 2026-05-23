@@ -94,9 +94,14 @@ See Tools → Data Sources page in the UI for the full interactive reference.
 - get_category_caps() in coingecko_client.py: calls /coins/categories → meme_cap_usd (MEME.C), stable_cap_usd, stable_dominance_pct (STABLE.C.D)
 
 ## Confluence Signals (chart_confluence.py)
-13 signals total: 11 TF-level + 2 symbol-level → max_per_tf = 5.55 (non-SMT) / 5.85 (SMT):
-TF-level: RSI, MACD (grouped momentum cap ±1.5), EMA, ADX,
-          WaveTrend, MFI (grouped oscillator cap ±1.0), CVD, order_flow, volume,
+15 signals total → max_per_tf = 6.35 (non-SMT) / 6.65 (SMT):
+TF-level: RSI (regime-aware via `chart_rsi.summarize_rsi`),
+          MACD (grouped momentum cap ±1.5), EMA, ADX,
+          WaveTrend, MFI (grouped oscillator cap ±1.0),
+          Stochastic (joins oscillator group),
+          CVD, order_flow, volume,
+          RSI failure swing ±0.4 (RSI Mastery — reversal signal),
+          RSI divergence ±0.4 cap (regular for reversal, hidden for continuation),
           _smt_weight (cross-exchange price divergence ≥0.5%),
           _smt_direction_weight (24h directional divergence vs correlated pair ±0.15)
 Symbol-level: liquidation wall ±0.20 (conditional — short-squeeze/cascade within 3%),
@@ -104,6 +109,25 @@ Symbol-level: liquidation wall ±0.20 (conditional — short-squeeze/cascade wit
 Context tags (no direct score, surfaced in `parts` for Sonnet to read):
   - 4H range position (premium/equilibrium/discount) via `range_position()`
   - unfilled FVG count (bullish/bearish, 4H) via `chart_fvg.detect_unfilled_fvgs`
+  - RSI regime (bullish/bearish/range) tag from `chart_rsi.classify_regime`
+
+## RSI Mastery (`chart_rsi.py`, 2026-05-23)
+Replaces the old static `_rsi_weight()` with regime-aware interpretation per
+the trader research RSI Mastery framework:
+
+- **Regime detection** (`classify_regime`): looks at last 20 RSI values.
+  Bullish regime when avg > 55 AND 70%+ bars in 40-80 healthy zone.
+  Bearish regime: mirror with 20-60. Else range.
+- **Regime-aware weight** (`regime_aware_rsi_weight`):
+  - Bullish regime: RSI 70 is NOT bearish (trend hot); RSI <40 IS the warning
+  - Bearish regime: RSI 30 is NOT bullish (trend cold); RSI >60 IS the warning
+  - Range regime: classic 30/70 logic
+- **Failure swings** (`detect_failure_swing`): RSI rejected at 30/70 without
+  making a new extreme; the most reliable reversal signal per the guide.
+  Contributes ±0.4 to confluence.
+- **Divergences** (`detect_divergences`): regular (price LL+RSI HL = reversal
+  up; mirror) and hidden (price HL+RSI LL = continuation up; mirror).
+  ±0.3 (regular) or ±0.2 (hidden); total capped at ±0.4.
 
 ## PO3 Score Modifiers (applied in ai_scanner Stage 3, after caps)
 Direction-aware modifiers added 2026-05-23 from the trader research

@@ -516,7 +516,26 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
             continue
 
         rsi_val = (inds.get("rsi",  {}) or {}).get("value", 50)
-        rsi_w  = _rsi_weight(rsi_val)
+        # RSI Mastery Guide enhancement: regime-aware weighting + failure
+        # swing + divergence detection. Falls through to the simple
+        # _rsi_weight() if chart_rsi can't load a series (pandas_ta missing
+        # or insufficient candles).
+        rsi_summary = None
+        rsi_fs_w    = 0.0
+        rsi_div_w   = 0.0
+        try:
+            from chart_candles import get_candles
+            from chart_rsi import summarize_rsi
+            df_for_rsi = get_candles(symbol, tf, limit=60)
+            if df_for_rsi is not None and len(df_for_rsi) >= 20:
+                rsi_summary = summarize_rsi(df_for_rsi)
+                rsi_fs_w    = rsi_summary.get("fs_weight",  0.0) or 0.0
+                rsi_div_w   = rsi_summary.get("div_weight", 0.0) or 0.0
+        except Exception:
+            rsi_summary = None
+        # Use regime-aware weight if available, otherwise the simple value-based one.
+        rsi_w = rsi_summary["weight"] if rsi_summary and rsi_summary.get("weight") is not None \
+                else _rsi_weight(rsi_val)
         macd_w = _macd_weight(inds.get("macd", {}))
         ema_w  = _ema_weight(inds.get("ema",   {}))
         adx_w  = _adx_weight(inds.get("adx",   {}))
@@ -539,11 +558,30 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
         _oscillator_raw = wt_w + mfi_w + stoch_w
         _oscillator = max(-1.0, min(1.0, _oscillator_raw))
 
-        base_score = _momentum + ema_w + adx_w + _oscillator + cvd_w + smt_w + smt_dir_w + of_w
+        # RSI Mastery — failure swings + divergences contribute as their
+        # own line items (additive to the momentum group). Cap added to
+        # base_score directly rather than nested inside the momentum cap
+        # because these are STRUCTURAL signals, not noisy oscillator reads.
+        base_score = _momentum + ema_w + adx_w + _oscillator + cvd_w + smt_w + smt_dir_w + of_w \
+                     + rsi_fs_w + rsi_div_w
         vol_w  = _volume_weight(inds, base_score, symbol=symbol, timeframe=tf)
 
         tf_score = base_score + vol_w
         total_score += tf_score
+
+        # Surface RSI Mastery findings into parts (one line per TF when
+        # something interesting fires)
+        if rsi_summary:
+            rsi_parts: list[str] = []
+            if rsi_summary.get("regime") in ("bullish", "bearish"):
+                rsi_parts.append(f"RSI regime: {rsi_summary['regime']}")
+            if rsi_summary.get("failure_swing"):
+                fs = rsi_summary["failure_swing"]
+                rsi_parts.append(f"failure swing {fs['type']} (age {fs['age']})")
+            for d in rsi_summary.get("divergences", [])[:2]:
+                rsi_parts.append(f"{d['kind']} {d['type']} div (age {d['age']})")
+            if rsi_parts:
+                parts.append(f"{tf} " + " · ".join(rsi_parts))
 
         # Collect human-readable contribution strings — emitted only for
         # signals strong enough to matter (|w| >= 0.4). Used by prompt
@@ -667,7 +705,11 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
         total_score = round(total_score * vix_mult, 2)
 
     smt_bonus  = 0.30 if symbol in SMT_SYMBOLS else 0.0
-    max_per_tf = 5.55 + smt_bonus         # +0.15 order flow vs previous 5.40
+    # RSI Mastery additions (2026-05-23):
+    #   failure swing  → ±0.4 max
+    #   divergences    → ±0.4 max (capped)
+    # Total per-TF budget grows by 0.8 from 5.55 → 6.35 base.
+    max_per_tf = 6.35 + smt_bonus
     # Symbol-level bonuses to max: liquidation +0.20 (already counted above),
     # smart-flow +0.50 (max contribution from Q1 New Longs or Q3 New Shorts).
     max_val    = (float(len(tfs) * max_per_tf)
