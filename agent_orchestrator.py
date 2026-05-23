@@ -75,11 +75,16 @@ def run_call_analysis(
     setup_type: str,
     open_positions: list,
     conn,
+    trade_prep_model: str | None = None,
 ) -> AnalysisResult:
     """
     Full 5-stage pipeline for a trade call analysis.
     Returns AnalysisResult — a flat dict for persistence to analyzed_calls.
     On blocking failure returns AnalysisResult with error= and degraded=True.
+
+    trade_prep_model overrides ONLY the final TradePrep model (default Sonnet).
+    Used by futures-ai consensus so the gate can run on Opus while the
+    cheaper sub-agents (sentiment, reviewer — Haiku) stay unchanged.
     """
     import json
 
@@ -118,7 +123,7 @@ def run_call_analysis(
             reviewed=reviewed, sentiment=sentiment,
             call_text=call_text, account_equity=account_equity,
             setup_type=setup_type,
-        ), conn)
+        ), conn, model=trade_prep_model or MODEL)
     except Exception as e:
         return _degraded(f"TradePrep failed: {e}")
 

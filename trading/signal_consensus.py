@@ -24,10 +24,34 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import os
 from typing import Optional
 
 from constants import MODEL
 from helpers import strip_fence
+
+
+def _consensus_model() -> str:
+    """Pick the TradePrep model for the consensus gate.
+
+    Reads FUTURES_AI_CONSENSUS_MODEL env var. Accepts either a full Anthropic
+    model ID (`claude-opus-4-7`, `claude-sonnet-4-6`, etc.) or a family alias
+    (`opus`, `sonnet`, `haiku`). Falls back to the project default Sonnet
+    (constants.MODEL) when unset or empty.
+
+    Rationale: empirically Opus calibrated 5/5 on the 2026-05-23 score-6
+    Sonnet rejections — every one of those setups hit TP in hindsight.
+    The +$40/mo cost over Sonnet is small vs the missed-trade value.
+    """
+    raw = (os.environ.get("FUTURES_AI_CONSENSUS_MODEL") or "").strip()
+    if not raw:
+        return MODEL
+    aliases = {
+        "opus":   "claude-opus-4-7",
+        "sonnet": "claude-sonnet-4-6",
+        "haiku":  "claude-haiku-4-5-20251001",
+    }
+    return aliases.get(raw.lower(), raw)
 
 
 # ── Public API ───────────────────────────────────────────────────────────────
@@ -69,13 +93,15 @@ def evaluate(scanner_setup: dict, conn) -> dict:
         from ai_call import analyze_call as _analyze
         # Synthesize a call text from the scanner setup so the analyzer
         # gets a normal-looking input. Lifts the price targets it already
-        # computed so Sonnet doesn't have to re-derive them.
+        # computed so the model doesn't have to re-derive them.
         call_text = _build_call_text(scanner_setup)
+        consensus_model = _consensus_model()
         result = _analyze(
             call_text=call_text,
             account_equity=100.0,
             market_regime=None,
             open_positions=[],
+            trade_prep_model=consensus_model,
         )
     except Exception as e:
         base["reason"] = f"AI consensus call failed: {str(e)[:120]}"

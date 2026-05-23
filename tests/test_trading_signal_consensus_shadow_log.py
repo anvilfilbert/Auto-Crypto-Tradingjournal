@@ -143,3 +143,43 @@ def test_approved_also_carries_snapshot(conn):
     assert p["tp1"] == 1.320
     assert p["scanner_score"] == 8
     assert p["ai_score"] == 8
+
+
+# ── Consensus model selection ────────────────────────────────────────────────
+
+def test_consensus_model_defaults_to_sonnet_constant_when_unset(monkeypatch):
+    monkeypatch.delenv("FUTURES_AI_CONSENSUS_MODEL", raising=False)
+    from constants import MODEL as _SONNET
+    assert signal_consensus._consensus_model() == _SONNET
+
+
+def test_consensus_model_opus_alias(monkeypatch):
+    monkeypatch.setenv("FUTURES_AI_CONSENSUS_MODEL", "opus")
+    assert signal_consensus._consensus_model() == "claude-opus-4-7"
+
+
+def test_consensus_model_alias_case_insensitive(monkeypatch):
+    monkeypatch.setenv("FUTURES_AI_CONSENSUS_MODEL", "OPUS")
+    assert signal_consensus._consensus_model() == "claude-opus-4-7"
+
+
+def test_consensus_model_full_id_passthrough(monkeypatch):
+    monkeypatch.setenv("FUTURES_AI_CONSENSUS_MODEL", "claude-opus-4-7")
+    assert signal_consensus._consensus_model() == "claude-opus-4-7"
+
+
+def test_consensus_model_propagates_to_analyze_call(conn, monkeypatch):
+    """When the env var is set, signal_consensus passes the chosen model to
+    ai_call.analyze_call via the trade_prep_model kwarg."""
+    monkeypatch.setenv("FUTURES_AI_CONSENSUS_MODEL", "opus")
+    captured = {}
+
+    def spy_analyze(**kwargs):
+        captured.update(kwargs)
+        return {"setup_score": 8, "direction": "Long",
+                "summary": "agree", "_reviewer_warnings": []}
+
+    with patch.object(ai_call_stub, "analyze_call", spy_analyze):
+        signal_consensus.evaluate(_scanner_setup(), conn)
+
+    assert captured.get("trade_prep_model") == "claude-opus-4-7"

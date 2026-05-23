@@ -208,16 +208,20 @@ Rules:
 
 def analyze_call(call_text: str, account_equity: float,
                  image_b64: str = None, image_type: str = "image/png",
-                 market_regime: str = None, open_positions: list = None) -> dict:
+                 market_regime: str = None, open_positions: list = None,
+                 trade_prep_model: str = None) -> dict:
     """
     Analyze a trade call. Returns structured dict ready for JSON serialization.
 
-    call_text:      Raw analyst call text
-    account_equity: Current Bitget account equity in USDT
-    image_b64:      Optional base64-encoded chart image
-    image_type:     MIME type of the image
-    market_regime:  Optional pre-fetched market context string
-    open_positions: Open position list for correlation check
+    call_text:        Raw analyst call text
+    account_equity:   Current Bitget account equity in USDT
+    image_b64:        Optional base64-encoded chart image
+    image_type:       MIME type of the image
+    market_regime:    Optional pre-fetched market context string
+    open_positions:   Open position list for correlation check
+    trade_prep_model: Override the TradePrep model (used by futures-ai
+                      consensus to upgrade ONLY the gate to Opus while
+                      keeping sub-agents on their cheaper models).
     """
     text_lower = call_text.lower()
 
@@ -249,13 +253,14 @@ def analyze_call(call_text: str, account_equity: float,
 
     with db_conn() as conn:
         analysis = agent_orchestrator.run_call_analysis(
-            call_text      = call_text,
-            symbol         = symbol,
-            direction      = direction,
-            account_equity = account_equity,
-            setup_type     = detected_type,
-            open_positions = open_positions or [],
-            conn           = conn,
+            call_text       = call_text,
+            symbol          = symbol,
+            direction       = direction,
+            account_equity  = account_equity,
+            setup_type      = detected_type,
+            open_positions  = open_positions or [],
+            conn            = conn,
+            trade_prep_model= trade_prep_model,
         )
 
     if analysis.get("degraded"):

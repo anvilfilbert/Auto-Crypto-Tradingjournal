@@ -35,10 +35,14 @@ _STARTING_EQUITY = float(os.environ.get("FUTURES_AI_STARTING_EQUITY", "100"))
 #     but below this threshold skip consensus entirely and feed paper
 #     directly. Defaults to 8 — saves ~50% of consensus spend during the
 #     paper-validation period. Bump down to 7 once budget allows.
-#   CONSENSUS_MODEL — 'sonnet' (default, recommended) or 'haiku'. Haiku
-#     consensus costs ~80% less but loses reasoning quality.
+#   CONSENSUS_MODEL — 'opus' (default, calibrates 5/5 on real rejections),
+#     'sonnet' (legacy), or 'haiku' (cheapest, lowest quality). Also accepts
+#     full Anthropic model IDs (e.g. 'claude-opus-4-7'). Switched from Sonnet
+#     to Opus on 2026-05-23 — empirical re-review showed Opus would have
+#     approved 5/5 score-6 setups that Sonnet rejected, and hindsight showed
+#     4 of 5 hit TP. Cost: +$40/mo at ~26 consensus calls/day.
 CONSENSUS_MIN_SCORE = int(os.environ.get("FUTURES_AI_CONSENSUS_MIN_SCORE", "8"))
-CONSENSUS_MODEL     = os.environ.get("FUTURES_AI_CONSENSUS_MODEL", "sonnet").lower()
+CONSENSUS_MODEL     = os.environ.get("FUTURES_AI_CONSENSUS_MODEL", "opus").lower()
 
 
 # ── risk caps (constants — bumping these requires a code change + redeploy) ──
