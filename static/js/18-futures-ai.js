@@ -72,6 +72,69 @@ function _renderFuturesAI(d) {
     pn.style.color = pct >= 0 ? 'var(--accent3)' : 'var(--red)';
   }
 
+  // Headline one-liner — combines state + equity + breaker + hedge + streak
+  // into a single read-at-a-glance summary. Color-coded against state.
+  const headline = document.getElementById('fai-headline');
+  if (headline) {
+    const eqv = rt.equity_usdt ?? 0;
+    const totalPct = rt.total_pnl_pct ?? 0;
+    const dailyPct = rt.daily_pnl_pct ?? 0;
+    const openN = rt.open_positions ?? 0;
+    const capN = rt.max_concurrent ?? cfg.max_concurrent_positions ?? 0;
+    const wins = rt.consecutive_wins_since_reset ?? 0;
+    const losses = rt.consecutive_losses_since_reset ?? 0;
+    const streak = rt.streak_multiplier ?? 1;
+    const hedge = rt.active_hedge;
+    const state = rt.state || '—';
+
+    // State color — green if active+OK, red if breaker, yellow if paused
+    const stateColors = {
+      'active':            'var(--accent3)',
+      'circuit_breaker':   'var(--red)',
+      'pause_now':         'var(--yellow,#ffb300)',
+      'pause_after_close': 'var(--yellow,#ffb300)',
+    };
+    const stateColor = stateColors[state] || 'var(--muted)';
+
+    const totalColor = totalPct >= 0 ? 'var(--accent3)' : 'var(--red)';
+    const dailyColor = dailyPct >= 0 ? 'var(--accent3)' : 'var(--red)';
+
+    // Build a single-line summary with multiple colored spans
+    while (headline.firstChild) headline.removeChild(headline.firstChild);
+    const spans = [
+      [`${state.toUpperCase()}`, stateColor, 700],
+      [' · ', null, null],
+      [`equity $${eqv.toFixed(2)}`, null, 600],
+      [' (', null, null],
+      [`${totalPct >= 0 ? '+' : ''}${totalPct.toFixed(2)}%`, totalColor, 700],
+      [' total, ', null, null],
+      [`${dailyPct >= 0 ? '+' : ''}${dailyPct.toFixed(2)}%`, dailyColor, 600],
+      [' 24h)', null, null],
+      [' · ', null, null],
+      [`${openN}/${capN} open`, null, 600],
+    ];
+    if (wins > 0) {
+      spans.push([' · ', null, null]);
+      spans.push([`${wins} win streak`, 'var(--accent3)', 600]);
+      if (streak > 1) spans.push([` (×${streak.toFixed(1)})`, 'var(--accent3)', 600]);
+    }
+    if (losses > 0) {
+      spans.push([' · ', null, null]);
+      spans.push([`${losses} loss streak`, 'var(--red)', 600]);
+    }
+    if (hedge) {
+      spans.push([' · ', null, null]);
+      spans.push([`🛡 hedge active`, 'var(--yellow,#ffb300)', 700]);
+    }
+    spans.forEach(([text, color, weight]) => {
+      const s = document.createElement('span');
+      s.textContent = text;
+      if (color)  s.style.color = color;
+      if (weight) s.style.fontWeight = weight;
+      headline.appendChild(s);
+    });
+  }
+
   const rc = document.getElementById('fai-risk-config');
   if (rc) {
     while (rc.firstChild) rc.removeChild(rc.firstChild);
