@@ -739,7 +739,18 @@ def modify_position_sl(symbol: str, side: str, new_sl_price: float) -> dict:
 def close_position(symbol: str, side: str,
                     percentage: float = 100.0) -> dict:
     """Market-close (full or partial). Used by paper's force_close and
-    by MAE-breach auto-cuts."""
+    by MAE-breach auto-cuts.
+
+    Bitget V2 accounts default to **hedge_mode** where positions track
+    holdSide explicitly. The old `place-order` with `tradeSide=close`
+    path fails with code 22002 "No position to close" in hedge_mode
+    even when the position is visible — Bitget requires the dedicated
+    `close-positions` endpoint for hedged accounts.
+
+    For full close (100%) we use /close-positions which works in BOTH
+    one-way and hedge mode. For partial close we fall back to
+    place-order with the holdSide field added.
+    """
     side = side.lower()
     positions = get_open_positions()
     match = next((p for p in positions
@@ -748,6 +759,26 @@ def close_position(symbol: str, side: str,
     if not match:
         return {"ok": False, "reason": f"no open {side} position on {symbol}"}
 
+    # Full close — use /close-positions (works in hedge_mode + one_way)
+    if percentage >= 100.0:
+        body = {
+            "symbol":      symbol,
+            "holdSide":    side,
+            "productType": PRODUCT_TYPE,
+        }
+        try:
+            data = _request("POST", "/api/v2/mix/order/close-positions", body=body)
+        except TraderAPIError as e:
+            return {"ok": False, "reason": f"close-positions failed: {str(e)[:120]}"}
+        success = (data or {}).get("successList") or []
+        if not success:
+            return {"ok": False, "reason": "close-positions returned no successList",
+                    "raw": data}
+        return {"ok": True, "order_id": success[0].get("orderId"),
+                "closed_size_contracts": match["size_contracts"],
+                "exit_price_approx": match.get("mark_price")}
+
+    # Partial close — place-order with holdSide explicit
     qty = round(match["size_contracts"] * (percentage / 100.0), 6)
     body = {
         "symbol":       symbol,
@@ -757,10 +788,14 @@ def close_position(symbol: str, side: str,
         "size":         str(qty),
         "side":         "sell" if side == "long" else "buy",
         "tradeSide":    "close",
+        "holdSide":     side,        # REQUIRED in hedge_mode
         "orderType":    "market",
         "force":        "gtc",
     }
-    data = _request("POST", "/api/v2/mix/order/place-order", body=body)
+    try:
+        data = _request("POST", "/api/v2/mix/order/place-order", body=body)
+    except TraderAPIError as e:
+        return {"ok": False, "reason": f"partial close failed: {str(e)[:120]}"}
     return {"ok": True, "order_id": data.get("orderId"),
             "closed_size_contracts": qty,
             "exit_price_approx": match.get("mark_price")}
