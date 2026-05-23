@@ -16,15 +16,15 @@ build against a stale snapshot.*
 
 ## Cadence
 
-Two options, both pull-based:
+**On-demand only.** The operator pings the assistant when they want a
+check ("check DODEX upstream"). The assistant SSH's into the Pi and runs
+the watch script. ~Two checks per week is the operator's expected cadence
+for this phase. No cron, no Telegram push.
 
-1. **Manual ad-hoc** — operator (or assistant during a session) runs the
-   watch script, sees diffs, decides if anything needs action.
-2. **Background cron** — a cron job on the Pi writes daily snapshots and
-   emits a diff via Telegram when content changes.
-
-Recommend (1) until DODEX is closer to launch; flip to (2) once the
-integration is actively in build.
+Rationale: low-frequency upstream changes don't warrant automated
+notifications. The operator is closer to the Acki Nacki community than
+the assistant is — they'll often know about a release before the script
+sees it.
 
 ## Watch-script outline (NOT yet implemented)
 

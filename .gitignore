@@ -11,3 +11,8 @@ Export order history*/
 .agents/
 docs/superpowers/
 .claude/settings.local.json
+
+# DODEX integration (Phase 1+)
+scripts/dodex_probe/node_modules/
+scripts/dodex_probe/package-lock.json
+data/dodex_watch/

@@ -1,0 +1,21 @@
+{
+  "_comment": "Known Acki Nacki endpoints. Edit this file when DODEX cuts over to mainnet or new endpoints surface. Not secret.",
+  "_last_updated": "2026-05-23",
+  "mainnet": {
+    "name": "Acki Nacki mainnet",
+    "live_since": "2025-10-07",
+    "root": "https://mainnet.ackinacki.org/",
+    "graphql_candidates": [
+      "https://mainnet.ackinacki.org/graphql",
+      "https://mainnet.ackinacki.org/v1/graphql",
+      "https://mainnet.ackinacki.org/api/graphql"
+    ],
+    "notes": "/graphql returned 502 on 2026-05-23 — the actual path needs Phase 1 discovery."
+  },
+  "testnet": {
+    "name": "shellnet (testnet)",
+    "root": "https://shellnet.ackinacki.org/",
+    "graphql": "https://shellnet.ackinacki.org/graphql",
+    "notes": "Used by all official dev examples. DODEX in-build contracts live here."
+  }
+}

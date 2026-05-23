@@ -1,0 +1,17 @@
+{
+  "name": "dodex-probe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Read-only probe sidecar for the trading journal's DODEX integration.",
+  "main": "dodex_probe.js",
+  "scripts": {
+    "probe": "node dodex_probe.js"
+  },
+  "dependencies": {
+    "@tvmsdk/core": "*",
+    "@tvmsdk/lib-node": "*"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
