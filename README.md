@@ -5,10 +5,7 @@
 > I decided to remove versioning at the moment, as updates are pushed often. I'm now concentrating in scanner and setup improvements.
 
 Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI pipeline, interactive Telegram assistant, and deep performance analytics. Runs on a Raspberry Pi 5 (or any Linux box).
-
-<p align="center">
-  <img src="docs/images/factsheet-preview.png" alt="Crypto Trading Journal fact sheet" width="720">
-</p>
+<br>
 
 <p align="center">
   <a href="docs/architecture.md">Architecture Doc</a> ·
