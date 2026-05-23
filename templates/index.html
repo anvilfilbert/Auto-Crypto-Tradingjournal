@@ -445,6 +445,13 @@ select:focus,input:focus{border-color:var(--accent)}
     <div class="nav-item" onclick="showPage('sources')" id="nav-sources">
       <span class="nav-icon">🗂️</span><span>Data Sources</span>
     </div>
+    <div class="nav-item" onclick="showPage('ai-architecture')" id="nav-ai-architecture">
+      <span class="nav-icon">🧠</span><span>AI Architecture</span>
+    </div>
+    <div class="nav-item" onclick="showPage('scanner-pipeline')" id="nav-scanner-pipeline">
+      <span class="nav-icon">🪜</span><span>Scanner Pipeline</span>
+    </div>
+    <div class="nav-sep">System</div>
     <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <span class="nav-icon">⚙️</span><span>Settings</span>
     </div>
@@ -1884,9 +1891,25 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════════════════ -->
-      <!-- AI ARCHITECTURE — 7-agent pipeline + 5-provider cascade            -->
-      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- Cross-links to the related doc pages -->
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+        <a href="#" onclick="showPage('ai-architecture');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ffb300;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🧠 AI Architecture →</div>
+          <div style="font-size:.75rem;color:var(--muted)">7-agent pipeline · 5-provider cascade · model routing</div>
+        </a>
+        <a href="#" onclick="showPage('scanner-pipeline');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #4fc3f7;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🪜 Scanner Pipeline →</div>
+          <div style="font-size:.75rem;color:var(--muted)">7-stage funnel · main + backup paths · modifiers + caps</div>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- ── AI Architecture (Docs) ───────────────────────────────────────────── -->
+    <div id="page-ai-architecture" class="page-view">
+      <div class="page-title">AI Architecture</div>
+      <div class="page-subtitle">How models are routed and what runs when — 7-agent pipeline, 5-provider fallback cascade, model-to-task routing.</div>
+
       <div class="src-layer">
         <div class="src-layer-hdr">
           <div class="src-layer-dot" style="background:#ffb300"></div>
@@ -1971,9 +1994,25 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════════════════ -->
-      <!-- SCANNER PIPELINE — main + backup paths                              -->
-      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- Cross-link back to the other doc pages -->
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+        <a href="#" onclick="showPage('sources');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🗂️ Data Sources →</div>
+          <div style="font-size:.75rem;color:var(--muted)">All external inputs · 4 layers · who reads what</div>
+        </a>
+        <a href="#" onclick="showPage('scanner-pipeline');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #4fc3f7;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🪜 Scanner Pipeline →</div>
+          <div style="font-size:.75rem;color:var(--muted)">7-stage funnel · main + backup paths · modifiers + caps</div>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- ── Scanner Pipeline (Docs) ──────────────────────────────────────────── -->
+    <div id="page-scanner-pipeline" class="page-view">
+      <div class="page-title">Scanner Pipeline</div>
+      <div class="page-subtitle">From ~300 raw symbols to a ranked list of A+ setups — 7 stages, main + backup paths, modifiers, and caps.</div>
+
       <div class="src-layer">
         <div class="src-layer-hdr">
           <div class="src-layer-dot" style="background:#4fc3f7"></div>
@@ -2083,6 +2122,18 @@ select:focus,input:focus{border-color:var(--accent)}
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Cross-link back to the other doc pages -->
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+        <a href="#" onclick="showPage('sources');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🗂️ Data Sources →</div>
+          <div style="font-size:.75rem;color:var(--muted)">All external inputs · 4 layers · who reads what</div>
+        </a>
+        <a href="#" onclick="showPage('ai-architecture');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ffb300;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🧠 AI Architecture →</div>
+          <div style="font-size:.75rem;color:var(--muted)">7-agent pipeline · 5-provider cascade · model routing</div>
+        </a>
       </div>
 
     </div>
