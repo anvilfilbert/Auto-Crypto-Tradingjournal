@@ -124,6 +124,27 @@ function _renderFuturesAI(d) {
 }
 
 
+// Sum unrealized P&L across open auto-trader positions and write the
+// total + % into the #fai-unrealized pill. Called from the positions
+// loader since that's where we already have the open-rows data.
+function _setFuturesAIUnrealized(openRows, equityUsdt) {
+  const el = document.getElementById('fai-unrealized');
+  if (!el) return;
+  if (!openRows || !openRows.length) {
+    el.textContent = '$0.00';
+    el.style.color = 'var(--muted)';
+    return;
+  }
+  const totalUnrl = openRows.reduce(
+    (s, p) => s + (parseFloat(p.unrealized_pnl) || 0), 0
+  );
+  const pct = equityUsdt ? (totalUnrl / equityUsdt) * 100 : 0;
+  const sign = totalUnrl >= 0 ? '+' : '';
+  el.textContent = `${sign}$${totalUnrl.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
+  el.style.color = totalUnrl >= 0 ? 'var(--accent3)' : 'var(--red)';
+}
+
+
 async function _loadFuturesAIPositions() {
   const openEl = document.getElementById('fai-open-positions');
   const closedEl = document.getElementById('fai-closed-positions');
@@ -149,6 +170,12 @@ async function _loadFuturesAIPositions() {
     } else {
       openEl.appendChild(_buildOpenPositionsTable(openRows, source));
     }
+
+    // Unrealized total pill — uses equity from the equity element (already
+    // populated by the state loader); falls back to no % if unavailable.
+    const eqEl = document.getElementById('fai-equity');
+    const eqVal = eqEl ? parseFloat((eqEl.textContent || '').replace('$', '')) : 0;
+    _setFuturesAIUnrealized(openRows, eqVal || 100);
 
     // Closed positions table
     while (closedEl.firstChild) closedEl.removeChild(closedEl.firstChild);
@@ -284,21 +311,31 @@ async function _loadFuturesAILog() {
       return;
     }
     const tbl = document.createElement('table');
-    tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem';
+    tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem;table-layout:fixed';
     const thead = tbl.createTHead();
     const hr = thead.insertRow();
-    ['Time','Event','Symbol','Dir','Score','Details'].forEach(h => {
+    // Explicit widths on the fixed-content columns leave Details with
+    // all remaining width so its JSON has room to wrap legibly.
+    const headerSpec = [
+      ['Time',    '70px'],
+      ['Event',   '160px'],
+      ['Symbol',  '90px'],
+      ['Dir',     '50px'],
+      ['Score',   '50px'],
+      ['Details', 'auto'],
+    ];
+    headerSpec.forEach(([h, w]) => {
       const th = document.createElement('th');
       th.textContent = h;
-      th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--border)';
+      th.style.cssText = 'text-align:left;color:var(--muted);font-weight:600;'
+        + 'padding:4px 8px;border-bottom:1px solid var(--border);width:' + w;
       hr.appendChild(th);
     });
     const tb = tbl.createTBody();
     rows.forEach(row => {
       const tr = tb.insertRow();
       let details = row.payload_json || '';
-      try { details = JSON.stringify(JSON.parse(details)); } catch {}
-      if (details.length > 110) details = details.slice(0, 107) + '…';
+      try { details = JSON.stringify(JSON.parse(details), null, 1); } catch {}
       const cells = [
         (row.ts || '').slice(11, 19),
         row.event,
@@ -307,10 +344,18 @@ async function _loadFuturesAILog() {
         row.score || '',
         details,
       ];
-      cells.forEach(v => {
+      const base = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top';
+      cells.forEach((v, i) => {
         const td = tr.insertCell();
         td.textContent = v;
-        td.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
+        if (i === 5) {
+          // Details column — wrap long JSON, monospace, give it room.
+          td.style.cssText = base
+            + ';white-space:pre-wrap;word-break:break-word'
+            + ';font-family:ui-monospace,SFMono-Regular,monospace;font-size:.72rem';
+        } else {
+          td.style.cssText = base + ';white-space:nowrap';
+        }
       });
     });
     while (el.firstChild) el.removeChild(el.firstChild);

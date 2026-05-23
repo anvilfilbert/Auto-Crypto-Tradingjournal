@@ -1230,6 +1230,10 @@ select:focus,input:focus{border-color:var(--accent)}
           <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">24h P&L</div>
           <div id="fai-pnl-24h" style="font-size:1.05rem;font-weight:700">—</div>
         </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Unrealized</div>
+          <div id="fai-unrealized" style="font-size:1.05rem;font-weight:700">—</div>
+        </div>
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="loadFuturesAI()">↻ Refresh</button>
           <button class="btn btn-sm" style="background:rgba(38,217,107,.12);color:var(--accent3);border:1px solid rgba(38,217,107,.3)"
@@ -2209,7 +2213,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/15-hindsight.js?v=3.1"></script>
 <script src="/static/js/16-settings.js?v=2.9"></script>
 <script src="/static/js/17-risk.js?v=2.2"></script>
-<script src="/static/js/18-futures-ai.js?v=1.2"></script>
+<script src="/static/js/18-futures-ai.js?v=1.3"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">
   <button class="bottom-nav-item" data-tab="trades">
