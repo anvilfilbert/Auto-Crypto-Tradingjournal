@@ -253,6 +253,33 @@ async function _loadFuturesAIPositions() {
 }
 
 
+// Format a tp_levels JSON array as a multi-line cell. Each line shows
+// "TPn  price  (pct%)" so the operator can see the full Opus-emitted
+// ladder at a glance. Falls back to preset_tp (legacy single-TP) when
+// no ladder is present.
+function _formatTpLevels(p) {
+  const levels = Array.isArray(p.tp_levels) ? p.tp_levels : [];
+  if (!levels.length) {
+    return _num(p.preset_tp) || '—';
+  }
+  // Stack one per line inside the cell. Active (not-yet-hit) levels in
+  // brighter text; hit levels dimmed + struck through.
+  const frag = document.createDocumentFragment();
+  levels.forEach((lvl, i) => {
+    const line = document.createElement('div');
+    const idx = lvl.idx ?? (i + 1);
+    const price = _num(lvl.price) || '?';
+    const pct = lvl.pct != null ? `(${Math.round(lvl.pct)}%)` : '';
+    line.textContent = `TP${idx}  ${price}  ${pct}`.trim();
+    line.style.cssText = lvl.hit
+      ? 'opacity:.45;text-decoration:line-through;font-size:.74rem;line-height:1.4'
+      : 'font-size:.74rem;line-height:1.4';
+    frag.appendChild(line);
+  });
+  return frag;
+}
+
+
 function _buildOpenPositionsTable(rows, source) {
   const tbl = document.createElement('table');
   tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.8rem';
@@ -260,8 +287,8 @@ function _buildOpenPositionsTable(rows, source) {
   const hrow = thead.insertRow();
   // Different columns for real (live data from Bitget) vs paper (DB)
   const headers = source === 'real'
-    ? ['Symbol','Dir','Entry','Mark','% Move','Unrl P&L','Size','Lev','SL','TP']
-    : ['Symbol','Dir','Score','Archetype','Entry','SL','TP1','TP2','Notional','Lev'];
+    ? ['Symbol','Dir','Entry','Mark','% Move','Unrl P&L','Size','Lev','SL','TPs']
+    : ['Symbol','Dir','Score','Archetype','Entry','SL','TPs','Notional','Lev'];
   headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h;
@@ -271,6 +298,14 @@ function _buildOpenPositionsTable(rows, source) {
   const tb = tbl.createTBody();
   rows.forEach(p => {
     const tr = tb.insertRow();
+    // For paper rows, build a synthetic tp_levels from tp1/tp2 so the
+    // shared formatter renders something coherent
+    if (source !== 'real' && (!p.tp_levels || !p.tp_levels.length)) {
+      const synth = [];
+      if (p.tp1_price) synth.push({idx: 1, price: p.tp1_price, pct: 60, hit: !!p.tp1_hit});
+      if (p.tp2_price) synth.push({idx: 2, price: p.tp2_price, pct: 40, hit: false});
+      p = Object.assign({}, p, {tp_levels: synth});
+    }
     const cells = source === 'real' ? [
       p.symbol,
       p.direction,
@@ -281,7 +316,7 @@ function _buildOpenPositionsTable(rows, source) {
       _num(p.size_contracts),
       p.leverage + 'x',
       _num(p.preset_sl) || '—',
-      _num(p.preset_tp) || '—',
+      _formatTpLevels(p),
     ] : [
       p.symbol,
       p.direction,
@@ -289,15 +324,19 @@ function _buildOpenPositionsTable(rows, source) {
       p.archetype || '—',
       _num(p.entry_price),
       _num(p.current_sl),
-      _num(p.tp1_price),
-      _num(p.tp2_price),
+      _formatTpLevels(p),
       '$' + (p.notional_usdt ?? 0).toFixed(2),
       p.leverage + 'x',
     ];
     cells.forEach((v, i) => {
       const td = tr.insertCell();
-      td.textContent = v;
+      // Allow DocumentFragment for the TPs cell so multi-line stacking works
+      if (v instanceof DocumentFragment) td.appendChild(v);
+      else td.textContent = v;
+      // Multi-line TP cell needs top-aligned padding so other cells line up
+      const isTpCell = (source === 'real' && i === 9) || (source !== 'real' && i === 6);
       let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
+      if (isTpCell) cls += ';vertical-align:top';
       // Color the %-move and P&L cells
       if (source === 'real' && (i === 4 || i === 5)) {
         const val = i === 4 ? (p.unrealized_pct || 0) : (p.unrealized_pnl || 0);
@@ -318,7 +357,8 @@ const _CLOSE_REASON_LABELS = {
   'TP':                'TP hit',
   'TP1':               'TP1 hit',
   'TP2':               'TP2 hit',
-  'BE':                'Break-even stop',
+  'BE':                'Break-even stop (manual lifecycle)',
+  'BE_stop':           'Stopped at BE level',  // SL fired after BE-move (+ fee buffer)
   'MAE_cut':           'MAE auto-close',
   'trail_stop':        'Trailing stop',
   'manual_close':      'Manual close',
