@@ -22,6 +22,7 @@ stabilises, not to ship code now.
 | [`04-cex-vs-dex-translation.md`](04-cex-vs-dex-translation.md) | Bitget → DODEX translation table, what changes for the auto-trader |
 | [`05-integration-blueprint.md`](05-integration-blueprint.md) | Proposed module layout, SDK choices, key custody, on/off switch |
 | [`06-risks-and-decision-memo.md`](06-risks-and-decision-memo.md) | For/against integration, worst-case consequences, open questions |
+| [`07-upstream-watch.md`](07-upstream-watch.md) | How we monitor DODEX repo + docs for changes, schedule + change-detection script outline |
 
 ## Key terms you'll see repeatedly
 
@@ -34,12 +35,21 @@ stabilises, not to ship code now.
 - **Shielded note** — a contract instance (`PrivateNote`) that holds a hidden balance. Created via a ZK deposit proof. Spent via a `Nullifier` to prevent double-spend. Tornado-style cryptography.
 - **Dark order** — privacy classification: prices, balances and individual orders in the on-chain book are shielded. Trades become public when a user exits to a transparent address. *Not* dark in the "hidden venue" CEX sense.
 
-## Status as of 2026-05-23
+## Status as of 2026-05-23 (operator-confirmed)
 
-- Acki Nacki testnet live at `shellnet.ackinacki.org`. Mainnet status not confirmed in docs.
-- TVM-SDK at `v2.24.21` (released 2026-05-21). Rust core + JS/TS bindings, no Python.
+- **Acki Nacki mainnet: live since 2025-10-07.** Testnet `shellnet.ackinacki.org` still used for the latest in-development tooling, including DODEX preview contracts.
+- **DODEX: in active build.** Contracts and docs are dropping incrementally on `github.com/ackinacki/ackinacki` and `dev.ackinacki.com/dex.do`. Operator estimate: public release within the next few weeks.
+- **TVM-SDK** at `v2.24.21` (released 2026-05-21). Rust core + JS/TS bindings, no Python.
 - DODEX docs reference contracts `Nullifier`, `RootPrivateNote`, `PrivateNote`, `RootOracle`, `Oracle`, `OracleEventList`, `Pari Mutuel Pool`, `ShellAccumulatorRootUSDC`, `ShellSellOrderLot`, `Exchange`. Several marked *(Work in progress)*.
 - The dex.do landing page advertises an order-book DEX with x1000 margin, no MEV, microsecond execution, sub-second settlement. **These are marketing claims; the docs only currently expose a fixed-rate SHELL↔USDC accumulator** — the general limit-order primitives are not yet documented.
+
+## Operator-confirmed decisions (2026-05-23)
+
+- **SDK strategy:** Node.js sidecar (option B in `02-acki-nacki-blockchain.md`).
+- **Token roles:** `$NACKL` is the *main user/transferable token* on Acki Nacki and the asset that will be traded on DODEX. `SHELL` is the *gas / transaction-cost token* (and `VMSHELL` is its in-contract form for paying execution). This is operator-stated; the older Acki Nacki dev docs use `SHELL` as the "standard" token — reconcile during Phase 1 when we touch a live wallet.
+- **Asset scope:** DODEX will support multiple trading pairs at launch; cross-chain bridges to other L1s are also WIP. Plan the integration as multi-pair from the start, not SHELL/USDC-only.
+- **Approved phases:** **Phase 1 (read-only probe)** + **Phase 2 (module skeleton, toggleable, no trading)**. Phases 3-5 deferred until those land cleanly.
+- **Monitoring:** track upstream changes on `github.com/ackinacki/ackinacki` + the `dev.ackinacki.com` docs so we stay current as the protocol stabilises. See `07-upstream-watch.md`.
 
 ## How to refresh this knowledge later
 

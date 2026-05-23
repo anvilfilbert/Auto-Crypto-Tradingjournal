@@ -20,8 +20,8 @@ new code, new state, or both.
 
 | Bitget | DODEX |
 |---|---|
-| Single USDT-M futures account; `equity_usdt` lives in the wallet snapshot | **Multiple balances per wallet**: public SHELL, public VMSHELL (gas), USDC (for trading USDC pairs), plus any number of `PrivateNote` contract balances (shielded) |
-| Periodic `wallet_snapshots` row from REST poll | GraphQL query on each address; subscribe via WS for changes. **No single number to display** — UI must aggregate public + shielded. |
+| Single USDT-M futures account; `equity_usdt` lives in the wallet snapshot | **Multiple balances per wallet**: public **NACKL** (main asset), public **SHELL/VMSHELL** (gas), plus any bridged-in assets (USDC etc.) once DODEX cross-chain bridges are live, plus any number of `PrivateNote` contract balances (shielded) |
+| Periodic `wallet_snapshots` row from REST poll | GraphQL query on each address; subscribe via WS for changes. **No single number to display** — UI must aggregate public + shielded across token types. |
 | Sub-account isolation | One key per subaccount-equivalent. Could keep manual-trade and auto-trade keys separate so `chain` column can route to the right wallet. |
 
 ## Order placement

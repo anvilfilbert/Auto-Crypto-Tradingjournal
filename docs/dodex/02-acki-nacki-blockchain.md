@@ -29,15 +29,29 @@ floor; the marketing "microsecond" number refers to in-contract execution.
 
 ## Tokens
 
-- **SHELL** — the standard transferable token. What users hold and trade.
-- **VMSHELL** — gas token. Converted 1:1 from SHELL inside the contract at
-  deployment / call time. Contracts pay VMSHELL to execute.
-- **NACKL** — separate token used by the Bee Engine client-side mining
-  subsystem. Not relevant to DODEX trading.
+There is a wrinkle between what older Acki Nacki dev docs say and what the
+operator clarified on 2026-05-23. Both perspectives matter; reconcile on first
+real wallet touch in Phase 1.
 
-We need to manage **two balances** for our wallet contract: SHELL for trading
-+ value movement, and VMSHELL for paying gas. Conversion happens via a contract
-call (deposit some SHELL, the contract mints VMSHELL).
+| Token | Role per operator (authoritative) | Role per older dev docs |
+|---|---|---|
+| **NACKL** | **Main user / transferable token. The asset that gets traded on DODEX.** | Mining reward token paid by the Bee Engine subsystem. |
+| **SHELL** | Gas / transaction-cost token. Pre-paid to be spent on tx execution. | "Standard" transferable token. Converted 1:1 into VMSHELL for paying gas inside contracts. |
+| **VMSHELL** | In-contract form of SHELL — what a contract actually spends when executing. (1:1 with SHELL on conversion.) | Same. |
+
+Likely reconciliation: NACKL has emerged as the **user-facing primary token**
+(staking, trading, rewards) while SHELL/VMSHELL is the **gas layer**. Older
+docs that called SHELL "the standard token" probably predate this split.
+We'll confirm with on-chain reads in Phase 1.
+
+What we need to manage for any wallet we control:
+
+- **NACKL balance** — the value we're actually trading / hodling.
+- **SHELL (or VMSHELL) balance** — paid down on every external message we
+  submit. Needs a refill flow before it runs dry. Analogue: a tiny "gas
+  account" sitting alongside the trading balance.
+- Possibly **USDC** (or other bridged stablecoins) once DODEX launches
+  bridge-backed pairs.
 
 ## Smart-contract VM
 
@@ -136,6 +150,12 @@ compromised Pi means a drained wallet, not just rate-limited Bitget calls.
 
 ## Mainnet status
 
-Not explicitly confirmed in any doc we've fetched. All examples target
-`shellnet.ackinacki.org` (testnet). Plan as if mainnet is months away;
-treat any sooner date as a bonus.
+**Acki Nacki mainnet is live since 2025-10-07** (operator-confirmed
+2026-05-23). The public dev docs we fetched still default their examples to
+the testnet endpoint `shellnet.ackinacki.org` — that's because **DODEX
+itself is still in build** and runs against testnet for now. The underlying
+chain is production.
+
+We'll need mainnet endpoints (GraphQL, BoC submission) for our wallet
+interactions once DODEX cuts over. Treat the testnet URLs in the dev docs as
+*current dev surface for DODEX*, not as the chain's status.
