@@ -537,27 +537,28 @@ async function loadChart() {
 
   _chart.timeScale().fitContent();
 
-  // Fibonacci levels — stored for toggle
-  // Extensions (>100%) shown dashed and slightly dimmer; OTE 0.66 shown in red.
+  // Fibonacci levels — role-based colour scheme (see chart_patterns.py
+  // FIB_STYLE for the design rationale):
+  //   white      = swing anchors (0% / 100%)
+  //   blue       = shallow retracements (0.236, 0.382) — weak
+  //   gold       = 0.5 (equilibrium)
+  //   orange     = 0.618 (golden pocket — primary entry)
+  //   bright red = 0.66 OTE (ICT marker — strongest entry zone)
+  //   deep red   = 0.786 (last defence)
+  //   green      = extensions 1.618-4.236 (profit-target zones)
+  //
+  // backend now emits per-level color + weight + dash on each fib entry.
+  // Fall back to old purple/amber palette if a server is on an old build.
+  const _LS = { solid: 0, dotted: 1, dashed: 2 };
   if (fibonacci && fibonacci.levels) {
     fibonacci.levels.forEach(fib => {
-      let col, lw, ls;
-      if (fib.color) {
-        // Custom color (e.g. OTE 0.66 = red)
-        col = fib.color;
-        lw  = 1.5;
-        ls  = 0;   // solid
-      } else if (fib.extension) {
-        // Extension levels >100%: amber, dashed
-        col = 'rgba(255,179,0,0.50)';
-        lw  = 1;
-        ls  = 2;
-      } else {
-        // Standard retracement: purple, dotted
-        col = 'rgba(180,130,255,0.55)';
-        lw  = 1;
-        ls  = 1;
-      }
+      let col = fib.color
+              || (fib.extension ? 'rgba(255,179,0,0.55)' : 'rgba(180,130,255,0.55)');
+      const lw = (fib.weight === 3) ? 2.5
+               : (fib.weight === 2) ? 1.8
+               : 1;
+      const ls = _LS[fib.dash] != null ? _LS[fib.dash]
+               : (fib.extension ? _LS.dashed : _LS.dotted);
       const pl = series.createPriceLine({
         price: fib.price, lineWidth: lw, lineStyle: ls,
         color: col, axisLabelVisible: true,

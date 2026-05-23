@@ -182,9 +182,40 @@ FIB_LABELS = {
     4.236: "423.6%",
 }
 
-FIB_COLORS = {
-    0.66: "#ef5350",        # red — OTE zone marker
+# Per-level visual style. Each entry: (color, weight 1=thin/2=medium/3=heavy,
+# dashed/solid). Designed for *role* not retracement-vs-extension so the
+# operator can read intent from colour alone:
+#
+#   ┌──────────────────────────────────────────────────────────┐
+#   │ WHITE  → swing anchors (0%, 100%) — frame of reference   │
+#   │ BLUE   → shallow retracements (0.236, 0.382) — weak      │
+#   │ GOLD   → 0.5 (equilibrium / 50% retracement)             │
+#   │ ORANGE → 0.618 (golden pocket — primary entry zone)      │
+#   │ RED    → 0.66 OTE (ICT marker — strongest entry zone)    │
+#   │ DEEP-R → 0.786 (last-defence zone before invalidation)   │
+#   │ GREEN  → extensions (1.618-4.236) — profit-target zones  │
+#   └──────────────────────────────────────────────────────────┘
+#
+# Lines for KEY entry zones (0.618, 0.66, 0.786) are slightly thicker;
+# shallow retracements are dotted; extensions are dashed.
+FIB_STYLE = {
+    0.0:   {"color": "#e0e0e0", "weight": 2, "dash": "solid"},   # swing anchor
+    0.236: {"color": "#64b5f6", "weight": 1, "dash": "dotted"},  # shallow
+    0.382: {"color": "#42a5f5", "weight": 1, "dash": "dotted"},  # shallow
+    0.5:   {"color": "#ffd54f", "weight": 1, "dash": "solid"},   # equilibrium
+    0.618: {"color": "#ffa726", "weight": 2, "dash": "solid"},   # golden pocket
+    0.66:  {"color": "#ef5350", "weight": 2, "dash": "solid"},   # OTE
+    0.786: {"color": "#b71c1c", "weight": 1, "dash": "solid"},   # last defence
+    1.0:   {"color": "#e0e0e0", "weight": 2, "dash": "solid"},   # swing anchor
+    1.618: {"color": "#66bb6a", "weight": 1, "dash": "dashed"},  # ext target
+    2.618: {"color": "#4caf50", "weight": 1, "dash": "dashed"},
+    3.618: {"color": "#388e3c", "weight": 1, "dash": "dashed"},
+    4.236: {"color": "#2e7d32", "weight": 1, "dash": "dashed"},
 }
+
+# Backward-compat alias used by older renderers that read FIB_COLORS as a
+# simple ratio→hex map. New code should consult FIB_STYLE.
+FIB_COLORS = {ratio: spec["color"] for ratio, spec in FIB_STYLE.items()}
 
 
 def detect_fibonacci(df: pd.DataFrame, n_swing: int = 10) -> dict | None:
@@ -233,14 +264,16 @@ def detect_fibonacci(df: pd.DataFrame, n_swing: int = 10) -> dict | None:
         else:
             # 0% = swing_high, 100% = swing_low, >100% extends below low
             price = swing_high - ratio * rng
+        spec = FIB_STYLE.get(ratio, {})
         entry = {
             "ratio":     ratio,
             "price":     round(float(price), 8),
             "label":     FIB_LABELS[ratio],
             "extension": ratio > 1.0,
+            "color":     spec.get("color"),
+            "weight":    spec.get("weight", 1),
+            "dash":      spec.get("dash", "solid"),
         }
-        if ratio in FIB_COLORS:
-            entry["color"] = FIB_COLORS[ratio]
         levels.append(entry)
 
     return {
