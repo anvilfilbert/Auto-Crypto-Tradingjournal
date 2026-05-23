@@ -103,6 +103,31 @@ def run(inp: TradePrepInput, conn, model: str = MODEL) -> TradePrepResult:
     tp1    = float(data.get("tp1",         0) or 0)
     tp2    = float(data.get("tp2",         0) or 0)
 
+    # Optional multi-TP ladder. Opus may emit `tp_prices` as an array of 3-7
+    # ascending (Long) / descending (Short) targets when the setup warrants
+    # tiered partials. Sanitise: drop non-numeric entries, enforce monotonic
+    # direction, cap at 7.
+    raw_tps = data.get("tp_prices") or data.get("tps") or []
+    tp_prices: list = []
+    if isinstance(raw_tps, list):
+        for x in raw_tps:
+            try:
+                v = float(x)
+                if v > 0:
+                    tp_prices.append(v)
+            except (TypeError, ValueError):
+                pass
+        if direction_out.lower() == "long":
+            tp_prices = sorted(set(tp_prices))
+        else:
+            tp_prices = sorted(set(tp_prices), reverse=True)
+        tp_prices = tp_prices[:7]
+        # Backfill tp1/tp2 from ladder if model omitted them but gave the ladder
+        if tp_prices and not tp1:
+            tp1 = tp_prices[0]
+        if len(tp_prices) >= 2 and not tp2:
+            tp2 = tp_prices[1]
+
     # Generate annotated chart
     criteria = []
     if claude_score:
@@ -112,11 +137,20 @@ def run(inp: TradePrepInput, conn, model: str = MODEL) -> TradePrepResult:
         criteria.append(interp_text[:100])
     criteria += (data.get("key_conditions") or [])[:3]
     candles_4h = collected["candles"].get("4H")
+    # If the model emitted a multi-TP ladder, hand it to the drawer so the
+    # chart shows ALL levels (with idx labels). Percentages are filled in
+    # later by the orchestrator (notional-aware), so we leave pct=None here.
+    chart_tp_levels = (
+        [{"idx": i + 1, "price": p, "pct": None}
+         for i, p in enumerate(tp_prices)]
+        if tp_prices else None
+    )
     chart_b64 = agent_chart_draw.draw(
         candles=candles_4h,
         symbol=symbol, direction=direction_out,
         entry=entry, sl=sl, tp1=tp1, tp2=tp2,
         criteria=[c for c in criteria if c],
+        tp_levels=chart_tp_levels,
     ) if entry and sl and candles_4h is not None else ""
 
     return TradePrepResult(
@@ -135,6 +169,7 @@ def run(inp: TradePrepInput, conn, model: str = MODEL) -> TradePrepResult:
         consensus        = consensus,
         raw_json         = data,
         chart_png_b64    = chart_b64,
+        tp_prices        = tp_prices,
         _model           = model,
         _cached_tokens   = cached if isinstance(cached, int) else 0,
     )
@@ -160,13 +195,22 @@ TRADE CALL:
 {trade_section}
 
 Respond with ONLY valid JSON (no markdown, no code fences):
-{{"setup_score":1,"direction":"Long","entry_price":0.0,"sl_price":0.0,"tp1":0.0,"tp2":0.0,"rr_ratio":0.0,"key_conditions":["condition 1"],"pattern_warnings":[],"sizing_hint":"one sentence","cot_reasoning":"2-3 sentence chain of thought"}}
+{{"setup_score":1,"direction":"Long","entry_price":0.0,"sl_price":0.0,"tp1":0.0,"tp2":0.0,"tp_prices":[],"rr_ratio":0.0,"key_conditions":["condition 1"],"pattern_warnings":[],"sizing_hint":"one sentence","cot_reasoning":"2-3 sentence chain of thought"}}
 
 Rules:
 - setup_score: 1-4=avoid, 5-6=monitor, 7-8=good, 9-10=strong conviction
 - Long: sl_price MUST be below entry_price. Short: sl_price MUST be above entry_price.
 - entry_price, sl_price, tp1, tp2 MUST all be non-zero real prices
 - tp1 = conservative target (1.5:1 R:R min), tp2 = full target (2.5:1+ R:R)
+- tp_prices (optional): a ladder of 3-7 targets when the setup justifies tiered exits.
+  Use 3 TPs for a typical swing, 4-5 for a multi-day trend with clear staged resistance,
+  6-7 only for high-conviction trend trades with very clear structural levels.
+  - Long: ascending order (lowest = tp1 = first exit, highest = final runner)
+  - Short: descending order (highest = tp1, lowest = final runner)
+  - Place TPs at REAL structural levels (next S/R, FVG edge, fib extension,
+    previous swing high/low, measured-move target). DO NOT space them
+    evenly — use actual chart structure.
+  - Leave tp_prices EMPTY ([]) for scalp/range setups where only TP1+TP2 makes sense.
 - Reference the context provided above (backtest WR, sentiment, indicators, S/R levels)
 - cot_reasoning: state the 2-3 strongest reasons for your score"""
 

@@ -155,9 +155,81 @@ def evaluate(scanner_setup: dict, conn) -> dict:
     base["approved"]        = True
     base["consensus_score"] = min(sc_score, ai_score)
     base["reason"]          = "ok"
+
+    # Opus override path: when the consensus model produces its own
+    # entry/SL/TP ladder, merge them into the scanner setup so the executor
+    # uses them. Safety rule: SL can only move TIGHTER (closer to entry) —
+    # the consensus model is allowed to reduce risk but never silently
+    # increase it. Entry can shift freely (the order isn't placed yet).
+    overrides = _build_overrides(scanner_setup, result)
+    if overrides:
+        base["overrides"] = overrides
+        for k, v in overrides.items():
+            # Apply onto a copy of the scanner setup so the downstream
+            # executor uses the merged values. Don't mutate caller's dict
+            # in place — orchestrator iterates over the original list.
+            scanner_setup[f"_override_{k}"] = v
+        snap["overrides"] = overrides
+
     _log(conn, "consensus_approved", sym, direction, base["consensus_score"],
          json.dumps({**snap, "reject_kind": None}))
     return base
+
+
+# ── Override helpers ─────────────────────────────────────────────────────────
+
+def _build_overrides(scanner_setup: dict, ai_result: dict) -> dict:
+    """Compare Opus's emitted entry/SL/TP ladder against the scanner's
+    proposed prices. Returns dict of overrides that pass safety checks.
+    Empty dict = use scanner targets unchanged."""
+    out: dict = {}
+    direction = (scanner_setup.get("direction") or "Long").lower()
+    sc_entry = (scanner_setup.get("entry_zone") or {}).get("low") or scanner_setup.get("entry_price")
+    sc_sl    = scanner_setup.get("sl_price")
+    sc_tp1   = scanner_setup.get("tp1_price")
+
+    ai_entry = ai_result.get("entry_price") or 0
+    ai_sl    = ai_result.get("sl_price") or 0
+    ai_tps   = ai_result.get("tp_prices") or []
+    # Backfill ai_tps from tp1/tp2 if Opus didn't emit a ladder
+    if not ai_tps:
+        for v in (ai_result.get("tp1_price"), ai_result.get("tp2_price")):
+            if v:
+                ai_tps.append(float(v))
+
+    # Entry override — accept if Opus moved it AND the move is small (<2% drift)
+    if ai_entry and sc_entry and abs(ai_entry - sc_entry) / sc_entry > 0.001:
+        drift_pct = abs(ai_entry - sc_entry) / sc_entry * 100
+        if drift_pct < 2.0:
+            out["entry"] = float(ai_entry)
+        # else: too far — likely a hallucination, ignore
+
+    # SL override — ONLY accept tighter (closer to entry). Loosening is unsafe.
+    entry_for_sl = ai_entry or sc_entry
+    if ai_sl and sc_sl and entry_for_sl:
+        if direction == "long":
+            tighter = ai_sl > sc_sl  # higher SL on a Long = tighter
+        else:
+            tighter = ai_sl < sc_sl  # lower SL on a Short = tighter
+        # Also keep SL on the safe side of entry
+        on_safe_side = (ai_sl < entry_for_sl) if direction == "long" else (ai_sl > entry_for_sl)
+        if tighter and on_safe_side:
+            out["sl"] = float(ai_sl)
+
+    # TP ladder override — accept if Opus emitted ≥3 levels with structure
+    if len(ai_tps) >= 3:
+        # Validate monotonicity matches direction
+        if direction == "long":
+            ok = all(ai_tps[i+1] > ai_tps[i] for i in range(len(ai_tps)-1))
+        else:
+            ok = all(ai_tps[i+1] < ai_tps[i] for i in range(len(ai_tps)-1))
+        # And first TP on the right side of entry
+        first_tp_ok = (ai_tps[0] > (out.get("entry") or sc_entry)) if direction == "long" \
+                       else (ai_tps[0] < (out.get("entry") or sc_entry))
+        if ok and first_tp_ok:
+            out["tp_prices"] = ai_tps[:7]
+
+    return out
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

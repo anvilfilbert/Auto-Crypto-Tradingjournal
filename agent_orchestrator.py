@@ -139,6 +139,7 @@ def run_call_analysis(
         setup_score=prep["setup_score"], direction=prep["direction"],
         entry_price=prep["entry_price"], sl_price=prep["sl_price"],
         tp1_price=prep["tp1_price"], tp2_price=prep["tp2_price"],
+        tp_prices=prep.get("tp_prices") or [],
         rr_ratio=prep["rr_ratio"],
         key_conditions=prep["key_conditions"],
         pattern_warnings=prep["pattern_warnings"],

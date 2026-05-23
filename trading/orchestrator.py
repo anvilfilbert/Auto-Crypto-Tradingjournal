@@ -183,14 +183,43 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     continue
 
                 # 4. dispatch — paper or real
+                # Apply Opus consensus overrides when present (signal_consensus
+                # populates `_override_*` keys on the setup dict). Safety: SL
+                # override is already pre-validated to be tighter than scanner's,
+                # entry can shift up to 2% drift, TP ladder is monotonic.
+                ov_entry = setup.get("_override_entry")
+                ov_sl    = setup.get("_override_sl")
+                ov_tps   = setup.get("_override_tp_prices") or []
+                scanner_entry = setup.get("entry_zone", {}).get("low") or setup.get("entry_price")
+                entry_px = ov_entry or scanner_entry
+                sl_px    = ov_sl    or setup.get("sl_price")
+                tp1_px   = (ov_tps[0] if ov_tps else None) or setup.get("tp1_price")
+                tp2_px   = (ov_tps[1] if len(ov_tps) >= 2 else None) or setup.get("tp2_price")
+
+                # Build the tp_levels ladder. Cap count by notional so smallest
+                # slice is fillable on Bitget (≥$5). Apply matching TP_SPLITS row.
+                from trading.config import TP_SPLITS, pick_max_tp_count
+                notional = float(sizing.get("notional_usdt") or 0)
+                tps_for_ladder = ov_tps if ov_tps else [p for p in (tp1_px, tp2_px) if p]
+                desired_count = len(tps_for_ladder) or 1
+                allowed_count = pick_max_tp_count(notional, ideal=desired_count)
+                tps_capped = tps_for_ladder[:allowed_count]
+                splits = TP_SPLITS.get(allowed_count, [100])
+                tp_levels = [
+                    {"idx": i + 1, "price": float(p), "pct": float(splits[i]),
+                     "hit": False, "hit_at": None}
+                    for i, p in enumerate(tps_capped)
+                ]
+
                 signal = {
                     "symbol":          setup.get("symbol"),
                     "direction":       setup.get("direction"),
                     "consensus_score": verdict["consensus_score"],
-                    "entry_price":     setup.get("entry_zone", {}).get("low") or setup.get("entry_price"),
-                    "sl_price":        setup.get("sl_price"),
-                    "tp1_price":       setup.get("tp1_price"),
-                    "tp2_price":       setup.get("tp2_price"),
+                    "entry_price":     entry_px,
+                    "sl_price":        sl_px,
+                    "tp1_price":       tp1_px,
+                    "tp2_price":       tp2_px,
+                    "tp_levels":       tp_levels,
                     "scanner":         verdict["scanner"],
                     "ai":              verdict["ai"],
                 }

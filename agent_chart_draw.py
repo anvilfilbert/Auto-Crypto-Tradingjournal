@@ -61,6 +61,7 @@ def draw(
     n_candles: int = 60,
     entry_high: float = None,
     sr_levels: list = None,
+    tp_levels: list = None,
 ) -> str:
     """Returns base64-encoded PNG or '' on failure."""
     try:
@@ -130,6 +131,14 @@ def draw(
         for lv in (entry, entry_high, sl, tp1, tp2):
             if lv:
                 y_vals.append(lv)
+        if tp_levels:
+            for lvl in tp_levels:
+                try:
+                    p = float(lvl.get("price") or 0)
+                    if p:
+                        y_vals.append(p)
+                except (AttributeError, TypeError, ValueError):
+                    pass
         if y_vals:
             y_lo, y_hi = min(y_vals), max(y_vals)
             pad = (y_hi - y_lo) * 0.10 or y_lo * 0.02
@@ -204,15 +213,51 @@ def draw(
             return Line2D([0], [0], color=color, linewidth=lw,
                           linestyle=ls, label=f"{label} {price:.5g}")
 
+        # Multi-TP palette (TP1 + TP2 use the existing TP colours; 3-7 extend it)
+        _MULTI_TP_COLORS = [
+            TP1_C,        # TP1 — existing green
+            TP2_C,        # TP2 — existing cyan
+            "#FFD54F",    # TP3 — yellow
+            "#FF7043",    # TP4 — orange
+            "#BA68C8",    # TP5 — purple
+            "#F06292",    # TP6 — pink
+            "#90A4AE",    # TP7 — grey
+        ]
+
         legend_handles = []
         for handle in [
             _draw_level(entry, ENTRY_C, 1.8, "--", "Entry"),
             _draw_level(sl,    SL_C,    1.8, "--", "SL"),
-            _draw_level(tp1,   TP1_C,   1.6, "-",  "TP1"),
-            _draw_level(tp2,   TP2_C,   1.6, "-",  "TP2"),
         ]:
             if handle:
                 legend_handles.append(handle)
+
+        # Multi-TP ladder takes precedence over tp1/tp2 args when present.
+        # Each level carries its target % share (e.g. "TP3 [20%]").
+        if tp_levels:
+            for lvl in tp_levels[:7]:
+                try:
+                    price = float(lvl.get("price") or 0)
+                    pct   = lvl.get("pct")
+                    idx   = int(lvl.get("idx") or 0)
+                except (AttributeError, TypeError, ValueError):
+                    continue
+                if not price or not idx:
+                    continue
+                color = _MULTI_TP_COLORS[min(idx - 1, len(_MULTI_TP_COLORS) - 1)]
+                label = f"TP{idx}"
+                if pct:
+                    label += f" [{int(pct)}%]"
+                handle = _draw_level(price, color, 1.6, "-", label)
+                if handle:
+                    legend_handles.append(handle)
+        else:
+            for handle in [
+                _draw_level(tp1, TP1_C, 1.6, "-", "TP1"),
+                _draw_level(tp2, TP2_C, 1.6, "-", "TP2"),
+            ]:
+                if handle:
+                    legend_handles.append(handle)
 
         # ── Legend ────────────────────────────────────────────────────────────
         if legend_handles:

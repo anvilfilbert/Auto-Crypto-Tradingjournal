@@ -59,6 +59,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
     close_time=NULL so the reconciler treats it as open."""
     sym  = signal.get("symbol")
     dir_ = signal.get("direction")
+    tp_levels_json = json.dumps(signal.get("tp_levels") or []) if signal.get("tp_levels") else None
     cur = conn.execute("""
         INSERT INTO positions(
             symbol, base_asset, direction,
@@ -68,7 +69,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             realized_pnl, position_pnl,
             opening_fee, closing_fee, total_fees,
             is_manual, exchange, leverage,
-            chain, setup_type, setup_score, signal_price
+            chain, setup_type, setup_score, signal_price, tp_levels
         ) VALUES (
             ?, ?, ?,
             'isolated', datetime('now'), '',
@@ -77,7 +78,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             NULL, NULL,
             NULL, NULL, NULL,
             0, 'bitget_trader', ?,
-            'auto_ai', ?, ?, ?
+            'auto_ai', ?, ?, ?, ?
         )
     """, (
         sym,
@@ -90,6 +91,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
         (signal.get("scanner") or {}).get("archetype") or "auto_ai",
         signal.get("consensus_score"),
         signal.get("entry_price"),
+        tp_levels_json,
     ))
     conn.commit()
     return cur.lastrowid

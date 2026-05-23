@@ -5,6 +5,7 @@ GET  /api/futures-ai/state    — full snapshot for the UI page
 POST /api/futures-ai/state    — set state ("active"|"pause_now"|"pause_after_close")
 GET  /api/futures-ai/log      — recent decisions (paginated)
 """
+import json
 import traceback
 
 from flask import Blueprint, request
@@ -107,6 +108,22 @@ def api_futures_ai_positions():
                 except Exception:
                     live = []
                 open_rows = []
+                # Pre-fetch tp_levels JSON for each auto-AI position so the UI
+                # can show the full ladder + Opus's per-level percentages.
+                tp_levels_by_sym = {}
+                try:
+                    for r in conn.execute(
+                        "SELECT symbol, tp_levels FROM positions "
+                        "WHERE chain='auto_ai' AND (close_time IS NULL OR close_time='') "
+                        "AND tp_levels IS NOT NULL"
+                    ).fetchall():
+                        try:
+                            tp_levels_by_sym[r["symbol"]] = json.loads(r["tp_levels"])
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
                 for p in live:
                     entry = float(p.get("entry_price") or 0)
                     mark  = float(p.get("mark_price") or 0)
@@ -125,6 +142,7 @@ def api_futures_ai_positions():
                         "leverage":        p.get("leverage"),
                         "preset_sl":       p.get("preset_sl"),
                         "preset_tp":       p.get("preset_tp"),
+                        "tp_levels":       tp_levels_by_sym.get(p.get("symbol")) or [],
                     })
                 closed = [dict(r) for r in conn.execute(
                     "SELECT symbol, direction, entry_price, close_price, "

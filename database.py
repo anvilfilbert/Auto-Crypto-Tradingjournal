@@ -455,6 +455,19 @@ def init_db():
     _apply(49, "positions.close_reason",
            "ALTER TABLE positions ADD COLUMN close_reason TEXT DEFAULT NULL")
 
+    # 'tp_levels' — JSON array of {idx, price, pct, hit, hit_at} per TP level.
+    # Replaces the binary tp1_price/tp2_price model when Opus (consensus model)
+    # emits multi-TP overrides. Phase 1 (2026-05-23): DB stores the full ladder,
+    # charts render all levels, but the auto-trader still places ONLY TP1 as a
+    # plan order. Operator handles partial closes manually until Phase 2 wires
+    # plan-order-per-level execution. tp1_price / tp2_price remain populated
+    # (= levels[0].price and levels[1].price respectively) for backward compat
+    # with existing chart code, scanner output, and analyzed_calls consumers.
+    _apply(50, "positions.tp_levels",
+           "ALTER TABLE positions ADD COLUMN tp_levels TEXT DEFAULT NULL")
+    _apply(51, "analyzed_calls.tp_levels",
+           "ALTER TABLE analyzed_calls ADD COLUMN tp_levels TEXT DEFAULT NULL")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

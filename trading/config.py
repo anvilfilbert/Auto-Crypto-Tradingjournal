@@ -45,6 +45,50 @@ CONSENSUS_MIN_SCORE = int(os.environ.get("FUTURES_AI_CONSENSUS_MIN_SCORE", "8"))
 CONSENSUS_MODEL     = os.environ.get("FUTURES_AI_CONSENSUS_MODEL", "opus").lower()
 
 
+# ── Multi-TP splits (operator-defined, 2026-05-23) ───────────────────────────
+#
+# When Opus emits N take-profit levels via the consensus override path, the
+# system applies the matching split. Percentages MUST sum to 100. The two
+# baseline cases (1 and 2 TPs) are the legacy scanner-only behaviour and stay
+# binary (100% close at TP1 / 60% at TP1 + 40% at TP2 — the latter is what
+# the manual Call Analyzer flow uses).
+#
+# Bitget USDT-M futures min notional is symbol-dependent but ~$5 typical.
+# `pick_max_tp_count()` clamps Opus's suggested count to what notional supports.
+
+TP_SPLITS = {
+    1: [100],
+    2: [60, 40],
+    3: [40, 40, 20],
+    4: [40, 30, 20, 10],
+    5: [30, 25, 20, 15, 10],
+    6: [30, 25, 15, 15, 10, 5],
+    7: [25, 20, 15, 15, 10, 10, 5],
+}
+
+# Bitget min-notional safety floor (USDT). Sub-orders smaller than this are
+# rejected by the exchange — auto-trader caps tp_count so the smallest slice
+# is still fillable.
+MIN_TP_SLICE_USDT = float(os.environ.get("FUTURES_AI_MIN_TP_SLICE_USDT", "5.0"))
+
+
+def pick_max_tp_count(notional_usdt: float, ideal: int = 3) -> int:
+    """Return the largest tp_count from TP_SPLITS where the SMALLEST slice
+    is ≥ MIN_TP_SLICE_USDT, capped at `ideal`. Used to clamp Opus's suggested
+    count to what the position size actually supports.
+
+    Example: notional=25, ideal=7 → returns 3 (5%×25=$1.25 < $5 floor for 7,
+    but 20%×25=$5 hits the floor for 3-TPs).
+    """
+    ideal = max(1, min(int(ideal or 1), 7))
+    for n in range(ideal, 0, -1):
+        smallest_pct = min(TP_SPLITS[n])
+        smallest_slice = notional_usdt * smallest_pct / 100.0
+        if smallest_slice >= MIN_TP_SLICE_USDT - 1e-9:
+            return n
+    return 1
+
+
 # ── risk caps (constants — bumping these requires a code change + redeploy) ──
 
 # Risk-budget per trade, as fraction of equity. Kelly-scaled by score:

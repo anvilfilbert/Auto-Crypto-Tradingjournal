@@ -105,6 +105,12 @@ class TradePrepResult(TypedDict):
     consensus: dict
     raw_json: dict
     chart_png_b64: str       # base64 PNG of annotated chart, "" if not generated
+    # Optional multi-TP override. When Opus (or whatever the consensus model
+    # is) classifies the setup as worth multi-tier exits, it emits a tp_prices
+    # array of 3-7 ascending (Long) / descending (Short) targets. Auto-trader
+    # currently uses tp_prices[0..1] as tp1/tp2 for placement (Phase 1) and
+    # stores the full ladder for chart rendering + later partial-close logic.
+    tp_prices: list          # [] when the model didn't emit a ladder
     _model: str
     _cached_tokens: int
 
@@ -156,6 +162,7 @@ class AnalysisResult(TypedDict):
     sl_price: float
     tp1_price: float
     tp2_price: float
+    tp_prices: list          # multi-TP ladder, [] when not emitted
     rr_ratio: float
     key_conditions: list
     pattern_warnings: list
