@@ -16,6 +16,68 @@ Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI
 
 ---
 
+## 🎬 Feature Tour
+
+The autonomous Bitget chain — equity, breakers, open positions, decision log, and the catastrophe-hedge state all in one screen:
+
+<p align="center">
+  <img src="docs/images/showcase/01-futures-ai.png" alt="Futures-AI auto-trader page" width="900">
+</p>
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🔭 Setup Scanner
+
+Three-stage pipeline filters 300+ symbols every 30 min. Surfaces only high-conviction setups (score ≥ 7) with R:R, urgency, and the confluence reasoning that fired each pick.
+
+<img src="docs/images/showcase/02-scanner.png" alt="Setup Scanner" width="100%">
+
+</td>
+<td width="50%" valign="top">
+
+### 🛡 Risk Dashboard
+
+Institutional-grade portfolio metrics — VaR, position correlation, P&L attribution vs BTC benchmark, and Kelly-criterion bet sizing. All computed from free Binance public data.
+
+<img src="docs/images/showcase/03-risk.png" alt="Risk Dashboard" width="100%">
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top">
+
+### 📖 Trade Journal
+
+Full history across both exchanges with rich filters: search · symbol · direction · result · setup-type · date range. Click any row to add notes, tags, or grade the execution.
+
+<img src="docs/images/showcase/04-journal.png" alt="Trade Journal" width="100%">
+
+</td>
+</tr>
+</table>
+
+<details>
+<summary><b>📊 What else is in the box</b> (click to expand)</summary>
+
+- **Dashboard** — KPIs, monthly target tracker, equity curve, wallet history, current streak, recent trades
+- **Deep Dive Analytics** — breakdown by symbol / month / hour / setup type; worst-symbol identification
+- **Edge Lab** — setup-type analysis, execution-grade impact, AI pattern detector, planned-vs-realized R:R
+- **Chart Explorer** — LightweightCharts popup with S/R overlay, WaveTrend pane, at-level highlights, FVG zones
+- **Call Analyzer** — paste an analyst call → instant 7-agent AI scoring + annotated chart
+- **Hindsight Analysis** — retroactive trade re-scoring with full chart context at entry time
+- **Pending Limit Orders** — pop-out chart per order + AI verdict with retry hint on truncated responses
+- **Live Sync** — Bitget USDT-M + Blofin every 5 min; CSV import for historical
+- **Data Sources** — interactive reference of all 14 fan-in clients (Coinalyze, Nansen, CoinGecko, CoinMetrics, etc.)
+- **Settings** — token-usage dashboard with per-module spend, prompt-cache hit rate, runway estimate
+
+> Numbers shown in screenshots are illustrative — wired to local demo data, not real account state.
+
+</details>
+
+---
+
 ## Features
 
 - **Trade Journal** — Bitget USDT-M + Blofin sync (5 min cadence), CSV import, per-trade notes/tags/setup type
