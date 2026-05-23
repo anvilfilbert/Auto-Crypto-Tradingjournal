@@ -198,9 +198,29 @@ def on_scan_completed(scanner_state: dict) -> dict:
 
                 # Build the tp_levels ladder. Cap count by notional so smallest
                 # slice is fillable on Bitget (≥$5). Apply matching TP_SPLITS row.
+                #
+                # Default is 3 TPs (the operator's preferred ladder). When
+                # Opus emits a richer ladder via ov_tps we use that; otherwise
+                # we synthesise a third tier by extrapolating beyond TP2 using
+                # the TP1→TP2 gap (TP3 = TP2 + (TP2 - TP1)). This guarantees
+                # every approved setup shows a 3-TP ladder unless notional
+                # forces a smaller count or Opus genuinely emitted < 3 with
+                # a reason (e.g. tight scalp).
                 from trading.config import TP_SPLITS, pick_max_tp_count
                 notional = float(sizing.get("notional_usdt") or 0)
-                tps_for_ladder = ov_tps if ov_tps else [p for p in (tp1_px, tp2_px) if p]
+                if ov_tps:
+                    tps_for_ladder = list(ov_tps)
+                else:
+                    tps_for_ladder = [p for p in (tp1_px, tp2_px) if p]
+                    # Synthesise TP3 from the TP1→TP2 structural gap. Only
+                    # add it if both TP1 and TP2 exist and the gap is
+                    # positive (Long) / negative (Short) — otherwise leave
+                    # at 2 TPs.
+                    if len(tps_for_ladder) == 2:
+                        gap = tps_for_ladder[1] - tps_for_ladder[0]
+                        is_long_dir = (setup.get("direction") or "").lower() == "long"
+                        if (is_long_dir and gap > 0) or (not is_long_dir and gap < 0):
+                            tps_for_ladder.append(tps_for_ladder[1] + gap)
                 desired_count = len(tps_for_ladder) or 1
                 allowed_count = pick_max_tp_count(notional, ideal=desired_count)
                 tps_capped = tps_for_ladder[:allowed_count]

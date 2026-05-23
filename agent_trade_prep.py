@@ -202,15 +202,19 @@ Rules:
 - Long: sl_price MUST be below entry_price. Short: sl_price MUST be above entry_price.
 - entry_price, sl_price, tp1, tp2 MUST all be non-zero real prices
 - tp1 = conservative target (1.5:1 R:R min), tp2 = full target (2.5:1+ R:R)
-- tp_prices (optional): a ladder of 3-7 targets when the setup justifies tiered exits.
-  Use 3 TPs for a typical swing, 4-5 for a multi-day trend with clear staged resistance,
-  6-7 only for high-conviction trend trades with very clear structural levels.
-  - Long: ascending order (lowest = tp1 = first exit, highest = final runner)
-  - Short: descending order (highest = tp1, lowest = final runner)
-  - Place TPs at REAL structural levels (next S/R, FVG edge, fib extension,
-    previous swing high/low, measured-move target). DO NOT space them
-    evenly — use actual chart structure.
-  - Leave tp_prices EMPTY ([]) for scalp/range setups where only TP1+TP2 makes sense.
+- **tp_prices is now MANDATORY for any setup you score ≥ 7.**
+  Default count: 3 levels (TP1/TP2/TP3) at REAL structural levels —
+  next S/R, FVG edge, fib extension, previous swing high/low,
+  measured-move target. DO NOT space them evenly — use chart structure.
+  - 3 TPs (default) for swing setups
+  - 4-5 TPs for clean multi-day trends with staged resistance
+  - 6-7 TPs only for very-high-conviction trend continuation with clear levels
+  - 2 TPs OR empty []: only acceptable for pure scalp/range setups where
+    the third level would have negative R:R or no structural anchor.
+    Justify the choice in cot_reasoning when you go below 3.
+  - Long: ascending order (TP1 = first/closest exit, last = final runner)
+  - Short: descending order (TP1 = highest, last = lowest runner)
+  - tp1 + tp2 fields MUST still match tp_prices[0] + tp_prices[1] when emitted
 - Reference the context provided above (backtest WR, sentiment, indicators, S/R levels)
 - cot_reasoning: state the 2-3 strongest reasons for your score"""
 
