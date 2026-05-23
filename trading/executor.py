@@ -412,13 +412,19 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
         new_sl = entry + sign * (atr * 0.5)
         if (is_long and new_sl > current_sl) or (not is_long and new_sl < current_sl):
             try:
-                bitget_trader.modify_position_sl(
+                result = bitget_trader.modify_position_sl(
                     live["symbol"], live["direction"].lower(), new_sl
                 )
-                _log(conn, "real_trail", db_pos["id"], {
-                    "symbol": live["symbol"], "old_sl": current_sl, "new_sl": new_sl,
-                })
-                actions.append("trail_moved")
+                if result.get("ok"):
+                    _log(conn, "real_trail", db_pos["id"], {
+                        "symbol": live["symbol"], "old_sl": current_sl, "new_sl": new_sl,
+                        "result": result,
+                    })
+                    actions.append("trail_moved")
+                else:
+                    _log(conn, "real_trail_failed", db_pos["id"],
+                         {"symbol": live["symbol"],
+                          "reason": result.get("reason", "unknown")})
             except Exception as e:
                 _log(conn, "real_trail_failed", db_pos["id"],
                      {"symbol": live["symbol"], "error": str(e)[:200]})
@@ -428,13 +434,19 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
     if current_pct >= atr_pct * 1.0:
         if (is_long and entry > current_sl) or (not is_long and entry < current_sl):
             try:
-                bitget_trader.modify_position_sl(
+                result = bitget_trader.modify_position_sl(
                     live["symbol"], live["direction"].lower(), entry
                 )
-                _log(conn, "real_be", db_pos["id"], {
-                    "symbol": live["symbol"], "old_sl": current_sl, "new_sl": entry,
-                })
-                actions.append("be_moved")
+                if result.get("ok"):
+                    _log(conn, "real_be", db_pos["id"], {
+                        "symbol": live["symbol"], "old_sl": current_sl, "new_sl": entry,
+                        "result": result,
+                    })
+                    actions.append("be_moved")
+                else:
+                    _log(conn, "real_be_failed", db_pos["id"],
+                         {"symbol": live["symbol"],
+                          "reason": result.get("reason", "unknown")})
             except Exception as e:
                 _log(conn, "real_be_failed", db_pos["id"],
                      {"symbol": live["symbol"], "error": str(e)[:200]})

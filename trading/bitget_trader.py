@@ -669,21 +669,71 @@ def get_position_history(start_ms: int, end_ms: int,
 
 def modify_position_sl(symbol: str, side: str, new_sl_price: float) -> dict:
     """
-    Move the position's preset SL. Called by the BE-trigger and trail
-    rules. Bitget expects we replace the existing preset SL plan order.
+    Move the position's SL. Called by the BE-trigger and trail rules.
+
+    Bitget V2 stores SL/TP as separate plan orders — there's no
+    'modify-position-tpsl' endpoint (the old code called that, got
+    HTTP 404 every time, and BE never actually moved). The V2 pattern:
+      1. Look up the existing loss_plan for (symbol, side)
+      2. Cancel it via cancel-plan-order
+      3. Place a fresh loss_plan at the new price via place-tpsl-order
+
+    Tick-size snapping is applied to new_sl_price before submission.
+    Returns {ok: bool, action: str, ...} with diagnostic fields.
     """
     side = side.lower()
-    body = {
-        "symbol":      symbol,
-        "productType": PRODUCT_TYPE,
-        "marginCoin":  "USDT",
-        "holdSide":    side,
-        "stopLossTriggerPrice": str(new_sl_price),
-        "stopLossTriggerType":  "fill_price",
-    }
-    data = _request("POST", "/api/v2/mix/order/modify-position-tpsl",
-                     body=body)
-    return {"ok": True, "modified": data}
+    # Snap to the symbol's price grid (otherwise Bitget rejects 45115)
+    try:
+        spec = get_contract_spec(symbol)
+        new_sl_price = _snap_price(float(new_sl_price), spec["price_place"])
+    except Exception:
+        pass
+
+    # Find the existing loss_plan for this side
+    plans  = get_pending_plan_orders(symbol)
+    existing = next((p for p in plans
+                     if p["plan_type"] == "loss_plan"
+                     and (p.get("direction") or "").lower() == side),
+                    None)
+
+    # Resolve size — from the existing plan if present, otherwise from
+    # the live position record
+    size = 0.0
+    if existing:
+        size = float(existing.get("size") or 0)
+    if not size:
+        positions = get_open_positions()
+        match = next((p for p in positions
+                      if p["symbol"] == symbol
+                      and (p.get("direction") or "").lower() == side),
+                     None)
+        if match:
+            size = float(match.get("size_contracts") or 0)
+    if not size:
+        return {"ok": False, "reason": f"could not resolve size for {symbol} {side}"}
+
+    # Cancel the existing loss_plan, if any (best-effort)
+    if existing:
+        try:
+            _request("POST", "/api/v2/mix/order/cancel-plan-order", body={
+                "symbol":      symbol,
+                "productType": PRODUCT_TYPE,
+                "marginCoin":  "USDT",
+                "planType":    "loss_plan",
+                "orderIdList": [{"orderId": existing["order_id"], "clientOid": ""}],
+            })
+        except TraderAPIError as e:
+            # Non-fatal — keep going; the new place call may still succeed
+            # and Bitget will end up with two SLs (we'll log this)
+            return {"ok": False, "reason": f"cancel old SL failed: {str(e)[:100]}"}
+
+    # Place a fresh loss_plan at the new price
+    placed = _try_place_tpsl(symbol, side, new_sl_price, size,
+                              plan_type="loss_plan")
+    if not placed:
+        return {"ok": False, "reason": "place new loss_plan failed"}
+    return {"ok": True, "action": "cancel+replace", "new_sl": new_sl_price,
+            "cancelled_old": bool(existing)}
 
 
 def close_position(symbol: str, side: str,
