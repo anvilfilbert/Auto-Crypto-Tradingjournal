@@ -30,6 +30,7 @@ reconstruct the exact decision chain after the fact.
 from __future__ import annotations
 
 import json
+import re
 import threading
 from typing import Optional
 
@@ -38,6 +39,40 @@ from . import kill_switch
 from . import risk_budget
 from . import signal_consensus
 from . import paper
+
+
+# Matches the trailing "→ <signed-decimal>" in PO3/bear_phase descriptive
+# strings emitted by ai_scanner Stage 3 — e.g. "PO3 range: premium (76%) → -0.3"
+# extracts -0.3. Returns 0.0 when no modifier is present (neutral cases).
+_MODIFIER_RE = re.compile(r"→\s*([+-]?\d+(?:\.\d+)?)")
+
+
+def _parse_po3_modifier(value) -> float:
+    """Extract the signed modifier from a scanner PO3/bear_phase string.
+
+    Examples:
+        "PO3 range: premium (76%) → -0.3"   →  -0.3
+        "FVG: bullish FVG below … → +0.30"  →   0.3
+        "PO3 range: equilibrium (60%)"      →   0.0   (no arrow)
+        ""                                  →   0.0
+        None                                →   0.0
+        0.3 (already-numeric)                →   0.3
+    """
+    if value is None or value == "":
+        return 0.0
+    if isinstance(value, (int, float)):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+    if isinstance(value, str):
+        m = _MODIFIER_RE.search(value)
+        if m:
+            try:
+                return float(m.group(1))
+            except (TypeError, ValueError):
+                return 0.0
+    return 0.0
 
 
 # ── Idempotency — don't re-evaluate the same scanner setup twice ────────────
@@ -237,11 +272,18 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 # scanner setup dict (populated by ai_scanner Stage 3). Opus
                 # override flag is true when consensus produced any of
                 # _override_entry / _override_sl / _override_tp_prices.
-                po3_total = sum([
-                    float(setup.get("_po3_range") or 0),
-                    float(setup.get("_po3_fvg")   or 0),
-                    float(setup.get("_po3_session") or 0),
-                ])
+                #
+                # NB: the scanner emits PO3 fields as VERBOSE STRINGS like
+                # "PO3 range: premium (76%) → -0.3" (signed modifier at the
+                # end), or no arrow when the level is neutral. Naive float()
+                # crashes the orchestrator and the trade is lost. Use the
+                # parse helper to extract the signed decimal.
+                po3_total = round(
+                    _parse_po3_modifier(setup.get("_po3_range")) +
+                    _parse_po3_modifier(setup.get("_po3_fvg")) +
+                    _parse_po3_modifier(setup.get("_po3_session")),
+                    3,
+                )
                 opus_had_overrides = bool(ov_entry or ov_sl or ov_tps)
 
                 # Normalise bear_phase to just the classification keyword.
