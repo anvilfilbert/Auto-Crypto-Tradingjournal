@@ -1,5 +1,8 @@
 """
-trading.bitget_trader — isolated write-enabled Bitget V2 client.
+trading.bitget_trader — write-enabled Bitget V2 client for the auto-trader
+chain. Margin mode is controlled by the MARGIN_MODE constant below
+(default: "crossed" — wallet collateral shared across positions, supports
+hedging).
 
 Uses BITGET_TRADER_* env vars (separate from BITGET_* used by the
 read-only journal client). Every method is defensive about Elite-account
@@ -52,6 +55,15 @@ API_KEY      = os.environ.get("BITGET_TRADER_API_KEY", "")
 SECRET_KEY   = os.environ.get("BITGET_TRADER_SECRET_KEY", "")
 PASSPHRASE   = os.environ.get("BITGET_TRADER_PASSPHRASE", "")
 PRODUCT_TYPE = "USDT-FUTURES"
+
+# Margin mode for newly opened auto-trader positions. "crossed" shares
+# wallet collateral across all positions on the subaccount, which is the
+# right choice when we want to hedge (an offsetting position reduces
+# required margin, and a single bad position can't liquidate the book
+# in isolation). Existing positions keep whatever mode they were opened
+# with — this constant only affects NEW openings. Flip to "isolated"
+# here if you ever want to revert.
+MARGIN_MODE  = "crossed"
 
 
 class TraderAPIError(Exception):
@@ -360,6 +372,29 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
     # (observed 22:28 batch: requested 3x, got 10x on 4 of 5 positions).
     import logging
     _log = logging.getLogger(__name__)
+
+    # Switch the symbol's margin mode to MARGIN_MODE if not already.
+    # Bitget V2 rejects place-order if the body's marginMode disagrees
+    # with the symbol's current mode, so we must align first. Idempotent
+    # — Bitget returns success when already in the target mode.
+    margin_mode_result = "untried"
+    try:
+        _request("POST", "/api/v2/mix/account/set-margin-mode", body={
+            "symbol":      symbol,
+            "productType": PRODUCT_TYPE,
+            "marginCoin":  "USDT",
+            "marginMode":  MARGIN_MODE,
+        })
+        margin_mode_result = "ok"
+    except TraderAPIError as e:
+        emsg = str(e).lower()
+        if "already" in emsg or "same" in emsg or "no need" in emsg:
+            margin_mode_result = f"already {MARGIN_MODE}"
+        else:
+            margin_mode_result = f"refused: {str(e)[:100]}"
+            _log.warning("[bitget_trader] set-margin-mode %s -> %s failed: %s",
+                          symbol, MARGIN_MODE, str(e)[:120])
+
     leverage_set_result = "untried"
     try:
         _request("POST", "/api/v2/mix/account/set-leverage", body={
@@ -451,7 +486,7 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
     body = {
         "symbol":       symbol,
         "productType":  PRODUCT_TYPE,
-        "marginMode":   "isolated",
+        "marginMode":   MARGIN_MODE,
         "marginCoin":   "USDT",
         "size":         str(size_contracts),
         "side":         "buy" if is_long else "sell",
@@ -535,7 +570,7 @@ def _try_place_tpsl(symbol: str, side: str, trigger_price: float,
     body = {
         "symbol":        symbol,
         "productType":   PRODUCT_TYPE,
-        "marginMode":    "isolated",
+        "marginMode":    MARGIN_MODE,
         "marginCoin":    "USDT",
         "planType":      plan_type,
         "triggerPrice":  str(trigger_price),
@@ -667,7 +702,7 @@ def close_position(symbol: str, side: str,
     body = {
         "symbol":       symbol,
         "productType":  PRODUCT_TYPE,
-        "marginMode":   "isolated",
+        "marginMode":   MARGIN_MODE,
         "marginCoin":   "USDT",
         "size":         str(qty),
         "side":         "sell" if side == "long" else "buy",
