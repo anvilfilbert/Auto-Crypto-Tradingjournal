@@ -2,7 +2,8 @@
 
 > **Disclaimer:** Vibe-coded with [Claude Code](https://claude.ai/code). Not reviewed by professional security experts. Use at your own risk.
 
-> I decided to remove versioning at the moment, as updates are pushed often. I'm now concentrating in scanner and setup improvements.
+> **Disclaimer: Automatic AI trading** I recommend to start with paper trading first (integrated feature), to get a good knowledge about scoring decisions and workflows. Risk (if hit at hard SL) ist hardcoded: max. 1% on single entry, max. 2% if DCA strategy is activated.<br>
+This tool was made for learning purposes. If you want to use the trading feature with real money - your decision...
 
 Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI pipeline, interactive Telegram assistant, and deep performance analytics. Runs on a Raspberry Pi 5 (or any Linux box).
 <br>
