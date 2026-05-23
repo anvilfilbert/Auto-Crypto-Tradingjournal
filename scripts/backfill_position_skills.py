@@ -106,7 +106,17 @@ def main(argv: list[str] | None = None) -> int:
             # The shadow log was added 2026-05-23 afternoon — older
             # consensus_approved payloads won't have these fields. Pull
             # defensively.
-            bear_phase = payload.get("bear_phase")
+            # Normalise the bear_phase string. Scanner emits verbose descriptions
+            # like "bear-phase: decline (F&G 28 fear, BTC drifting) → -0.3" —
+            # we want just the classification keyword for clean GROUP BY.
+            raw_phase = payload.get("bear_phase") or ""
+            _PHASE_KEYWORDS = ("distribution", "decline", "capitulation",
+                               "recovery", "unknown")
+            _lower = raw_phase.lower()
+            bear_phase = next(
+                (kw for kw in _PHASE_KEYWORDS if kw in _lower),
+                raw_phase[:32] if raw_phase else None,
+            )
             archetype = payload.get("archetype") or archetype
             # po3_total is reconstructed from the components inside the snapshot
             po3_total = 0.0

@@ -224,6 +224,20 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 ])
                 opus_had_overrides = bool(ov_entry or ov_sl or ov_tps)
 
+                # Normalise bear_phase to just the classification keyword.
+                # The scanner emits a verbose description like
+                # "bear-phase: decline (F&G 28 fear, BTC drifting) → -0.3".
+                # Storing the whole string makes the analytics GROUP BY useless
+                # since every position has a slightly different one.
+                raw_phase = (setup.get("_bear_phase") or "")
+                _PHASE_KEYWORDS = ("distribution", "decline", "capitulation",
+                                   "recovery", "unknown")
+                _lower = raw_phase.lower()
+                bear_phase_normalised = next(
+                    (kw for kw in _PHASE_KEYWORDS if kw in _lower),
+                    raw_phase[:32] if raw_phase else None,
+                )
+
                 signal = {
                     "symbol":          setup.get("symbol"),
                     "direction":       setup.get("direction"),
@@ -237,7 +251,7 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     "ai":              verdict["ai"],
                     # Skill provenance (persisted by executor._insert_open_position)
                     "consensus_model_used": fa_config.CONSENSUS_MODEL,
-                    "bear_phase_at_open":   setup.get("_bear_phase"),
+                    "bear_phase_at_open":   bear_phase_normalised,
                     "archetype_at_open":    setup.get("trade_type") or (verdict["scanner"] or {}).get("archetype"),
                     "po3_total":            round(po3_total, 3),
                     "opus_had_overrides":   1 if opus_had_overrides else 0,
