@@ -105,8 +105,20 @@ def api_scanner_criteria_defaults():
 
 @bp.route("/api/scanner/status")
 def api_scanner_status():
+    """Current scan state + scheduler cadence so the UI can render a
+    countdown to the next cycle (or a stopwatch while running)."""
     try:
-        return _ok(ai_scanner.get_state())
+        state = dict(ai_scanner.get_state() or {})
+        # Surface the scheduler interval so the topbar doesn't need to
+        # hardcode 1800 — falls through to the scheduler's runtime constants.
+        try:
+            import scanner_scheduler
+            state["scheduler_interval_sec"]   = scanner_scheduler.INTERVAL
+            state["scheduler_first_delay_sec"] = scanner_scheduler.FIRST_DELAY
+        except Exception:
+            state.setdefault("scheduler_interval_sec",   1800)
+            state.setdefault("scheduler_first_delay_sec", 300)
+        return _ok(state)
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)

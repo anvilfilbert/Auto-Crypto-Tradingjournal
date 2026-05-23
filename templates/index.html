@@ -480,6 +480,9 @@ select:focus,input:focus{border-color:var(--accent)}
     </span>
     <!-- Dual clock: UTC (reference) + Europe/Zurich (your local) -->
     <span id="dual-clock" style="margin-left:14px;font-family:ui-monospace,monospace;font-size:.78rem;color:var(--muted);letter-spacing:.04em" title="UTC reference + your Europe/Zurich local time. Updated every 15s."></span>
+    <!-- Scanner countdown / stopwatch — idle → "Next scan in MM:SS",
+         running → "Scanning · MM:SS" (stopwatch). Polls /api/scanner/status. -->
+    <span id="scan-timer" style="margin-left:10px;font-family:ui-monospace,monospace;font-size:.78rem;letter-spacing:.04em;cursor:default" title="Countdown to next scanner cycle. Switches to stopwatch while a scan is running."></span>
     <!-- Global exchange filter — applies to all pages -->
     <div class="exch-pills" id="exch-pills">
       <button class="exch-pill active" id="ep-all"    onclick="setGlobalExchange('all',this)"    data-tip="Show trades from all exchanges">All</button>
@@ -2800,7 +2803,7 @@ select:focus,input:focus{border-color:var(--accent)}
   </div>
 </div>
 
-<script src="/static/js/01-utils.js?v=3.4"></script>
+<script src="/static/js/01-utils.js?v=3.5"></script>
 <script src="/static/js/02-dashboard.js?v=2.8"></script>
 <script src="/static/js/03-journal.js?v=2.9"></script>
 <script src="/static/js/04-deep-edge.js?v=3.3"></script>

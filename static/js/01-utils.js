@@ -61,6 +61,92 @@ setInterval(_renderDualClock, 15000);
 window.addEventListener('DOMContentLoaded', _renderDualClock);
 _renderDualClock();   // initial paint in case DOM already loaded
 
+
+// ── Scanner timer (countdown / stopwatch) ───────────────────────────────────
+// Polls /api/scanner/status periodically (cheap — local SQLite read), then
+// either ticks down to the next scheduled scan or counts up while a scan
+// is running. State refreshes every 5s; the displayed seconds tick every 1s.
+let _scanTimerCache = {
+  fetched_at: 0,           // wall-clock ms when state was last fetched
+  status:     null,         // 'idle' | 'running' | 'completed' | ...
+  started_at: null,         // unix-sec when current scan started (if running)
+  completed_at: null,       // unix-sec when last scan completed
+  interval:   1800,         // scheduler cadence in seconds
+};
+
+async function _refreshScanTimerState() {
+  try {
+    const res = await fetch('/api/scanner/status');
+    if (!res.ok) return;
+    const json = await res.json();
+    const d = (json && json.data) || {};
+    _scanTimerCache = {
+      fetched_at:   Date.now(),
+      status:       d.status || null,
+      started_at:   d.started_at   || null,
+      completed_at: d.completed_at || null,
+      interval:     d.scheduler_interval_sec || 1800,
+    };
+  } catch (_) {
+    // network blip — keep previous cache, render will fall back gracefully
+  }
+}
+
+function _fmtMMSS(seconds) {
+  if (seconds == null || !isFinite(seconds) || seconds < 0) seconds = 0;
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function _renderScanTimer() {
+  const el = document.getElementById('scan-timer');
+  if (!el) return;
+  const c   = _scanTimerCache;
+  const now = Date.now() / 1000;   // unix seconds
+
+  // Running → stopwatch
+  if (c.status === 'running' && c.started_at) {
+    const elapsed = now - c.started_at;
+    el.textContent = `🔄 Scanning · ${_fmtMMSS(elapsed)}`;
+    el.style.color = 'var(--accent)';
+    return;
+  }
+
+  // Idle / completed → countdown to next scheduled scan
+  if (c.completed_at && c.interval) {
+    const next_at  = c.completed_at + c.interval;
+    const remaining = next_at - now;
+    if (remaining > 0) {
+      el.textContent = `⏱ Next scan in ${_fmtMMSS(remaining)}`;
+      // Warn-color when within last 30s — operator can prepare
+      el.style.color = remaining < 30 ? 'var(--yellow,#ffb300)' : 'var(--muted)';
+    } else {
+      // Window passed; scheduler should fire any moment now
+      el.textContent = `⏱ Next scan due · ${_fmtMMSS(-remaining)} overdue`;
+      el.style.color = 'var(--yellow,#ffb300)';
+    }
+    return;
+  }
+
+  // Pre-boot / no completion yet → boot countdown is not knowable from
+  // scanner_status alone (scheduler's FIRST_DELAY timer is not exposed),
+  // so just show a placeholder until the first scan completes.
+  el.textContent = `⏱ Scanner warming up…`;
+  el.style.color = 'var(--muted)';
+}
+
+// 5s refresh for state, 1s for visual tick (keeps stopwatch smooth)
+setInterval(_refreshScanTimerState, 5000);
+setInterval(_renderScanTimer,       1000);
+window.addEventListener('DOMContentLoaded', () => {
+  _refreshScanTimerState();
+  _renderScanTimer();
+});
+// Initial paint in case DOM was already ready
+_refreshScanTimerState();
+_renderScanTimer();
+
 // ── Notification toast ────────────────────────────────────────────────────────
 let _notifyTimer = null;
 function notify(msg, type) {
