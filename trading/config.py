@@ -53,8 +53,23 @@ RISK_SCORE_MULTIPLIERS = {7: 1.0, 8: 1.5, 9: 2.0, 10: 2.0}
 
 # Hard ceilings — order size never exceeds these regardless of score
 MAX_LEVERAGE              = 10
-MAX_NOTIONAL_USDT         = 25.0   # $25 notional per trade on $100 bankroll
+MAX_NOTIONAL_USDT         = 25.0   # FLOOR for the dynamic cap (see below)
+# Dynamic notional cap — Profit Compounding Strategy: position size grows
+# with accumulated equity. Effective cap per trade is:
+#   max(MAX_NOTIONAL_USDT, equity × MAX_NOTIONAL_PCT)
+# So a $100 starting equity → $25 cap; equity grows to $200 → $50 cap.
+# Floor of $25 ensures small accounts still get tradeable sizes.
+MAX_NOTIONAL_PCT          = 0.25
 MAX_CONCURRENT_POSITIONS  = 5      # raised 3→5 (2026-05-22) — operator request
+
+# Profit Compounding Strategy — streak-based risk progression. After N
+# consecutive winning auto_ai trades since the last loss (or breaker
+# reset), risk per trade is multiplied by min(N, MAX_STREAK_MULTIPLIER).
+# Resets to 1× on any loss. Disabled with COMPOUND_STREAK_ENABLED=0 in env.
+COMPOUND_STREAK_ENABLED   = os.environ.get(
+    "FUTURES_AI_COMPOUND_STREAK", "1").strip() == "1"
+MAX_STREAK_MULTIPLIER     = int(os.environ.get(
+    "FUTURES_AI_MAX_STREAK_MULT", "3"))   # cap at 3× by default
 
 # Elite-setup bypass — a "verified 10/10" setup (scanner==10 AND Sonnet
 # consensus==10) is rare enough that we will not pass on it even when
@@ -211,6 +226,9 @@ def snapshot() -> dict:
         "max_concurrent_positions":   MAX_CONCURRENT_POSITIONS,
         "max_elite_positions":        MAX_ELITE_POSITIONS,
         "elite_bypass_score":         ELITE_BYPASS_SCORE,
+        "max_notional_pct":           MAX_NOTIONAL_PCT,
+        "compound_streak_enabled":    COMPOUND_STREAK_ENABLED,
+        "max_streak_multiplier":      MAX_STREAK_MULTIPLIER,
         "consensus_min_score":        CONSENSUS_MIN_SCORE,
         "consensus_model":            CONSENSUS_MODEL,
         "daily_dd_breaker_pct":       DAILY_DD_BREAKER_PCT,

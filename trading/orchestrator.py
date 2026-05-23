@@ -174,6 +174,7 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     entry   = setup.get("entry_zone", {}).get("low") or setup.get("entry_price"),
                     sl      = setup.get("sl_price"),
                     equity_usdt = equity,
+                    conn    = conn,
                 )
                 if not sizing:
                     summary["rejected_sizing"] += 1

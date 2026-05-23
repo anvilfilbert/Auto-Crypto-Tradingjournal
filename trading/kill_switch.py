@@ -266,6 +266,15 @@ def evaluate(conn) -> dict:
 
     can_trade, reason = can_open_new_trade(conn)
 
+    # Profit Compounding progression — current win streak + multiplier
+    try:
+        from trading.risk_budget import _consecutive_wins, _streak_multiplier
+        wins = _consecutive_wins(conn)
+        streak_mult = _streak_multiplier(wins)
+    except Exception:
+        wins = 0
+        streak_mult = 1.0
+
     return {
         "state":                       config.get_state(conn),
         "can_open_new_trade":          can_trade,
@@ -276,6 +285,8 @@ def evaluate(conn) -> dict:
         "total_pnl_pct":               round(dd_total * 100, 2),
         "consecutive_losses":          n_losses_raw,
         "consecutive_losses_since_reset": n_losses_reset,
+        "consecutive_wins_since_reset": wins,
+        "streak_multiplier":           round(streak_mult, 1),
         "open_positions":              n_open,
         "max_concurrent":              config.MAX_CONCURRENT_POSITIONS,
         "breaker_reset_at":            config.breaker_reset_at(conn),

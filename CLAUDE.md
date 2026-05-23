@@ -111,6 +111,29 @@ Context tags (no direct score, surfaced in `parts` for Sonnet to read):
   - unfilled FVG count (bullish/bearish, 4H) via `chart_fvg.detect_unfilled_fvgs`
   - RSI regime (bullish/bearish/range) tag from `chart_rsi.classify_regime`
 
+## Profit Compounding Strategy (`trading/risk_budget.py`, 2026-05-23)
+Streak-based progressive risk + dynamic notional cap from the trader research
+Company Profit Compounding Strategy sheet. Sizing now goes:
+
+  risk_dollars = equity × RISK_PER_TRADE_PCT × score_mult × streak_mult
+
+- **Streak multiplier** (`_streak_multiplier`): counts consecutive winning
+  auto_ai closes since last loss / breaker reset.
+  - streak 0 or 1 → 1.0× (Trade 1 foundation; Trade 2 lock-and-load at base)
+  - streak 2 → 2.0×  (Trade 3 — begin compounding)
+  - streak N (N ≥ 2) → min(N, MAX_STREAK_MULTIPLIER)×  (capped at 3 by default)
+  - Any loss → streak resets → next trade back at 1.0×
+- **Dynamic notional cap**: `max(MAX_NOTIONAL_USDT, equity × MAX_NOTIONAL_PCT)`.
+  Position size grows as account compounds — equity $100 → $25 cap;
+  equity $200 → $50 cap; equity $500 → $125 cap. Floor of $25 protects
+  small accounts.
+- **Env knobs**:
+  - `FUTURES_AI_COMPOUND_STREAK=1|0` — enable/disable (default ON)
+  - `FUTURES_AI_MAX_STREAK_MULT=N` — cap streak multiplier (default 3)
+
+Snapshot adds `consecutive_wins_since_reset` and `streak_multiplier`
+so the Futures-AI page can show the current compounding state.
+
 ## RSI Mastery (`chart_rsi.py`, 2026-05-23)
 Replaces the old static `_rsi_weight()` with regime-aware interpretation per
 the trader research RSI Mastery framework:
