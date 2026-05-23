@@ -382,18 +382,108 @@ def get_deep_stats(filters=None, conn=None):
         ORDER BY grade ASC
     """, params)
 
+    # ── Skill-provenance aggregations (added 2026-05-23) ──────────────────────
+    # Per-trade tagging lives on positions.* (consensus_model_used,
+    # bear_phase_at_open, archetype_at_open, po3_total, opus_had_overrides,
+    # tp_levels_count). Aggregating here lets AI Advisor commentary cite
+    # *skills*, not just symbols/hours.
+    by_consensus_model = _rows(conn, f"""
+        SELECT consensus_model_used AS consensus_model,
+               COUNT(*) AS trade_count,
+               ROUND(SUM(realized_pnl), 4) AS total_pnl,
+               ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
+               ROUND(AVG(realized_pnl), 4) AS avg_pnl
+        FROM positions {where} {and_} consensus_model_used IS NOT NULL
+        GROUP BY consensus_model_used
+        ORDER BY trade_count DESC
+    """, params)
+
+    by_bear_phase = _rows(conn, f"""
+        SELECT bear_phase_at_open AS bear_phase,
+               COUNT(*) AS trade_count,
+               ROUND(SUM(realized_pnl), 4) AS total_pnl,
+               ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
+               ROUND(AVG(realized_pnl), 4) AS avg_pnl
+        FROM positions {where} {and_} bear_phase_at_open IS NOT NULL
+        GROUP BY bear_phase_at_open
+        ORDER BY trade_count DESC
+    """, params)
+
+    by_archetype = _rows(conn, f"""
+        SELECT archetype_at_open AS archetype,
+               COUNT(*) AS trade_count,
+               ROUND(SUM(realized_pnl), 4) AS total_pnl,
+               ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
+               ROUND(AVG(realized_pnl), 4) AS avg_pnl
+        FROM positions {where} {and_} archetype_at_open IS NOT NULL
+        GROUP BY archetype_at_open
+        ORDER BY trade_count DESC
+    """, params)
+
+    # PO3 buckets: net negative (fighting setup), zero, small positive (one
+    # modifier firing), large positive (multiple stacked)
+    by_po3_bucket = _rows(conn, f"""
+        SELECT
+            CASE
+              WHEN po3_total IS NULL THEN 'unknown'
+              WHEN po3_total < 0 THEN 'negative (fighting)'
+              WHEN po3_total = 0 THEN 'neutral (no PO3)'
+              WHEN po3_total <= 0.3 THEN 'one modifier (+small)'
+              WHEN po3_total <= 0.6 THEN 'two modifiers'
+              ELSE 'three+ modifiers (max stack)'
+            END AS po3_bucket,
+            COUNT(*) AS trade_count,
+            ROUND(SUM(realized_pnl), 4) AS total_pnl,
+            ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
+            ROUND(AVG(realized_pnl), 4) AS avg_pnl
+        FROM positions {where}
+        GROUP BY po3_bucket
+        ORDER BY trade_count DESC
+    """, params)
+
+    by_opus_overrides = _rows(conn, f"""
+        SELECT
+            CASE WHEN opus_had_overrides=1 THEN 'with_overrides' ELSE 'no_overrides' END AS opus_overrides,
+            COUNT(*) AS trade_count,
+            ROUND(SUM(realized_pnl), 4) AS total_pnl,
+            ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
+            ROUND(AVG(realized_pnl), 4) AS avg_pnl
+        FROM positions {where} {and_} consensus_model_used IS NOT NULL
+        GROUP BY opus_overrides
+        ORDER BY trade_count DESC
+    """, params)
+
+    by_tp_count = _rows(conn, f"""
+        SELECT
+            COALESCE(tp_levels_count, 0) AS tp_levels_count,
+            COUNT(*) AS trade_count,
+            ROUND(SUM(realized_pnl), 4) AS total_pnl,
+            ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
+            ROUND(AVG(realized_pnl), 4) AS avg_pnl
+        FROM positions {where}
+        GROUP BY tp_levels_count
+        ORDER BY tp_levels_count ASC
+    """, params)
+
     return {
-        "by_symbol":        by_symbol,
-        "by_month":         by_month,
-        "by_weekday":       by_weekday,
-        "by_hour":          by_hour,
-        "by_direction":     by_direction,
-        "duration_buckets": duration_buckets,
-        "streaks":          streaks,
-        "fee_analysis":     fee_analysis,
-        "worst_symbols":    worst_symbols,
-        "by_setup":         by_setup,
-        "by_grade":         by_grade,
+        "by_symbol":          by_symbol,
+        "by_month":           by_month,
+        "by_weekday":         by_weekday,
+        "by_hour":            by_hour,
+        "by_direction":       by_direction,
+        "duration_buckets":   duration_buckets,
+        "streaks":            streaks,
+        "fee_analysis":       fee_analysis,
+        "worst_symbols":      worst_symbols,
+        "by_setup":           by_setup,
+        "by_grade":           by_grade,
+        # Skill provenance
+        "by_consensus_model": by_consensus_model,
+        "by_bear_phase":      by_bear_phase,
+        "by_archetype":       by_archetype,
+        "by_po3_bucket":      by_po3_bucket,
+        "by_opus_overrides":  by_opus_overrides,
+        "by_tp_count":        by_tp_count,
     }
 
 

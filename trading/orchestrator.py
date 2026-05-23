@@ -211,6 +211,19 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     for i, p in enumerate(tps_capped)
                 ]
 
+                # Skill provenance — captured at decision time so the position
+                # row carries enough context for later "is this skill working?"
+                # cohort analysis. Bear-phase + PO3 modifiers come from the
+                # scanner setup dict (populated by ai_scanner Stage 3). Opus
+                # override flag is true when consensus produced any of
+                # _override_entry / _override_sl / _override_tp_prices.
+                po3_total = sum([
+                    float(setup.get("_po3_range") or 0),
+                    float(setup.get("_po3_fvg")   or 0),
+                    float(setup.get("_po3_session") or 0),
+                ])
+                opus_had_overrides = bool(ov_entry or ov_sl or ov_tps)
+
                 signal = {
                     "symbol":          setup.get("symbol"),
                     "direction":       setup.get("direction"),
@@ -222,6 +235,13 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     "tp_levels":       tp_levels,
                     "scanner":         verdict["scanner"],
                     "ai":              verdict["ai"],
+                    # Skill provenance (persisted by executor._insert_open_position)
+                    "consensus_model_used": fa_config.CONSENSUS_MODEL,
+                    "bear_phase_at_open":   setup.get("_bear_phase"),
+                    "archetype_at_open":    setup.get("trade_type") or (verdict["scanner"] or {}).get("archetype"),
+                    "po3_total":            round(po3_total, 3),
+                    "opus_had_overrides":   1 if opus_had_overrides else 0,
+                    "tp_levels_count":      len(tp_levels),
                 }
                 if fa_config.is_real_mode():
                     opened_ok = _open_real(conn, signal, sizing)

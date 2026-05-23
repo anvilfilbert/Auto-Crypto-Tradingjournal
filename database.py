@@ -468,6 +468,27 @@ def init_db():
     _apply(51, "analyzed_calls.tp_levels",
            "ALTER TABLE analyzed_calls ADD COLUMN tp_levels TEXT DEFAULT NULL")
 
+    # ── Skill provenance (migrations 52-57) ──────────────────────────────────
+    # Six columns that tag a position with the "trading skill" provenance that
+    # produced it. Lets AI Advisor + analytics aggregate by *skill* (not just
+    # by symbol/hour) so we can answer "is Opus consensus actually winning?",
+    # "are bear-phase-aligned trades better?", "do PO3 modifiers correlate
+    # with outcome?". Populated at trade open by trading/executor.py and
+    # backfilled from futures_ai_log shadow logs by
+    # scripts/backfill_position_skills.py.
+    _apply(52, "positions.consensus_model_used",
+           "ALTER TABLE positions ADD COLUMN consensus_model_used TEXT DEFAULT NULL")
+    _apply(53, "positions.bear_phase_at_open",
+           "ALTER TABLE positions ADD COLUMN bear_phase_at_open TEXT DEFAULT NULL")
+    _apply(54, "positions.archetype_at_open",
+           "ALTER TABLE positions ADD COLUMN archetype_at_open TEXT DEFAULT NULL")
+    _apply(55, "positions.po3_total",
+           "ALTER TABLE positions ADD COLUMN po3_total REAL DEFAULT NULL")
+    _apply(56, "positions.opus_had_overrides",
+           "ALTER TABLE positions ADD COLUMN opus_had_overrides INTEGER DEFAULT 0")
+    _apply(57, "positions.tp_levels_count",
+           "ALTER TABLE positions ADD COLUMN tp_levels_count INTEGER DEFAULT 0")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

@@ -56,7 +56,10 @@ def _open_auto_positions(conn) -> list[dict]:
 def _insert_open_position(conn, signal: dict, sizing: dict,
                             order_result: dict) -> int:
     """Write the position row immediately after order placement. Sets
-    close_time=NULL so the reconciler treats it as open."""
+    close_time=NULL so the reconciler treats it as open. Also persists the
+    skill-provenance fields (consensus_model_used, bear_phase_at_open,
+    archetype_at_open, po3_total, opus_had_overrides, tp_levels_count) so
+    later analytics can aggregate by *skill* not just by symbol/hour."""
     sym  = signal.get("symbol")
     dir_ = signal.get("direction")
     tp_levels_json = json.dumps(signal.get("tp_levels") or []) if signal.get("tp_levels") else None
@@ -69,7 +72,9 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             realized_pnl, position_pnl,
             opening_fee, closing_fee, total_fees,
             is_manual, exchange, leverage,
-            chain, setup_type, setup_score, signal_price, tp_levels
+            chain, setup_type, setup_score, signal_price, tp_levels,
+            consensus_model_used, bear_phase_at_open, archetype_at_open,
+            po3_total, opus_had_overrides, tp_levels_count
         ) VALUES (
             ?, ?, ?,
             'isolated', datetime('now'), '',
@@ -78,7 +83,9 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             NULL, NULL,
             NULL, NULL, NULL,
             0, 'bitget_trader', ?,
-            'auto_ai', ?, ?, ?, ?
+            'auto_ai', ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?
         )
     """, (
         sym,
@@ -92,6 +99,13 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
         signal.get("consensus_score"),
         signal.get("entry_price"),
         tp_levels_json,
+        # Skill provenance
+        signal.get("consensus_model_used"),
+        signal.get("bear_phase_at_open"),
+        signal.get("archetype_at_open"),
+        signal.get("po3_total"),
+        int(signal.get("opus_had_overrides") or 0),
+        int(signal.get("tp_levels_count") or 0),
     ))
     conn.commit()
     return cur.lastrowid

@@ -28,6 +28,7 @@ def _prune_stats(deep: dict) -> dict:
     """
     Strip empty arrays and low-signal data before feeding to Claude.
     Caps by_symbol to top 10 and by_hour to top 8 most-differentiated hours.
+    Skill-provenance slices stay as-is — they're already small (≤7 buckets).
     """
     out = {k: v for k, v in deep.items() if not (isinstance(v, list) and not v)}
     if "by_symbol" in out and isinstance(out["by_symbol"], list):
@@ -67,6 +68,18 @@ def _build_prompt(kpis: dict, deep: dict, mkt_ctx: str = "",
         "streaks":      pruned.get("streaks", {}),
         "fee_analysis": pruned.get("fee_analysis", {}),
         "worst_symbols": pruned.get("worst_symbols", []),
+        # ── Skill-provenance slices (per-trade tagging from 2026-05-23) ─────
+        # These are the input the advisor needs to comment on whether the
+        # *trading skills themselves* are working. Without them the advisor
+        # can only attribute performance to symbols/hours.
+        "skill_provenance": {
+            "by_consensus_model": pruned.get("by_consensus_model", []),
+            "by_bear_phase":      pruned.get("by_bear_phase", []),
+            "by_archetype":       pruned.get("by_archetype", []),
+            "by_po3_bucket":      pruned.get("by_po3_bucket", []),
+            "by_opus_overrides":  pruned.get("by_opus_overrides", []),
+            "by_tp_count":        pruned.get("by_tp_count", []),
+        },
     }
 
     stats_json  = json.dumps(summary)
@@ -81,11 +94,17 @@ TRADING STATISTICS:
 {stats_json}
 {mkt_block}
 
+The `skill_provenance` section is new and important: it breaks down performance by the
+auto-trader's *trading skills* (consensus model used, bear-phase alignment at entry,
+setup archetype, PO3 modifier stacking, Opus override usage, TP-ladder depth). If any
+skill cohort has ≥5 trades AND a clearly different win rate / PnL from the overall
+average, surface it in `skill_insights`. Skip cohorts with <5 trades — too noisy.
+
 Respond with this exact JSON structure. Keep each text field concise (2-3 sentences max). Include 3-5 items in strengths, weaknesses, recommendations, and symbol_insights:
 
-{{"overall_status":"2-3 sentence honest summary referencing actual numbers","score":{{"value":1-10,"label":"Poor|Developing|Competent|Good|Excellent"}},"strengths":[{{"title":"short title","detail":"2 sentences with specific numbers"}}],"weaknesses":[{{"title":"short title","detail":"2 sentences with specific numbers"}}],"recommendations":[{{"priority":"High|Medium|Low","title":"short title","action":"one specific action","expected_impact":"one expected result"}}],"symbol_insights":[{{"symbol":"XYZUSDT","insight":"one sentence"}}],"risk_management":"2-3 sentences on position sizing and stops","mindset_note":"one honest encouraging sentence"}}
+{{"overall_status":"2-3 sentence honest summary referencing actual numbers","score":{{"value":1-10,"label":"Poor|Developing|Competent|Good|Excellent"}},"strengths":[{{"title":"short title","detail":"2 sentences with specific numbers"}}],"weaknesses":[{{"title":"short title","detail":"2 sentences with specific numbers"}}],"recommendations":[{{"priority":"High|Medium|Low","title":"short title","action":"one specific action","expected_impact":"one expected result"}}],"symbol_insights":[{{"symbol":"XYZUSDT","insight":"one sentence"}}],"skill_insights":[{{"skill":"consensus_model|bear_phase|archetype|po3_bucket|opus_overrides|tp_count","cohort":"specific bucket value","verdict":"working|hurting|inconclusive","detail":"one sentence with the win rate / pnl gap vs overall"}}],"risk_management":"2-3 sentences on position sizing and stops","mindset_note":"one honest encouraging sentence"}}
 
-Reference real numbers (win rates, PnL figures, symbols). No generic advice."""
+Reference real numbers (win rates, PnL figures, symbols). No generic advice. Skill_insights is empty list if no cohort has ≥5 trades yet."""
 
 
 def analyze(filters: dict = None) -> dict:
