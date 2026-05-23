@@ -387,42 +387,51 @@ def get_deep_stats(filters=None, conn=None):
     # bear_phase_at_open, archetype_at_open, po3_total, opus_had_overrides,
     # tp_levels_count). Aggregating here lets AI Advisor commentary cite
     # *skills*, not just symbols/hours.
-    by_consensus_model = _rows(conn, f"""
+    #
+    # IMPORTANT: skill provenance only exists on the auto_ai chain. The
+    # journal's default filter is chain='manual', so a naive WHERE would
+    # exclude every tagged row. We hard-code chain='auto_ai' for these
+    # six slices regardless of the caller's filter, since the skills
+    # ARE the auto-trader.
+    by_consensus_model = _rows(conn, """
         SELECT consensus_model_used AS consensus_model,
                COUNT(*) AS trade_count,
-               ROUND(SUM(realized_pnl), 4) AS total_pnl,
+               ROUND(SUM(COALESCE(realized_pnl, 0)), 4) AS total_pnl,
                ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
-               ROUND(AVG(realized_pnl), 4) AS avg_pnl
-        FROM positions {where} {and_} consensus_model_used IS NOT NULL
+               ROUND(AVG(COALESCE(realized_pnl, 0)), 4) AS avg_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND consensus_model_used IS NOT NULL
         GROUP BY consensus_model_used
         ORDER BY trade_count DESC
-    """, params)
+    """)
 
-    by_bear_phase = _rows(conn, f"""
+    by_bear_phase = _rows(conn, """
         SELECT bear_phase_at_open AS bear_phase,
                COUNT(*) AS trade_count,
-               ROUND(SUM(realized_pnl), 4) AS total_pnl,
+               ROUND(SUM(COALESCE(realized_pnl, 0)), 4) AS total_pnl,
                ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
-               ROUND(AVG(realized_pnl), 4) AS avg_pnl
-        FROM positions {where} {and_} bear_phase_at_open IS NOT NULL
+               ROUND(AVG(COALESCE(realized_pnl, 0)), 4) AS avg_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND bear_phase_at_open IS NOT NULL
         GROUP BY bear_phase_at_open
         ORDER BY trade_count DESC
-    """, params)
+    """)
 
-    by_archetype = _rows(conn, f"""
+    by_archetype = _rows(conn, """
         SELECT archetype_at_open AS archetype,
                COUNT(*) AS trade_count,
-               ROUND(SUM(realized_pnl), 4) AS total_pnl,
+               ROUND(SUM(COALESCE(realized_pnl, 0)), 4) AS total_pnl,
                ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
-               ROUND(AVG(realized_pnl), 4) AS avg_pnl
-        FROM positions {where} {and_} archetype_at_open IS NOT NULL
+               ROUND(AVG(COALESCE(realized_pnl, 0)), 4) AS avg_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND archetype_at_open IS NOT NULL
         GROUP BY archetype_at_open
         ORDER BY trade_count DESC
-    """, params)
+    """)
 
     # PO3 buckets: net negative (fighting setup), zero, small positive (one
     # modifier firing), large positive (multiple stacked)
-    by_po3_bucket = _rows(conn, f"""
+    by_po3_bucket = _rows(conn, """
         SELECT
             CASE
               WHEN po3_total IS NULL THEN 'unknown'
@@ -433,37 +442,40 @@ def get_deep_stats(filters=None, conn=None):
               ELSE 'three+ modifiers (max stack)'
             END AS po3_bucket,
             COUNT(*) AS trade_count,
-            ROUND(SUM(realized_pnl), 4) AS total_pnl,
+            ROUND(SUM(COALESCE(realized_pnl, 0)), 4) AS total_pnl,
             ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
-            ROUND(AVG(realized_pnl), 4) AS avg_pnl
-        FROM positions {where}
+            ROUND(AVG(COALESCE(realized_pnl, 0)), 4) AS avg_pnl
+        FROM positions
+        WHERE chain='auto_ai'
         GROUP BY po3_bucket
         ORDER BY trade_count DESC
-    """, params)
+    """)
 
-    by_opus_overrides = _rows(conn, f"""
+    by_opus_overrides = _rows(conn, """
         SELECT
             CASE WHEN opus_had_overrides=1 THEN 'with_overrides' ELSE 'no_overrides' END AS opus_overrides,
             COUNT(*) AS trade_count,
-            ROUND(SUM(realized_pnl), 4) AS total_pnl,
+            ROUND(SUM(COALESCE(realized_pnl, 0)), 4) AS total_pnl,
             ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
-            ROUND(AVG(realized_pnl), 4) AS avg_pnl
-        FROM positions {where} {and_} consensus_model_used IS NOT NULL
+            ROUND(AVG(COALESCE(realized_pnl, 0)), 4) AS avg_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND consensus_model_used IS NOT NULL
         GROUP BY opus_overrides
         ORDER BY trade_count DESC
-    """, params)
+    """)
 
-    by_tp_count = _rows(conn, f"""
+    by_tp_count = _rows(conn, """
         SELECT
             COALESCE(tp_levels_count, 0) AS tp_levels_count,
             COUNT(*) AS trade_count,
-            ROUND(SUM(realized_pnl), 4) AS total_pnl,
+            ROUND(SUM(COALESCE(realized_pnl, 0)), 4) AS total_pnl,
             ROUND(100.0 * SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS win_rate,
-            ROUND(AVG(realized_pnl), 4) AS avg_pnl
-        FROM positions {where}
+            ROUND(AVG(COALESCE(realized_pnl, 0)), 4) AS avg_pnl
+        FROM positions
+        WHERE chain='auto_ai'
         GROUP BY tp_levels_count
         ORDER BY tp_levels_count ASC
-    """, params)
+    """)
 
     return {
         "by_symbol":          by_symbol,
