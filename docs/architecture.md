@@ -194,7 +194,7 @@ The Futures-AI page reads this table for the "Recent decisions" panel.
 ## Trader-Sheet Integration Wave (2026-05-23 afternoon)
 
 Distilled into code from a series of trader infographics shared by the
-operator (trader research + trader research). Each sheet was
+operator (trader research). Each sheet was
 translated into either a confluence signal, a scoring modifier, a sizing
 rule, or a defensive mechanism — pure mindset/discipline content was
 filtered out as non-algorithmic.
