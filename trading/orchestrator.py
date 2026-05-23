@@ -303,18 +303,37 @@ def _close_all(conn, reason: str) -> dict:
 # ── Internal logger ─────────────────────────────────────────────────────────
 
 def _log(conn, event: str, setup_or_signal: dict, reason: str) -> None:
+    """Persist a futures_ai_log row. Embeds a setup snapshot (entry/SL/TP +
+    archetype + scores) into the payload so downstream hindsight tooling can
+    replay rejected_killswitch / rejected_sizing / consensus_skipped events
+    without joining against the analyzed_calls dedup table."""
     try:
+        s = setup_or_signal or {}
+        entry = (s.get("entry_zone") or {}).get("low") or s.get("entry_price")
+        payload = {
+            "reason":        reason,
+            "entry":         entry,
+            "sl":            s.get("sl_price"),
+            "tp1":           s.get("tp1_price"),
+            "tp2":           s.get("tp2_price"),
+            "rr":            s.get("rr_ratio"),
+            "scanner_score": s.get("setup_score"),
+            "consensus_score": s.get("consensus_score"),
+            "archetype":     s.get("trade_type"),
+            "confluence":    s.get("confluence"),
+            "bear_phase":    s.get("_bear_phase"),
+            "timeframe":     s.get("timeframe"),
+        }
         conn.execute("""
             INSERT INTO futures_ai_log
               (ts, event, symbol, direction, score, payload_json)
             VALUES (datetime('now'), ?, ?, ?, ?, ?)
         """, (
             event,
-            setup_or_signal.get("symbol") or "",
-            setup_or_signal.get("direction") or "",
-            int(setup_or_signal.get("setup_score") or
-                setup_or_signal.get("consensus_score") or 0),
-            json.dumps({"reason": reason})[:500],
+            s.get("symbol") or "",
+            s.get("direction") or "",
+            int(s.get("setup_score") or s.get("consensus_score") or 0),
+            json.dumps(payload)[:1500],
         ))
         conn.commit()
     except Exception:

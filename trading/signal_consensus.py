@@ -79,7 +79,9 @@ def evaluate(scanner_setup: dict, conn) -> dict:
         )
     except Exception as e:
         base["reason"] = f"AI consensus call failed: {str(e)[:120]}"
-        _log(conn, "consensus_error", sym, direction, sc_score, base["reason"])
+        _log(conn, "consensus_error", sym, direction, sc_score,
+             json.dumps({**_setup_snapshot(scanner_setup, sc_score, 0, "", "", []),
+                         "error": base["reason"]}))
         return base
 
     ai_score = int(result.get("setup_score") or 0)
@@ -94,6 +96,13 @@ def evaluate(scanner_setup: dict, conn) -> dict:
         "summary":      ai_summary,
     }
 
+    # Build the shadow-log snapshot — every consensus log carries the FULL setup
+    # (entry/SL/TP, scanner+AI scores, archetype, regime) so a later hindsight
+    # pass can simulate the trade without joining against analyzed_calls
+    # (which dedups setups for the same symbol and loses their per-rejection
+    # snapshot).
+    snap = _setup_snapshot(scanner_setup, sc_score, ai_score, ai_dir, ai_summary, ai_warns)
+
     # Disagreement rules. All rejection payloads include the AI's
     # rationale (summary + warnings) so the operator can see WHY Sonnet
     # disagreed — not just that it did. Without this the decision log
@@ -101,43 +110,27 @@ def evaluate(scanner_setup: dict, conn) -> dict:
     if ai_score < SCANNER_MIN_SCORE:
         base["reason"] = f"AI scored {ai_score} (below {SCANNER_MIN_SCORE} threshold)"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
-             json.dumps({
-                 "ai_score":  ai_score,
-                 "reason":    base["reason"],
-                 "ai_summary": ai_summary,
-                 "ai_warnings": ai_warns[:3],
-             }))
+             json.dumps({**snap, "reject_kind": "low_score", "reason": base["reason"]}))
         return base
 
     if ai_dir and direction and ai_dir.lower() != direction.lower():
         base["reason"] = f"direction mismatch (scanner={direction}, AI={ai_dir})"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
-             json.dumps({
-                 "reason":     base["reason"],
-                 "ai_score":   ai_score,
-                 "ai_summary": ai_summary,
-             }))
+             json.dumps({**snap, "reject_kind": "direction_mismatch", "reason": base["reason"]}))
         return base
 
     if any("critical" in str(w).lower() or "high risk" in str(w).lower()
            for w in ai_warns):
         base["reason"] = f"AI flagged critical warning: {ai_warns[:1]}"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
-             json.dumps({
-                 "warnings":   ai_warns,
-                 "ai_score":   ai_score,
-                 "ai_summary": ai_summary,
-             }))
+             json.dumps({**snap, "reject_kind": "critical_warning", "reason": base["reason"]}))
         return base
 
     base["approved"]        = True
     base["consensus_score"] = min(sc_score, ai_score)
     base["reason"]          = "ok"
     _log(conn, "consensus_approved", sym, direction, base["consensus_score"],
-         json.dumps({
-             "scanner_score": sc_score, "ai_score": ai_score,
-             "archetype":     archetype,
-         }))
+         json.dumps({**snap, "reject_kind": None}))
     return base
 
 
@@ -172,6 +165,38 @@ def _build_call_text(setup: dict) -> str:
         "honest score and direction with reasoning. The trader will only "
         "act on this signal if both you and the scanner agree."
     )
+
+
+def _setup_snapshot(setup: dict, sc_score: int, ai_score: int,
+                    ai_dir: str, ai_summary: str, ai_warns: list) -> dict:
+    """Compact dict embedded in every consensus log entry. Self-contained so
+    hindsight + Opus re-review tooling never needs to join against the
+    analyzed_calls dedup table."""
+    entry = setup.get("entry_zone", {}).get("low") or setup.get("entry_price")
+    return {
+        # the trade structure — what would have been placed
+        "entry":         entry,
+        "sl":            setup.get("sl_price"),
+        "tp1":           setup.get("tp1_price"),
+        "tp2":           setup.get("tp2_price"),
+        "rr":            setup.get("rr_ratio"),
+        # scores
+        "scanner_score": sc_score,
+        "ai_score":      ai_score,
+        "ai_direction":  ai_dir,
+        "ai_summary":    ai_summary,
+        "ai_warnings":   list(ai_warns)[:3],
+        # context (helpful for hindsight grouping)
+        "archetype":     setup.get("trade_type") or "—",
+        "confluence":    setup.get("confluence"),
+        "bear_phase":    setup.get("_bear_phase"),
+        "po3_range":     setup.get("_po3_range"),
+        "po3_fvg":       setup.get("_po3_fvg"),
+        "po3_session":   setup.get("_po3_session"),
+        "regime":        setup.get("regime_label"),
+        "timeframe":     setup.get("timeframe"),
+        "rationale":     (setup.get("_rationale") or "")[:200],
+    }
 
 
 def _log(conn, event: str, sym: str, direction: str, score: int,
