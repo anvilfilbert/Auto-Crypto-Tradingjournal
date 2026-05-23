@@ -114,13 +114,16 @@ def get_open_interest_history(symbol: str, hours: int = 4) -> dict:
     """
     if hours < 1:
         return {}
-    now_ms  = int(time.time() * 1000)
-    from_ms = now_ms - (hours * 3600 * 1000)
+    # Coinalyze open-interest-history uses unix SECONDS (not ms like
+    # liquidation-history). Confirmed empirically 2026-05-23 — sending
+    # ms returns HTTP 200 with an empty body silently.
+    now_s  = int(time.time())
+    from_s = now_s - (hours * 3600)
     data = _get("open-interest-history", {
         "symbols":  _symbol(symbol),
         "interval": "1hour",
-        "from":     from_ms,
-        "to":       now_ms,
+        "from":     from_s,
+        "to":       now_s,
     })
     try:
         if not data:
