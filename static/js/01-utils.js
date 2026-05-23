@@ -138,18 +138,22 @@ function openChart(symbol, tf = '4H') {
     .filter(p => p.symbol === symbol && p.liquidation_price)
     .map(p => ({ price: parseFloat(p.liquidation_price), label: p.direction }));
 
-  // Entry / SL / TP levels from any open position on this symbol
+  // Entry / SL / TP levels from any open position on this symbol.
+  // tp_levels is the multi-TP ladder (one line per Bitget plan order); tp1/
+  // tp2 stay for backward-compat with the legacy chart-rendering branch.
   const trades = (livePositionsCache || [])
     .filter(p => p.symbol === symbol)
     .map(p => {
       const key  = p.symbol + '_' + p.direction;
       const call = typeof liveCallMatches !== 'undefined' ? (liveCallMatches[key] || null) : null;
+      const tpLevels = Array.isArray(p.tp_levels) ? p.tp_levels : [];
       return {
-        dir:   p.direction,
-        entry: parseFloat(p.entry_price)  || null,
-        sl:    parseFloat(p.stop_loss)    || null,
-        tp1:   parseFloat(p.take_profit)  || (call ? parseFloat(call.tp1_price) || null : null),
-        tp2:   call ? parseFloat(call.tp2_price) || null : null,
+        dir:       p.direction,
+        entry:     parseFloat(p.entry_price)  || null,
+        sl:        parseFloat(p.stop_loss)    || null,
+        tp1:       parseFloat(p.take_profit)  || (call ? parseFloat(call.tp1_price) || null : null),
+        tp2:       call ? parseFloat(call.tp2_price) || null : null,
+        tp_levels: tpLevels.length ? tpLevels : null,
       };
     })
     .filter(t => t.entry);

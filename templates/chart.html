@@ -473,18 +473,50 @@ async function loadChart() {
       axisLabelVisible: true, axisLabelColor: 'rgba(239,83,80,0.30)',
       title: 'SL',
     });
-    if (t.tp1) series.createPriceLine({
-      price: t.tp1, lineWidth: 2, lineStyle: 0,
-      color: 'rgba(38,217,107,0.90)',
-      axisLabelVisible: true, axisLabelColor: 'rgba(38,217,107,0.25)',
-      title: 'TP1',
-    });
-    if (t.tp2) series.createPriceLine({
-      price: t.tp2, lineWidth: 2, lineStyle: 0,
-      color: 'rgba(79,195,247,0.70)',
-      axisLabelVisible: true, axisLabelColor: 'rgba(79,195,247,0.20)',
-      title: 'TP2',
-    });
+    // Multi-TP ladder (Bitget plan orders or our tp_levels JSON).
+    // Falls back to tp1/tp2 fields when no ladder is present.
+    const TP_COLORS = [
+      'rgba(38,217,107,0.90)',   // TP1 green
+      'rgba(79,195,247,0.70)',   // TP2 cyan
+      'rgba(255,213,80,0.85)',   // TP3 yellow
+      'rgba(255,112,67,0.85)',   // TP4 orange
+      'rgba(186,104,200,0.85)',  // TP5 purple
+      'rgba(240,98,146,0.85)',   // TP6 pink
+      'rgba(144,164,174,0.85)',  // TP7 grey
+    ];
+    const TP_LABEL_COLORS = [
+      'rgba(38,217,107,0.25)', 'rgba(79,195,247,0.20)',
+      'rgba(255,213,80,0.25)', 'rgba(255,112,67,0.25)',
+      'rgba(186,104,200,0.25)','rgba(240,98,146,0.25)',
+      'rgba(144,164,174,0.25)',
+    ];
+    if (Array.isArray(t.tp_levels) && t.tp_levels.length) {
+      t.tp_levels.forEach((lvl, i) => {
+        if (!lvl || !lvl.price) return;
+        const idx = lvl.idx || (i + 1);
+        const pct = (lvl.pct != null) ? ` (${Math.round(lvl.pct)}%)` : '';
+        const c = TP_COLORS[Math.min(i, TP_COLORS.length - 1)];
+        const lc = TP_LABEL_COLORS[Math.min(i, TP_LABEL_COLORS.length - 1)];
+        series.createPriceLine({
+          price: lvl.price, lineWidth: 2, lineStyle: 0,
+          color: c, axisLabelVisible: true, axisLabelColor: lc,
+          title: 'TP' + idx + pct,
+        });
+      });
+    } else {
+      if (t.tp1) series.createPriceLine({
+        price: t.tp1, lineWidth: 2, lineStyle: 0,
+        color: 'rgba(38,217,107,0.90)',
+        axisLabelVisible: true, axisLabelColor: 'rgba(38,217,107,0.25)',
+        title: 'TP1',
+      });
+      if (t.tp2) series.createPriceLine({
+        price: t.tp2, lineWidth: 2, lineStyle: 0,
+        color: 'rgba(79,195,247,0.70)',
+        axisLabelVisible: true, axisLabelColor: 'rgba(79,195,247,0.20)',
+        title: 'TP2',
+      });
+    }
   });
 
   // Trendlines — stored for toggle

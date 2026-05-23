@@ -199,11 +199,43 @@ def get_account_bills(start_ms: int = None, end_ms: int = None) -> list:
     )
 
 
+def _get_plan_orders_grouped() -> dict:
+    """Fetch all pending profit_loss plan orders on the main account, grouped
+    by (symbol, direction) so we can attach multi-TP ladders to positions.
+
+    A position with multiple TP plan orders is the standard way Bitget
+    expresses a multi-tier exit (place-tpsl-order called N times). Each
+    becomes its own row in /api/v2/mix/order/orders-plan-pending.
+
+    Returns dict keyed by (symbol, "Long"|"Short") with value being a list of
+    {trigger_price, plan_type, size, order_id}.
+    """
+    try:
+        data = _get("/api/v2/mix/order/orders-plan-pending",
+                    {"productType": "USDT-FUTURES", "planType": "profit_loss"})
+    except Exception:
+        return {}
+    rows = (data or {}).get("entrustedList") if isinstance(data, dict) else (data if isinstance(data, list) else [])
+    rows = rows or []
+    out: dict = {}
+    for r in rows:
+        sym = r.get("symbol")
+        direction = "Long" if (r.get("posSide") or "").lower() == "long" else "Short"
+        out.setdefault((sym, direction), []).append({
+            "trigger_price": float(r.get("triggerPrice") or 0),
+            "plan_type":     r.get("planType"),
+            "size":          float(r.get("size") or 0),
+            "order_id":      r.get("orderId"),
+        })
+    return out
+
+
 def get_open_positions() -> list:
     """
     Fetch all currently open positions (USDT-M Futures).
     Returns a list enriched with calculated fields:
-      size_usdt, unrealized_pct, duration_minutes, direction (Long/Short)
+      size_usdt, unrealized_pct, duration_minutes, direction (Long/Short),
+      tp_levels (list of {idx, price, pct, size} from plan orders)
 
     API: GET /api/v2/mix/position/all-position
     Confirmed field names: symbol, holdSide, openPriceAvg, markPrice,
@@ -213,6 +245,9 @@ def get_open_positions() -> list:
     data = _get("/api/v2/mix/position/all-position",
                 {"productType": "USDT-FUTURES", "marginCoin": "USDT"})
     rows = data if isinstance(data, list) else []
+
+    # One plan-orders fetch, reuse across all positions
+    plans_by_pos = _get_plan_orders_grouped()
 
     now_ms = int(time.time() * 1000)
     result = []
@@ -226,9 +261,38 @@ def get_open_positions() -> list:
         unrl_pct   = (unrl / margin * 100) if margin else 0
         duration_m = int((now_ms - c_time_ms) / 60000) if c_time_ms else None
 
+        # Attach multi-TP ladder from the pre-fetched plan orders. Sorted
+        # ascending for Longs (TP1 = lowest target = first to fire), descending
+        # for Shorts. Stop-loss plans excluded — those are the SL row.
+        direction = "Long" if r.get("holdSide") == "long" else "Short"
+        sym = r.get("symbol")
+        plans = plans_by_pos.get((sym, direction), [])
+        tp_plans = [p for p in plans if p.get("plan_type") == "profit_plan"]
+        sl_plans = [p for p in plans if p.get("plan_type") == "loss_plan"]
+        tp_plans.sort(key=lambda p: p["trigger_price"],
+                      reverse=(direction == "Short"))
+        # Build the same shape the auto_ai chain uses so the UI can render
+        # both with one code path. Without a notional split known up front
+        # (Bitget doesn't return percentages), default to even % for now.
+        n = len(tp_plans)
+        even_pct = round(100.0 / n, 2) if n else 0
+        tp_levels = [
+            {"idx": i + 1, "price": p["trigger_price"], "pct": even_pct,
+             "hit": False, "hit_at": None, "size": p.get("size") or None}
+            for i, p in enumerate(tp_plans)
+        ]
+        # Single-TP fallback: if no plan orders exist but the position has a
+        # takeProfit field, surface that as the only TP.
+        if not tp_levels and r.get("takeProfit"):
+            try:
+                tp_levels = [{"idx": 1, "price": float(r["takeProfit"]),
+                              "pct": 100.0, "hit": False, "hit_at": None}]
+            except (TypeError, ValueError):
+                tp_levels = []
+
         result.append({
-            "symbol":           r.get("symbol"),
-            "direction":        "Long" if r.get("holdSide") == "long" else "Short",
+            "symbol":           sym,
+            "direction":        direction,
             "leverage":         r.get("leverage"),
             "margin_mode":      "Cross" if "cross" in (r.get("marginMode") or "") else "Isolated",
             "total":            total,
@@ -243,7 +307,8 @@ def get_open_positions() -> list:
             "achieved_profits": round(float(r.get("achievedProfits") or 0), 4),
             "total_fee":        round(float(r.get("totalFee") or 0), 4),
             "take_profit":      r.get("takeProfit") or "",
-            "stop_loss":        r.get("stopLoss") or "",
+            "stop_loss":        (sl_plans[0]["trigger_price"] if sl_plans else r.get("stopLoss")) or "",
+            "tp_levels":        tp_levels,
             "margin_ratio":     r.get("marginRatio"),
             "duration_minutes": duration_m,
             "open_time_ms":     c_time_ms,
