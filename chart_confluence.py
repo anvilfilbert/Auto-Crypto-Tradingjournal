@@ -549,25 +549,29 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
     # Research Desk framework). Fires once per symbol using the 4H window
     # since that's where the framework is most actionable. Returns 0 when
     # OI data is unavailable (no Coinalyze key) — falls through cleanly.
+    # Price fetched via chart_candles.get_candles (cached) since
+    # get_chart_context() doesn't carry the raw df in its return value.
     smart_flow_w = 0.0
     smart_flow_label = ""
     try:
-        df_4h = ctx.get("4H", {}).get("df")
         inds_4h = ctx.get("4H", {}).get("indicators", {})
-        if df_4h is not None and len(df_4h) >= 2 and inds_4h.get("ok"):
-            close_now  = float(df_4h["close"].iloc[-1])
-            close_prev = float(df_4h["close"].iloc[-2])
-            if close_prev > 0:
-                price_change_4h = (close_now - close_prev) / close_prev * 100.0
-                cvd_trend = (inds_4h.get("cvd") or {}).get("trend", "flat")
-                oi_change_4h = _get_oi_change_cached(symbol, hours=4)
-                smart_flow_w, smart_flow_label = _smart_flow_weight(
-                    cvd_trend, oi_change_4h, price_change_4h)
-                total_score += smart_flow_w
-                if smart_flow_label:
-                    parts.append(f"smart-flow {smart_flow_label} "
-                                 f"(OI {oi_change_4h:+.1f}% / CVD {cvd_trend} / "
-                                 f"px {price_change_4h:+.2f}%)")
+        if inds_4h.get("ok"):
+            from chart_candles import get_candles
+            df_4h = get_candles(symbol, "4H", limit=4)
+            if df_4h is not None and len(df_4h) >= 2:
+                close_now  = float(df_4h["close"].iloc[-1])
+                close_prev = float(df_4h["close"].iloc[-2])
+                if close_prev > 0:
+                    price_change_4h = (close_now - close_prev) / close_prev * 100.0
+                    cvd_trend = (inds_4h.get("cvd") or {}).get("trend", "flat")
+                    oi_change_4h = _get_oi_change_cached(symbol, hours=4)
+                    smart_flow_w, smart_flow_label = _smart_flow_weight(
+                        cvd_trend, oi_change_4h, price_change_4h)
+                    total_score += smart_flow_w
+                    if smart_flow_label:
+                        parts.append(f"smart-flow {smart_flow_label} "
+                                     f"(OI {oi_change_4h:+.1f}% / CVD {cvd_trend} / "
+                                     f"px {price_change_4h:+.2f}%)")
     except Exception:
         pass
 
