@@ -1,6 +1,6 @@
 # Trading Journal — Architecture & Data Flow
 
-*v1.6.0 + Futures-AI · Updated 2026-05-23*
+*v1.6.0 + Futures-AI + trader-sheet integration · Updated 2026-05-23 (afternoon)*
 
 ---
 
@@ -188,6 +188,112 @@ Every decision lands in `futures_ai_log` with `(ts, event, payload_json)`. Event
 | `breaker_tripped` | A circuit breaker fired |
 
 The Futures-AI page reads this table for the "Recent decisions" panel.
+
+---
+
+## Trader-Sheet Integration Wave (2026-05-23 afternoon)
+
+Distilled into code from a series of trader infographics shared by the
+operator (trader research + trader research). Each sheet was
+translated into either a confluence signal, a scoring modifier, a sizing
+rule, or a defensive mechanism — pure mindset/discipline content was
+filtered out as non-algorithmic.
+
+### Sheet 1 — CVD + OI + Price Combined Analysis
+**Implementation**: smart-flow quadrant signal in `chart_confluence.py`.
+- 4-quadrant classification: New Longs (+0.5), Short Covering (+0.2),
+  New Shorts (-0.5), Long Liquidation (-0.2)
+- Inputs: 4H OI change from Coinalyze + CVD trend + 4H price change
+- Symbol-level signal (fires once per symbol per scan)
+- New `coinalyze_client.get_open_interest_history()`; uses unix SECONDS
+  not ms (Coinalyze quirk)
+
+### Sheet 2 — Power of 3 (AMD cycle)
+**Implementation**: 3 score modifiers in scanner Stage 3.
+- `chart_fvg.py` — Fair Value Gap detection (3-candle imbalance, filtered
+  for "unfilled"); nearest-FVG signal contributes ±0.3 based on whether
+  it acts as same-direction support or opposing resistance
+- `chart_confluence.range_position()` + `directional_range_weight()` —
+  premium/equilibrium/discount classification of current price; Long in
+  discount = +0.3, Long in premium = -0.3, mirror for Shorts
+- `scanner_criteria._apply_kill_zone_modifier()` — Silver Bullet (13:30-
+  14:30 UTC, +0.3), London (07-10 UTC, +0.2), NY AM (12-16 UTC, +0.2),
+  NY PM (18:30-21 UTC, +0.15), Dead hour (16:30-17:30 UTC, -0.2)
+- All three apply AFTER macro/personal-bad-hour/reversal caps; personal
+  bad-hour cap is re-applied as a hard ceiling so PO3 boosts can't
+  punch through it
+
+### Sheet 3 — RSI Mastery Guide
+**Implementation**: new `chart_rsi.py` module replacing the static
+`_rsi_weight()`.
+- `classify_regime()` — bullish (avg RSI > 55, 70%+ bars in 40-80),
+  bearish (mirror), or range
+- `regime_aware_rsi_weight()` — RSI 70 in a bullish regime is +0.5 (trend
+  hot, NOT a sell); RSI <40 IS the warning. Mirror for bearish.
+- `detect_failure_swing()` — 4-point reversal pattern (RSI rejected at
+  extreme without confirming new price extreme); contributes ±0.4
+- `detect_divergences()` — regular (price LL/HH + RSI HL/LH) and hidden
+  (price HL/LH + RSI LL/HH); ±0.3 / ±0.2 respectively, capped at ±0.4
+  total. Surfaces in `parts` so Sonnet sees the structural reads.
+
+### Sheet 4 — Profit Compounding Strategy
+**Implementation**: `trading/risk_budget.py` extensions.
+- `_consecutive_wins()` — mirror of `_consecutive_losses`, honors
+  `breaker_reset_at`
+- `_streak_multiplier()` — 1× at streak 0-1 (lock-and-load), then linear
+  to `MAX_STREAK_MULTIPLIER` (default 3×); resets on any loss
+- `_effective_notional_cap()` — `max(MAX_NOTIONAL_USDT, equity × 25%)`
+  so the cap grows as the account compounds. Floor of $25 preserves
+  small-account playability.
+- Combined sizing: `risk_dollars = equity × 2% × score_mult × streak_mult × dd_mult`
+
+### Sheet 5 — Bear Market Strategy
+**Implementation**: graduated DD response + bear-phase classifier.
+- `risk_budget._drawdown_dampener()` — risk multiplier scales DOWN as
+  drawdown grows BEFORE the binary breaker trips: ×1.00 (0-5%), ×0.75
+  (5-10%), ×0.50 (10-15%), ×0.25 (past 15% — breaker should already
+  have tripped)
+- `bear_phase.classify_phase()` — rule-based classifier from F&G + BTC
+  24h + dominance + HMM regime → distribution / decline / capitulation /
+  recovery / unknown, each with a Long/Short directional bias
+- `phase_alignment_weight()` — setup direction agreeing with phase bias
+  = +0.3, fighting it = -0.3 (applied in scanner Stage 3 alongside PO3
+  modifiers)
+
+### Catastrophe hedge (`trading/hedge_manager.py`)
+Motivated by the 2026-05-22 23:53 incident where 4 of 5 auto_ai longs
+stopped out within the same UTC bar close (correlated BTC dump took out
+the basket). The hedge plugs that hole:
+
+- **Trigger** (ALL): basket unrealized ≤ -3% of equity AND BTC 1h ≤ -2%
+  AND ≥70% of open notional is Long AND no active hedge open
+- **Action**: opens 1 BTC perpetual SHORT, notional = 50% of net long
+  notional, leverage 3×, no SL/TP (rides the storm)
+- **Unwind** (ANY): BTC recovers within 1% of hedge-open price, OR
+  2 consecutive green BTC 15m candles, OR 24h elapsed (safety cap)
+- Position flagged `is_hedge=1` (DB migration 48) so it's EXCLUDED from
+  `MAX_CONCURRENT_POSITIONS`, consec-loss breaker, win-streak progression
+- State persisted in `settings.futures_ai_active_hedge` (JSON) for
+  restart safety; surfaced as `runtime.active_hedge` in killswitch
+  snapshot for the UI
+- New log events: `hedge_opened`, `hedge_closed`, `hedge_open_failed`,
+  `hedge_close_failed`, `hedge_skipped`
+
+### Operator-activate clears breaker
+The earlier circuit-breaker reset semantics: clicking ▶ Activate while in
+`circuit_breaker` state stamps `settings.futures_ai_breaker_reset_at`
+with the current UTC time. `_consecutive_losses()` and `_daily_pnl_pct()`
+honor this stamp via a `since_reset=True` parameter when called from
+`can_open_new_trade()`, so the breaker history is "forgiven" for the
+trip-check while display shows the true 24h figures. New losses
+post-reset still re-trip the breaker after 3 in a row.
+
+### Cross margin mode
+`trading.bitget_trader.MARGIN_MODE = "crossed"` (was "isolated").
+`place_market_order` calls `set-margin-mode` first to align the symbol
+before the order body's `marginMode` field can be set to crossed
+(Bitget V2 rejects mismatch). Enables future hedging where offsetting
+positions reduce required margin instead of doubling it.
 
 ---
 

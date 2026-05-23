@@ -80,11 +80,15 @@ Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI
   - `trading/orchestrator.py` — scan-hook + monitor-tick driver wiring kill_switch → consensus → sizing → dispatch
   - `trading/kill_switch.py` — capital-preservation gate; daily/total DD, consec-loss, soft+elite concurrent caps, state machine
   - `trading/signal_consensus.py` — Sonnet second-opinion (`consensus_score = min(scanner, ai)`)
-  - `trading/risk_budget.py` — Kelly-scaled position sizing (2% risk × score multiplier, capped at notional + leverage limits)
-  - `trading/bitget_trader.py` — V2 REST write client (HMAC-SHA256, tick-size snapping, ATR-based SL/TP repair, plan-order attach)
+  - `trading/risk_budget.py` — Kelly-scaled sizing × win-streak compounding × drawdown dampener (dynamic notional cap)
+  - `trading/bitget_trader.py` — V2 REST write client (HMAC-SHA256, tick-size snapping, ATR-based SL/TP repair, plan-order attach, cross margin mode)
+  - `trading/hedge_manager.py` — catastrophe BTC-short hedge during basket-flush events
   - `trading/executor.py` — real-mode order placement + Bitget history reconciliation
   - `trading/paper.py` — paper-mode simulator (price-walk fills, identical accounting)
   - `trading/learner.py` — Sonnet post-trade reflection feeding rulebook
+- `chart_fvg.py` — Fair Value Gap detection (3-candle imbalance, unfilled detection)
+- `chart_rsi.py` — RSI Mastery: regime-aware weighting + failure swings + regular/hidden divergences
+- `bear_phase.py` — Bear-market phase classifier (distribution/decline/capitulation/recovery) with directional bias
 
 ---
 
@@ -103,6 +107,15 @@ Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI
 - **Scanner SL floor (2026-05-23)** — `trade_utils.enforce_sl_floor` repairs wrong-side / too-tight / too-wide SLs upstream so the journal records sane levels without relying on the executor's last-mile ATR repair.
 - **Cross-chain exposure monitor (2026-05-23)** — `monitor_scheduler` now feeds combined manual + auto_ai positions to `exposure_monitor.check`, so sector clustering and directional-overload alerts cover the operator's full book.
 - **Leverage logging (2026-05-23)** — `bitget_trader.place_market_order` returns `leverage_requested` / `leverage_actual` / `set_leverage_result`; mismatches surface as `lev_mismatch` events in `futures_ai_log` for audit.
+- **Operator-activate clears breaker (2026-05-23)** — clicking ▶ Activate from circuit_breaker stamps `breaker_reset_at`; killswitch history checks honor the stamp so past losses are forgiven for breaker purposes (new losses post-reset still re-trip).
+- **Cross margin mode (2026-05-23)** — new positions open in cross margin, enabling future hedging where offsetting positions reduce required margin instead of doubling it.
+- **Consensus rationale logging (2026-05-23)** — `consensus_rejected` events now include Sonnet's `ai_summary` + top warnings so the operator can see WHY a setup was killed, not just that it was.
+- **Smart-flow quadrant signal (2026-05-23)** — OI × CVD × Price 4-quadrant classification per trader research sheet: ±0.5 / ±0.2 confluence weight differentiating new longs from short covering, etc.
+- **PO3 framework: FVG + Premium/Discount + Kill Zones (2026-05-23)** — Fair Value Gap detection as a 13th signal; range-position score modifier (Long in discount/premium = ±0.3); institutional session timing (Silver Bullet +0.3, NY AM/London +0.2, dead hour -0.2).
+- **RSI Mastery (2026-05-23)** — regime-aware RSI weighting (RSI 70 isn't bearish in a bullish regime), failure swing detection (most reliable reversal signal), regular + hidden divergence detection.
+- **Profit Compounding Strategy (2026-05-23)** — streak-based risk progression: consecutive wins multiply risk (capped at 3×, resets on loss); dynamic notional cap = max($25, equity × 25%) so position size grows with the account.
+- **Bear-market phase classifier + graduated DD response (2026-05-23)** — auto-classify current phase (distribution / decline / capitulation / recovery) from F&G + BTC + dominance; ±0.3 score modifier when setup direction aligns with phase. Drawdown dampener scales risk DOWN as DD grows (×0.75 at -5 to -10%, ×0.50 at -10 to -15%) BEFORE the binary breaker trips.
+- **Catastrophe hedge (2026-05-23)** — `trading/hedge_manager.py` auto-opens a BTC perpetual short during basket-flush events (basket -3% + BTC -2% in 1h + ≥70% long-biased). Hedge is `is_hedge=1`, excluded from breakers/concurrency. Unwinds when BTC recovers within 1% or two consecutive green 15m candles.
 
 ---
 

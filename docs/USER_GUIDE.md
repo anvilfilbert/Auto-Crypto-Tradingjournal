@@ -921,7 +921,29 @@ High accuracy means the setup scoring system genuinely predicts your outcomes. I
 
 ---
 
-## New in 2026-05-22 → 2026-05-23 (Futures-AI)
+## New 2026-05-23 (later in day — trader-sheet integration wave)
+
+**Catastrophe hedge** — when the auto-trader basket is bleeding rapidly during a market-wide move (-3% unrealized + BTC -2% in 1h + ≥70% long-biased), a BTC perpetual SHORT auto-opens at 50% of net long notional to insure the basket. Unwinds when BTC recovers within 1%, two consecutive green 15m candles, or 24h elapsed. Toggle via `FUTURES_AI_HEDGE_ENABLED=0` in `.env`.
+
+**Bear-market phase classifier + graduated DD response** — auto-classifies current macro phase (distribution / decline / capitulation / recovery) from F&G + BTC 24h + dominance + HMM regime. Long setups in decline phases get -0.3 score; Short setups in capitulation phases get -0.3 (mirror). Drawdown dampener scales risk DOWN gracefully (×0.75 between -5% and -10% DD, ×0.50 between -10% and -15%) BEFORE the binary breaker trips at -15%.
+
+**RSI Mastery** — RSI 70 is no longer treated as "overbought" in a confirmed bullish regime (it's normal trending behavior). New signals: failure swing detection (the most reliable reversal signal), regular vs hidden divergences explicitly detected and scored.
+
+**Profit Compounding Strategy** — consecutive winning trades now multiply the per-trade risk (capped at 3×), reset to 1× on any loss. Per-trade notional cap is dynamic = max($25, equity × 25%) so position size compounds with the account.
+
+**PO3 framework: FVG + Premium/Discount + Kill Zones** — Fair Value Gaps detected and scored as confluence signal; range position (premium/discount/equilibrium) modifies score by ±0.3 based on direction; setups during institutional kill zones (Silver Bullet, London open, NY AM/PM) get +0.15 to +0.3 score boost.
+
+**Smart-flow quadrant (OI × CVD × Price)** — 4-quadrant smart-money classification: New Longs +0.5, Short Covering +0.2, New Shorts -0.5, Long Liquidation -0.2.
+
+**Operator-activate clears breaker** — clicking ▶ Activate from `circuit_breaker` stamps a reset timestamp. The killswitch history honors the stamp, so past losses are forgiven for breaker purposes. New losses still re-trip after 3 in a row.
+
+**Cross margin mode** — new positions open in cross margin (was isolated). Enables future hedging where offsetting positions reduce required margin instead of doubling it.
+
+**Consensus rationale logging** — `consensus_rejected` log entries now include Sonnet's full reasoning (`ai_summary` + warnings), so post-trade review shows WHY a setup was killed.
+
+---
+
+## New in 2026-05-22 → 2026-05-23 morning (Futures-AI launch)
 
 **Auto-trader live** — the 🤖 **Futures-AI** tab runs an autonomous trader on a dedicated Bitget subaccount. Risk envelope: 2% per trade, $25 notional cap, 10× max leverage, 5 concurrent positions soft cap (7 with elite bypass). Circuit breakers: -5% daily DD, -15% total DD, 3 consecutive losses. All decisions logged in `futures_ai_log` and surfaced in the page's "Recent decisions" panel.
 
