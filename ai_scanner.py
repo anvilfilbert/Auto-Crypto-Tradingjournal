@@ -263,15 +263,21 @@ def _score_finalists_with_agents(finalists: list, conn,
 
             # ── Bear-phase alignment modifier (added 2026-05-23) ─────────
             # Classify the current macro phase (distribution/decline/
-            # capitulation/recovery) from macro_ctx (BTC.D, F&G, BTC 24h)
-            # and apply ±0.3 if the setup direction agrees/fights the phase
-            # bias. Same magnitude as PO3 range/FVG — Sonnet consensus is
-            # still the final filter.
+            # capitulation/recovery) from F&G + BTC 24h change + BTC.D +
+            # HMM regime, then apply ±0.3 if the setup direction agrees
+            # or fights the phase bias. Sonnet consensus is still the
+            # final filter — this is a directional context signal, not
+            # a hard gate.
             bp_label = ""
             try:
                 from bear_phase import classify_phase, phase_alignment_weight
+                from chart_confluence import _get_ticker_change_cached
+                # BTC 24h change isn't in macro_ctx — fetch directly (cached
+                # for 5min in chart_confluence so this is one HTTP every
+                # 5min, not per setup).
+                btc_24h = _get_ticker_change_cached("BTCUSDT")
                 bp = classify_phase(
-                    btc_change_24h_pct=macro.get("es_change_pct") or 0,
+                    btc_change_24h_pct=btc_24h,
                     fng=macro.get("fear_greed"),
                     btc_dom_pct=macro.get("btc_dominance"),
                     vix=macro.get("vix"),
