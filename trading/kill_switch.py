@@ -47,15 +47,21 @@ def _equity_now(conn) -> float:
         return config.starting_equity()
 
 
-def _daily_pnl_pct(conn) -> float:
+def _daily_pnl_pct(conn, *, since_reset: bool = False) -> float:
     """
-    Auto-trader's realized P&L over the last 24h as a fraction of
-    starting equity. Restricted to auto_ai chain (real) or paper_positions
-    (paper) so manual trades cannot trip the auto-trader's breakers.
-    Honors the operator-initiated breaker reset stamp — losses closed
-    before the reset don't count.
+    Auto-trader's realized P&L over the last 24h as a fraction of starting
+    equity. Restricted to auto_ai chain (real) or paper_positions (paper)
+    so manual trades cannot affect the auto-trader's metrics.
+
+    since_reset=False (default, for DISPLAY) → true 24h history regardless
+    of operator overrides. This is what the Futures-AI page shows.
+
+    since_reset=True (for BREAKER) → honors the operator-initiated
+    breaker_reset_at stamp; losses closed before the reset don't count.
+    This is what can_open_new_trade uses so the operator's "I've reviewed"
+    decision actually unblocks the chain.
     """
-    reset_at = config.breaker_reset_at(conn)
+    reset_at = config.breaker_reset_at(conn) if since_reset else None
     try:
         if config.is_real_mode():
             if reset_at:
@@ -91,12 +97,16 @@ def _daily_pnl_pct(conn) -> float:
         return 0.0
 
 
-def _consecutive_losses(conn) -> int:
+def _consecutive_losses(conn, *, since_reset: bool = False) -> int:
     """Count of consecutive auto-trader losers up to the most recent close.
-    Honors the operator-initiated breaker reset stamp — only counts trades
-    closed AFTER the reset, so an operator override forgives prior losses
-    for breaker purposes but new losses still re-trip if 3 in a row."""
-    reset_at = config.breaker_reset_at(conn)
+
+    since_reset=False (DISPLAY) → true count over the entire history.
+    since_reset=True (BREAKER) → only counts trades closed AFTER the
+    operator-initiated breaker reset stamp, so an explicit override
+    forgives prior losses for breaker purposes. New losses still re-trip
+    the breaker if 3 in a row appear post-reset.
+    """
+    reset_at = config.breaker_reset_at(conn) if since_reset else None
     try:
         if config.is_real_mode():
             if reset_at:
@@ -181,8 +191,10 @@ def can_open_new_trade(conn, scanner_score: int = 0) -> tuple[bool, str]:
     if state in ("pause_now", "pause_after_close", "circuit_breaker"):
         return False, f"state={state}"
 
-    # Daily DD breaker
-    dd = _daily_pnl_pct(conn)
+    # Daily DD breaker — uses since_reset=True so an operator override
+    # of the circuit breaker actually unblocks the chain (display still
+    # shows the raw 24h truth via the no-arg call in evaluate()).
+    dd = _daily_pnl_pct(conn, since_reset=True)
     if dd <= config.DAILY_DD_BREAKER_PCT:
         _trip_breaker(conn, f"daily DD {dd*100:.1f}% ≤ {config.DAILY_DD_BREAKER_PCT*100:.0f}%")
         return False, f"daily DD breaker tripped at {dd*100:.1f}%"
@@ -194,8 +206,8 @@ def can_open_new_trade(conn, scanner_score: int = 0) -> tuple[bool, str]:
         _trip_breaker(conn, f"total DD {total_dd*100:.1f}% ≤ {config.TOTAL_DD_BREAKER_PCT*100:.0f}%")
         return False, f"total DD breaker tripped at {total_dd*100:.1f}%"
 
-    # Consecutive loss breaker
-    nl = _consecutive_losses(conn)
+    # Consecutive loss breaker — same since_reset semantics as daily DD
+    nl = _consecutive_losses(conn, since_reset=True)
     if nl >= config.CONSECUTIVE_LOSS_BREAKER:
         _trip_breaker(conn, f"{nl} consecutive losses")
         return False, f"consecutive-loss breaker tripped ({nl} losses)"
@@ -236,24 +248,35 @@ def _trip_breaker(conn, why: str) -> None:
 
 
 def evaluate(conn) -> dict:
-    """Snapshot of every rule's current state — for the UI panel."""
+    """Snapshot of every rule's current state — for the UI panel.
+
+    daily_pnl_pct / consecutive_losses are TRUE 24h history (since_reset
+    OFF) so the UI shows what actually happened. The corresponding
+    *_since_reset fields show the breaker-relevant values that
+    can_open_new_trade actually checks against — useful for
+    understanding why the breaker is or isn't tripping.
+    """
     eq = _equity_now(conn)
-    dd_day = _daily_pnl_pct(conn)
-    dd_total = (eq - config.starting_equity()) / max(config.starting_equity(), 1)
-    n_losses = _consecutive_losses(conn)
+    dd_day_raw   = _daily_pnl_pct(conn)
+    dd_day_reset = _daily_pnl_pct(conn, since_reset=True)
+    dd_total     = (eq - config.starting_equity()) / max(config.starting_equity(), 1)
+    n_losses_raw   = _consecutive_losses(conn)
+    n_losses_reset = _consecutive_losses(conn, since_reset=True)
     n_open = _open_position_count(conn)
 
     can_trade, reason = can_open_new_trade(conn)
 
     return {
-        "state":                 config.get_state(conn),
-        "can_open_new_trade":    can_trade,
-        "reason":                reason or "ok",
-        "equity_usdt":           round(eq, 2),
-        "daily_pnl_pct":         round(dd_day * 100, 2),
-        "total_pnl_pct":         round(dd_total * 100, 2),
-        "consecutive_losses":    n_losses,
-        "open_positions":        n_open,
-        "max_concurrent":        config.MAX_CONCURRENT_POSITIONS,
-        "breaker_reset_at":      config.breaker_reset_at(conn),
+        "state":                       config.get_state(conn),
+        "can_open_new_trade":          can_trade,
+        "reason":                      reason or "ok",
+        "equity_usdt":                 round(eq, 2),
+        "daily_pnl_pct":               round(dd_day_raw * 100, 2),
+        "daily_pnl_pct_since_reset":   round(dd_day_reset * 100, 2),
+        "total_pnl_pct":               round(dd_total * 100, 2),
+        "consecutive_losses":          n_losses_raw,
+        "consecutive_losses_since_reset": n_losses_reset,
+        "open_positions":              n_open,
+        "max_concurrent":              config.MAX_CONCURRENT_POSITIONS,
+        "breaker_reset_at":            config.breaker_reset_at(conn),
     }

@@ -244,7 +244,7 @@ function _buildClosedPositionsTable(rows, source) {
       _num(closePrice),
       ((pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2)),
       p.close_reason || (source === 'real' ? 'reconcile' : '—'),
-      (p.opened_at || '').slice(5, 16),
+      (p.opened_at || p.open_time || '').slice(5, 16),
       (p.closed_at || p.close_time || '').slice(5, 16),
     ];
     cells.forEach((v, i) => {
