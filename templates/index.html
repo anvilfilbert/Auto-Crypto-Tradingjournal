@@ -451,6 +451,10 @@ select:focus,input:focus{border-color:var(--accent)}
     <div class="nav-item" onclick="showPage('scanner-pipeline')" id="nav-scanner-pipeline">
       <span class="nav-icon">🪜</span><span>Scanner Pipeline</span>
     </div>
+    <div class="nav-sep">Acki Nacki — DoDEX</div>
+    <div class="nav-item" onclick="showPage('dodex')" id="nav-dodex">
+      <span class="nav-icon">💱</span><span>DODEX Integration</span>
+    </div>
     <div class="nav-sep">System</div>
     <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <span class="nav-icon">⚙️</span><span>Settings</span>
@@ -2248,6 +2252,236 @@ select:focus,input:focus{border-color:var(--accent)}
           <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🧠 AI Architecture →</div>
           <div style="font-size:.75rem;color:var(--muted)">7-agent pipeline · 5-provider cascade · model routing</div>
         </a>
+      </div>
+
+    </div>
+
+    <!-- ── Acki Nacki / DODEX Integration (preparation, no app code wired in) ───── -->
+    <div id="page-dodex" class="page-view">
+      <div class="page-title">💱 Acki Nacki — DoDEX Integration</div>
+      <div class="page-subtitle">Phase-tracked preparation for a future DEX module. Not wired into the running app · informational only · serves as the persistent reminder + documentation hub.</div>
+
+      <!-- ─── Status banner ─────────────────────────────────────────────────── -->
+      <div class="src-grid" style="margin-bottom:24px">
+        <div class="src-card" style="border-left-color:#26d96b">
+          <div class="src-card-hdr"><div class="src-icon">⚡</div><div><div class="src-name">Acki Nacki Mainnet</div><div class="src-provider">Live since 2025-10-07</div></div></div>
+          <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val" style="color:#26d96b">✓ Active</span></div>
+          <div class="src-row"><span class="src-row-label">Endpoint</span><span class="src-row-val"><code>https://mainnet.ackinacki.org/</code></span></div>
+          <div class="src-row"><span class="src-row-label">Block time</span><span class="src-row-val">330 ms · finality ~750 ms</span></div>
+        </div>
+        <div class="src-card" style="border-left-color:#ffb300">
+          <div class="src-card-hdr"><div class="src-icon">🔨</div><div><div class="src-name">DODEX Protocol</div><div class="src-provider">Dark-order DEX on Acki Nacki</div></div></div>
+          <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val" style="color:#ffb300">⏳ In build</span></div>
+          <div class="src-row"><span class="src-row-label">Code</span><span class="src-row-val"><code>github.com/ackinacki/ackinacki</code></span></div>
+          <div class="src-row"><span class="src-row-label">Docs</span><span class="src-row-val"><code>dev.ackinacki.com/dex.do</code> (WIP markers)</span></div>
+          <div class="src-row"><span class="src-row-label">Public release</span><span class="src-row-val">Few weeks (operator estimate, not committed)</span></div>
+        </div>
+        <div class="src-card" style="border-left-color:#6c63ff">
+          <div class="src-card-hdr"><div class="src-icon">📦</div><div><div class="src-name">Our Integration</div><div class="src-provider">Phase 0 + 1 infra installed</div></div></div>
+          <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val" style="color:#6c63ff">📦 Prep only — toggled OFF</span></div>
+          <div class="src-row"><span class="src-row-label">App impact</span><span class="src-row-val">None · no service code touches DODEX yet</span></div>
+          <div class="src-row"><span class="src-row-label">Revertible</span><span class="src-row-val"><code>git revert 722ebc6</code> removes everything</span></div>
+        </div>
+      </div>
+
+      <!-- ─── Phase tracker (the centerpiece) ───────────────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#6c63ff"></div>
+          <div class="src-layer-title">Phase Tracker</div>
+          <div class="src-layer-sub">Each phase is independently feature-flagged · we can stop at any boundary if DODEX changes shape</div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden">
+          <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+            <thead>
+              <tr style="background:var(--bg3,#0f1419);color:var(--muted);text-align:left">
+                <th style="padding:10px 14px;width:50px">Phase</th>
+                <th style="padding:10px 14px;width:140px">Status</th>
+                <th style="padding:10px 14px">Scope</th>
+                <th style="padding:10px 14px;width:220px">Approval gate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:12px 14px;font-weight:700;text-align:center">0</td>
+                <td style="padding:12px 14px;color:#26d96b;font-weight:600">✓ Done</td>
+                <td style="padding:12px 14px"><b>Knowledge base.</b> 7 docs in <code>docs/dodex/</code> (815 lines): chain mechanics, DODEX contracts, CEX↔DEX translation, integration blueprint, risks + decision memo, upstream watch plan.</td>
+                <td style="padding:12px 14px;color:var(--muted)">— (implicit, no code shipped)</td>
+              </tr>
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:12px 14px;font-weight:700;text-align:center">1</td>
+                <td style="padding:12px 14px;color:#ffb300;font-weight:600">🔧 Installed · not active</td>
+                <td style="padding:12px 14px"><b>Read-only probe.</b> Node sidecar (<code>@tvmsdk/lib-node</code>) + Python orchestrator. Verifies SDK loads, GraphQL endpoint discovers, can read account state. <b>Never signs.</b> Lives in <code>scripts/dodex_probe/</code> · invoked manually on demand.</td>
+                <td style="padding:12px 14px;color:var(--muted)">Operator says "run Phase 1 probe"</td>
+              </tr>
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:12px 14px;font-weight:700;text-align:center">2</td>
+                <td style="padding:12px 14px;color:#4fc3f7;font-weight:600">📋 Approved · pending</td>
+                <td style="padding:12px 14px"><b>Module skeleton, toggleable, no trading.</b> <code>trading/dodex/</code> package skeleton · <code>FUTURES_AI_DODEX_ENABLED=0</code> env flag · <code>/api/dodex/state</code> read-only route · this page wires to live balances. <b>No writes.</b></td>
+                <td style="padding:12px 14px;color:var(--muted)">After Phase 1 passes once + DODEX limit-order or contract addresses become public</td>
+              </tr>
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:12px 14px;font-weight:700;text-align:center;color:var(--muted)">3</td>
+                <td style="padding:12px 14px;color:var(--muted)">⏸ Deferred</td>
+                <td style="padding:12px 14px;color:var(--muted)"><b>Manual trade from UI.</b> Operator clicks → wallet signs deposit-as-sell-order tx → reconciler ingests fill. Single pair, hard-capped notional. First time a private key touches the Pi.</td>
+                <td style="padding:12px 14px;color:var(--muted)">After Phase 2 + a wallet funding cycle on testnet first</td>
+              </tr>
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:12px 14px;font-weight:700;text-align:center;color:var(--muted)">4</td>
+                <td style="padding:12px 14px;color:var(--muted)">⏸ Deferred</td>
+                <td style="padding:12px 14px;color:var(--muted)"><b>Auto-trader DODEX execution.</b> Scanner-selected DODEX-supported pairs routed via new <code>chain='dodex_auto'</code>. Opus consensus gate stays venue-agnostic.</td>
+                <td style="padding:12px 14px;color:var(--muted)">After Phase 3 stability + DODEX mainnet live + 1 week of testnet ops</td>
+              </tr>
+              <tr style="border-top:1px solid var(--border)">
+                <td style="padding:12px 14px;font-weight:700;text-align:center;color:var(--muted)">5</td>
+                <td style="padding:12px 14px;color:var(--muted)">⏸ Deferred (optional)</td>
+                <td style="padding:12px 14px;color:var(--muted)"><b>Shielded operations.</b> PrivateNote-mediated trading using the Tornado-style ZK deposit + Nullifier primitives. Privacy at the cost of operational complexity.</td>
+                <td style="padding:12px 14px;color:var(--muted)">After Phase 4 + the shielded-matching flow is documented</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── What's installed ──────────────────────────────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#26d96b"></div>
+          <div class="src-layer-title">What's already on the Pi (passive)</div>
+          <div class="src-layer-sub">All deliverables from Phase 0 + Phase 1 setup</div>
+        </div>
+
+        <div class="src-grid">
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">📚</div><div><div class="src-name">Knowledge base</div><div class="src-provider">docs/dodex/ — 7 files</div></div></div>
+            <div class="src-row"><span class="src-row-label">01-overview</span><span class="src-row-val">What DODEX is, claims vs reality</span></div>
+            <div class="src-row"><span class="src-row-label">02-blockchain</span><span class="src-row-val">TVM-Solidity, consensus, ABI, SDK options</span></div>
+            <div class="src-row"><span class="src-row-label">03-mechanics</span><span class="src-row-val">Contracts, order lifecycle, shielded notes</span></div>
+            <div class="src-row"><span class="src-row-label">04-translation</span><span class="src-row-val">Bitget → DODEX concept-by-concept</span></div>
+            <div class="src-row"><span class="src-row-label">05-blueprint</span><span class="src-row-val">Proposed module layout, SDK choice, custody</span></div>
+            <div class="src-row"><span class="src-row-label">06-risks</span><span class="src-row-val">For/against, worst-case, open questions</span></div>
+            <div class="src-row"><span class="src-row-label">07-watch</span><span class="src-row-val">Upstream monitoring plan</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🔧</div><div><div class="src-name">Phase 1 read-only probe</div><div class="src-provider">scripts/dodex_probe/ — installed · NOT active</div></div></div>
+            <div class="src-row"><span class="src-row-label">Sidecar</span><span class="src-row-val">Node.js <code>@tvmsdk/lib-node</code> + <code>@tvmsdk/core</code> installed</span></div>
+            <div class="src-row"><span class="src-row-label">Orchestrator</span><span class="src-row-val">Python <code>dodex_probe.py</code> spawns Node via stdin/stdout JSON</span></div>
+            <div class="src-row"><span class="src-row-label">Ops supported</span><span class="src-row-val">ping · node_info · block_height · account_state · run_local <i>(all read-only)</i></span></div>
+            <div class="src-row"><span class="src-row-label">Run command</span><span class="src-row-val"><code>python3 scripts/dodex_probe/dodex_probe.py --network mainnet</code></span></div>
+            <div class="src-row"><span class="src-row-label">Holds keys</span><span class="src-row-val" style="color:#26d96b">✓ No · cannot sign or submit txs</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#4fc3f7">
+            <div class="src-card-hdr"><div class="src-icon">📡</div><div><div class="src-name">Upstream watcher</div><div class="src-provider">scripts/dodex_watch.py — baselined</div></div></div>
+            <div class="src-row"><span class="src-row-label">Targets</span><span class="src-row-val">10 — ackinacki + tvm-sdk repos (commits + releases), DODEX dev docs, dex.do landing</span></div>
+            <div class="src-row"><span class="src-row-label">State</span><span class="src-row-val"><code>data/dodex_watch/</code> · hash + last body per target</span></div>
+            <div class="src-row"><span class="src-row-label">Cadence</span><span class="src-row-val">On-demand only · no cron · no Telegram (operator preference)</span></div>
+            <div class="src-row"><span class="src-row-label">Trigger</span><span class="src-row-val">Operator says "check DODEX upstream"</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Locked-in decisions ───────────────────────────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#4fc3f7"></div>
+          <div class="src-layer-title">Locked-in decisions (operator-confirmed 2026-05-23)</div>
+          <div class="src-layer-sub">Reference for future sessions — don't re-litigate without explicit operator change</div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+          <table style="width:100%;font-size:.8rem;border-collapse:collapse">
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;width:200px;font-weight:600">SDK strategy</td><td style="padding:8px 10px">Node.js sidecar (option B) — keeps Python clean, lets us bump SDK via single npm version</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Mainnet endpoint</td><td style="padding:8px 10px"><code>https://mainnet.ackinacki.org/</code> · live since 2025-10-07 · /graphql path TBD (Phase 1 discovers)</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Token roles</td><td style="padding:8px 10px"><code>NACKL</code> = main / transferable / traded asset · <code>SHELL</code> = gas / transaction-cost · <code>VMSHELL</code> = in-contract form of SHELL</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Asset scope</td><td style="padding:8px 10px">Multi-pair from day one · cross-chain bridges to other L1s are also WIP on DODEX side</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Smart contracts</td><td style="padding:8px 10px">TVM-Solidity (NOT EVM) · TON-family · Ed25519-signed external messages over BoCs</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Privacy</td><td style="padding:8px 10px">Tornado-style shielded notes (Nullifier + PrivateNote + ZK deposit proof) · public order book on top is "dark" (shielded balances + hidden orders)</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Phases approved</td><td style="padding:8px 10px">0 + 1 + 2 · 3-5 deferred</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Pi runs</td><td style="padding:8px 10px">Node v22.22.2 + npm 10.9.7 (pre-installed) · TVM-SDK v2.24.21</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-weight:600">Probe location</td><td style="padding:8px 10px">Pi only · NOT yet running / active</td></tr>
+              <tr><td style="padding:8px 10px;font-weight:600">Watcher cadence</td><td style="padding:8px 10px">On-demand only · operator pings assistant 2× / week</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── Open questions / pending decisions ─────────────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#ef5350"></div>
+          <div class="src-layer-title">Pending decisions before next phase moves</div>
+          <div class="src-layer-sub">Each one gates a specific phase boundary</div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+          <table style="width:100%;font-size:.78rem;border-collapse:collapse">
+            <thead><tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--border)">
+              <th style="padding:6px 10px">Decision needed</th>
+              <th style="padding:6px 10px;width:120px">Gates</th>
+              <th style="padding:6px 10px">Default if unanswered</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px">Whitelist application on dex.do</td><td style="padding:8px 10px">Phase 1 run</td><td style="padding:8px 10px;color:var(--muted)">Apply when Phase 1 needs DODEX contract access</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px">Capital allocation to DODEX</td><td style="padding:8px 10px">Phase 3</td><td style="padding:8px 10px;color:var(--muted)">$10 hard-cap until Phase 4</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px">Trading style (scalp / swing / position)</td><td style="padding:8px 10px">Phase 3</td><td style="padding:8px 10px;color:var(--muted)">Swing + position only (block-time latency makes scalp marginal)</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px">Manual UI first or auto-trader first</td><td style="padding:8px 10px">Phase 3 vs 4</td><td style="padding:8px 10px;color:var(--muted)">Manual UI first, then auto-trader</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px">Key custody approach</td><td style="padding:8px 10px">Phase 3</td><td style="padding:8px 10px;color:var(--muted)">Single hot key on Pi · chmod 600 · hard tx caps · small balance</td></tr>
+              <tr><td style="padding:8px 10px">Privacy default (PrivateNote-mediated vs public)</td><td style="padding:8px 10px">Phase 5</td><td style="padding:8px 10px;color:var(--muted)">Public until Phase 5 validates shielded flow</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── External references ────────────────────────────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#ffb300"></div>
+          <div class="src-layer-title">External references</div>
+          <div class="src-layer-sub">Sources we monitor + canonical docs</div>
+        </div>
+
+        <div class="src-grid">
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">🌐</div><div><div class="src-name">Acki Nacki chain</div><div class="src-provider">L1 — production</div></div></div>
+            <div class="src-row"><span class="src-row-label">Mainnet</span><span class="src-row-val"><a href="https://mainnet.ackinacki.org/" target="_blank" rel="noopener" style="color:var(--accent)">mainnet.ackinacki.org</a></span></div>
+            <div class="src-row"><span class="src-row-label">Testnet</span><span class="src-row-val"><a href="https://shellnet.ackinacki.org/" target="_blank" rel="noopener" style="color:var(--accent)">shellnet.ackinacki.org</a></span></div>
+            <div class="src-row"><span class="src-row-label">Docs</span><span class="src-row-val"><a href="https://docs.ackinacki.com/" target="_blank" rel="noopener" style="color:var(--accent)">docs.ackinacki.com</a></span></div>
+            <div class="src-row"><span class="src-row-label">Dev docs</span><span class="src-row-val"><a href="https://dev.ackinacki.com/" target="_blank" rel="noopener" style="color:var(--accent)">dev.ackinacki.com</a></span></div>
+            <div class="src-row"><span class="src-row-label">Node source</span><span class="src-row-val"><a href="https://github.com/ackinacki/ackinacki" target="_blank" rel="noopener" style="color:var(--accent)">ackinacki/ackinacki</a></span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">💱</div><div><div class="src-name">DODEX</div><div class="src-provider">Dark-order DEX — in build</div></div></div>
+            <div class="src-row"><span class="src-row-label">Landing</span><span class="src-row-val"><a href="https://www.dex.do/" target="_blank" rel="noopener" style="color:var(--accent)">dex.do</a></span></div>
+            <div class="src-row"><span class="src-row-label">Dev docs</span><span class="src-row-val"><a href="https://dev.ackinacki.com/dex.do" target="_blank" rel="noopener" style="color:var(--accent)">dev.ackinacki.com/dex.do</a></span></div>
+            <div class="src-row"><span class="src-row-label">ABI spec</span><span class="src-row-val"><a href="https://dev.ackinacki.com/abi/abi" target="_blank" rel="noopener" style="color:var(--accent)">dev.ackinacki.com/abi/abi</a></span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🧰</div><div><div class="src-name">TVM-SDK</div><div class="src-provider">Client library — Rust + JS/TS</div></div></div>
+            <div class="src-row"><span class="src-row-label">Repo</span><span class="src-row-val"><a href="https://github.com/tvmlabs/tvm-sdk" target="_blank" rel="noopener" style="color:var(--accent)">tvmlabs/tvm-sdk</a></span></div>
+            <div class="src-row"><span class="src-row-label">Version</span><span class="src-row-val">v2.24.21 (2026-05-21)</span></div>
+            <div class="src-row"><span class="src-row-label">npm</span><span class="src-row-val"><code>@tvmsdk/core</code> · <code>@tvmsdk/lib-node</code></span></div>
+            <div class="src-row"><span class="src-row-label">Python binding</span><span class="src-row-val" style="color:var(--muted)">None official — using Node sidecar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Quick action reminders (for the assistant on future sessions) ──── -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:20px">
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">Quick actions (operator → assistant phrasing)</div>
+        <table style="width:100%;font-size:.8rem;border-collapse:collapse">
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-family:ui-monospace,monospace;width:280px">"check DODEX upstream"</td><td style="padding:8px 10px">Assistant SSHs Pi → <code>python3 scripts/dodex_watch.py</code> → reports diffs</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-family:ui-monospace,monospace">"run Phase 1 probe"</td><td style="padding:8px 10px">Assistant SSHs Pi → <code>python3 scripts/dodex_probe/dodex_probe.py --network mainnet</code> → reports PASS/FAIL per step</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 10px;font-family:ui-monospace,monospace">"start Phase 2"</td><td style="padding:8px 10px">Triggers module skeleton implementation per <code>docs/dodex/05-integration-blueprint.md</code></td></tr>
+            <tr><td style="padding:8px 10px;font-family:ui-monospace,monospace">"freeze DODEX work"</td><td style="padding:8px 10px"><code>git revert 722ebc6</code> removes all DODEX scaffolding cleanly</td></tr>
+          </tbody>
+        </table>
       </div>
 
     </div>
