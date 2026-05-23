@@ -101,6 +101,51 @@ def get_open_interest(symbol: str) -> dict:
         return {}
 
 
+def get_open_interest_history(symbol: str, hours: int = 4) -> dict:
+    """
+    OI change over the last `hours`, used for the smart-flow quadrant
+    classification (OI direction × CVD direction × price direction).
+
+    Coinalyze open-interest-history returns OHLC of OI in 1h candles.
+    We compute the simple delta: latest_close vs first_open across the window.
+
+    Returns {"oi_change_pct": float, "oi_then": float, "oi_now": float}
+    or {} if data unavailable.
+    """
+    if hours < 1:
+        return {}
+    now_ms  = int(time.time() * 1000)
+    from_ms = now_ms - (hours * 3600 * 1000)
+    data = _get("open-interest-history", {
+        "symbols":  _symbol(symbol),
+        "interval": "1hour",
+        "from":     from_ms,
+        "to":       now_ms,
+    })
+    try:
+        if not data:
+            return {}
+        records = data if isinstance(data, list) else [data]
+        # Coinalyze nests history under "history" or returns a list of
+        # bars directly depending on plan. Normalize both shapes.
+        bars = records[0].get("history") if records and isinstance(records[0], dict) and "history" in records[0] else records
+        if not bars:
+            return {}
+        bars = sorted(bars, key=lambda b: b.get("t", 0))
+        first_open = float(bars[0].get("o") or bars[0].get("open") or 0)
+        last_close = float(bars[-1].get("c") or bars[-1].get("close") or 0)
+        if first_open <= 0 or last_close <= 0:
+            return {}
+        change_pct = (last_close - first_open) / first_open * 100.0
+        return {
+            "oi_change_pct": round(change_pct, 3),
+            "oi_then":       round(first_open, 3),
+            "oi_now":        round(last_close, 3),
+        }
+    except Exception:
+        return {}
+
+
 def get_liquidations(symbol: str, lookback_hours: int = 1) -> dict:
     """
     Recent liquidation volume over the last lookback_hours.
