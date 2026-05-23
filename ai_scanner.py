@@ -261,6 +261,32 @@ def _score_finalists_with_agents(finalists: list, conn,
             except Exception as e:
                 logger.debug("PO3 modifier error on %s: %s", sym, e)
 
+            # ── Bear-phase alignment modifier (added 2026-05-23) ─────────
+            # Classify the current macro phase (distribution/decline/
+            # capitulation/recovery) from macro_ctx (BTC.D, F&G, BTC 24h)
+            # and apply ±0.3 if the setup direction agrees/fights the phase
+            # bias. Same magnitude as PO3 range/FVG — Sonnet consensus is
+            # still the final filter.
+            bp_label = ""
+            try:
+                from bear_phase import classify_phase, phase_alignment_weight
+                bp = classify_phase(
+                    btc_change_24h_pct=macro.get("es_change_pct") or 0,
+                    fng=macro.get("fear_greed"),
+                    btc_dom_pct=macro.get("btc_dominance"),
+                    vix=macro.get("vix"),
+                    hmm_regime=macro.get("hmm_regime") or macro.get("regime"),
+                )
+                bp_w, bp_reason = phase_alignment_weight(bp.get("phase",""), direction)
+                if bp_w != 0:
+                    score = max(0.0, min(10.0, score + bp_w))
+                    bp_label = f"bear-phase: {bp.get('label','')} → {bp_w:+.1f}"
+                    logger.info("bear-phase mod applied to %s: %s", sym, bp_label)
+                elif bp.get("phase") and bp["phase"] != "unknown":
+                    bp_label = f"bear-phase: {bp.get('label','')}"
+            except Exception as e:
+                logger.debug("bear-phase modifier error on %s: %s", sym, e)
+
             # Re-apply personal bad-hour cap AFTER kill-zone boost — the cap
             # is a hard ceiling that must not be exceeded by any boost.
             score, _bh_post = _apply_personal_bad_hour_cap(score)
@@ -305,15 +331,14 @@ def _score_finalists_with_agents(finalists: list, conn,
 
             # `archetype` was already detected above for the reversal-cap step.
 
-            # Compose a single PO3 summary line for Sonnet's consensus call.
-            # Pulled from the labels we built earlier; empty when nothing
-            # fired. Reads like: "PO3 [silver_bullet · range:discount(22%) ·
-            # FVG support 1.8%]" — terse enough to fit alongside the
-            # existing rationale without bloating the prompt.
+            # Compose a single PO3 + bear-phase summary line for Sonnet's
+            # consensus call. Pulled from the labels we built earlier;
+            # empty when nothing fired.
             _po3_bits = []
             if kz_label:    _po3_bits.append(kz_label.replace("PO3 session ", "").replace("'", ""))
             if range_label: _po3_bits.append(range_label.replace("PO3 range: ", "range:"))
             if fvg_label:   _po3_bits.append(fvg_label.replace("FVG: ", "FVG:"))
+            if bp_label:    _po3_bits.append(bp_label.replace("bear-phase: ", "phase:"))
             _po3_summary = f"PO3 [{' · '.join(_po3_bits)}]" if _po3_bits else ""
 
             base_summary = " · ".join(prep.get("key_conditions", [])[:2])
@@ -337,6 +362,7 @@ def _score_finalists_with_agents(finalists: list, conn,
                 "_po3_range":     range_label,
                 "_po3_fvg":       fvg_label,
                 "_po3_session":   kz_label,
+                "_bear_phase":    bp_label,
                 "rr_ratio":       prep.get("rr_ratio", 0),
                 "key_conditions": prep.get("key_conditions", []),
                 "chart_png_b64":  prep.get("chart_png_b64", ""),

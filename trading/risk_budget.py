@@ -115,6 +115,37 @@ def _effective_notional_cap(equity_usdt: float) -> float:
                 equity_usdt * config.MAX_NOTIONAL_PCT)
 
 
+def _drawdown_dampener(equity_usdt: float) -> tuple[float, str]:
+    """
+    Graduated drawdown response (Bear Market Strategy Ch 8).
+
+    Returns (risk_multiplier, reason). Scales DOWN risk as total
+    drawdown grows, BEFORE the binary breakers trip. Smooths the
+    transition between "trade normally" and "force-stop":
+
+      0   to -5%   total DD → 1.00× (normal)
+      -5  to -10%  total DD → 0.75× (caution: review trades)
+      -10 to -15%  total DD → 0.50× (warning: pause aggressive setups)
+      below -15%               → kill_switch breaker handles it
+
+    The breaker (-15% TOTAL_DD_BREAKER_PCT) still trips as a hard stop.
+    This function only graduates the path TO the breaker, giving more
+    runway to recover before being force-flat.
+    """
+    start_eq = config.starting_equity()
+    if start_eq <= 0:
+        return 1.0, ""
+    dd_pct = (equity_usdt - start_eq) / start_eq    # negative when below start
+    if dd_pct >= -0.05:
+        return 1.0, ""
+    if dd_pct >= -0.10:
+        return 0.75, f"DD {dd_pct*100:.1f}% in 5-10% zone — risk ×0.75 (caution)"
+    if dd_pct >= -0.15:
+        return 0.50, f"DD {dd_pct*100:.1f}% in 10-15% zone — risk ×0.50 (warning)"
+    # below -15% — breaker should already have tripped, but if not, lock to minimum
+    return 0.25, f"DD {dd_pct*100:.1f}% past 15% danger zone — risk ×0.25 (crisis)"
+
+
 def size_trade(score: int, entry: float, sl: float,
                equity_usdt: Optional[float] = None,
                conn=None) -> Optional[dict]:
@@ -150,7 +181,12 @@ def size_trade(score: int, entry: float, sl: float,
     wins = _consecutive_wins(conn)
     streak_mult = _streak_multiplier(wins)
 
-    risk_dollars = eq * config.RISK_PER_TRADE_PCT * score_mult * streak_mult
+    # Bear Market Strategy — graduated drawdown dampener. Scales risk
+    # DOWN as equity bleeds toward the breaker. Runs BEFORE the breaker
+    # check so we glide into safety rather than slam into it.
+    dd_mult, dd_reason = _drawdown_dampener(eq)
+
+    risk_dollars = eq * config.RISK_PER_TRADE_PCT * score_mult * streak_mult * dd_mult
     sl_dist_pct = abs(entry - sl) / entry
     if sl_dist_pct < 0.002:   # SL closer than 0.2% — would be unreasonable lev
         return None
@@ -174,6 +210,8 @@ def size_trade(score: int, entry: float, sl: float,
         "score_multiplier":   score_mult,
         "streak_multiplier":  streak_mult,
         "win_streak":         wins,
+        "dd_dampener":        round(dd_mult, 2),
+        "dd_dampener_reason": dd_reason,
         "effective_cap_usdt": round(cap, 2),
         "capped":             notional_raw > cap,
     }

@@ -111,6 +111,30 @@ Context tags (no direct score, surfaced in `parts` for Sonnet to read):
   - unfilled FVG count (bullish/bearish, 4H) via `chart_fvg.detect_unfilled_fvgs`
   - RSI regime (bullish/bearish/range) tag from `chart_rsi.classify_regime`
 
+## Bear Market Strategy (2026-05-23)
+Two pieces from the bear-market framework, scoped to what makes sense
+for an intraday futures auto-trader (the spot DCA / portfolio sections
+were skipped — we don't hold spot):
+
+- **Graduated drawdown dampener** (`trading.risk_budget._drawdown_dampener`):
+  Risk multiplier scales DOWN as total drawdown grows, BEFORE the binary
+  -15% breaker trips. 0 to -5% DD → 1.0× | -5 to -10% → 0.75× |
+  -10 to -15% → 0.50× | below -15% → 0.25× (and breaker also trips).
+  Applied as another multiplicand in `risk_dollars` alongside score_mult
+  and streak_mult. Surfaced as `dd_dampener` + `dd_dampener_reason` in
+  sizing payload.
+
+- **Bear phase classifier** (`bear_phase.classify_phase` +
+  `phase_alignment_weight`): rule-based classifier from F&G + BTC 24h +
+  BTC.D + HMM regime → returns one of {distribution, decline, capitulation,
+  recovery, unknown} with a Long/Short bias.
+    - distribution / decline   → favor Shorts
+    - capitulation / recovery  → favor Longs
+  Setup direction agreeing with phase bias = +0.3 score modifier; fighting
+  it = -0.3. Applied in scanner Stage 3 alongside the PO3 modifiers.
+  Surfaced in setup `_bear_phase` field and the `summary` line Sonnet
+  consensus reads.
+
 ## Profit Compounding Strategy (`trading/risk_budget.py`, 2026-05-23)
 Streak-based progressive risk + dynamic notional cap from the trader research
 Company Profit Compounding Strategy sheet. Sizing now goes:
