@@ -304,6 +304,21 @@ def get_contract_spec(symbol: str) -> dict:
             "size_step": 0.0001, "min_size": 0}
 
 
+def _fetch_atr_4h(symbol: str) -> float:
+    """4H ATR from the shared chart_context cache. Used by ATR-based
+    SL/TP repair when the scanner's levels are pathological. Returns 0
+    on any failure so the caller can fall back to passing-through the
+    original (possibly bad) levels — the executor will fail loudly at
+    Bitget's validator rather than silently submitting noise."""
+    try:
+        import chart_context
+        ctx = chart_context.get_chart_context(symbol, ["4H"]) or {}
+        atr = (ctx.get("4H", {}).get("indicators", {}).get("atr") or {})
+        return float(atr.get("value") or 0)
+    except Exception:
+        return 0.0
+
+
 def _snap_price(price: float, decimals: int) -> float:
     """Snap a price to the symbol's tick grid by rounding to N decimal
     places. Bitget rejects orders whose price/SL/TP aren't multiples of
