@@ -94,24 +94,40 @@ def evaluate(scanner_setup: dict, conn) -> dict:
         "summary":      ai_summary,
     }
 
-    # Disagreement rules
+    # Disagreement rules. All rejection payloads include the AI's
+    # rationale (summary + warnings) so the operator can see WHY Sonnet
+    # disagreed — not just that it did. Without this the decision log
+    # tells you a setup was killed but gives no learnable signal.
     if ai_score < SCANNER_MIN_SCORE:
         base["reason"] = f"AI scored {ai_score} (below {SCANNER_MIN_SCORE} threshold)"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
-             json.dumps({"ai_score": ai_score, "reason": base["reason"]}))
+             json.dumps({
+                 "ai_score":  ai_score,
+                 "reason":    base["reason"],
+                 "ai_summary": ai_summary,
+                 "ai_warnings": ai_warns[:3],
+             }))
         return base
 
     if ai_dir and direction and ai_dir.lower() != direction.lower():
         base["reason"] = f"direction mismatch (scanner={direction}, AI={ai_dir})"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
-             json.dumps({"reason": base["reason"]}))
+             json.dumps({
+                 "reason":     base["reason"],
+                 "ai_score":   ai_score,
+                 "ai_summary": ai_summary,
+             }))
         return base
 
     if any("critical" in str(w).lower() or "high risk" in str(w).lower()
            for w in ai_warns):
         base["reason"] = f"AI flagged critical warning: {ai_warns[:1]}"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
-             json.dumps({"warnings": ai_warns}))
+             json.dumps({
+                 "warnings":   ai_warns,
+                 "ai_score":   ai_score,
+                 "ai_summary": ai_summary,
+             }))
         return base
 
     base["approved"]        = True
