@@ -11,7 +11,9 @@ Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI
 </p>
 
 <p align="center">
-  <a href="docs/architecture_detailed.pdf">Architecture PDF</a>
+  <a href="docs/architecture.md">Architecture Doc</a> ·
+  <a href="docs/USER_GUIDE.md">User Guide</a> ·
+  <a href="docs/MODULE_MAP.md">Module Map</a>
 </p>
 
 ---
