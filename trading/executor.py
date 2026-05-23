@@ -435,7 +435,13 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
     if atr <= 0:
         return actions
 
-    entry   = float(db_pos.get("entry_price") or live.get("entry_price") or 0)
+    # Use Bitget's reported entry as the authoritative price — it's the actual
+    # averaged fill, vs db_pos.entry_price which is the signal/target price
+    # the executor *intended* to fill at. The two can drift by ~0.05-0.10% on
+    # market entries due to slippage. The BE buffer must be applied to the
+    # REAL fill so the buffer math (entry × 1.0015 for Long) actually nets
+    # the trader ≥ $0 on an SL fill.
+    entry   = float(live.get("entry_price") or db_pos.get("entry_price") or 0)
     mark    = float(live.get("mark_price") or 0)
     is_long = live["direction"].lower() == "long"
     if entry <= 0 or mark <= 0:
@@ -461,9 +467,14 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
         return actions
 
     # Trail — +2× ATR (move SL to entry + 0.5× ATR)
+    # Same tick-rounding epsilon as the BE block — Bitget rounds the SL it
+    # reports back, so a full-precision new_sl > current_sl compare would
+    # re-fire every cycle on identical positions.
     if current_pct >= atr_pct * 2.0:
         new_sl = entry + sign * (atr * 0.5)
-        if (is_long and new_sl > current_sl) or (not is_long and new_sl < current_sl):
+        gap_pct = abs(new_sl - current_sl) / entry if entry else 0
+        if ((is_long and new_sl > current_sl) or (not is_long and new_sl < current_sl)) \
+                and gap_pct >= 0.0005:
             try:
                 result = bitget_trader.modify_position_sl(
                     live["symbol"], live["direction"].lower(), new_sl
@@ -487,9 +498,21 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
     # SL must NOT be placed at raw entry: hitting it would still cost the
     # round-trip taker fee (~0.12% on Bitget) + a slippage allowance, locking
     # in a small loss. fa_config.be_price_for() applies the buffer.
+    #
+    # `current_sl` is Bitget's tick-rounded reported value (e.g. 134.55 for
+    # an internally-computed 134.5515). A naive `be_sl > current_sl` compare
+    # in full precision will spuriously fire a redundant move every monitor
+    # cycle. Compare with a 0.05% epsilon — that's well below the BE buffer
+    # itself (0.15%) and well above any tick-rounding noise.
     if current_pct >= atr_pct * 1.0:
         be_sl = fa_config.be_price_for(entry, is_long)
-        be_is_tighter = (be_sl > current_sl) if is_long else (be_sl < current_sl)
+        gap_pct = abs(be_sl - current_sl) / entry if entry else 0
+        # "tighter" means the be_sl moves toward favorable side AND is
+        # materially different from current_sl (more than tick noise).
+        if is_long:
+            be_is_tighter = (be_sl > current_sl) and (gap_pct >= 0.0005)
+        else:
+            be_is_tighter = (be_sl < current_sl) and (gap_pct >= 0.0005)
         if be_is_tighter:
             try:
                 result = bitget_trader.modify_position_sl(

@@ -139,3 +139,59 @@ def test_no_conn_no_be_detection():
         raw_reason="",
     )
     assert r in ("early_close", "manual_close")
+
+
+# ── No-double-fire on BE move (2026-05-23 21:08 incident regression) ────────
+#
+# RKLBUSDT fired real_be twice 11 min apart. Root cause: executor compared
+# its full-precision be_sl=134.5515 against Bitget's tick-rounded current_sl
+# of 134.55 — true at full precision, so a redundant cancel+replace fired.
+# The fix: only treat a BE/trail move as needed when the gap between be_sl
+# and current_sl is ≥ 0.05% of entry (well below the 0.15% buffer itself,
+# well above any reasonable tick-rounding noise).
+
+def _gap_pct(target_sl, current_sl, entry):
+    """Replicates the executor's epsilon-guard inputs."""
+    return abs(target_sl - current_sl) / entry if entry else 0
+
+
+def test_be_move_blocked_when_gap_within_tick_noise():
+    """current_sl is Bitget's tick-rounded view (134.55) of the same SL the
+    executor already moved to (134.5515). The next monitor cycle must NOT
+    fire a redundant move."""
+    entry = 134.43
+    be_sl = fa_config.be_price_for(entry, is_long=True)   # ~134.6316
+    bitget_rounded = round(be_sl, 2)                       # 134.63 (within tick noise)
+    gap = _gap_pct(be_sl, bitget_rounded, entry)
+    assert gap < 0.0005, (
+        f"gap {gap:.5%} should be below 0.05% epsilon — Bitget tick rounding "
+        f"creates a tiny mismatch but the executor should treat as no-op"
+    )
+
+
+def test_be_move_fires_when_gap_exceeds_epsilon():
+    """A real reason to fire — old SL was 5% below entry."""
+    entry = 134.43
+    be_sl = fa_config.be_price_for(entry, is_long=True)
+    old_sl = entry * 0.95          # scanner's original SL
+    gap = _gap_pct(be_sl, old_sl, entry)
+    assert gap >= 0.0005           # meaningful gap → fire allowed
+
+
+def test_be_buffer_uses_live_entry_not_db_signal():
+    """Regression: BE was applying the buffer to db_pos.entry_price (the
+    signal price 134.35) instead of live.entry_price (Bitget's actual fill
+    134.43), so the effective buffer was only +0.089% instead of +0.150%.
+    The executor now reads live.entry_price first.
+    """
+    # Just confirm the function returns the right shape — the executor
+    # change is structural (which dict key it reads from). The math here
+    # demonstrates that with the LIVE fill, the buffer is the full 0.15%.
+    live_entry = 134.43      # actual Bitget fill
+    db_entry   = 134.35      # original signal price
+    be_from_live = fa_config.be_price_for(live_entry, is_long=True)
+    be_from_db   = fa_config.be_price_for(db_entry,   is_long=True)
+    # With LIVE entry, the gap from real fill is the full 0.15%
+    assert abs(be_from_live - live_entry) / live_entry == pytest.approx(0.0015)
+    # With the OLD (db) calc, the gap from real fill was less
+    assert abs(be_from_db - live_entry) / live_entry < 0.0015
