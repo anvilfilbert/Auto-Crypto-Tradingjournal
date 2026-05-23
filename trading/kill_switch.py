@@ -52,18 +52,39 @@ def _daily_pnl_pct(conn) -> float:
     Auto-trader's realized P&L over the last 24h as a fraction of
     starting equity. Restricted to auto_ai chain (real) or paper_positions
     (paper) so manual trades cannot trip the auto-trader's breakers.
+    Honors the operator-initiated breaker reset stamp — losses closed
+    before the reset don't count.
     """
+    reset_at = config.breaker_reset_at(conn)
     try:
         if config.is_real_mode():
-            r = conn.execute(
-                "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
-                "WHERE chain='auto_ai' AND close_time >= datetime('now','-24 hours')"
-            ).fetchone()
+            if reset_at:
+                r = conn.execute(
+                    "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
+                    "WHERE chain='auto_ai' "
+                    "AND close_time >= datetime('now','-24 hours') "
+                    "AND close_time > ?",
+                    (reset_at,),
+                ).fetchone()
+            else:
+                r = conn.execute(
+                    "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
+                    "WHERE chain='auto_ai' AND close_time >= datetime('now','-24 hours')"
+                ).fetchone()
         else:
-            r = conn.execute(
-                "SELECT COALESCE(SUM(realized_pnl),0) FROM paper_positions "
-                "WHERE status='closed' AND closed_at >= datetime('now','-24 hours')"
-            ).fetchone()
+            if reset_at:
+                r = conn.execute(
+                    "SELECT COALESCE(SUM(realized_pnl),0) FROM paper_positions "
+                    "WHERE status='closed' "
+                    "AND closed_at >= datetime('now','-24 hours') "
+                    "AND closed_at > ?",
+                    (reset_at,),
+                ).fetchone()
+            else:
+                r = conn.execute(
+                    "SELECT COALESCE(SUM(realized_pnl),0) FROM paper_positions "
+                    "WHERE status='closed' AND closed_at >= datetime('now','-24 hours')"
+                ).fetchone()
         pnl = float(r[0] or 0)
         return pnl / max(config.starting_equity(), 1)
     except Exception:
@@ -71,20 +92,42 @@ def _daily_pnl_pct(conn) -> float:
 
 
 def _consecutive_losses(conn) -> int:
-    """Count of consecutive auto-trader losers up to the most recent close."""
+    """Count of consecutive auto-trader losers up to the most recent close.
+    Honors the operator-initiated breaker reset stamp — only counts trades
+    closed AFTER the reset, so an operator override forgives prior losses
+    for breaker purposes but new losses still re-trip if 3 in a row."""
+    reset_at = config.breaker_reset_at(conn)
     try:
         if config.is_real_mode():
-            rows = conn.execute(
-                "SELECT realized_pnl FROM positions "
-                "WHERE chain='auto_ai' AND close_time IS NOT NULL AND close_time != '' "
-                "ORDER BY close_time DESC LIMIT 10"
-            ).fetchall()
+            if reset_at:
+                rows = conn.execute(
+                    "SELECT realized_pnl FROM positions "
+                    "WHERE chain='auto_ai' "
+                    "AND close_time IS NOT NULL AND close_time != '' "
+                    "AND close_time > ? "
+                    "ORDER BY close_time DESC LIMIT 10",
+                    (reset_at,),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT realized_pnl FROM positions "
+                    "WHERE chain='auto_ai' AND close_time IS NOT NULL AND close_time != '' "
+                    "ORDER BY close_time DESC LIMIT 10"
+                ).fetchall()
         else:
-            rows = conn.execute(
-                "SELECT realized_pnl FROM paper_positions "
-                "WHERE status='closed' "
-                "ORDER BY closed_at DESC LIMIT 10"
-            ).fetchall()
+            if reset_at:
+                rows = conn.execute(
+                    "SELECT realized_pnl FROM paper_positions "
+                    "WHERE status='closed' AND closed_at > ? "
+                    "ORDER BY closed_at DESC LIMIT 10",
+                    (reset_at,),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT realized_pnl FROM paper_positions "
+                    "WHERE status='closed' "
+                    "ORDER BY closed_at DESC LIMIT 10"
+                ).fetchall()
         n = 0
         for (pnl,) in rows:
             if (pnl or 0) <= 0:
@@ -212,4 +255,5 @@ def evaluate(conn) -> dict:
         "consecutive_losses":    n_losses,
         "open_positions":        n_open,
         "max_concurrent":        config.MAX_CONCURRENT_POSITIONS,
+        "breaker_reset_at":      config.breaker_reset_at(conn),
     }

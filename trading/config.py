@@ -122,7 +122,16 @@ def get_state(conn=None) -> str:
 
 def set_state(new_state: str, conn=None, reason: Optional[str] = None) -> str:
     """Persist a state transition. Returns the new effective state.
-    Reason gets logged to the trader audit log if conn is provided."""
+    Reason gets logged to the trader audit log if conn is provided.
+
+    Operator override semantics — when transitioning out of
+    `circuit_breaker` to `active`, also stamp `futures_ai_breaker_reset_at`
+    with the current UTC time. The killswitch's consecutive-loss and
+    daily-DD calculations honor this stamp by only counting trades closed
+    AFTER it, so the operator's explicit "I've reviewed" decision forgives
+    the past losses for breaker purposes. New losses post-reset still
+    count normally, so 3 fresh losses will re-trip the breaker.
+    """
     if new_state not in VALID_STATES:
         raise ValueError(f"invalid state {new_state!r}; "
                           f"must be one of {VALID_STATES}")
@@ -131,25 +140,57 @@ def set_state(new_state: str, conn=None, reason: Optional[str] = None) -> str:
         with db_conn() as c:
             return set_state(new_state, c, reason)
 
+    prev_state = get_state(conn)
+
     conn.execute("""
         INSERT INTO settings(key, value) VALUES('futures_ai_state', ?)
         ON CONFLICT(key) DO UPDATE SET value=excluded.value
     """, (new_state,))
+
+    # Operator-initiated recovery from circuit_breaker → active stamps
+    # the reset timestamp so the killswitch's history-based breakers
+    # start counting fresh from this moment.
+    breaker_reset = False
+    if (prev_state == "circuit_breaker"
+            and new_state == "active"):
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute("""
+            INSERT INTO settings(key, value) VALUES('futures_ai_breaker_reset_at', ?)
+            ON CONFLICT(key) DO UPDATE SET value=excluded.value
+        """, (now,))
+        breaker_reset = True
+
     conn.commit()
 
     # Record the transition so we have a full audit trail
     try:
+        payload = f'{{"to":"{new_state}","from":"{prev_state}",' \
+                  f'"reason":{repr(reason or "user")},' \
+                  f'"breaker_reset":{str(breaker_reset).lower()}}}'
         conn.execute("""
             INSERT INTO futures_ai_log(ts, event, payload_json)
             VALUES (datetime('now'), 'state_change', ?)
-        """, (
-            f'{{"to":"{new_state}","reason":{repr(reason or "user")}}}',
-        ))
+        """, (payload,))
         conn.commit()
     except Exception:
         pass   # log table may not exist yet on fresh DB
 
     return new_state
+
+
+def breaker_reset_at(conn=None) -> Optional[str]:
+    """Returns the UTC timestamp ('YYYY-MM-DD HH:MM:SS') of the last
+    operator-initiated breaker reset, or None if never reset. Used by
+    kill_switch to filter loss history."""
+    if conn is None:
+        from database import db_conn
+        with db_conn() as c:
+            return breaker_reset_at(c)
+    row = conn.execute(
+        "SELECT value FROM settings WHERE key='futures_ai_breaker_reset_at'"
+    ).fetchone()
+    return row[0] if row and row[0] else None
 
 
 def snapshot() -> dict:
