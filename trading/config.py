@@ -88,6 +88,26 @@ MIN_TP_SLICE_USDT = float(os.environ.get("FUTURES_AI_MIN_TP_SLICE_USDT", "5.0"))
 BE_BUFFER_PCT = float(os.environ.get("FUTURES_AI_BE_BUFFER_PCT", "0.0015"))
 
 
+# ── Entry-drift guard ────────────────────────────────────────────────────────
+#
+# Scanner Stage 1/2 derives signal["entry_price"] from a closed-candle reference
+# (4H/1H/scanner output). The orchestrator then sends a MARKET order to Bitget,
+# which fills at the *current* mark — which can be meaningfully different on
+# fast/illiquid moves between scan-time and execution-time (observed: QNTUSDT
+# +7.3% drift 2026-05-24 00:02 UTC; ARKMUSDT +21% drift 2026-05-24 08:09 UTC).
+# The TP ladder is anchored to the scanner entry; on a Long with up-drift,
+# TP1/TP2 end up BELOW the actual fill — they'd fire as partial losses if
+# Phase-2 plan-order execution were live.
+#
+# Guard: in `executor.open_real_trade`, if abs(fill - signal.entry) / signal.entry
+# exceeds MAX_ENTRY_DRIFT_PCT, the position is closed immediately and a
+# `real_entry_drift_aborted` event logged. The trade is refused, not retried.
+#
+# Set to 0 (or empty) to disable the guard entirely — discouraged but possible
+# if the operator wants to opt out for testing.
+MAX_ENTRY_DRIFT_PCT = float(os.environ.get("FUTURES_AI_MAX_ENTRY_DRIFT_PCT", "0.02"))
+
+
 def be_price_for(entry: float, is_long: bool, buffer_pct: float = None) -> float:
     """Return the break-even SL price that covers round-trip fees + slippage.
 

@@ -276,6 +276,54 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
              {"symbol": sym, "direction": dir_, "error": str(e)[:200]})
         return None
 
+    # ── Entry-drift guard ────────────────────────────────────────────────────
+    # The scanner derives `signal["entry_price"]` from a recent candle close.
+    # A fast move between scan-time and order-time can mean the market fill
+    # is meaningfully above (Long) / below (Short) the intended entry. Two
+    # consecutive trades on 2026-05-24 hit this — QNTUSDT +7.3% drift,
+    # ARKMUSDT +21% drift. The TP ladder is anchored to the SCANNER entry,
+    # so when fill drifts up on a Long, TP1/TP2 end up BELOW entry → they
+    # would fire as partial losses on Phase-2 execution. The setup's premise
+    # (Opus's entry-zone reasoning) is also gone if price moved that much.
+    #
+    # Mitigation: if |fill - signal.entry| / signal.entry > tolerance, close
+    # the position immediately and log a real_entry_drift_aborted event.
+    # The close is at the same market price + a few seconds later — slippage
+    # is bounded and predictable. Better to eat ~0.1% in fees than ride a
+    # broken ladder for hours.
+    fill_px = float(result.get("mark_at_entry") or 0)
+    intended_entry = float(signal.get("entry_price") or 0)
+    if (fill_px and intended_entry and
+            fa_config.MAX_ENTRY_DRIFT_PCT > 0):
+        drift = abs(fill_px - intended_entry) / intended_entry
+        if drift > fa_config.MAX_ENTRY_DRIFT_PCT:
+            try:
+                bitget_trader.close_position(sym, dir_.lower(), percentage=100.0)
+            except Exception as e:
+                _log(conn, "real_entry_drift_close_failed", None, {
+                    "symbol": sym, "direction": dir_,
+                    "intended_entry": intended_entry, "fill_price": fill_px,
+                    "drift_pct": round(drift * 100, 3),
+                    "error": str(e)[:200],
+                })
+                # Even on close failure we don't try to "recover" — the
+                # ladder is already wrong; let the operator see this state.
+                return None
+            _log(conn, "real_entry_drift_aborted", None, {
+                "symbol":         sym,
+                "direction":      dir_,
+                "intended_entry": intended_entry,
+                "fill_price":     fill_px,
+                "drift_pct":      round(drift * 100, 3),
+                "tolerance_pct":  fa_config.MAX_ENTRY_DRIFT_PCT * 100,
+                "tp1":            signal.get("tp1_price"),
+                "tp2":            signal.get("tp2_price"),
+                "sl":             signal.get("sl_price"),
+                "order_id":       result.get("order_id"),
+                "client_oid":     client_oid,
+            })
+            return None
+
     pos_id = _insert_open_position(conn, signal, sizing, result)
     _log(conn, "real_open", pos_id, {
         "symbol":         sym,
