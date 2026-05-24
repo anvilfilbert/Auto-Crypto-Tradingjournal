@@ -21,10 +21,12 @@ import pytest
 def _stub_module(name):
     sys.modules.setdefault(name, types.ModuleType(name))
 
-for _m in ("bitget_client", "trading.bitget_trader", "trading.bitget_trader",
-           "trading.signal_consensus", "ai_client", "ai_call",
-           "agent_orchestrator", "prompt_builder", "gemini_client", "consensus",
-           "agent_chart_draw"):
+# NB: we deliberately do NOT stub `trading.signal_consensus` here even
+# though executor imports it transitively. Stubbing leaks across test files
+# and breaks the multi_tp tests that need the real module (2026-05-24).
+for _m in ("bitget_client", "trading.bitget_trader",
+           "ai_client", "ai_call", "agent_orchestrator", "prompt_builder",
+           "gemini_client", "consensus", "agent_chart_draw"):
     _stub_module(_m)
 
 

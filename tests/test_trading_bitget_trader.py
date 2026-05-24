@@ -9,6 +9,15 @@ Focused on the two real-money bugs caught during the 2026-05-23 audit:
 
 These tests use mocked _request so they DON'T hit Bitget live.
 """
+import sys
+
+# Earlier test files may have stubbed `trading.bitget_trader` with a
+# MagicMock-only module to test executor in isolation. We need the REAL
+# implementation to test it here, so evict any stale stub from sys.modules
+# BEFORE this module's tests resolve their `from trading import bitget_trader`
+# imports (2026-05-24 cross-file pollution fix).
+sys.modules.pop("trading.bitget_trader", None)
+
 from unittest.mock import patch, MagicMock
 import pytest
 
@@ -164,9 +173,12 @@ class TestCloseReasonCategorisation:
         assert _categorize_close_reason(0.1, 100.0, 100.3, "Long") == "early_close"
 
     def test_be_trigger_passes_through(self):
+        # The close_reason label was renamed BE → BE_stop on 2026-05-24
+        # to distinguish "BE-move event" (real_be in the log) from
+        # "stop fired at the BE-moved level" (the close_reason).
         from trading.executor import _categorize_close_reason
         assert _categorize_close_reason(0, 100, 100, "Long",
-                                          raw_reason="be_trigger fired") == "BE"
+                                          raw_reason="be_trigger fired") == "BE_stop"
 
     def test_hedge_unwind_preserved(self):
         from trading.executor import _categorize_close_reason

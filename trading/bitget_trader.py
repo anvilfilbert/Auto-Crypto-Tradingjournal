@@ -348,6 +348,7 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
                         sl_price: Optional[float] = None,
                         tp1_price: Optional[float] = None,
                         tp2_price: Optional[float] = None,
+                        tp_levels: Optional[list] = None,
                         client_oid: Optional[str] = None) -> dict:
     """
     Place a market entry with preset SL + TP. Bitget V2 lets you bundle
@@ -513,10 +514,59 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
     # immediately after the entry fills.
     attached_sl  = False
     attached_tp1 = False
+    tp_attach_results: list = []   # [{idx, price, pct, size, ok}] per tier
     if sl_price:
         attached_sl = _try_place_tpsl(symbol, side, sl_price,
                                        size_contracts, plan_type="loss_plan")
-    if tp1_price:
+
+    # ── Multi-TP plan-order placement (Phase 2) ────────────────────────────
+    # When tp_levels is provided (list of {idx, price, pct, ...}), place ONE
+    # profit_plan per tier sized at size_contracts × pct/100. Falls back to
+    # the legacy single-TP path (tp1_price) when tp_levels is None or empty
+    # so older callers + tests keep working.
+    if tp_levels:
+        # Snap each tier's price to tick + size to step. Skip tiers where
+        # the slice is below the symbol's min order size — Bitget would
+        # reject and we'd leak the order.
+        remaining = size_contracts
+        for i, lvl in enumerate(tp_levels):
+            try:
+                price_raw = float(lvl.get("price") or 0)
+                pct_raw   = float(lvl.get("pct") or 0)
+            except (TypeError, ValueError):
+                continue
+            if price_raw <= 0 or pct_raw <= 0:
+                continue
+            # For the LAST tier we close whatever's left over so rounding
+            # noise doesn't leave a sliver of position un-closed (Bitget
+            # then refuses the close because <min_size).
+            if i == len(tp_levels) - 1:
+                slice_size = round(remaining, vp)
+            else:
+                slice_size = size_contracts * pct_raw / 100.0
+                # Snap to volumePlace precision so Bitget accepts
+                slice_size = round(slice_size, vp)
+            if slice_size <= 0:
+                continue
+            # Refuse sub-min-size slices — Bitget rejects them silently
+            min_sz = float(spec.get("min_size") or 0)
+            if min_sz and slice_size < min_sz:
+                continue
+            tp_price = _snap_price(price_raw, pp)
+            ok = _try_place_tpsl(symbol, side, tp_price,
+                                  slice_size, plan_type="profit_plan")
+            tp_attach_results.append({
+                "idx":   int(lvl.get("idx") or i + 1),
+                "price": tp_price,
+                "pct":   pct_raw,
+                "size":  slice_size,
+                "ok":    ok,
+            })
+            if ok and i == 0:
+                attached_tp1 = True  # back-compat flag
+            remaining = max(0.0, remaining - slice_size)
+    elif tp1_price:
+        # Legacy single-TP path — preserved for backward compat
         attached_tp1 = _try_place_tpsl(symbol, side, tp1_price,
                                         size_contracts, plan_type="profit_plan")
 
@@ -555,6 +605,7 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
         "tp2":                  tp2_price,
         "attached_sl":          attached_sl,
         "attached_tp1":         attached_tp1,
+        "tp_attach_results":    tp_attach_results,   # Phase 2 — per-tier outcomes
     }
 
 

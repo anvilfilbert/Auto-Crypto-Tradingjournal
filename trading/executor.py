@@ -269,6 +269,8 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
             sl_price    = signal.get("sl_price"),
             tp1_price   = signal.get("tp1_price"),
             tp2_price   = signal.get("tp2_price"),
+            # Phase 2: full ladder. trader attaches one plan order per tier.
+            tp_levels   = signal.get("tp_levels"),
             client_oid  = client_oid,
         )
     except Exception as e:
@@ -468,6 +470,67 @@ def force_close_all(conn) -> int:
     return n
 
 
+# ── TP-fill detector (Phase 2 of multi-TP) ──────────────────────────────────
+
+def _detect_tp_fills(conn, db_pos: dict, live: dict) -> list[dict]:
+    """Compare the ORIGINALLY-placed tp_levels (stored in db_pos.tp_levels
+    JSON at trade-open) against what's STILL pending on Bitget side (live.
+    tp_levels — populated from /orders-plan-pending).
+
+    A tier whose price is no longer in the pending list but is also not
+    yet marked .hit must have FIRED. Update its .hit=True / .hit_at=<utc>
+    and persist back to the JSON column.
+
+    Returns the list of newly-detected fills (empty list = no change).
+    The CALLER decides what to do with each fill (log + BE-on-TP1 trigger).
+    """
+    raw = db_pos.get("tp_levels")
+    if not raw:
+        return []
+    try:
+        db_tps = json.loads(raw)
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(db_tps, list) or len(db_tps) <= 1:
+        # Single-TP positions don't need Phase-2 reconciliation —
+        # the existing /position-history path handles their close.
+        return []
+
+    # Build a set of currently-pending TP prices (snapped to micro-precision
+    # so tick-rounding differences don't cause a false-positive "fill").
+    live_tps = live.get("tp_levels") or []
+    pending_prices = {round(float(t.get("price") or 0), 6) for t in live_tps}
+
+    newly_filled: list[dict] = []
+    for tp in db_tps:
+        if tp.get("hit"):
+            continue
+        try:
+            price_key = round(float(tp.get("price") or 0), 6)
+        except (TypeError, ValueError):
+            continue
+        if price_key and price_key not in pending_prices:
+            tp["hit"]    = True
+            tp["hit_at"] = _utc_iso_now()
+            newly_filled.append(tp)
+
+    if newly_filled:
+        try:
+            conn.execute(
+                "UPDATE positions SET tp_levels = ? WHERE id = ?",
+                (json.dumps(db_tps), db_pos["id"]),
+            )
+            conn.commit()
+        except Exception:
+            pass
+    return newly_filled
+
+
+def _utc_iso_now() -> str:
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
 # ── Lifecycle rules — mirror position_risk_monitor's thresholds ─────────────
 
 def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
@@ -499,6 +562,55 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
     current_pct = (mark - entry) / entry * 100.0 * sign
     atr_pct     = atr / entry * 100.0
     current_sl  = float(live.get("preset_sl") or entry)   # bitget side-of-truth
+
+    # ── Phase 2: TP-fill detection ──────────────────────────────────────────
+    # Compare ORIGINALLY-placed tp_levels (stored in DB at trade open) vs
+    # what's still PENDING on Bitget. Any tier that disappeared from
+    # pending = filled. Log it; if TP1 just fired, also fire the BE move
+    # (operator default 2026-05-24: yes, first profit = capital protection).
+    filled_tps = _detect_tp_fills(conn, db_pos, live)
+    for tp in filled_tps:
+        idx = tp.get("idx") or "?"
+        _log(conn, "real_tp_hit", db_pos["id"], {
+            "symbol":        live["symbol"],
+            "tp_idx":        idx,
+            "trigger_price": tp.get("price"),
+            "size_pct":      tp.get("pct"),
+            "hit_at":        tp.get("hit_at"),
+        })
+        actions.append(f"tp{idx}_hit")
+    # If TP1 just fired, force-move SL to BE+buffer regardless of ATR position.
+    # Standard playbook: first partial = capital protection. Skip if SL is
+    # already at/past BE (current_sl already favourable).
+    if any((t.get("idx") == 1) for t in filled_tps):
+        be_sl = fa_config.be_price_for(entry, is_long)
+        gap_pct = abs(be_sl - current_sl) / entry if entry else 0
+        sl_already_protective = (current_sl >= be_sl) if is_long else (current_sl <= be_sl)
+        if not sl_already_protective and gap_pct >= 0.0005:
+            try:
+                result = bitget_trader.modify_position_sl(
+                    live["symbol"], live["direction"].lower(), be_sl
+                )
+                if result.get("ok"):
+                    _log(conn, "real_be", db_pos["id"], {
+                        "symbol": live["symbol"], "old_sl": current_sl,
+                        "new_sl": be_sl, "entry": entry,
+                        "buffer_pct": fa_config.BE_BUFFER_PCT,
+                        "trigger":    "tp1_hit",
+                        "result":     result,
+                    })
+                    actions.append("be_moved_on_tp1")
+                    current_sl = be_sl   # update local for downstream checks
+                else:
+                    _log(conn, "real_be_failed", db_pos["id"], {
+                        "symbol": live["symbol"], "trigger": "tp1_hit",
+                        "reason": result.get("reason", "unknown"),
+                    })
+            except Exception as e:
+                _log(conn, "real_be_failed", db_pos["id"], {
+                    "symbol": live["symbol"], "trigger": "tp1_hit",
+                    "error":  str(e)[:200],
+                })
 
     # MAE breach — -1× ATR (matches position_risk_monitor)
     if current_pct <= -atr_pct * 1.0:

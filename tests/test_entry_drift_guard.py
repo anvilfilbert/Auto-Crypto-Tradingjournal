@@ -24,15 +24,11 @@ for _m in (
 ):
     sys.modules.setdefault(_m, types.ModuleType(_m))
 
-# Stub trading.bitget_trader before executor imports it
-bt = types.ModuleType("trading.bitget_trader")
-bt.place_market_order = MagicMock()
-bt.close_position = MagicMock()
-bt.modify_position_sl = MagicMock()
-bt.get_open_positions = MagicMock(return_value=[])
-sys.modules["trading.bitget_trader"] = bt
-
-# chart_context for the lifecycle path (not exercised here but executor imports it lazily)
+# Stub trading.bitget_trader before executor imports it. Uses setdefault so
+# we don't overwrite a prior test-file's stub (cross-file pollution caused
+# real test failures on 2026-05-24 when test_phase2 + test_drift_guard +
+# test_trading_be_buffer ran together).
+sys.modules.setdefault("trading.bitget_trader", types.ModuleType("trading.bitget_trader"))
 sys.modules.setdefault("chart_context", types.ModuleType("chart_context"))
 
 
@@ -40,7 +36,29 @@ from trading import config as fa_config  # noqa: E402
 from trading import executor  # noqa: E402
 
 
+# Module-level mock holder — re-assigned per test by the autouse fixture
+bt = None
+
+
 # ── Fixtures ────────────────────────────────────────────────────────────────
+
+@pytest.fixture(autouse=True)
+def _patch_trader(monkeypatch):
+    """Patch the executor's bitget_trader reference DIRECTLY (not via sys.modules)
+    so each test gets a fresh MagicMock and the patch unwinds at teardown.
+    This avoids cross-file pollution from tests that swap sys.modules['trading.
+    bitget_trader'] for their own stubs (real failure on 2026-05-24)."""
+    fresh = types.ModuleType("trading.bitget_trader")
+    fresh.place_market_order  = MagicMock()
+    fresh.close_position      = MagicMock()
+    fresh.modify_position_sl  = MagicMock()
+    fresh.get_open_positions  = MagicMock(return_value=[])
+    fresh.get_mark_price      = MagicMock(return_value=0.0)
+    monkeypatch.setattr(executor, "bitget_trader", fresh)
+    # Expose to tests via the module-level `bt` for backward-compat
+    global bt
+    bt = fresh
+
 
 @pytest.fixture()
 def conn():
