@@ -186,12 +186,15 @@ def test_be_buffer_uses_live_entry_not_db_signal():
     """
     # Just confirm the function returns the right shape — the executor
     # change is structural (which dict key it reads from). The math here
-    # demonstrates that with the LIVE fill, the buffer is the full 0.15%.
+    # demonstrates that with the LIVE fill, the buffer is the configured
+    # BE_BUFFER_PCT, not a hardcoded smaller value.
     live_entry = 134.43      # actual Bitget fill
     db_entry   = 134.35      # original signal price
     be_from_live = fa_config.be_price_for(live_entry, is_long=True)
     be_from_db   = fa_config.be_price_for(db_entry,   is_long=True)
-    # With LIVE entry, the gap from real fill is the full 0.15%
-    assert abs(be_from_live - live_entry) / live_entry == pytest.approx(0.0015)
-    # With the OLD (db) calc, the gap from real fill was less
-    assert abs(be_from_db - live_entry) / live_entry < 0.0015
+    # With LIVE entry, the gap from real fill is the full configured buffer
+    assert abs(be_from_live - live_entry) / live_entry == pytest.approx(
+        fa_config.BE_BUFFER_PCT
+    )
+    # With the OLD (db) calc, the gap from real fill is smaller than the buffer
+    assert abs(be_from_db - live_entry) / live_entry < fa_config.BE_BUFFER_PCT

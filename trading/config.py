@@ -79,13 +79,17 @@ MIN_TP_SLICE_USDT = float(os.environ.get("FUTURES_AI_MIN_TP_SLICE_USDT", "5.0"))
 # we still owe the closing taker fee and a small slippage allowance. The
 # buffer is small but compounding: 0.12% × 100 trades = 12% of account.
 #
-# Defaults (operator-tunable via env):
+# Defaults (operator-tunable via env), recalibrated 2026-05-24 after the
+# NXPCUSDT BE_stop closed at -$0.006 because the SL fill slipped 0.04% below
+# the trigger price (Bitget stop-market orders always take the next available
+# price, which is worse than trigger on fast moves):
 #   - Bitget USDT-M futures taker fee:  0.06% (open) + 0.06% (close) = 0.12%
-#   - Slippage allowance on close:       0.03%
-#   - Total round-trip buffer:           0.15%
+#   - Observed slippage on stop fills:   ~0.04% one-side → 0.08% allowance
+#   - Safety cushion:                    0.05%
+#   - Total round-trip buffer:           0.25%
 #
 # Applied direction-aware: Long → SL placed ABOVE entry; Short → BELOW entry.
-BE_BUFFER_PCT = float(os.environ.get("FUTURES_AI_BE_BUFFER_PCT", "0.0015"))
+BE_BUFFER_PCT = float(os.environ.get("FUTURES_AI_BE_BUFFER_PCT", "0.0025"))
 
 
 # ── Entry-drift guard ────────────────────────────────────────────────────────
