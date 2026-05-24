@@ -171,6 +171,85 @@ COMPOUND_STREAK_ENABLED   = os.environ.get(
 MAX_STREAK_MULTIPLIER     = int(os.environ.get(
     "FUTURES_AI_MAX_STREAK_MULT", "3"))   # cap at 3× by default
 
+# Feature 7 — Trade Apgar pre-trade scorecard gate (default OFF until
+# operator validates workflow). When ON: blocks new entries unless a
+# passing Apgar (total ≥7 AND no zeros) exists for today (UTC date).
+APGAR_GATE_ENABLED        = os.environ.get(
+    "FUTURES_AI_APGAR_GATE_ENABLED", "0").strip() == "1"
+APGAR_PASS_THRESHOLD      = int(os.environ.get(
+    "FUTURES_AI_APGAR_PASS_THRESHOLD", "7"))
+
+# Feature 8 — Pre-session readiness gate (default OFF). Red blocks; yellow
+# logs warning but permits; green is normal trading.
+READINESS_GATE_ENABLED    = os.environ.get(
+    "FUTURES_AI_READINESS_GATE_ENABLED", "0").strip() == "1"
+
+
+# Feature 6 — Available-risk monthly gate (Elder's 6% Rule). Blocks new
+# entries when realized monthly loss + open-position risk ≥ MONTHLY_RISK_GATE_PCT
+# × starting_equity. Slow-moving governor that complements daily DD breaker.
+MONTHLY_GATE_ENABLED      = os.environ.get(
+    "FUTURES_AI_MONTHLY_GATE_ENABLED", "1").strip() == "1"
+MONTHLY_RISK_GATE_PCT     = float(os.environ.get(
+    "FUTURES_AI_MONTHLY_RISK_GATE_PCT", "0.06"))   # default 6%
+
+
+# Feature 10 — Euphoria Dampener (Douglas, "Trading in the Zone"): mirror
+# of the loss-streak breaker for wins. After N consecutive wins, position
+# size SHRINKS to prevent post-streak hubris. Default OFF (philosophy
+# conflict with Profit Compounding); operator picks one mode via the UI
+# toggle or env knob FUTURES_AI_STREAK_MODE.
+STREAK_MODE_ENV           = os.environ.get(
+    "FUTURES_AI_STREAK_MODE", "compound").strip().lower()  # compound | euphoria_dampener | off
+EUPHORIA_CAP_WINS         = int(os.environ.get(
+    "FUTURES_AI_EUPHORIA_CAP_WINS", "3"))
+EUPHORIA_SIZE_MULT        = float(os.environ.get(
+    "FUTURES_AI_EUPHORIA_SIZE_MULT", "0.75"))
+
+
+def streak_mode() -> str:
+    """
+    Return the active streak mode. Checks the runtime settings table first
+    (so the UI toggle takes effect without service restart), falls back to
+    env knob STREAK_MODE_ENV if no runtime override.
+
+    Valid values: "compound", "euphoria_dampener", "off".
+    """
+    try:
+        from database import db_conn as _db
+        with _db() as conn:
+            row = conn.execute(
+                "SELECT value FROM settings WHERE key='futures_ai_streak_mode'"
+            ).fetchone()
+            if row and row[0] in ("compound", "euphoria_dampener", "off"):
+                return row[0]
+    except Exception:
+        pass
+    return STREAK_MODE_ENV if STREAK_MODE_ENV in (
+        "compound", "euphoria_dampener", "off") else "compound"
+
+
+def set_streak_mode(new_mode: str, conn=None) -> str:
+    """Persist a new streak mode via settings table (UI toggle hook)."""
+    if new_mode not in ("compound", "euphoria_dampener", "off"):
+        raise ValueError(f"invalid streak_mode: {new_mode}")
+    try:
+        from database import db_conn as _db
+        if conn is None:
+            with _db() as c:
+                c.execute(
+                    "INSERT OR REPLACE INTO settings (key, value) VALUES "
+                    "('futures_ai_streak_mode', ?)", (new_mode,))
+                c.commit()
+        else:
+            conn.execute(
+                "INSERT OR REPLACE INTO settings (key, value) VALUES "
+                "('futures_ai_streak_mode', ?)", (new_mode,))
+            conn.commit()
+        return new_mode
+    except Exception as e:
+        raise RuntimeError(f"could not persist streak_mode: {e}")
+
 # Catastrophe hedge — opens a single BTC perpetual SHORT to neutralise
 # the basket's downside during rapid sell-offs (the "23:53 simultaneous
 # stop-out" pattern from 2026-05-22). Defensive only — never extends
@@ -349,6 +428,11 @@ def snapshot() -> dict:
         "max_notional_pct":           MAX_NOTIONAL_PCT,
         "compound_streak_enabled":    COMPOUND_STREAK_ENABLED,
         "max_streak_multiplier":      MAX_STREAK_MULTIPLIER,
+        "streak_mode":                streak_mode(),
+        "euphoria_cap_wins":          EUPHORIA_CAP_WINS,
+        "euphoria_size_mult":         EUPHORIA_SIZE_MULT,
+        "monthly_gate_enabled":       MONTHLY_GATE_ENABLED,
+        "monthly_risk_gate_pct":      MONTHLY_RISK_GATE_PCT,
         "hedge_enabled":              HEDGE_ENABLED,
         "hedge_trigger_unreal_pct":   HEDGE_TRIGGER_UNREAL_PCT,
         "hedge_trigger_btc_drop_pct": HEDGE_TRIGGER_BTC_DROP_PCT,

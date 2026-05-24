@@ -7,7 +7,10 @@ Generates annotated chart after Claude responds.
 """
 import contextvars
 import json
+import logging
 from concurrent.futures import ThreadPoolExecutor
+
+logger = logging.getLogger(__name__)
 
 from constants import MODEL
 from ai_client import send as ai_send
@@ -98,6 +101,13 @@ def run(inp: TradePrepInput, conn, model: str = MODEL) -> TradePrepResult:
     )
 
     direction_out = data.get("direction", direction)
+    if direction_out and direction and \
+       str(direction_out).strip().lower() != str(direction).strip().lower():
+        logger.warning(
+            "trade_prep direction mismatch for %s: stage1=%s llm=%s — "
+            "levels follow llm direction; downstream validator will drop if inverted",
+            symbol, direction, direction_out,
+        )
     entry  = float(data.get("entry_price", 0) or 0)
     sl     = float(data.get("sl_price",    0) or 0)
     tp1    = float(data.get("tp1",         0) or 0)

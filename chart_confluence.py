@@ -198,6 +198,103 @@ def _cvd_weight(cvd: dict) -> float:
     return 0.4 if trend == "rising" else (-0.4 if trend == "falling" else 0.0)
 
 
+def _wyckoff_trap_weight(trap: dict) -> float:
+    """
+    Wyckoff single-bar spring/upthrust weight.
+
+    Returns +0.3 (spring → Long reversal), -0.3 (upthrust → Short reversal),
+    or 0 when no trap detected. Pure passthrough of the detector's weight
+    field — separated to match the `_<X>_weight` pattern.
+
+    Strong single-bar reversal signal: requires both close-back-inside-range
+    on the candidate bar AND no-follow-through on the next bar.
+    """
+    if not isinstance(trap, dict) or not trap.get("detected"):
+        return 0.0
+    return float(trap.get("weight", 0.0))
+
+
+def _bb_squeeze_weight(bb_sq: dict) -> float:
+    """
+    Bollinger squeeze: ±0.2 on RELEASE (volatility expansion after contraction),
+    direction inferred from close vs Bollinger mid. Squeezing/expanded/neutral
+    states contribute 0 — only the release moment carries a directional bias.
+
+    Volatility-regime signal: complementary to oscillators (which measure
+    momentum extent) by measuring momentum *availability*. Magnitude is small
+    (±0.2) because squeeze alone is not a directional signal — it amplifies
+    whatever direction the rest of the stack favors.
+    """
+    if not isinstance(bb_sq, dict):
+        return 0.0
+    if bb_sq.get("state") != "releasing":
+        return 0.0
+    direction = bb_sq.get("direction")
+    if direction == "Long":
+        return 0.2
+    if direction == "Short":
+        return -0.2
+    return 0.0
+
+
+def classify_wyckoff_phase(range_info: dict, adx_dict: dict, ema_dict: dict) -> dict:
+    """
+    Feature 21 — Classify the current trading range into a Wyckoff phase
+    (accumulation/distribution/markup/markdown/trading_range).
+
+    Inputs:
+      range_info: from range_position() — has 'label' (premium/equilibrium/discount)
+      adx_dict:   from compute_adx — has 'value'
+      ema_dict:   from compute_ema_alignment — has 'trend' or 'bias'
+
+    Returns:
+      {phase, label, hint}
+
+    Logic:
+      - ADX > 25 + EMA bullish      → markup       (trending up)
+      - ADX > 25 + EMA bearish      → markdown     (trending down)
+      - ADX < 20 + price discount   → accumulation (chop near low, supply absorbed)
+      - ADX < 20 + price premium    → distribution (chop near high, supply distributed)
+      - ADX < 20 + equilibrium      → trading_range (no edge)
+      - Otherwise (ADX 20-25)       → transitional (in-between regimes)
+
+    Context tag only — surfaced in parts[] for Sonnet, no standalone weight.
+    """
+    out = {"phase": "unknown", "label": "", "hint": ""}
+    if not range_info:
+        return out
+    try:
+        adx_val = float(adx_dict.get("value", 0)) if adx_dict else 0
+    except (TypeError, ValueError):
+        adx_val = 0
+    range_label = (range_info.get("label") or "").lower()
+    ema_bias = ""
+    if ema_dict:
+        ema_bias = (ema_dict.get("trend") or ema_dict.get("bias") or "").lower()
+
+    if adx_val >= 25:
+        if "bullish" in ema_bias or "up" in ema_bias:
+            return {"phase": "markup", "label": f"Wyckoff markup (ADX {adx_val:.1f}, EMA bullish)",
+                    "hint": "trend phase — long-side bias"}
+        if "bearish" in ema_bias or "down" in ema_bias:
+            return {"phase": "markdown", "label": f"Wyckoff markdown (ADX {adx_val:.1f}, EMA bearish)",
+                    "hint": "trend phase — short-side bias"}
+    elif adx_val < 20:
+        if "discount" in range_label:
+            return {"phase": "accumulation",
+                    "label": f"Wyckoff accumulation (ADX {adx_val:.1f}, price at discount)",
+                    "hint": "chop near range low — long-side setups preferred"}
+        if "premium" in range_label:
+            return {"phase": "distribution",
+                    "label": f"Wyckoff distribution (ADX {adx_val:.1f}, price at premium)",
+                    "hint": "chop near range high — short-side setups preferred"}
+        return {"phase": "trading_range",
+                "label": f"Wyckoff trading_range (ADX {adx_val:.1f}, equilibrium)",
+                "hint": "no clear bias — wait for breakout"}
+    return {"phase": "transitional", "label": f"transitional (ADX {adx_val:.1f})",
+            "hint": "between regimes — uncertain"}
+
+
 def range_position(df, lookback: int = 40) -> dict:
     """
     Premium/Discount/Equilibrium classification of current price relative to
@@ -326,6 +423,70 @@ def _smart_flow_weight(cvd_trend: str, oi_change_pct: float | None,
     if oi_dir == -1 and cvd_dir == -1 and px_dir == -1:
         return -0.2, "long_liquidation"
     # Mixed quadrants (e.g. OI↑ + CVD↑ + price↓) — divergent flow, no edge
+    return 0.0, ""
+
+
+def _climactic_volume_weight(volume_dict: dict, candle_dict: dict) -> tuple[float, str]:
+    """
+    Climactic vs exhaustion volume — Weis-style refinement of volume reading.
+
+    Distinguishes two volume patterns:
+      - CLIMACTIC volume: large spike (≥2× average) at a price extreme with
+        rejection wick = strong reversal signal (±0.2)
+      - EXHAUSTION volume: low (≤0.5× average) at a price extreme = trend
+        running out of fuel (0; informational only — no directional weight)
+
+    Args:
+      volume_dict: from compute_volume — must have 'ratio_to_avg'
+      candle_dict: from compute_recent_candles or compute_all_indicators —
+                   needs last bar's open/high/low/close
+
+    Returns (weight, label).
+
+    Direction (climactic only):
+      - Last bar is up-bar with bearish wick (close near low) + spike → -0.2 (top)
+      - Last bar is down-bar with bullish wick (close near high) + spike → +0.2 (bottom)
+    """
+    if not isinstance(volume_dict, dict) or not isinstance(candle_dict, dict):
+        return 0.0, ""
+    ratio = volume_dict.get("ratio_to_avg") or volume_dict.get("vol_ratio")
+    if ratio is None:
+        return 0.0, ""
+    try:
+        ratio = float(ratio)
+    except (TypeError, ValueError):
+        return 0.0, ""
+
+    # Need last-bar OHLC for wick analysis
+    o = candle_dict.get("open")
+    h = candle_dict.get("high")
+    l = candle_dict.get("low")
+    c = candle_dict.get("close")
+    if None in (o, h, l, c):
+        return 0.0, ""
+    try:
+        o = float(o); h = float(h); l = float(l); c = float(c)
+    except (TypeError, ValueError):
+        return 0.0, ""
+
+    bar_range = h - l
+    if bar_range <= 0:
+        return 0.0, ""
+
+    # Climactic threshold
+    if ratio >= 2.0:
+        # Up bar with bearish rejection wick (close near low)?
+        if c > o:  # green bar
+            upper_wick = (h - c) / bar_range
+            if upper_wick >= 0.4:  # 40% of bar is wick above body
+                return -0.2, f"climactic vol {ratio:.1f}× + rejection wick at high → reversal top"
+        else:  # red bar
+            lower_wick = (c - l) / bar_range
+            if lower_wick >= 0.4:
+                return +0.2, f"climactic vol {ratio:.1f}× + rejection wick at low → reversal bottom"
+    # No climactic firing; check exhaustion (informational, no weight)
+    if ratio <= 0.5:
+        return 0.0, f"exhaustion vol {ratio:.1f}× — trend running out of fuel"
     return 0.0, ""
 
 
@@ -474,6 +635,46 @@ def _get_tf_weights(ctx: dict, tf: str, symbol: str = "") -> list:
     smt_w     = _smt_weight(inds, symbol)
     smt_dir_w = _smt_direction_weight(inds, symbol)
     of_w      = _order_flow_weight(inds.get("order_flow"))
+    # BB Squeeze release — volatility-regime amplifier added 2026-05-24.
+    # Standalone signal (not grouped); ±0.2 on release direction.
+    bb_sq_w   = _bb_squeeze_weight(inds.get("bollinger_squeeze"))
+    # Wyckoff single-bar trap (spring/upthrust) — strong reversal signal,
+    # standalone (not grouped). ±0.3 only when detected.
+    trap_w    = _wyckoff_trap_weight(inds.get("wyckoff_trap"))
+    # Multi-bar Wyckoff (Spring + Upthrust + Absorption) — Phase 2.
+    # Returns single composite weight: only one of the three can fire.
+    try:
+        from chart_wyckoff import wyckoff_multibar_weight, sot_weight, wave_ratio_weight
+        wmb_w, _ = wyckoff_multibar_weight(
+            inds.get("wyckoff_spring"),
+            inds.get("wyckoff_upthrust"),
+            inds.get("wyckoff_absorption"),
+        )
+        sot_w     = sot_weight(inds.get("sot"))
+        wave_w    = wave_ratio_weight(inds.get("wave_ratio"))
+    except Exception:
+        wmb_w  = 0.0
+        sot_w  = 0.0
+        wave_w = 0.0
+
+    # Climactic vs exhaustion volume — Phase 2 refinement of CVD/smart-flow.
+    # Reads volume.ratio_to_avg + last_bar OHLC for wick-based reversal trigger.
+    try:
+        climactic_w, _ = _climactic_volume_weight(
+            inds.get("volume", {}),
+            inds.get("last_bar", {}),
+        )
+    except Exception:
+        climactic_w = 0.0
+
+    # Composite divergence (Feature 12) — counts how many indicators show
+    # the SAME divergence direction. Catches multi-indicator agreement that
+    # single-indicator signals miss.
+    try:
+        from chart_divergence import composite_divergence_weight
+        div_agg_w, _ = composite_divergence_weight(inds)
+    except Exception:
+        div_agg_w = 0.0
 
     # Cap correlated signal groups to prevent trend-inflation
     _momentum = max(-1.5, min(1.5, rsi_w + macd_w))
@@ -483,11 +684,14 @@ def _get_tf_weights(ctx: dict, tf: str, symbol: str = "") -> list:
     # agree (e.g. all 3 oversold). Self-review wishlist (2026-05-21).
     _oscillator = max(-1.0, min(1.0, wt_w + mfi_w + stoch_w))
 
-    base_score = _momentum + ema_w + adx_w + _oscillator + cvd_w + smt_w + smt_dir_w + of_w
+    base_score = (_momentum + ema_w + adx_w + _oscillator
+                  + cvd_w + smt_w + smt_dir_w + of_w + bb_sq_w + trap_w
+                  + wmb_w + sot_w + wave_w + climactic_w + div_agg_w)
     vol_w = _volume_weight(inds, base_score, symbol=symbol, timeframe=tf)
 
     # Return as flat list for bull/bear totals (capped momentum and oscillator as single entries)
-    return [_momentum, ema_w, adx_w, _oscillator, cvd_w, smt_w, smt_dir_w, of_w, vol_w]
+    return [_momentum, ema_w, adx_w, _oscillator, cvd_w, smt_w, smt_dir_w,
+            of_w, vol_w, bb_sq_w, trap_w, wmb_w, sot_w, wave_w, climactic_w, div_agg_w]
 
 
 def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> dict:

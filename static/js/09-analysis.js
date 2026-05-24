@@ -401,22 +401,77 @@ async function runWalkForward() {
 function _renderWalkForwardResult(r) {
   const el = document.getElementById('wf-result');
   if (!el) return;
+  el.textContent = '';
   if (r.error) { el.textContent = '❌ ' + r.error; return; }
-  const gen = r.generalizes;
-  const genColor = gen ? 'var(--accent3)' : 'var(--red)';
-  const genLabel = gen ? '✓ Generalizes' : '✗ Possible overfit';
-  el.innerHTML = `
-    <div style="border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:10px;font-size:.82rem">
-      <div style="font-weight:600;margin-bottom:8px">Walk-Forward: ${r.symbol} ${r.timeframe}
-        <span style="margin-left:10px;color:${genColor};font-size:.78rem">${genLabel}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
-        <div>Training (${r.train_days}d)<br><b>${r.train_sharpe ?? '—'}</b> Sharpe</div>
-        <div>Test (${r.test_days}d)<br><b style="color:${genColor}">${r.test_sharpe ?? '—'}</b> Sharpe</div>
-        <div>Test trades<br><b>${r.test_trades ?? '—'}</b> (${r.test_win_rate ?? '—'}% WR)</div>
-      </div>
-      <div style="color:var(--muted);font-size:.75rem">${r.n_positions} real positions over ${r.total_days} days used for split</div>
-    </div>`;
+
+  // Three outcomes: no trades / overfit / generalizes. "No trades" means
+  // the strategy rules + this symbol/timeframe never produced ≥10 entries —
+  // not an overfit, just untestable. Distinct yellow label + footer.
+  const trainN = r.train_trades || 0;
+  const testN  = r.test_trades  || 0;
+  const noTrades = (trainN === 0) || (testN === 0);
+
+  let genLabel, genColor, footer;
+  if (noTrades) {
+    genLabel = '⚠ No qualifying trades';
+    genColor = 'var(--accent2)';  // yellow
+    const which = (trainN === 0 && testN === 0) ? 'both windows'
+                : (trainN === 0)                ? 'training window'
+                                                : 'test window';
+    footer = `Candle-based 70/30 split over ${r.total_days}d · Strategy produced 0 trades in ${which} — too restrictive for this symbol/timeframe (try wider parameters or different TF)`;
+  } else if (r.generalizes) {
+    genLabel = '✓ Generalizes';
+    genColor = 'var(--accent3)';
+    footer = `Candle-based 70/30 split over ${r.total_days}d · OOS Sharpe retains >50% of in-sample`;
+  } else {
+    genLabel = '✗ Possible overfit';
+    genColor = 'var(--red)';
+    footer = `Candle-based 70/30 split over ${r.total_days}d · OOS Sharpe collapsed or negative — likely curve-fit`;
+  }
+
+  const card = document.createElement('div');
+  card.style.cssText = 'border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:10px;font-size:.82rem';
+
+  const header = document.createElement('div');
+  header.style.cssText = 'font-weight:600;margin-bottom:8px';
+  header.textContent = `Walk-Forward: ${r.symbol} ${r.timeframe}`;
+  const tag = document.createElement('span');
+  tag.style.cssText = `margin-left:10px;color:${genColor};font-size:.78rem`;
+  tag.textContent = genLabel;
+  header.appendChild(tag);
+  card.appendChild(header);
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px';
+
+  const makeCard = (label, sharpe, n, wr, sharpeColor) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'border:1px solid var(--border);border-radius:6px;padding:8px';
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'color:var(--muted);font-size:.72rem;margin-bottom:4px';
+    lbl.textContent = label;
+    const row = document.createElement('div');
+    const b = document.createElement('b');
+    if (sharpeColor) b.style.color = sharpeColor;
+    b.textContent = sharpe ?? '—';
+    row.appendChild(b);
+    row.appendChild(document.createTextNode(` Sharpe · ${n} trades · ${wr ?? '—'}% WR`));
+    wrap.appendChild(lbl);
+    wrap.appendChild(row);
+    return wrap;
+  };
+  grid.appendChild(makeCard(`TRAIN (${r.train_days}d, in-sample)`,
+                             r.train_sharpe, trainN, r.train_win_rate, null));
+  grid.appendChild(makeCard(`TEST (${r.test_days}d, out-of-sample)`,
+                             r.test_sharpe, testN, r.test_win_rate, genColor));
+  card.appendChild(grid);
+
+  const foot = document.createElement('div');
+  foot.style.cssText = 'color:var(--muted);font-size:.72rem';
+  foot.textContent = footer;
+  card.appendChild(foot);
+
+  el.appendChild(card);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -583,4 +638,290 @@ function checkPositionSize(actual) {
     el.style.color  = 'var(--yellow)';
     el.textContent  = `Under-sized by ${Math.abs(pct).toFixed(1)}% (${diff.toFixed(0)} USDT) — less risk than planned`;
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCORE COMPARISON  (scanner vs Opus vs Hindsight)
+// Added 2026-05-24. Backend: ai_score_comparison.compute_comparison()
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function loadScoreComparison() {
+  await _renderScoreComparison(false);
+}
+
+async function _renderScoreComparison(forceRecompute) {
+  const header = document.getElementById('sc-header');
+  const aggDiv = document.getElementById('sc-aggregates');
+  const disDiv = document.getElementById('sc-disagreements');
+  const ptDiv  = document.getElementById('sc-per-trade');
+  if (!header) return;
+
+  // Clear + loading state
+  header.textContent = ''; aggDiv.textContent = ''; disDiv.textContent = ''; ptDiv.textContent = '';
+  const loading = document.createElement('small');
+  loading.style.color = 'var(--muted)';
+  loading.textContent = forceRecompute ? '⧗ Recomputing…' : '⧗ Loading…';
+  header.appendChild(loading);
+
+  let res;
+  try {
+    if (forceRecompute) {
+      res = await api('/api/analysis/score-comparison/recompute', 'POST');
+    } else {
+      res = await api('/api/analysis/score-comparison');
+    }
+    if (!res.ok) throw new Error(res.error || 'failed');
+  } catch (e) {
+    header.textContent = '';
+    const err = document.createElement('small');
+    err.style.color = 'var(--red)';
+    err.textContent = 'Error: ' + e.message;
+    header.appendChild(err);
+    return;
+  }
+
+  const data = res.data || {};
+  _scRenderHeader(header, data.meta || {});
+  _scRenderAggregates(aggDiv, data.aggregates || {}, data.meta || {});
+  _scRenderDisagreements(disDiv, data.disagreements || []);
+  _scRenderPerTrade(ptDiv, data.per_trade || []);
+}
+
+function _scRenderHeader(el, meta) {
+  el.textContent = '';
+  const stats = document.createElement('div');
+  stats.style.cssText = 'display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)';
+  const items = [
+    ['total closed',     meta.n_total],
+    ['with scanner',     meta.n_with_scanner],
+    ['with Opus',        meta.n_with_opus],
+    ['with hindsight',   meta.n_with_hindsight],
+    ['overlap (all 3)',  meta.n_all_three],
+  ];
+  for (const [label, val] of items) {
+    const span = document.createElement('span');
+    const strong = document.createElement('strong');
+    strong.style.color = 'var(--text)';
+    strong.textContent = String(val ?? 0);
+    span.appendChild(strong);
+    span.appendChild(document.createTextNode(' ' + label));
+    stats.appendChild(span);
+  }
+  el.appendChild(stats);
+
+  const ts = document.createElement('span');
+  ts.style.cssText = 'font-size:.78rem;color:var(--muted);margin-left:auto';
+  ts.textContent = meta.computed_at ? `Last computed: ${meta.computed_at}` : 'Never computed';
+  el.appendChild(ts);
+
+  const btn = document.createElement('button');
+  btn.textContent = '↻ Recompute';
+  btn.style.cssText = 'padding:6px 14px;font-size:.8rem;background:var(--accent);border:none;border-radius:6px;color:#fff;cursor:pointer';
+  btn.onclick = function() { _renderScoreComparison(true); };
+  el.appendChild(btn);
+}
+
+function _scBucketColor(wr) {
+  if (wr == null) return 'var(--muted)';
+  if (wr >= 60) return 'var(--accent3)';
+  if (wr >= 45) return 'var(--text)';
+  return 'var(--red)';
+}
+
+function _scRenderAggregates(el, aggs, meta) {
+  el.textContent = '';
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:600;margin-bottom:8px';
+  title.textContent = 'Aggregates per score system × bucket';
+  el.appendChild(title);
+
+  const systems = [
+    ['scanner',   'Scanner technicals',    aggs.scanner],
+    ['opus',      'Opus consensus',        aggs.opus],
+    ['hindsight', 'Hindsight (Haiku)',     aggs.hindsight],
+  ];
+  for (const [key, label, agg] of systems) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:14px;border:1px solid var(--border);border-radius:8px;padding:10px 14px;background:var(--bg2)';
+
+    const hd = document.createElement('div');
+    hd.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px';
+    const hdl = document.createElement('strong');
+    hdl.textContent = label;
+    hd.appendChild(hdl);
+    if (!agg || agg.insufficient_data) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'font-size:.72rem;color:var(--accent2);padding:2px 8px;border:1px solid var(--accent2);border-radius:4px';
+      badge.textContent = `insufficient data (n=${agg ? agg.n : 0}, need ≥${meta.min_sample_n || 5})`;
+      hd.appendChild(badge);
+      wrap.appendChild(hd);
+      el.appendChild(wrap);
+      continue;
+    }
+    const meta_n = document.createElement('span');
+    meta_n.style.cssText = 'font-size:.75rem;color:var(--muted)';
+    meta_n.textContent = `n=${agg.n}`;
+    hd.appendChild(meta_n);
+    wrap.appendChild(hd);
+
+    // Table: bucket | n | WR | expectancy | TP/FP/TN/FN | sig acc
+    const tbl = document.createElement('table');
+    tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem';
+    const thead = document.createElement('thead');
+    const trh = document.createElement('tr');
+    for (const h of ['Bucket','n','Wins','WR','Expectancy','TP','FP','TN','FN','Sig Acc']) {
+      const th = document.createElement('th');
+      th.style.cssText = 'text-align:left;padding:4px 8px;color:var(--muted);border-bottom:1px solid var(--border)';
+      th.textContent = h;
+      trh.appendChild(th);
+    }
+    thead.appendChild(trh);
+    tbl.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const rows = (agg.by_bucket || []).concat(agg.overall ? [{...agg.overall, bucket: 'OVERALL'}] : []);
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      tr.style.cssText = (r.bucket === 'OVERALL') ? 'border-top:1px solid var(--border);font-weight:600' : '';
+      const cells = [
+        r.bucket || '—',
+        r.n != null ? r.n : 0,
+        r.wins != null ? r.wins : '—',
+        r.win_rate != null ? r.win_rate + '%' : '—',
+        r.expectancy != null ? (r.expectancy >= 0 ? '+' : '') + r.expectancy.toFixed(3) : '—',
+        r.tp != null ? r.tp : '—',
+        r.fp != null ? r.fp : '—',
+        r.tn != null ? r.tn : '—',
+        r.fn != null ? r.fn : '—',
+        r.signal_accuracy != null ? r.signal_accuracy + '%' : '—',
+      ];
+      cells.forEach((c, i) => {
+        const td = document.createElement('td');
+        td.style.cssText = 'padding:4px 8px';
+        if (i === 3) td.style.color = _scBucketColor(r.win_rate);
+        td.textContent = String(c);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    tbl.appendChild(tbody);
+    wrap.appendChild(tbl);
+    el.appendChild(wrap);
+  }
+}
+
+function _scRenderDisagreements(el, items) {
+  el.textContent = '';
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:600;margin-bottom:8px';
+  title.textContent = `Disagreement cases (${items.length} — pairs differ by ≥2, sorted by |delta| × |pnl|)`;
+  el.appendChild(title);
+
+  if (items.length === 0) {
+    const empty = document.createElement('small');
+    empty.style.color = 'var(--muted)';
+    empty.textContent = 'No disagreements yet — either no overlap, or all scoring systems agree.';
+    el.appendChild(empty);
+    return;
+  }
+
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden';
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  for (const h of ['Close time','Symbol','Dir','Pair','Score A','Score B','Δ','Scanner','Opus','Hindsight','PnL','Close reason']) {
+    const th = document.createElement('th');
+    th.style.cssText = 'text-align:left;padding:6px 8px;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border)';
+    th.textContent = h;
+    trh.appendChild(th);
+  }
+  thead.appendChild(trh);
+  tbl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (const it of items.slice(0, 25)) {
+    const tr = document.createElement('tr');
+    const pnlColor = (it.realized_pnl > 0) ? 'var(--accent3)' : (it.realized_pnl < 0 ? 'var(--red)' : 'var(--muted)');
+    const cells = [
+      (it.close_time || '').slice(0, 16),
+      it.symbol || '—',
+      it.direction || '—',
+      it.pair || '—',
+      it.score_a != null ? it.score_a : '—',
+      it.score_b != null ? it.score_b : '—',
+      it.delta != null ? it.delta : '—',
+      it.scanner_score != null ? it.scanner_score : '—',
+      it.opus_score != null ? it.opus_score : '—',
+      it.hindsight_score != null ? it.hindsight_score : '—',
+      (it.realized_pnl >= 0 ? '+' : '') + (it.realized_pnl || 0).toFixed(2),
+      it.close_reason || '—',
+    ];
+    cells.forEach((c, i) => {
+      const td = document.createElement('td');
+      td.style.cssText = 'padding:5px 8px;border-bottom:1px solid var(--border)';
+      if (i === 10) td.style.color = pnlColor;
+      td.textContent = String(c);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+  el.appendChild(tbl);
+}
+
+function _scRenderPerTrade(el, rows) {
+  el.textContent = '';
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:600;margin-bottom:8px';
+  title.textContent = `Per-trade scores (${rows.length} closed positions)`;
+  el.appendChild(title);
+
+  if (rows.length === 0) {
+    const empty = document.createElement('small');
+    empty.style.color = 'var(--muted)';
+    empty.textContent = 'No closed positions yet.';
+    el.appendChild(empty);
+    return;
+  }
+
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem;border:1px solid var(--border);border-radius:8px;overflow:hidden';
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  for (const h of ['Close time','Symbol','Dir','Chain','Scanner','Opus','Hindsight','PnL','Close']) {
+    const th = document.createElement('th');
+    th.style.cssText = 'text-align:left;padding:6px 8px;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border)';
+    th.textContent = h;
+    trh.appendChild(th);
+  }
+  thead.appendChild(trh);
+  tbl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (const r of rows.slice(0, 100)) {
+    const tr = document.createElement('tr');
+    const pnlColor = (r.realized_pnl > 0) ? 'var(--accent3)' : (r.realized_pnl < 0 ? 'var(--red)' : 'var(--muted)');
+    const cells = [
+      (r.close_time || '').slice(0, 16),
+      r.symbol || '—',
+      r.direction || '—',
+      r.chain || '—',
+      r.scanner_score != null ? r.scanner_score : '—',
+      r.opus_score != null ? r.opus_score : '—',
+      r.hindsight_score != null ? r.hindsight_score : '—',
+      (r.realized_pnl >= 0 ? '+' : '') + (r.realized_pnl || 0).toFixed(2),
+      r.close_reason || '—',
+    ];
+    cells.forEach((c, i) => {
+      const td = document.createElement('td');
+      td.style.cssText = 'padding:5px 8px;border-bottom:1px solid var(--border)';
+      if (i === 7) td.style.color = pnlColor;
+      td.textContent = String(c);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  }
+  tbl.appendChild(tbody);
+  el.appendChild(tbl);
 }

@@ -16,3 +16,9 @@ docs/superpowers/
 scripts/dodex_probe/node_modules/
 scripts/dodex_probe/package-lock.json
 data/dodex_watch/
+
+# Local ML/HMM model artifacts (regenerable from training scripts)
+*.joblib
+
+# Local conversation memory buffer (not source code)
+.remember/

@@ -245,6 +245,21 @@ def _score_finalists_with_agents(finalists: list, conn,
                         range_label = (f"PO3 range: {range_info.get('label')} "
                                        f"({range_info.get('pct',0)*100:.0f}%)")
 
+                    # Feature 21 — Wyckoff phase classification (context tag only)
+                    try:
+                        from chart_confluence import classify_wyckoff_phase
+                        _inds_4h = (ctx.get("4H") or {}).get("indicators") or {}
+                        wp = classify_wyckoff_phase(
+                            range_info,
+                            _inds_4h.get("adx") or {},
+                            _inds_4h.get("ema") or {},
+                        )
+                        if wp.get("phase") not in (None, "unknown"):
+                            range_label = (range_label + " · " + wp.get("label", "")).strip(" ·") \
+                                          if range_label else wp.get("label", "")
+                    except Exception:
+                        pass
+
                     # FVG — directional modifier
                     cur_px = float(df_4h_for_po3["close"].iloc[-1])
                     fvg_sig = nearest_fvg_signal(df_4h_for_po3, cur_px, direction)
@@ -293,6 +308,80 @@ def _score_finalists_with_agents(finalists: list, conn,
             except Exception as e:
                 logger.debug("bear-phase modifier error on %s: %s", sym, e)
 
+            # ── HMM regime alignment modifier (added 2026-05-24) ─────────
+            # Direct ±0.2 modifier based on macro HMM regime (trending_up/
+            # _down/ranging) vs setup direction. Smaller magnitude than
+            # bear_phase (±0.3) because the two can stack in aligned cases.
+            # Gated on confidence > 0.6 — boundary regimes don't vote.
+            hmm_label = ""
+            try:
+                from market_regime import hmm_alignment_weight, detect_regime
+                regime = detect_regime()
+                hmm_w, hmm_reason = hmm_alignment_weight(regime, direction)
+                if hmm_w != 0:
+                    score = max(0.0, min(10.0, score + hmm_w))
+                    hmm_label = hmm_reason
+                    logger.info("HMM mod applied to %s: %s", sym, hmm_label)
+                elif hmm_reason:
+                    hmm_label = hmm_reason
+            except Exception as e:
+                logger.debug("HMM modifier error on %s: %s", sym, e)
+
+            # ── CPR alignment modifier (added 2026-05-24) ─────────────────
+            # Central Pivot Range from prior day's H/L/C — different math
+            # basis (daily levels) and timescale (daily) than PO3 (intraday)
+            # and HMM (rolling regime). Direction-aware ±0.3 modifier.
+            # Gated on FUTURES_AI_CPR_ENABLED env knob (default ON).
+            cpr_label = ""
+            try:
+                import os
+                if int(os.environ.get("FUTURES_AI_CPR_ENABLED", "1")):
+                    from chart_cpr import (compute_cpr_from_df,
+                                            two_day_relationship,
+                                            cpr_alignment_weight)
+                    df_1d = (ctx.get("1D") or {}).get("df")
+                    if df_1d is not None and len(df_1d) >= 3:
+                        curr_cpr = compute_cpr_from_df(df_1d)
+                        prev_cpr = compute_cpr_from_df(df_1d.iloc[:-1])
+                        two_day  = two_day_relationship(curr_cpr, prev_cpr)
+                        ema_4h   = ((ctx.get("4H") or {}).get("indicators") or {}).get("ema") or {}
+                        curr_px  = float(ema_4h.get("current_price") or 0)
+                        cpr_w, cpr_reason = cpr_alignment_weight(
+                            curr_cpr, curr_px, two_day, direction)
+                        if cpr_w != 0:
+                            score = max(0.0, min(10.0, score + cpr_w))
+                            cpr_label = cpr_reason
+                            logger.info("CPR mod applied to %s: %s", sym, cpr_label)
+                        elif cpr_reason:
+                            cpr_label = cpr_reason
+            except Exception as e:
+                logger.debug("CPR modifier error on %s: %s", sym, e)
+
+            # ── Initial Balance modifier (added 2026-05-24) ───────────────
+            # Price vs first-60min H/L of NYSE session (14:30-15:30 UTC).
+            # ±0.2 once IB is_complete: above IB high + Long = +0.2 etc.
+            # Gated on FUTURES_AI_IB_ENABLED (default ON).
+            ib_label = ""
+            try:
+                import os as _os
+                if int(_os.environ.get("FUTURES_AI_IB_ENABLED", "1")):
+                    from chart_session import compute_initial_balance, ib_alignment_weight
+                    # Use 1H candles (already fetched for finalists at Stage 3)
+                    df_1h = (ctx.get("1H") or {}).get("df")
+                    if df_1h is not None and len(df_1h) >= 2:
+                        ib = compute_initial_balance(df_1h)
+                        ema_4h = ((ctx.get("4H") or {}).get("indicators") or {}).get("ema") or {}
+                        curr_px = float(ema_4h.get("current_price") or 0)
+                        ib_w, ib_reason = ib_alignment_weight(ib, curr_px, direction)
+                        if ib_w != 0:
+                            score = max(0.0, min(10.0, score + ib_w))
+                            ib_label = ib_reason
+                            logger.info("IB mod applied to %s: %s", sym, ib_label)
+                        elif ib_reason:
+                            ib_label = ib_reason
+            except Exception as e:
+                logger.debug("IB modifier error on %s: %s", sym, e)
+
             # Re-apply personal bad-hour cap AFTER kill-zone boost — the cap
             # is a hard ceiling that must not be exceeded by any boost.
             score, _bh_post = _apply_personal_bad_hour_cap(score)
@@ -320,20 +409,69 @@ def _score_finalists_with_agents(finalists: list, conn,
             sl_raw  = prep.get("sl_price", 0)
             _tp_notes: list[str] = []
             _sl_notes: list[str] = []
-            try:
-                import trade_utils as _tu
-                atr_4h = ((ctx.get("4H", {}).get("indicators", {})
-                                       .get("atr") or {}).get("value", 0))
-                if atr_4h:
+            import trade_utils as _tu
+            atr_4h = ((ctx.get("4H", {}).get("indicators", {})
+                                   .get("atr") or {}).get("value", 0))
+            if atr_4h:
+                try:
                     tp1_raw, tp2_raw, _tp_notes = _tu.enforce_tp_floor(
                         entry_p, direction, tp1_raw, tp2_raw, atr_4h)
                     sl_raw, _sl_notes = _tu.enforce_sl_floor(
                         entry_p, direction, sl_raw, atr_4h)
+                    # SafeZone SL (Feature 20, 2026-05-24): if SL ended up
+                    # near a round number, push it 0.5× ATR further to dodge
+                    # stop-hunt clusters. Joins the enforce pipeline.
+                    import os as _os
+                    if int(_os.environ.get("FUTURES_AI_SAFEZONE_SL_ENABLED", "1")):
+                        sz_sl, sz_notes = _tu.safezone_sl(
+                            entry_p, direction, sl_raw, atr_4h)
+                        if sz_notes:
+                            sl_raw = sz_sl
+                            _sl_notes.extend(sz_notes)
                     if _sl_notes:
                         logger.info("SL floor applied to %s: %s",
                                     sym, "; ".join(_sl_notes))
-            except Exception:
-                pass
+                except Exception as e:
+                    logger.warning("enforce_*_floor failed for %s: %s — "
+                                   "levels left as agent provided", sym, e)
+            else:
+                logger.warning("enforce skipped for %s: atr_4h=0 — "
+                               "wrong-side level repair impossible", sym)
+
+            # Defence in depth: even after enforcement, validate that the
+            # final geometry is consistent with the setup direction. Stage 1
+            # sets `direction` from confluence; the LLM in agent_trade_prep
+            # can emit a different direction silently when building levels.
+            # If they disagree, the (direction, sl, tp1, tp2) tuple ends up
+            # geometrically inverted (Short with sl<entry and tp>entry, or
+            # mirror). The enforce functions can be skipped when ATR is
+            # missing, so this validator is the last gate before consensus.
+            _ok, _why = _tu.validate_direction_vs_levels(
+                direction, entry_p, sl_raw, tp1_raw, tp2_raw)
+            if not _ok:
+                logger.warning(
+                    "stage3_levels_dropped %s %s: %s — entry=%s sl=%s tp1=%s tp2=%s",
+                    sym, direction, _why, entry_p, sl_raw, tp1_raw, tp2_raw,
+                )
+                try:
+                    with db_conn() as _conn:
+                        _conn.execute(
+                            "INSERT INTO futures_ai_log(ts, event, symbol, direction, score, payload_json) "
+                            "VALUES (datetime('now'), 'stage3_levels_dropped', ?, ?, ?, ?)",
+                            (sym, direction, score, json.dumps({
+                                "reason":  _why,
+                                "entry":   entry_p,
+                                "sl":      sl_raw,
+                                "tp1":     tp1_raw,
+                                "tp2":     tp2_raw,
+                                "atr_4h":  atr_4h,
+                                "archetype": archetype,
+                            })),
+                        )
+                        _conn.commit()
+                except Exception as _le:
+                    logger.debug("stage3_levels_dropped log write failed: %s", _le)
+                continue
 
             # `archetype` was already detected above for the reversal-cap step.
 
@@ -345,6 +483,9 @@ def _score_finalists_with_agents(finalists: list, conn,
             if range_label: _po3_bits.append(range_label.replace("PO3 range: ", "range:"))
             if fvg_label:   _po3_bits.append(fvg_label.replace("FVG: ", "FVG:"))
             if bp_label:    _po3_bits.append(bp_label.replace("bear-phase: ", "phase:"))
+            if hmm_label:   _po3_bits.append(hmm_label.replace("HMM: ", "hmm:"))
+            if cpr_label:   _po3_bits.append(cpr_label.replace("CPR: ", "cpr:"))
+            if ib_label:    _po3_bits.append(ib_label.replace("IB: ", "ib:"))
             _po3_summary = f"PO3 [{' · '.join(_po3_bits)}]" if _po3_bits else ""
 
             base_summary = " · ".join(prep.get("key_conditions", [])[:2])
@@ -369,6 +510,9 @@ def _score_finalists_with_agents(finalists: list, conn,
                 "_po3_fvg":       fvg_label,
                 "_po3_session":   kz_label,
                 "_bear_phase":    bp_label,
+                "_hmm_regime":    hmm_label,
+                "_cpr":           cpr_label,
+                "_ib":            ib_label,
                 "rr_ratio":       prep.get("rr_ratio", 0),
                 "key_conditions": prep.get("key_conditions", []),
                 "chart_png_b64":  prep.get("chart_png_b64", ""),

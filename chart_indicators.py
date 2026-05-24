@@ -337,6 +337,183 @@ def compute_bollinger(df: pd.DataFrame) -> dict | None:
     }
 
 
+def compute_obv(df: pd.DataFrame) -> dict | None:
+    """
+    On-Balance Volume (Granville, 1963).
+
+    Returns {"value", "trend", "slope_pct"} or None.
+    Trend = direction of OBV slope over last 20 bars.
+    """
+    if len(df) < 20:
+        return None
+    try:
+        obv = ta.obv(df["close"], df["volume"])
+        if obv is None or obv.empty:
+            return None
+        recent  = obv.iloc[-20:]
+        current = float(obv.iloc[-1])
+        start   = float(recent.iloc[0])
+        if start == 0:
+            slope_pct = 0.0
+        else:
+            slope_pct = (current - start) / abs(start) * 100
+        trend = "rising" if slope_pct > 2 else ("falling" if slope_pct < -2 else "flat")
+        return {
+            "value":     round(current, 2),
+            "trend":     trend,
+            "slope_pct": round(slope_pct, 2),
+        }
+    except Exception:
+        return None
+
+
+def compute_cmf(df: pd.DataFrame, period: int = 20) -> dict | None:
+    """
+    Chaikin Money Flow (Marc Chaikin).
+
+    CMF > 0.10 → strong buying pressure
+    CMF < -0.10 → strong selling pressure
+    Returns {"value", "signal"} or None.
+    """
+    if len(df) < period + 5:
+        return None
+    try:
+        cmf = ta.cmf(df["high"], df["low"], df["close"], df["volume"], length=period)
+        if cmf is None or cmf.empty:
+            return None
+        current = float(cmf.iloc[-1])
+        if pd.isna(current):
+            return None
+        signal = ("strong_buying" if current > 0.10
+                  else ("buying" if current > 0.05
+                  else ("strong_selling" if current < -0.10
+                  else ("selling" if current < -0.05 else "neutral"))))
+        return {
+            "value":  round(current, 4),
+            "signal": signal,
+        }
+    except Exception:
+        return None
+
+
+def _detect_simple_divergence(price_series, indicator_series, lookback: int = 15) -> str:
+    """
+    Quick divergence check: compare slope of price vs indicator over last `lookback` bars.
+
+    Returns:
+      "bullish_regular"  — price LL, indicator HL → reversal up
+      "bearish_regular"  — price HH, indicator LH → reversal down
+      "bullish_hidden"   — price HL, indicator LL → continuation up
+      "bearish_hidden"   — price LH, indicator HH → continuation down
+      ""                  — no clear divergence
+
+    Compact: uses first-vs-last comparison (not pivot-detection).
+    """
+    if price_series is None or indicator_series is None:
+        return ""
+    try:
+        p = price_series.iloc[-lookback:].dropna()
+        i = indicator_series.iloc[-lookback:].dropna()
+        if len(p) < 5 or len(i) < 5:
+            return ""
+        p_start, p_end = float(p.iloc[0]), float(p.iloc[-1])
+        i_start, i_end = float(i.iloc[0]), float(i.iloc[-1])
+        # Threshold: must move at least 0.5% to count as direction
+        if abs(p_end - p_start) / max(abs(p_start), 1) < 0.005:
+            return ""
+        p_up = p_end > p_start
+        i_up = i_end > i_start
+        if p_up and not i_up:
+            return "bearish_regular"   # price up, indicator down
+        if not p_up and i_up:
+            return "bullish_regular"   # price down, indicator up
+        return ""   # both same direction = no regular divergence
+    except Exception:
+        return ""
+
+
+def compute_bollinger_squeeze(df: pd.DataFrame, lookback: int = 50,
+                                squeeze_pct: float = 0.25,
+                                expansion_threshold: float = 1.5) -> dict | None:
+    """
+    Bollinger Squeeze detector — measures volatility contraction → expansion.
+
+    A squeeze fires when current band-width is in the bottom `squeeze_pct`
+    (default 25%) of the last `lookback` bars. A release fires when the
+    band-width within the last 1-3 bars was squeezed AND current width has
+    expanded to ≥ `expansion_threshold` × the recent squeeze minimum.
+
+    Direction of release: bullish if close > mid (Bollinger middle),
+    bearish if close < mid.
+
+    Returns:
+      {
+        "state":        "squeezing" | "releasing" | "expanded" | "neutral",
+        "direction":    "Long" | "Short" | None (only when state == releasing),
+        "bw_current":   float,
+        "bw_min_recent": float,
+        "bw_percentile": float (0-100, current bw's percentile in lookback window),
+        "bars_since_squeeze_low": int | None,
+      }
+
+    Returns None if insufficient data.
+    """
+    if df is None or len(df) < lookback + 5:
+        return None
+    bbands = ta.bbands(df["close"], length=20, std=2)
+    if bbands is None or bbands.empty:
+        return None
+    bwidth_col = [c for c in bbands.columns if "BBB" in c]
+    mid_col    = [c for c in bbands.columns if "BBM" in c]
+    if not bwidth_col or not mid_col:
+        return None
+    bw_series = bbands[bwidth_col[0]].dropna()
+    if len(bw_series) < lookback:
+        return None
+
+    recent = bw_series.iloc[-lookback:]
+    current_bw   = float(bw_series.iloc[-1])
+    bw_min       = float(recent.min())
+    threshold    = float(recent.quantile(squeeze_pct))
+
+    if pd.isna(current_bw) or pd.isna(bw_min):
+        return None
+
+    # Percentile of current bw within recent window
+    pct = float((recent < current_bw).sum()) / len(recent) * 100.0
+
+    # Find bars-since-squeeze-low (the most recent bar where bw was at/below threshold)
+    bars_since = None
+    for i in range(1, min(lookback, len(recent))):
+        if recent.iloc[-i] <= threshold:
+            bars_since = i - 1  # 0 = current bar still squeezed
+            break
+
+    # State classification
+    state = "neutral"
+    direction = None
+    if current_bw <= threshold:
+        state = "squeezing"
+    elif bars_since is not None and bars_since <= 3 and current_bw >= bw_min * expansion_threshold:
+        state = "releasing"
+        # Direction from close vs mid
+        mid = float(bbands[mid_col[0]].iloc[-1])
+        close = float(df["close"].iloc[-1])
+        if not pd.isna(mid):
+            direction = "Long" if close > mid else "Short"
+    elif current_bw >= bw_min * expansion_threshold:
+        state = "expanded"
+
+    return {
+        "state":                  state,
+        "direction":              direction,
+        "bw_current":             round(current_bw, 4),
+        "bw_min_recent":          round(bw_min, 4),
+        "bw_percentile":          round(pct, 1),
+        "bars_since_squeeze_low": bars_since,
+    }
+
+
 def compute_atr(df: pd.DataFrame, period: int = 14) -> dict | None:
     """ATR(period). Returns {"value","pct","comment"} or None."""
     if len(df) < 30:
@@ -502,6 +679,77 @@ def compute_all_indicators(df: pd.DataFrame) -> dict:
     bb = compute_bollinger(df)
     if bb:
         result["bollinger"] = bb
+
+    # Bollinger Squeeze (added 2026-05-24) — volatility-regime signal,
+    # not a direct band reading. Separate dict so consumers can read
+    # either the bands OR the squeeze state.
+    bb_sq = compute_bollinger_squeeze(df)
+    if bb_sq:
+        result["bollinger_squeeze"] = bb_sq
+
+    # Wyckoff single-bar trap (added 2026-05-24) — spring (bullish reversal)
+    # or upthrust (bearish reversal). Uses last 2 closed bars for the
+    # candidate + next-bar confirmation. Reference Schlotmann TA Masterclass.
+    try:
+        from chart_wyckoff import detect_single_bar_trap
+        trap = detect_single_bar_trap(df)
+        if trap and trap.get("detected"):
+            result["wyckoff_trap"] = trap
+    except Exception:
+        pass
+
+    # Wyckoff multi-bar signals (added 2026-05-24, Phase 2) — Spring,
+    # Upthrust, Absorption. Reference: David Weis "Trades About to Happen".
+    try:
+        from chart_wyckoff import detect_spring, detect_upthrust, detect_absorption
+        sp = detect_spring(df)
+        if sp and sp.get("detected"):
+            result["wyckoff_spring"] = sp
+        ut = detect_upthrust(df)
+        if ut and ut.get("detected"):
+            result["wyckoff_upthrust"] = ut
+        # Only check absorption if no spring/upthrust (mutually exclusive)
+        if not (sp and sp.get("detected")) and not (ut and ut.get("detected")):
+            ab = detect_absorption(df)
+            if ab and ab.get("detected"):
+                result["wyckoff_absorption"] = ab
+    except Exception:
+        pass
+
+    # SOT (Shortening of the Thrust) + Wave leg ratio — Phase 2, share
+    # swing-pivot extraction. Reference Weis + Schlotmann.
+    try:
+        from chart_wyckoff import detect_sot, detect_wave_ratio
+        sot = detect_sot(df)
+        if sot and sot.get("detected"):
+            result["sot"] = sot
+        wave = detect_wave_ratio(df)
+        if wave and wave.get("detected"):
+            result["wave_ratio"] = wave
+    except Exception:
+        pass
+
+    # OBV + CMF — Phase 4 prerequisite for divergence aggregation (F12).
+    obv = compute_obv(df)
+    if obv:
+        result["obv"] = obv
+    cmf = compute_cmf(df)
+    if cmf:
+        result["cmf"] = cmf
+
+    # Last bar OHLC — used by climactic volume detection (Feature 18) and
+    # other downstream wick-aware signals. Cheap snapshot of the most
+    # recent closed candle.
+    try:
+        last = df.iloc[-1]
+        result["last_bar"] = {
+            "open":  float(last["open"]),
+            "high":  float(last["high"]),
+            "low":   float(last["low"]),
+            "close": float(last["close"]),
+        }
+    except Exception:
+        pass
 
     # ATR
     atr = compute_atr(df)

@@ -558,7 +558,7 @@ def _ask_claude(stats: dict, total: int) -> list:
     raw_text, _cached = ai_send(
         "rulebook", MODEL,
         [{"role": "user", "content": prompt}],
-        max_tokens=2048,
+        max_tokens=4096,
     )
     raw = strip_fence(raw_text.strip())
     return json.loads(raw)
@@ -639,9 +639,9 @@ def update_rulebook(conn=None, force: bool = False) -> dict:
         conn.commit()
         return get_rulebook(conn)
 
-    except Exception:
+    except Exception as e:
         traceback.print_exc()
-        return {"error": "Rulebook update failed — see server logs"}
+        return {"error": f"Rulebook update failed: {type(e).__name__}: {e}"}
     finally:
         if own_conn:
             conn.close()

@@ -28,14 +28,42 @@ def is_configured() -> bool:
     return bool(TELEGRAM_TOKEN and TELEGRAM_CHAT)
 
 
+def is_telegram_paused() -> bool:
+    """
+    Telegram-only pause flag (distinct from journal_paused which pauses
+    scanner + monitor too). Allows operator to silence TG notifications
+    while keeping all AI processes running.
+
+    Two sources, ANY truthy → paused:
+      - Env: TG_PAUSED=1 (set in Pi .env)
+      - Settings table: telegram_paused=1 (runtime toggle via /api/settings)
+    """
+    if os.environ.get("TG_PAUSED", "").strip().lower() in ("1", "true", "yes", "on"):
+        return True
+    try:
+        from database import db_conn
+        with db_conn() as conn:
+            row = conn.execute(
+                "SELECT value FROM settings WHERE key='telegram_paused'"
+            ).fetchone()
+            if row and str(row["value"]).strip().lower() in ("1", "true", "yes", "on"):
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def send_message(text: str) -> bool:
     """Send HTML-formatted message. Returns True on success."""
     if not is_configured():
         return False
+    if is_telegram_paused():
+        print(f"[Telegram] TG_PAUSED — suppressed: {text[:60]}...", flush=True)
+        return False
     try:
         import journal_paused
         if journal_paused.is_paused():
-            print(f"[Telegram] paused — suppressed: {text[:60]}...", flush=True)
+            print(f"[Telegram] journal paused — suppressed: {text[:60]}...", flush=True)
             return False
     except Exception:
         pass

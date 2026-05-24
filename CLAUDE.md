@@ -20,6 +20,7 @@ Runs as a systemd service on a Raspberry Pi 5 (<Pi-IP>). Accessible from any bro
 - **Close categorisation:** `positions.close_reason TEXT` (migration 49). Categorical tag: TP / SL / BE / MAE_cut / trail_stop / manual_close / hedge_unwind:<r> / pending_reconcile. Populated by `executor._categorize_close_reason()`.
 - **Multi-TP ladder:** `positions.tp_levels TEXT` JSON (migration 50, and same on `analyzed_calls` via migration 51). JSON array of `{idx, price, pct, hit, hit_at}` per Opus-emitted TP tier. Phase-1 multi-TP work — DB stores the ladder, charts render all levels, but only TP1 is actually placed as a Bitget plan order. Operator handles partial closes manually until Phase 2 wires per-tier execution.
 - **Skill provenance:** 6 columns added 2026-05-23 (migrations 52-57) — `consensus_model_used`, `bear_phase_at_open` (normalised keyword only — distribution/decline/capitulation/recovery), `archetype_at_open`, `po3_total`, `opus_had_overrides`, `tp_levels_count`. Populated by `trading/executor.py::_insert_open_position`. Used by `analytics.get_deep_stats` for the 6 new skill-cohort aggregations consumed by `ai_advisor`. **NB:** these aggregations hard-code `chain='auto_ai'` since skills only exist on the auto-trader. Skill backfill for historical positions: `scripts/backfill_position_skills.py` (idempotent).
+- **Opus calibration score:** `positions.ai_score_at_open REAL` (migration 58, added 2026-05-24). Captures the ai_score that Opus consensus assigned at entry — separate from `setup_score` (scanner score) and `consensus_model_used` (which model graded it). Used by `ai_calibration.compute_calibration()` to bucket outcomes by entry-time confidence. Populated by `trading/executor.py::_insert_open_position` from the orchestrator's signal dict. New entries only — column starts NULL on legacy positions.
 
 ## Import Graph (safe edit order)
 constants.py, prompt_fragments.py, trade_history.py, chart_sr.py, chart_indicators.py — no internal deps, edit freely
@@ -237,6 +238,23 @@ through it.
 
 Setup dict gains `_po3_range`, `_po3_fvg`, `_po3_session` fields and the
 PO3 line is appended to `summary` so the Sonnet consensus call sees it.
+
+## HMM Regime Gate (`market_regime.hmm_alignment_weight`, 2026-05-24)
+Standalone direct ±0.2 score modifier based on HMM regime vs setup direction,
+applied AFTER bear_phase and before personal-bad-hour cap. Distinct from the
+bear_phase classifier which uses HMM only as a tie-breaker.
+
+- `trending_up + Long`    → +0.2 (boost)
+- `trending_up + Short`   → -0.2 (fighting macro trend)
+- `trending_down + Long`  → -0.2
+- `trending_down + Short` → +0.2
+- `ranging` or unknown    →  0.0 (no directional bias)
+- HMM `confidence < 0.6`  →  0.0 (skip boundary regimes)
+
+Magnitude is intentionally smaller than bear_phase (±0.3) because the two
+signals can stack in aligned-direction cases. Setup dict gains `_hmm_regime`
+field; label appended to summary line passed to Sonnet.
+
 VIX multiplier: score × 0.80 when VIX > 30 (5-min cached)
 SMT_SYMBOLS = {BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT}
 SMT_PAIRS = {BTC↔ETH, SOL→ETH, BNB→BTC, XRP→BTC}
@@ -340,9 +358,10 @@ Use after: new tab added, major component redesign, or v2.x milestone.
 
 ## New Tools (Analysis tab)
 - Optimizer history: GET /api/backtest/optimizer-history — last 5 runs with Sharpe + params
-- Walk-forward test: POST /api/backtest/walk-forward — splits real positions 70/30, tests generalization
+- Walk-forward test: POST /api/backtest/walk-forward — **candle-based 70/30 chronological split** (rewritten 2026-05-24, body accepts `{symbol, timeframe, n_trials, days}`; days default 180, range 30-365). No journal-position dependency. Returns train/test Sharpe + generalization verdict (`test_sharpe > 0.5 × train_sharpe AND both > 0`).
 - Walk-forward poll: GET /api/backtest/walk-forward/<job_id> — dedicated poll endpoint (not /optimize/)
 - Hindsight re-run: POST /api/hindsight/run?n=200 — skips already-scored positions (LEFT JOIN fix), max 200
+- Opus calibration: GET /api/calibration/opus — buckets closed auto_ai positions by `ai_score_at_open`, reports WR / TP-hit / SL-hit / expectancy per bucket. Observation only; does NOT auto-adjust CONSENSUS_MIN_SCORE. Returns `"insufficient_data"` until n ≥ 15 per bucket (RELIABLE_N) or 5 per bucket (MIN_BUCKET_N). Backed by `ai_calibration.compute_calibration()`.
 
 ## Market & Analytics API (routes/market.py, routes/analytics.py)
 - GET /api/price/<symbol> — live price via Binance, Bitget fallback

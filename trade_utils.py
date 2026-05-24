@@ -5,7 +5,11 @@ Centralises sector definitions and ATR-based SL quality check,
 which were previously duplicated in ai_call.py and ai_limit.py.
 """
 
+import logging
+from typing import Optional
 import chart_context
+
+logger = logging.getLogger(__name__)
 
 # Sector → USDT symbol list (synced with JS SECTORS in 08-live.js)
 SECTORS = {
@@ -68,6 +72,10 @@ def enforce_tp_floor(entry: float, direction: str, tp1: float, tp2: float,
     except (TypeError, ValueError):
         return tp1, tp2, notes
     if entry <= 0 or atr_4h <= 0:
+        logger.warning(
+            "enforce_tp_floor skipped: entry=%s atr_4h=%s — wrong-side TPs cannot be repaired",
+            entry, atr_4h,
+        )
         return tp1, tp2, notes
 
     is_long = (direction or "").strip().lower() == "long"
@@ -129,6 +137,10 @@ def enforce_sl_floor(entry: float, direction: str, sl: float,
     except (TypeError, ValueError):
         return sl, notes
     if entry <= 0 or atr_4h <= 0:
+        logger.warning(
+            "enforce_sl_floor skipped: entry=%s atr_4h=%s — wrong-side SL cannot be repaired",
+            entry, atr_4h,
+        )
         return sl, notes
 
     is_long = (direction or "").strip().lower() == "long"
@@ -165,6 +177,166 @@ def enforce_sl_floor(entry: float, direction: str, sl: float,
         return round(new_sl, 6), notes
 
     return sl, notes
+
+
+# Feature 20 — SafeZone SL (Elder's "stay away from the crowd" stop placement).
+# Stop-hunt zones cluster around round numbers and obvious swing extremes.
+# Moving SL 0.5× ATR beyond these "obvious" levels often avoids the wick
+# that would trigger a premature exit.
+SAFEZONE_BUFFER_ATR_MULT     = 0.5    # how far to push SL past a round/swing zone
+SAFEZONE_ROUND_PROXIMITY_PCT = 0.5    # SL within this % of a round number = stop-hunt zone
+
+
+def _round_number_for(price: float) -> Optional[float]:
+    """
+    Find the nearest "round number" for a given price magnitude.
+
+    Examples:
+      $65,000 BTC → nearest $1,000 step    (65000)
+      $3,500 ETH  → nearest $100 step      (3500)
+      $0.003 alt  → nearest $0.0001 step
+    Scales by floor(log10(price)) to handle any asset.
+    """
+    if price is None or price <= 0:
+        return None
+    try:
+        import math as _math
+        magnitude = _math.floor(_math.log10(price))
+        step = 10 ** (magnitude - 1)  # one order below the asset magnitude
+        # Snap to multiples of step
+        return round(price / step) * step
+    except (ValueError, TypeError):
+        return None
+
+
+def safezone_sl(entry: float, direction: str, sl: float,
+                  atr_4h: float) -> tuple[float, list[str]]:
+    """
+    Push SL beyond round-number stop-hunt zones (Elder, Trading for a Living).
+
+    If the proposed SL is within SAFEZONE_ROUND_PROXIMITY_PCT% of the nearest
+    round number relative to entry, move the SL further by SAFEZONE_BUFFER_ATR_MULT× ATR.
+
+    Direction-aware: for Long, "further" means lower; for Short, higher.
+    Joins the existing enforce_*_floor pipeline in Stage 3 (after enforce_sl_floor).
+
+    Returns (sl_adjusted, notes). Returns (sl, []) on missing data or no adjustment.
+    """
+    notes: list[str] = []
+    try:
+        entry  = float(entry or 0)
+        sl     = float(sl or 0)
+        atr_4h = float(atr_4h or 0)
+    except (TypeError, ValueError):
+        return sl, notes
+    if entry <= 0 or sl <= 0 or atr_4h <= 0:
+        return sl, notes
+
+    round_num = _round_number_for(sl)
+    if round_num is None:
+        return sl, notes
+    proximity_pct = abs(sl - round_num) / entry * 100.0
+    if proximity_pct > SAFEZONE_ROUND_PROXIMITY_PCT:
+        return sl, notes   # SL not near a round zone
+
+    is_long = (direction or "").strip().lower() == "long"
+    buffer = atr_4h * SAFEZONE_BUFFER_ATR_MULT
+    new_sl = (sl - buffer) if is_long else (sl + buffer)
+    notes.append(
+        f"SafeZone SL: original {sl:.6g} within {proximity_pct:.2f}% of round "
+        f"{round_num:.6g} — pushed to {new_sl:.6g} ({SAFEZONE_BUFFER_ATR_MULT}× ATR buffer)"
+    )
+    return round(new_sl, 6), notes
+
+
+# Feature 9 — Trade Grade (Elder A-trade channel normalization).
+TRADE_GRADE_CHANNEL_ATR_MULT = 4.0  # 4× ATR_4H as proxy for "expected channel"
+
+
+def compute_trade_grade(symbol: str, entry: float, close_price: float,
+                          direction: str) -> Optional[float]:
+    """
+    Normalize trade P&L by expected channel height (≈ 4× ATR_4H).
+
+    A grade ≥ 0.30 = A-trade (captured ≥30% of expected channel).
+    A grade ≥ 0.15 = B-trade.
+    A grade < 0    = loser (price went wrong direction).
+
+    Direction-aware: for Long, positive grade = profit; for Short, mirror.
+
+    Returns float or None on missing/invalid data. ATR is fetched fresh
+    (close-time channel, not entry-time — easier; accuracy trade-off
+    documented in the architect's note).
+    """
+    try:
+        entry = float(entry or 0)
+        close_price = float(close_price or 0)
+    except (TypeError, ValueError):
+        return None
+    if entry <= 0 or close_price <= 0:
+        return None
+    try:
+        ctx = chart_context.get_chart_context(symbol, ["4H"])
+        atr = ((ctx.get("4H") or {}).get("indicators") or {}).get("atr") or {}
+        atr_v = atr.get("value")
+        if atr_v is None or atr_v <= 0:
+            return None
+        atr_v = float(atr_v)
+    except Exception:
+        return None
+    channel = atr_v * TRADE_GRADE_CHANNEL_ATR_MULT
+    if channel <= 0:
+        return None
+    is_long = (direction or "").strip().lower() == "long"
+    sign = 1 if is_long else -1
+    # Signed distance in direction of trade
+    move = (close_price - entry) * sign
+    return move / channel
+
+
+def validate_direction_vs_levels(direction: str, entry: float, sl: float,
+                                  tp1: float, tp2: float = 0) -> tuple[bool, str]:
+    """
+    Returns (ok, reason). Confirms levels sit on the correct side of entry
+    given the direction. Last-line defence against direction/levels drift
+    between Stage 1 (technicals) and Stage 3 (LLM-emitted ladder) — the
+    enforce_* functions can be skipped when ATR is missing, so a final
+    geometric check is needed before a setup reaches consensus.
+
+    Rules:
+      Long  → sl < entry  AND  tp1 > entry  (and tp2 > entry when present)
+      Short → sl > entry  AND  tp1 < entry  (and tp2 < entry when present)
+    """
+    try:
+        e   = float(entry or 0)
+        s   = float(sl    or 0)
+        t1  = float(tp1   or 0)
+        t2  = float(tp2   or 0)
+    except (TypeError, ValueError):
+        return False, "non-numeric level"
+
+    if e <= 0:
+        return False, "entry <= 0"
+    if s <= 0 or t1 <= 0:
+        return False, "sl or tp1 missing/<=0"
+
+    is_long = (direction or "").strip().lower() == "long"
+    if is_long:
+        if s >= e:
+            return False, f"Long: sl {s} >= entry {e}"
+        if t1 <= e:
+            return False, f"Long: tp1 {t1} <= entry {e}"
+        if t2 > 0 and t2 <= e:
+            return False, f"Long: tp2 {t2} <= entry {e}"
+        return True, ""
+    # Short
+    if s <= e:
+        return False, f"Short: sl {s} <= entry {e}"
+    if t1 >= e:
+        return False, f"Short: tp1 {t1} >= entry {e}"
+    if t2 > 0 and t2 >= e:
+        return False, f"Short: tp2 {t2} >= entry {e}"
+    return True, ""
 
 
 def normalize_symbol(s: str) -> str:

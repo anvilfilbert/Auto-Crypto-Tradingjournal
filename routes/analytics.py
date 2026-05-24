@@ -354,3 +354,37 @@ def api_chart_indicators():
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)
+
+
+# ── Score Comparison (scanner vs Opus vs hindsight) ────────────────────────────
+# Added 2026-05-24. Backed by ai_score_comparison.compute_comparison() —
+# returns per-trade rows + per-system aggregates + disagreement cases. Cached
+# in settings.score_comparison_cache_json; POST recompute to refresh.
+
+@bp.route("/api/analysis/score-comparison")
+def api_score_comparison():
+    """GET — returns cached result or {meta: {computed_at: null}} if never run."""
+    try:
+        import ai_score_comparison
+        with db_conn() as conn:
+            cached = ai_score_comparison.get_cached(conn)
+        if cached:
+            return _ok(cached)
+        return _ok({"per_trade": [], "aggregates": {}, "disagreements": [],
+                    "meta": {"computed_at": None, "note": "never computed — POST to recompute"}})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/analysis/score-comparison/recompute", methods=["POST"])
+def api_score_comparison_recompute():
+    """POST — force recompute + save to cache."""
+    try:
+        import ai_score_comparison
+        with db_conn() as conn:
+            data = ai_score_comparison.recompute_and_save(conn)
+        return _ok(data)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)

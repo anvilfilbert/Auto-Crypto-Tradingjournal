@@ -90,19 +90,28 @@ def _consecutive_wins(conn=None) -> int:
 
 
 def _streak_multiplier(wins: int) -> float:
-    """Profit Compounding Strategy progression — risk grows with the
-    winning streak, capped at MAX_STREAK_MULTIPLIER. Matches the guide's
-    Trade 1 + Trade 2 at base risk (Lock & Load), then progressive:
+    """Streak-based risk multiplier — two opposing modes, operator picks via
+    config.STREAK_MODE (env or runtime UI):
 
-      streak 0  → 1.0×  (Trade 1 — foundation)
-      streak 1  → 1.0×  (Trade 2 — lock first win, risk base again)
-      streak 2  → 2.0×  (Trade 3 — begin compounding)
-      streak 3  → 3.0×  (Trade 4 — progressive growth)
-      streak N  → min(N, MAX_STREAK_MULTIPLIER)×
+      "compound" (default):  risk GROWS with wins (Profit Compounding)
+        streak 0/1 → 1.0×, streak 2 → 2.0×, …, capped at MAX_STREAK_MULTIPLIER
 
-    A loss resets the streak to 0 → multiplier back to 1.0×.
+      "euphoria_dampener" (Feature 10, Douglas):  risk SHRINKS after 3+ wins
+        streak 0-2 → 1.0× (normal), streak 3+ → EUPHORIA_SIZE_MULT (0.75×)
+
+      "off": always 1.0× (operator wants neither compounding nor dampening)
+
+    A loss resets the streak → multiplier back to 1.0×.
     """
-    if not config.COMPOUND_STREAK_ENABLED or wins < 2:
+    mode = (config.streak_mode() or "compound").lower()
+    if mode == "off" or wins < 2:
+        return 1.0
+    if mode == "euphoria_dampener":
+        if wins >= config.EUPHORIA_CAP_WINS:
+            return float(config.EUPHORIA_SIZE_MULT)
+        return 1.0
+    # default: compound
+    if not config.COMPOUND_STREAK_ENABLED:
         return 1.0
     return float(min(int(wins), config.MAX_STREAK_MULTIPLIER))
 
@@ -113,6 +122,77 @@ def _effective_notional_cap(equity_usdt: float) -> float:
     minimum size."""
     return max(config.MAX_NOTIONAL_USDT,
                 equity_usdt * config.MAX_NOTIONAL_PCT)
+
+
+# ── Volatility-aware sizing dampener ─────────────────────────────────────────
+# Per-asset ATR(14) on 4H as the volatility proxy. Reference ATR is the
+# median across the major-symbol watchlist (sampled occasionally).
+# When current asset's ATR% > reference × VOL_OUTLIER_RATIO, the position
+# shrinks by VOL_DAMPENER_FLOOR so a single high-vol asset doesn't
+# dominate basket risk. Cached 5 min per symbol to keep size_trade fast.
+import time as _time_mod
+import os as _os
+
+VOL_DAMPENER_ENABLED   = bool(int(_os.environ.get("FUTURES_AI_VOL_DAMPENER_ENABLED", "1")))
+VOL_REFERENCE_ATR_PCT  = float(_os.environ.get("FUTURES_AI_VOL_REFERENCE_ATR_PCT",  "3.0"))  # BTC 4H ATR% baseline
+VOL_OUTLIER_RATIO      = float(_os.environ.get("FUTURES_AI_VOL_OUTLIER_RATIO",       "1.5"))
+VOL_DAMPENER_FLOOR     = float(_os.environ.get("FUTURES_AI_VOL_DAMPENER_FLOOR",      "0.5"))  # don't shrink past 50%
+_VOL_CACHE: dict = {}      # symbol → (timestamp, atr_pct)
+_VOL_CACHE_TTL = 300       # 5 minutes
+
+
+def _get_asset_atr_pct(symbol: str) -> Optional[float]:
+    """Fetch 4H ATR% for a symbol, cached 5min. Returns None on error."""
+    if not symbol:
+        return None
+    now = _time_mod.time()
+    cached = _VOL_CACHE.get(symbol)
+    if cached and (now - cached[0]) < _VOL_CACHE_TTL:
+        return cached[1]
+    try:
+        # Import lazily to avoid loading chart stack at module-import time
+        from chart_context import get_chart_context
+        ctx = get_chart_context(symbol, ["4H"])
+        atr = ((ctx.get("4H") or {}).get("indicators") or {}).get("atr") or {}
+        atr_pct = atr.get("pct")
+        if atr_pct is None:
+            return None
+        atr_pct = float(atr_pct)
+        _VOL_CACHE[symbol] = (now, atr_pct)
+        return atr_pct
+    except Exception:
+        return None
+
+
+def _vol_dampener(symbol: str) -> tuple[float, str]:
+    """
+    Per-asset volatility-aware sizing multiplier.
+
+    When asset's 4H ATR% is significantly above the reference baseline,
+    shrink position size proportionally. Caps at VOL_DAMPENER_FLOOR.
+
+    Returns (multiplier, reason). On error or disabled: (1.0, "").
+
+    Examples (VOL_REFERENCE_ATR_PCT=3.0, VOL_OUTLIER_RATIO=1.5):
+      asset ATR% = 3.0 → ratio=1.0 → no dampening (mult 1.0)
+      asset ATR% = 4.5 → ratio=1.5 → just at threshold (mult ≈ 1.0)
+      asset ATR% = 6.0 → ratio=2.0 → mult = 1.5/2.0 = 0.75
+      asset ATR% = 12  → ratio=4.0 → would be 0.375, floored to 0.5
+    """
+    if not VOL_DAMPENER_ENABLED:
+        return 1.0, ""
+    atr_pct = _get_asset_atr_pct(symbol)
+    if atr_pct is None or atr_pct <= 0:
+        return 1.0, "vol_dampener: ATR unavailable, no adjustment"
+    ratio = atr_pct / VOL_REFERENCE_ATR_PCT
+    if ratio <= VOL_OUTLIER_RATIO:
+        return 1.0, ""
+    # Outlier — scale down. mult = VOL_OUTLIER_RATIO / ratio, floored
+    mult = max(VOL_DAMPENER_FLOOR, VOL_OUTLIER_RATIO / ratio)
+    return round(mult, 3), (
+        f"vol_dampener: ATR% {atr_pct:.2f} vs ref {VOL_REFERENCE_ATR_PCT:.1f} "
+        f"(ratio {ratio:.2f}×) → size ×{mult:.2f}"
+    )
 
 
 def _drawdown_dampener(equity_usdt: float) -> tuple[float, str]:
@@ -148,7 +228,8 @@ def _drawdown_dampener(equity_usdt: float) -> tuple[float, str]:
 
 def size_trade(score: int, entry: float, sl: float,
                equity_usdt: Optional[float] = None,
-               conn=None) -> Optional[dict]:
+               conn=None,
+               symbol: Optional[str] = None) -> Optional[dict]:
     """
     Returns sizing dict or None if not sizeable.
       {
@@ -186,7 +267,12 @@ def size_trade(score: int, entry: float, sl: float,
     # check so we glide into safety rather than slam into it.
     dd_mult, dd_reason = _drawdown_dampener(eq)
 
-    risk_dollars = eq * config.RISK_PER_TRADE_PCT * score_mult * streak_mult * dd_mult
+    # Per-asset volatility-aware sizing — shrink notional on high-vol assets
+    # so one outlier doesn't blow basket risk. Cached 5min per symbol.
+    vol_mult, vol_reason = _vol_dampener(symbol or "")
+
+    risk_dollars = (eq * config.RISK_PER_TRADE_PCT * score_mult
+                    * streak_mult * dd_mult * vol_mult)
     sl_dist_pct = abs(entry - sl) / entry
     if sl_dist_pct < 0.002:   # SL closer than 0.2% — would be unreasonable lev
         return None
@@ -212,6 +298,8 @@ def size_trade(score: int, entry: float, sl: float,
         "win_streak":         wins,
         "dd_dampener":        round(dd_mult, 2),
         "dd_dampener_reason": dd_reason,
+        "vol_dampener":       round(vol_mult, 3),
+        "vol_dampener_reason": vol_reason,
         "effective_cap_usdt": round(cap, 2),
         "capped":             notional_raw > cap,
     }

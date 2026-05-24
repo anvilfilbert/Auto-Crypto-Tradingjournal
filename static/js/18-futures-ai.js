@@ -184,6 +184,32 @@ function _renderFuturesAI(d) {
 
   _loadFuturesAILog();
   _loadFuturesAIPositions();
+
+  // Feature 10 — update streak-mode pill from config
+  const sm = document.getElementById('fai-streak-mode-current');
+  if (sm && d.config) {
+    const mode = d.config.streak_mode || 'compound';
+    sm.textContent = (mode === 'euphoria_dampener') ? '↓ Euphoria dampener (shrink after 3+ wins)'
+                    : (mode === 'off')              ? 'Off (always 1×)'
+                                                    : '↑ Compound (grow with wins)';
+  }
+}
+
+
+// Feature 10 — switch streak mode via UI toggle.
+async function setStreakMode(mode) {
+  if (!['compound', 'euphoria_dampener', 'off'].includes(mode)) return;
+  try {
+    const res = await api('/api/futures-ai/streak-mode', 'POST', { mode });
+    if (res.ok) {
+      notify('Streak mode set to: ' + mode, 'success');
+      loadFuturesAI();   // refresh
+    } else {
+      notify('Failed: ' + (res.error || 'unknown'), 'danger');
+    }
+  } catch (e) {
+    notify('Error: ' + e.message, 'danger');
+  }
 }
 
 

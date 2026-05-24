@@ -91,7 +91,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             is_manual, exchange, leverage,
             chain, setup_type, setup_score, signal_price, tp_levels,
             consensus_model_used, bear_phase_at_open, archetype_at_open,
-            po3_total, opus_had_overrides, tp_levels_count
+            po3_total, opus_had_overrides, tp_levels_count,
+            ai_score_at_open
         ) VALUES (
             ?, ?, ?,
             'isolated', datetime('now'), '',
@@ -102,7 +103,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             0, 'bitget_trader', ?,
             'auto_ai', ?, ?, ?, ?,
             ?, ?, ?,
-            ?, ?, ?
+            ?, ?, ?,
+            ?
         )
     """, (
         sym,
@@ -123,6 +125,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
         signal.get("po3_total"),
         int(signal.get("opus_had_overrides") or 0),
         int(signal.get("tp_levels_count") or 0),
+        # AI score at open — added 2026-05-24 for Opus calibration analysis
+        signal.get("ai_score"),
     ))
     conn.commit()
     return cur.lastrowid
@@ -230,6 +234,26 @@ def _mark_closed(conn, position_id: int, close_price: float,
         WHERE id = ?
     """, (close_price, realized_pnl, short_reason, position_id))
     conn.commit()
+
+    # Feature 9 — Trade Grade (Elder A-trade normalization, 2026-05-24).
+    # ATR-normalized P&L distance: (exit - entry) / (4× ATR_4H at open).
+    # 4× ATR is roughly the "expected daily channel" for the asset; an
+    # A-trade closes for ≥30% of channel = ≥1.2× ATR_4H.
+    try:
+        from trade_utils import compute_trade_grade
+        if row:
+            symbol = conn.execute(
+                "SELECT symbol FROM positions WHERE id=?", (position_id,)
+            ).fetchone()[0]
+            grade = compute_trade_grade(symbol, entry_px, close_price, direction)
+            if grade is not None:
+                conn.execute(
+                    "UPDATE positions SET trade_grade = ? WHERE id = ?",
+                    (round(grade, 4), position_id))
+                conn.commit()
+    except Exception:
+        pass
+
     _log(conn, "auto_close", position_id,
          {"close_price": close_price, "pnl": realized_pnl,
           "reason": short_reason, "raw_reason": reason})
@@ -637,6 +661,75 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
                     "error":  str(e)[:200],
                 })
 
+    # ── Feature 19 — Tiered "cuff the trade" BE move (Elder, 2026-05-24) ──
+    # Before TP1 hit, progressively tighten SL as price moves toward TP1.
+    # Three tiers: at 33% of distance to TP1 → move to BE; at 66% → lock
+    # 33% of gain; at 90% → lock 66% of gain. Tracked in positions.be_tier_reached
+    # so we don't re-apply or regress. Env-toggle FUTURES_AI_TIERED_BE_ENABLED.
+    try:
+        import os as _os
+        if int(_os.environ.get("FUTURES_AI_TIERED_BE_ENABLED", "1")):
+            tp_levels = json.loads(db_pos.get("tp_levels") or "[]")
+            tp1 = next((t for t in tp_levels if t.get("idx") == 1), None)
+            tier_done = int(db_pos.get("be_tier_reached") or 0)
+            if tp1 and tp1.get("price") and tier_done < 3 and not (
+                any((t.get("idx") == 1) for t in filled_tps)):
+                # Compute pct of distance traveled toward TP1
+                tp1_price = float(tp1["price"])
+                distance_to_tp1 = abs(tp1_price - entry)
+                if distance_to_tp1 > 0:
+                    pct_traveled = abs(mark - entry) / distance_to_tp1
+                    # Tier definitions: (threshold, new_sl_lock_fraction_of_distance)
+                    # tier 1: 33% → SL at entry (BE)
+                    # tier 2: 66% → SL at entry + 33% of distance
+                    # tier 3: 90% → SL at entry + 66% of distance
+                    tiers = [(0.33, 0.0), (0.66, 0.33), (0.90, 0.66)]
+                    new_tier = tier_done
+                    new_sl_target = current_sl
+                    for tier_idx, (threshold, lock_frac) in enumerate(tiers, 1):
+                        if tier_idx <= tier_done:
+                            continue
+                        if pct_traveled >= threshold:
+                            # Compute SL at entry + lock_frac × distance (direction-aware)
+                            lock_offset = distance_to_tp1 * lock_frac
+                            candidate_sl = entry + sign * lock_offset
+                            # Apply BE buffer for tier 1 (lock_frac=0)
+                            if lock_frac == 0:
+                                candidate_sl = fa_config.be_price_for(entry, is_long)
+                            # Only adopt if candidate is more protective
+                            if (is_long and candidate_sl > new_sl_target) or \
+                               (not is_long and candidate_sl < new_sl_target):
+                                new_sl_target = candidate_sl
+                                new_tier = tier_idx
+                    if new_tier > tier_done:
+                        gap_pct = abs(new_sl_target - current_sl) / entry if entry else 0
+                        if gap_pct >= 0.0005:
+                            try:
+                                r2 = bitget_trader.modify_position_sl(
+                                    live["symbol"], live["direction"].lower(), new_sl_target)
+                                if r2.get("ok"):
+                                    conn.execute(
+                                        "UPDATE positions SET be_tier_reached=? WHERE id=?",
+                                        (new_tier, db_pos["id"]))
+                                    conn.commit()
+                                    _log(conn, "real_be_tier", db_pos["id"], {
+                                        "symbol":     live["symbol"],
+                                        "tier":       new_tier,
+                                        "pct_traveled": round(pct_traveled * 100, 1),
+                                        "old_sl":     current_sl,
+                                        "new_sl":     new_sl_target,
+                                        "result":     r2,
+                                    })
+                                    actions.append(f"be_tier_{new_tier}")
+                                    current_sl = new_sl_target
+                            except Exception as _e:
+                                _log(conn, "real_be_tier_failed", db_pos["id"], {
+                                    "symbol": live["symbol"], "tier": new_tier,
+                                    "error":  str(_e)[:200],
+                                })
+    except Exception as _e:
+        logger.debug("tiered BE check error: %s", _e)
+
     # MAE breach — -1× ATR (matches position_risk_monitor)
     if current_pct <= -atr_pct * 1.0:
         try:
@@ -651,12 +744,31 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
                  {"symbol": live["symbol"], "error": str(e)[:200]})
         return actions
 
-    # Trail — +2× ATR (move SL to entry + 0.5× ATR)
-    # Same tick-rounding epsilon as the BE block — Bitget rounds the SL it
-    # reports back, so a full-precision new_sl > current_sl compare would
-    # re-fire every cycle on identical positions.
+    # Trail — by default +2× ATR triggers, with new SL at entry + 0.5× ATR.
+    # CPR width forecasting (Feature 2, 2026-05-24): if the day-type is
+    # "trend" (narrow CPR), widen the trail to give the position room to
+    # run; if "range" (wide CPR), tighten the trail.
+    trail_atr_mult = 0.5   # default — distance of new SL beyond entry
+    try:
+        import os as _os
+        if int(_os.environ.get("FUTURES_AI_CPR_TRAIL_ENABLED", "1")):
+            from chart_cpr import compute_cpr_from_df, cpr_day_type
+            from chart_context import get_chart_context as _gcc
+            ctx_1d = _gcc(live["symbol"], ["1D"]) or {}
+            df_1d = (ctx_1d.get("1D") or {}).get("df")
+            if df_1d is not None and len(df_1d) >= 2:
+                _cpr = compute_cpr_from_df(df_1d)
+                _dt  = cpr_day_type(_cpr)
+                # trail_atr_mult fields from cpr_day_type are 1.0/1.5/2.0 representing
+                # the trail-distance multiplier. Map to "new SL beyond entry" by /4.
+                # (default 0.5 was for 2.0 trail mult, so factor is /4)
+                base = _dt.get("trail_atr_mult", 1.5)
+                trail_atr_mult = base / 4.0   # → 0.25 (range), 0.375 (neutral), 0.5 (trend)
+    except Exception:
+        pass
+
     if current_pct >= atr_pct * 2.0:
-        new_sl = entry + sign * (atr * 0.5)
+        new_sl = entry + sign * (atr * trail_atr_mult)
         gap_pct = abs(new_sl - current_sl) / entry if entry else 0
         if ((is_long and new_sl > current_sl) or (not is_long and new_sl < current_sl)) \
                 and gap_pct >= 0.0005:

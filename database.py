@@ -488,6 +488,57 @@ def init_db():
            "ALTER TABLE positions ADD COLUMN opus_had_overrides INTEGER DEFAULT 0")
     _apply(57, "positions.tp_levels_count",
            "ALTER TABLE positions ADD COLUMN tp_levels_count INTEGER DEFAULT 0")
+    _apply(58, "positions.ai_score_at_open",
+           "ALTER TABLE positions ADD COLUMN ai_score_at_open REAL DEFAULT NULL")
+    _apply(59, "positions.be_tier_reached",
+           "ALTER TABLE positions ADD COLUMN be_tier_reached INTEGER DEFAULT 0")
+    _apply(60, "positions.trade_grade",
+           "ALTER TABLE positions ADD COLUMN trade_grade REAL DEFAULT NULL")
+
+    # Feature 13 — Supply/Demand zones with order-absorption decay.
+    # Each zone has a price band [bottom, top], a touch counter, and a
+    # valid flag (auto-invalidated at 3+ touches). Per-symbol per-timeframe.
+    _apply(61, "sd_zones",
+           """CREATE TABLE IF NOT EXISTS sd_zones (
+                  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                  symbol      TEXT NOT NULL,
+                  timeframe   TEXT NOT NULL,
+                  zone_type   TEXT NOT NULL,   -- 'demand' (bullish) or 'supply' (bearish)
+                  top         REAL NOT NULL,
+                  bottom      REAL NOT NULL,
+                  touches     INTEGER DEFAULT 0,
+                  valid       INTEGER DEFAULT 1,
+                  created_at  TEXT DEFAULT (datetime('now')),
+                  last_seen   TEXT
+              )""")
+    # Feature 7 — Trade Apgar pre-trade scorecard (Elder). 5-question checklist;
+    # each answer 0/1/2. Total ≥7 AND no zeros = passed (allow new trades today).
+    _apply(62, "apgar_sessions",
+           """CREATE TABLE IF NOT EXISTS apgar_sessions (
+                  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                  ts        TEXT DEFAULT (datetime('now')),
+                  q1        INTEGER,
+                  q2        INTEGER,
+                  q3        INTEGER,
+                  q4        INTEGER,
+                  q5        INTEGER,
+                  total     INTEGER,
+                  passed    INTEGER,
+                  notes     TEXT
+              )""")
+    # Feature 8 — Pre-session operator readiness (Elder + Douglas).
+    # Mood / sleep / prior_pnl_flag / prep — yields red/yellow/green.
+    _apply(63, "session_readiness",
+           """CREATE TABLE IF NOT EXISTS session_readiness (
+                  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                  ts              TEXT DEFAULT (datetime('now')),
+                  mood            INTEGER,
+                  sleep           INTEGER,
+                  prior_pnl_flag  INTEGER,
+                  prep            INTEGER,
+                  color           TEXT,
+                  notes           TEXT
+              )""")
 
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.

@@ -210,6 +210,7 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     sl      = setup.get("sl_price"),
                     equity_usdt = equity,
                     conn    = conn,
+                    symbol  = setup.get("symbol"),  # for per-asset vol dampener
                 )
                 if not sizing:
                     summary["rejected_sizing"] += 1
@@ -318,6 +319,9 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     "po3_total":            round(po3_total, 3),
                     "opus_had_overrides":   1 if opus_had_overrides else 0,
                     "tp_levels_count":      len(tp_levels),
+                    # AI score at open — added 2026-05-24 for Opus calibration
+                    "ai_score":             (verdict.get("ai") or {}).get("score")
+                                            or verdict.get("consensus_score"),
                 }
                 if fa_config.is_real_mode():
                     opened_ok = _open_real(conn, signal, sizing)

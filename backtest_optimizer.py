@@ -98,56 +98,43 @@ def _objective(trial: optuna.Trial, symbol: str, timeframe: str, days: int,
 
 
 def run_walk_forward(symbol: str, timeframe: str = "4H",
-                     n_trials: int = 50) -> dict:
+                     n_trials: int = 50, days: int = 180) -> dict:
     """
-    Walk-forward test using the user's actual position date range.
+    Candle-based walk-forward test (rewritten 2026-05-24).
 
-    1. Reads oldest and newest closed positions for this symbol from DB.
-    2. Splits the date range at 70% (training / test).
-    3. Runs optimizer on the training window.
-    4. Runs a single backtest with best params on the test window.
-    5. Returns both Sharpe values so the user can judge generalization.
+    Splits a fixed price-history window (default 180d) chronologically 70/30:
+      - Train window: older 70% of `days` (end_offset_days = test portion)
+      - Test  window: most recent 30% (end_offset_days = 0)
+
+    Windows are guaranteed non-overlapping. Works for any symbol with sufficient
+    price history — does NOT depend on journal position count.
+
+    Returns train Sharpe + test Sharpe + generalization verdict so the operator
+    can judge whether an optimization result is real or curve-fit.
     """
-    from database import db_conn
-    from backtest_engine import run_backtest
+    from backtest_engine import run_backtest, BacktestParams
 
-    with db_conn() as conn:
-        row = conn.execute("""
-            SELECT MIN(close_time), MAX(close_time), COUNT(*)
-            FROM positions
-            WHERE symbol = ?
-              AND close_time IS NOT NULL
-        """, (symbol,)).fetchone()
+    if days < 30:
+        return {"error": f"days={days} too small — need at least 30 for a meaningful split"}
 
-    if not row or not row[0]:
-        return {"error": f"No positions found for {symbol}"}
+    train_days = max(14, round(days * 0.70))
+    test_days  = max(7,  days - train_days)
 
-    min_dt, max_dt, n_pos = row[0], row[1], row[2]
-    if n_pos < 10:
-        return {"error": f"Too few positions ({n_pos}) for walk-forward — need at least 10"}
-
-    from datetime import datetime
-    fmt = "%Y-%m-%d %H:%M:%S"
-    t_min = datetime.strptime(min_dt[:19], fmt)
-    t_max = datetime.strptime(max_dt[:19], fmt)
-    total_days = max(1, (t_max - t_min).days)
-    split_days = max(7, int(total_days * 0.70))
-    test_days  = max(7, total_days - split_days)
-
-    # Phase 1: optimize on training window (ends test_days ago, so no overlap with test)
+    # Phase 1: optimize on training window (ends `test_days` ago — no overlap)
     try:
         train_params = run_optimizer(symbol, timeframe,
-                                     days=split_days, n_trials=n_trials,
+                                     days=train_days, n_trials=n_trials,
                                      end_offset_days=test_days)
     except Exception as e:
         return {"error": f"Optimizer failed: {e}"}
 
-    # Phase 2: test best params on out-of-sample window (most recent test_days, ending NOW)
-    # Training window ends where the test window begins (end_offset_days=test_days),
-    # so the two windows are non-overlapping — no data leakage.
-    from backtest_engine import BacktestParams
+    if not train_params:
+        return {"error": "Optimizer returned no params — likely no valid trades in train window"}
+
     test_p = BacktestParams(**{k: v for k, v in train_params.items()
                                if k in BacktestParams.__dataclass_fields__})
+
+    # Phase 2: test best params on out-of-sample window (most recent test_days)
     try:
         test_result = run_backtest(symbol, timeframe,
                                    days=test_days, params=test_p,
@@ -155,37 +142,44 @@ def run_walk_forward(symbol: str, timeframe: str = "4H",
     except Exception as e:
         return {"error": f"Test backtest failed: {e}"}
 
-    # Also get training Sharpe for comparison (training window ends at test_days ago)
+    # Also run the same params on the train window for comparison
     try:
         train_result = run_backtest(symbol, timeframe,
-                                    days=split_days, params=test_p,
+                                    days=train_days, params=test_p,
                                     end_offset_days=test_days)
-        train_sharpe = round(train_result.sharpe, 3)
+        train_sharpe   = round(train_result.sharpe, 3)
+        train_trades   = train_result.total_trades
+        train_win_rate = round(train_result.win_rate, 1)
     except Exception:
-        train_sharpe = None
+        train_sharpe   = None
+        train_trades   = 0
+        train_win_rate = None
 
     test_sharpe = round(test_result.sharpe, 3) if test_result else None
+    # Generalizes if OOS is positive AND retains at least half of in-sample Sharpe
     generalizes = (test_sharpe is not None and test_sharpe > 0
-                   and train_sharpe is not None and test_sharpe > train_sharpe * 0.5)
+                   and train_sharpe is not None and train_sharpe > 0
+                   and test_sharpe > train_sharpe * 0.5)
 
     return {
-        "symbol":        symbol,
-        "timeframe":     timeframe,
-        "total_days":    total_days,
-        "train_days":    split_days,
-        "test_days":     test_days,
-        "n_positions":   n_pos,
-        "train_sharpe":  train_sharpe,
-        "test_sharpe":   test_sharpe,
-        "generalizes":   generalizes,
-        "best_params":   train_params,
-        "test_trades":   test_result.total_trades if test_result else 0,
-        "test_win_rate": round(test_result.win_rate, 1) if test_result else None,
+        "symbol":         symbol,
+        "timeframe":      timeframe,
+        "total_days":     days,
+        "train_days":     train_days,
+        "test_days":      test_days,
+        "train_sharpe":   train_sharpe,
+        "test_sharpe":    test_sharpe,
+        "train_trades":   train_trades,
+        "test_trades":    test_result.total_trades if test_result else 0,
+        "train_win_rate": train_win_rate,
+        "test_win_rate":  round(test_result.win_rate, 1) if test_result else None,
+        "generalizes":    generalizes,
+        "best_params":    train_params,
     }
 
 
 def start_walk_forward_job(symbol: str, timeframe: str = "4H",
-                           n_trials: int = 50) -> str:
+                           n_trials: int = 50, days: int = 180) -> str:
     """Start an async walk-forward job in a daemon thread. Returns job_id immediately."""
     job_id = str(uuid.uuid4())
     job = _OptJob(job_id=job_id, symbol=symbol)
@@ -195,7 +189,7 @@ def start_walk_forward_job(symbol: str, timeframe: str = "4H",
 
     def _run():
         try:
-            result = run_walk_forward(symbol, timeframe, n_trials)
+            result = run_walk_forward(symbol, timeframe, n_trials, days)
             with _jobs_lock:
                 if job_id in _jobs:
                     _jobs[job_id].status = "complete"

@@ -88,7 +88,7 @@ def backtest_optimize_status(job_id: str):
 
 @bp.route("/api/backtest/walk-forward", methods=["POST"])
 def api_walk_forward():
-    """Start async walk-forward test. Body: {symbol, timeframe, n_trials}"""
+    """Start async walk-forward test. Body: {symbol, timeframe, n_trials, days}"""
     try:
         body      = request.get_json(force=True, silent=True) or {}
         symbol    = (body.get("symbol") or "BTCUSDT").upper().strip()
@@ -97,8 +97,10 @@ def api_walk_forward():
             return _err(f"timeframe must be one of: {', '.join(sorted(VALID_TIMEFRAMES))}")
         n_trials  = int(body.get("n_trials", 30))
         n_trials  = max(10, min(n_trials, 100))
+        days      = int(body.get("days", 180))
+        days      = max(30, min(days, 365))
         import backtest_optimizer
-        job_id = backtest_optimizer.start_walk_forward_job(symbol, timeframe, n_trials)
+        job_id = backtest_optimizer.start_walk_forward_job(symbol, timeframe, n_trials, days)
         return _ok({"job_id": job_id, "message": f"Walk-forward started for {symbol}"})
     except Exception:
         traceback.print_exc()
@@ -138,6 +140,23 @@ def quality_check():
     if len(prices) != len(signals):
         return _err("prices and signals must be same length", 400)
     return _ok(run_quality_check(prices, signals, n_trials))
+
+
+@bp.get("/api/calibration/opus")
+def api_calibration_opus():
+    """
+    Opus threshold calibration report. Buckets closed auto_ai positions by
+    the ai_score they entered with, computes outcomes per bucket. Observation
+    only — does NOT change CONSENSUS_MIN_SCORE.
+    """
+    try:
+        from database import db_conn
+        import ai_calibration
+        with db_conn() as conn:
+            return _ok(ai_calibration.compute_calibration(conn))
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
 
 
 @bp.get("/api/backtest/optimizer-history")

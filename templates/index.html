@@ -373,7 +373,11 @@ select:focus,input:focus{border-color:var(--accent)}
 .legend-section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid rgba(108,99,255,.15)}
 
 /* ── Nav section separators ──────────────────────────────────────────────────── */
-.nav-sep{font-size:.65rem;color:var(--muted);padding:14px 16px 3px;text-transform:uppercase;letter-spacing:.05em;pointer-events:none;opacity:.7}
+.nav-sep{font-size:.65rem;color:var(--muted);padding:14px 16px 3px;text-transform:uppercase;letter-spacing:.05em;opacity:.7;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;transition:opacity .15s}
+.nav-sep:hover{opacity:1;color:var(--text)}
+.nav-caret{font-size:.6rem;color:var(--muted);transition:transform .15s;display:inline-block;width:8px}
+.nav-sep.collapsed .nav-caret{transform:rotate(-90deg)}
+.nav-item.section-hidden{display:none}
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media(max-width:900px){
@@ -391,72 +395,76 @@ select:focus,input:focus{border-color:var(--accent)}
       📈 TradingJournal
       <span>USDT-M Futures</span>
     </div>
-    <div class="nav-sep">Trading</div>
-    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+    <div class="nav-sep" data-section="trading"><span class="nav-caret">▾</span>Trading</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard" data-section-of="trading">
       <span class="nav-icon">🏠</span><span>Dashboard</span>
     </div>
-    <div class="nav-sep">Trade</div>
-    <div class="nav-item" onclick="showPage('futuresai')" id="nav-futuresai">
+    <div class="nav-sep" data-section="ai-trade"><span class="nav-caret">▾</span>AI-Trade</div>
+    <div class="nav-item" onclick="showPage('futuresai')" id="nav-futuresai" data-section-of="ai-trade">
       <span class="nav-icon">🤖</span><span>Futures-AI</span>
       <span id="nav-futuresai-badge" style="margin-left:auto;font-size:.6rem;padding:1px 5px;border-radius:8px;background:rgba(108,99,255,.15);color:var(--accent);display:none">…</span>
     </div>
-    <div class="nav-item" onclick="showPage('trades')" id="nav-trades">
+    <div class="nav-sep" data-section="manual-trade"><span class="nav-caret">▾</span>Manual-Trade</div>
+    <div class="nav-item" onclick="showPage('trades')" id="nav-trades" data-section-of="manual-trade">
       <span class="nav-icon">⚡</span><span>Live Trades</span>
     </div>
-    <div class="nav-item" onclick="showPage('calls')" id="nav-calls">
+    <div class="nav-item" onclick="showPage('calls')" id="nav-calls" data-section-of="manual-trade">
       <span class="nav-icon">📡</span><span>Call Analyzer</span>
     </div>
-    <div class="nav-item" onclick="showPage('pending')" id="nav-pending">
+    <div class="nav-item" onclick="showPage('pending')" id="nav-pending" data-section-of="manual-trade">
       <span class="nav-icon">⏳</span><span>Pending Orders</span>
     </div>
-    <div class="nav-item" onclick="showPage('live')" id="nav-live">
-      <span class="nav-icon">🔴</span><span>Live Sync</span>
-    </div>
-    <div class="nav-sep">Analysis</div>
-    <div class="nav-item" onclick="showPage('journal')" id="nav-journal">
+    <div class="nav-sep" data-section="analysis"><span class="nav-caret">▾</span>Analysis</div>
+    <div class="nav-item" onclick="showPage('journal')" id="nav-journal" data-section-of="analysis">
       <span class="nav-icon">📒</span><span>Journal</span>
     </div>
-    <div class="nav-item" onclick="showPage('hindsight')" id="nav-hindsight">
+    <div class="nav-item" onclick="showPage('hindsight')" id="nav-hindsight" data-section-of="analysis">
       <span class="nav-icon">🔮</span><span>Hindsight</span>
     </div>
-    <div class="nav-item" onclick="showPage('charts')" id="nav-charts">
+    <div class="nav-item" onclick="showPage('score-comparison')" id="nav-score-comparison" data-section-of="analysis">
+      <span class="nav-icon">⚖️</span><span>Score Comparison</span>
+    </div>
+    <div class="nav-item" onclick="showPage('charts')" id="nav-charts" data-section-of="analysis">
       <span class="nav-icon">📊</span><span>Chart Explorer</span>
     </div>
-    <div class="nav-item" onclick="showPage('deep')" id="nav-deep">
+    <div class="nav-item" onclick="showPage('deep')" id="nav-deep" data-section-of="analysis">
       <span class="nav-icon">📉</span><span>Deep Dive</span>
     </div>
-    <div class="nav-item" onclick="showPage('edge')" id="nav-edge">
+    <div class="nav-item" onclick="showPage('edge')" id="nav-edge" data-section-of="analysis">
       <span class="nav-icon">🔬</span><span>Edge Lab</span>
     </div>
-    <div class="nav-item" onclick="showPage('risk')" id="nav-risk">
+    <div class="nav-item" onclick="showPage('risk')" id="nav-risk" data-section-of="analysis">
       <span class="nav-icon">⚠️</span><span>Risk</span>
     </div>
-    <div class="nav-item" onclick="showPage('ai')" id="nav-ai">
+    <div class="nav-item" onclick="showPage('ai')" id="nav-ai" data-section-of="analysis">
       <span class="nav-icon">🤖</span><span>AI Advisor</span>
     </div>
-    <div class="nav-sep">Tools</div>
-    <div class="nav-item" onclick="showPage('scanner')" id="nav-scanner">
+    <div class="nav-sep" data-section="tools"><span class="nav-caret">▾</span>Tools</div>
+    <div class="nav-item" onclick="showPage('scanner')" id="nav-scanner" data-section-of="tools">
       <span class="nav-icon">⭐</span><span>Setup Scanner</span>
     </div>
-    <div class="nav-item" onclick="showPage('import')" id="nav-import">
+    <div class="nav-item" onclick="showPage('import')" id="nav-import" data-section-of="tools">
       <span class="nav-icon">⬆️</span><span>Import Data</span>
     </div>
-    <div class="nav-sep">Docs</div>
-    <div class="nav-item" onclick="showPage('sources')" id="nav-sources">
+    <div class="nav-sep" data-section="docs"><span class="nav-caret">▾</span>Docs</div>
+    <div class="nav-item" onclick="showPage('sources')" id="nav-sources" data-section-of="docs">
       <span class="nav-icon">🗂️</span><span>Data Sources</span>
     </div>
-    <div class="nav-item" onclick="showPage('ai-architecture')" id="nav-ai-architecture">
+    <div class="nav-item" onclick="showPage('ai-architecture')" id="nav-ai-architecture" data-section-of="docs">
       <span class="nav-icon">🧠</span><span>AI Architecture</span>
     </div>
-    <div class="nav-item" onclick="showPage('scanner-pipeline')" id="nav-scanner-pipeline">
+    <div class="nav-item" onclick="showPage('scanner-pipeline')" id="nav-scanner-pipeline" data-section-of="docs">
       <span class="nav-icon">🪜</span><span>Scanner Pipeline</span>
     </div>
-    <div class="nav-sep">Acki Nacki — DoDEX</div>
-    <div class="nav-item" onclick="showPage('dodex')" id="nav-dodex">
+    <div class="nav-sep" data-section="dodex"><span class="nav-caret">▾</span>Acki Nacki — DoDEX</div>
+    <div class="nav-item" onclick="showPage('dodex')" id="nav-dodex" data-section-of="dodex">
       <span class="nav-icon">💱</span><span>DODEX Integration</span>
     </div>
-    <div class="nav-sep">System</div>
-    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+    <div class="nav-sep" data-section="system"><span class="nav-caret">▾</span>System</div>
+    <div class="nav-item" onclick="showPage('live')" id="nav-live" data-section-of="system">
+      <span class="nav-icon">🔴</span><span>Live Sync</span>
+    </div>
+    <div class="nav-item" onclick="showPage('settings')" id="nav-settings" data-section-of="system">
       <span class="nav-icon">⚙️</span><span>Settings</span>
     </div>
   </nav>
@@ -1268,6 +1276,20 @@ select:focus,input:focus{border-color:var(--accent)}
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px">
         <div style="font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:10px">Risk caps · Circuit breakers</div>
         <div id="fai-risk-config" style="font-size:.85rem;line-height:1.7;color:var(--muted)">Loading…</div>
+
+        <!-- Streak mode toggle (Feature 10) -->
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Streak mode</span>
+          <span id="fai-streak-mode-current" style="font-size:.85rem;font-weight:600;color:var(--text)">—</span>
+          <span style="display:flex;gap:6px;margin-left:auto">
+            <button class="btn btn-sm" onclick="setStreakMode('compound')"
+                    style="background:rgba(38,217,107,.12);color:var(--accent3);border:1px solid rgba(38,217,107,.3);padding:4px 10px;font-size:.75rem">↑ Compound</button>
+            <button class="btn btn-sm" onclick="setStreakMode('euphoria_dampener')"
+                    style="background:rgba(255,179,0,.12);color:var(--yellow);border:1px solid rgba(255,179,0,.3);padding:4px 10px;font-size:.75rem">↓ Dampener</button>
+            <button class="btn btn-sm" onclick="setStreakMode('off')"
+                    style="background:var(--bg);color:var(--muted);border:1px solid var(--border);padding:4px 10px;font-size:.75rem">Off</button>
+          </span>
+        </div>
       </div>
 
       <!-- AI-opened positions: open + recent closed -->
@@ -1438,6 +1460,19 @@ select:focus,input:focus{border-color:var(--accent)}
       <div id="hindsight-status" style="margin-bottom:20px"></div>
       <div id="hindsight-summary"></div>
       <div id="hindsight-table"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- 9b. SCORE COMPARISON                                               -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div id="page-score-comparison" class="page-view">
+      <div class="page-title">⚖️ Score Comparison</div>
+      <div class="page-subtitle">Head-to-head: scanner technicals vs Opus consensus vs Hindsight Haiku — same trades scored by all three systems. Win rate, expectancy + signal accuracy by score bucket, plus disagreement cases.</div>
+
+      <div id="sc-header" style="margin:16px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap"></div>
+      <div id="sc-aggregates" style="margin-bottom:18px"></div>
+      <div id="sc-disagreements" style="margin-bottom:18px"></div>
+      <div id="sc-per-trade"></div>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════ -->
@@ -2803,7 +2838,7 @@ select:focus,input:focus{border-color:var(--accent)}
   </div>
 </div>
 
-<script src="/static/js/01-utils.js?v=3.5"></script>
+<script src="/static/js/01-utils.js?v=3.6"></script>
 <script src="/static/js/02-dashboard.js?v=2.8"></script>
 <script src="/static/js/03-journal.js?v=2.9"></script>
 <script src="/static/js/04-deep-edge.js?v=3.3"></script>
@@ -2812,16 +2847,16 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/07-calls.js?v=3.0"></script>
 <script src="/static/js/08-live.js?v=3.5"></script>
 <script src="/static/js/08b-live-calls.js?v=3.0"></script>
-<script src="/static/js/09-analysis.js?v=3.7"></script>
+<script src="/static/js/09-analysis.js?v=4.0"></script>
 <script src="/static/js/10-pending.js?v=3.7"></script>
 <script src="/static/js/11-sync.js?v=2.8"></script>
 <script src="/static/js/12-explorer.js?v=3.3"></script>
-<script src="/static/js/13-init.js?v=2.8"></script>
+<script src="/static/js/13-init.js?v=2.9"></script>
 <script src="/static/js/14-scanner.js?v=4.2"></script>
 <script src="/static/js/15-hindsight.js?v=3.1"></script>
 <script src="/static/js/16-settings.js?v=2.9"></script>
 <script src="/static/js/17-risk.js?v=2.2"></script>
-<script src="/static/js/18-futures-ai.js?v=1.6"></script>
+<script src="/static/js/18-futures-ai.js?v=1.7"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">
   <button class="bottom-nav-item" data-tab="trades">

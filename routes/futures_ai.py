@@ -60,6 +60,130 @@ def api_futures_ai_set_state():
         return _err("Internal server error", 500)
 
 
+@bp.route("/api/futures-ai/streak-mode", methods=["POST"])
+def api_futures_ai_set_streak_mode():
+    """
+    Set streak mode (Feature 10 UI toggle): compound | euphoria_dampener | off.
+    Persisted in settings.futures_ai_streak_mode. Takes effect immediately
+    on next sized trade.
+    """
+    try:
+        from trading import config as fa_config
+        body = request.get_json(force=True, silent=True) or {}
+        new  = (body.get("mode") or "").strip().lower()
+        if new not in ("compound", "euphoria_dampener", "off"):
+            return _err("mode must be one of: compound, euphoria_dampener, off", 400)
+        with db_conn() as conn:
+            updated = fa_config.set_streak_mode(new, conn=conn)
+        return _ok({"streak_mode": updated})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/futures-ai/apgar", methods=["POST"])
+def api_futures_ai_apgar():
+    """
+    Feature 7 — Submit Trade Apgar scorecard for today.
+    Body: {q1, q2, q3, q4, q5: 0|1|2, notes?}
+    Returns {total, passed} where passed = (total >= 7 AND no q is 0).
+    """
+    try:
+        body = request.get_json(force=True, silent=True) or {}
+        qs = []
+        for k in ("q1", "q2", "q3", "q4", "q5"):
+            v = body.get(k)
+            if v is None:
+                return _err(f"missing {k}", 400)
+            try:
+                qs.append(int(v))
+            except (TypeError, ValueError):
+                return _err(f"{k} must be 0/1/2", 400)
+            if qs[-1] not in (0, 1, 2):
+                return _err(f"{k} must be 0/1/2", 400)
+        total = sum(qs)
+        passed = 1 if (total >= 7 and 0 not in qs) else 0
+        notes = (body.get("notes") or "")[:200]
+        with db_conn() as conn:
+            conn.execute(
+                "INSERT INTO apgar_sessions (q1,q2,q3,q4,q5,total,passed,notes) "
+                "VALUES (?,?,?,?,?,?,?,?)",
+                (qs[0], qs[1], qs[2], qs[3], qs[4], total, passed, notes))
+            conn.commit()
+        return _ok({"total": total, "passed": bool(passed), "qs": qs})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/futures-ai/apgar", methods=["GET"])
+def api_futures_ai_apgar_today():
+    """Return today's most recent Apgar scorecard (or 404 if none)."""
+    try:
+        with db_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM apgar_sessions WHERE ts >= date('now') "
+                "ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+        if not row:
+            return _ok({"present": False})
+        return _ok({"present": True, "scorecard": dict(row)})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/futures-ai/readiness", methods=["POST"])
+def api_futures_ai_readiness():
+    """
+    Feature 8 — Submit pre-session readiness check for today.
+    Body: {mood, sleep, prior_pnl_flag, prep: 0-2, color: red|yellow|green, notes?}
+    """
+    try:
+        body = request.get_json(force=True, silent=True) or {}
+        fields = {}
+        for k in ("mood", "sleep", "prior_pnl_flag", "prep"):
+            v = body.get(k)
+            if v is None:
+                return _err(f"missing {k}", 400)
+            try:
+                fields[k] = int(v)
+            except (TypeError, ValueError):
+                return _err(f"{k} must be int 0-2", 400)
+        color = (body.get("color") or "").strip().lower()
+        if color not in ("red", "yellow", "green"):
+            return _err("color must be one of: red, yellow, green", 400)
+        notes = (body.get("notes") or "")[:200]
+        with db_conn() as conn:
+            conn.execute(
+                "INSERT INTO session_readiness (mood, sleep, prior_pnl_flag, prep, color, notes) "
+                "VALUES (?,?,?,?,?,?)",
+                (fields["mood"], fields["sleep"], fields["prior_pnl_flag"],
+                 fields["prep"], color, notes))
+            conn.commit()
+        return _ok({"color": color, **fields})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/futures-ai/readiness", methods=["GET"])
+def api_futures_ai_readiness_today():
+    """Return today's most recent readiness self-report."""
+    try:
+        with db_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM session_readiness WHERE ts >= date('now') "
+                "ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+        if not row:
+            return _ok({"present": False})
+        return _ok({"present": True, "report": dict(row)})
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
 @bp.route("/api/futures-ai/orchestrate-now", methods=["POST"])
 def api_futures_ai_orchestrate_now():
     """Manually fire the orchestrator against the CURRENT in-Flask scan

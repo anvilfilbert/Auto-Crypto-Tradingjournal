@@ -94,3 +94,57 @@ def detect_regime() -> dict:
     result        = _fit_and_predict()
     _CACHE["btc"] = (now, result)
     return result
+
+
+# HMM as a direct score gate (added 2026-05-24). Distinct from bear_phase which
+# uses HMM only as a tie-breaker. This modifier applies a smaller magnitude
+# (±0.2 vs bear_phase's ±0.3) gated on confidence > 0.6 — boundary regimes
+# don't get a strong vote. Magnitudes intentionally lower than bear_phase
+# because the two signals can stack in the aligned-direction case.
+_HMM_CONFIDENCE_THRESHOLD = 0.60
+_HMM_ALIGNMENT_WEIGHT     = 0.20
+
+
+def hmm_alignment_weight(regime: dict, direction: str) -> tuple[float, str]:
+    """
+    Standalone HMM regime modifier for setup scoring.
+
+    Args:
+      regime:    output of detect_regime() — must have 'ok', 'label', 'confidence'
+      direction: "Long" or "Short" (the setup's direction)
+
+    Returns:
+      (weight, reason) — weight is ±0.2 or 0; reason is a short label suitable
+                          for logging and the summary line passed to Sonnet.
+
+    Rules:
+      trending_up + Long   → +0.2   "HMM: trending_up + Long → +0.2"
+      trending_up + Short  → -0.2   (fighting macro trend)
+      trending_down + Long → -0.2
+      trending_down + Short → +0.2
+      ranging              →  0.0  (no directional bias)
+      confidence < 0.6     →  0.0  (boundary regime — don't bet on it)
+      ok != True           →  0.0  (model didn't run; no signal)
+    """
+    if not regime or not regime.get("ok"):
+        return 0.0, ""
+
+    label = str(regime.get("label", "")).lower()
+    conf  = float(regime.get("confidence") or 0)
+    if conf < _HMM_CONFIDENCE_THRESHOLD:
+        return 0.0, f"HMM: {label} (conf {conf:.2f} below threshold — skip)"
+
+    dir_lc = str(direction or "").strip().lower()
+    is_long = dir_lc == "long"
+    is_short = dir_lc == "short"
+    if not (is_long or is_short):
+        return 0.0, ""
+
+    if "trending_up" in label:
+        w = _HMM_ALIGNMENT_WEIGHT if is_long else -_HMM_ALIGNMENT_WEIGHT
+    elif "trending_down" in label:
+        w = -_HMM_ALIGNMENT_WEIGHT if is_long else _HMM_ALIGNMENT_WEIGHT
+    else:
+        return 0.0, f"HMM: {label} (no directional bias)"
+
+    return w, f"HMM: {label} + {direction} → {w:+.1f}"

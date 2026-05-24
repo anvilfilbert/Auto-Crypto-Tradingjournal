@@ -170,6 +170,59 @@ def _open_position_count(conn) -> int:
 
 # ── Public decision functions ────────────────────────────────────────────────
 
+def _monthly_risk_used_pct(conn, eq_now: float) -> tuple[float, str]:
+    """
+    Feature 6 — Compute total monthly risk used so far.
+
+    Formula:
+      used = (start_of_month_equity - eq_now) [realized losses MTD]
+           + sum(open_position |entry - sl| / entry × notional) [open risk to stop]
+
+      returned as fraction of starting_equity (so 0.06 = 6%).
+
+    Returns (used_pct, reason_label).
+    """
+    start_eq = config.starting_equity()
+    if start_eq <= 0:
+        return 0.0, "starting_equity=0"
+
+    # Realized losses MTD — sum negative realized_pnl on auto_ai positions
+    # closed since start of month
+    try:
+        realized_loss = conn.execute(
+            """SELECT COALESCE(SUM(realized_pnl), 0)
+               FROM positions
+               WHERE chain='auto_ai'
+                 AND close_time >= strftime('%Y-%m-01 00:00:00', 'now')
+                 AND realized_pnl < 0"""
+        ).fetchone()[0] or 0
+        realized_loss = abs(float(realized_loss))
+    except Exception:
+        realized_loss = 0.0
+
+    # Open position risk to stop — sum (entry - sl) / entry × notional
+    open_risk = 0.0
+    try:
+        rows = conn.execute(
+            """SELECT entry_price, size_usdt, direction
+               FROM positions
+               WHERE chain='auto_ai' AND (close_time IS NULL OR close_time='')"""
+        ).fetchall()
+        # We don't have explicit SL stored on positions — approximate with
+        # 2% per position (RISK_PER_TRADE_PCT) since that's the max we
+        # set up in size_trade. This intentionally OVER-estimates open
+        # risk (more conservative gate).
+        open_risk = len(rows) * start_eq * config.RISK_PER_TRADE_PCT
+    except Exception:
+        pass
+
+    total_risk_usd = realized_loss + open_risk
+    used_pct = total_risk_usd / start_eq
+
+    return used_pct, (f"loss MTD ${realized_loss:.2f} + "
+                       f"open risk ${open_risk:.2f}")
+
+
 def can_open_new_trade(conn, scanner_score: int = 0) -> tuple[bool, str]:
     """
     True/False + reason for the next would-be trade. Called BEFORE every
@@ -211,6 +264,46 @@ def can_open_new_trade(conn, scanner_score: int = 0) -> tuple[bool, str]:
     if nl >= config.CONSECUTIVE_LOSS_BREAKER:
         _trip_breaker(conn, f"{nl} consecutive losses")
         return False, f"consecutive-loss breaker tripped ({nl} losses)"
+
+    # Feature 6 — Available-risk monthly gate (Elder 6% Rule). Blocks new
+    # entries when monthly_loss_to_date + sum(open_position_risks_to_stop)
+    # ≥ MONTHLY_RISK_GATE_PCT × starting_equity. Slow-moving governor that
+    # complements the daily DD breaker. Env-toggleable, default ON.
+    if config.MONTHLY_GATE_ENABLED:
+        used_pct, gate_reason = _monthly_risk_used_pct(conn, eq)
+        if used_pct >= config.MONTHLY_RISK_GATE_PCT:
+            return False, (f"monthly risk gate: {used_pct*100:.2f}% used / "
+                           f"{config.MONTHLY_RISK_GATE_PCT*100:.0f}% cap "
+                           f"({gate_reason})")
+
+    # Feature 7 — Trade Apgar gate (default OFF). Requires a passing
+    # Apgar scorecard for today (UTC) before allowing new trades.
+    if config.APGAR_GATE_ENABLED:
+        try:
+            row = conn.execute(
+                "SELECT passed FROM apgar_sessions WHERE ts >= date('now') "
+                "ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+            if not row or not row["passed"]:
+                return False, "Apgar gate: no passing pre-session scorecard today"
+        except Exception:
+            pass
+
+    # Feature 8 — Pre-session readiness gate (default OFF). Red blocks; yellow
+    # logs warning but permits. Operator self-reports via UI.
+    if config.READINESS_GATE_ENABLED:
+        try:
+            row = conn.execute(
+                "SELECT color FROM session_readiness WHERE ts >= date('now') "
+                "ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+            if not row:
+                return False, "Readiness gate: no pre-session self-report today"
+            color = (row["color"] or "").lower()
+            if color == "red":
+                return False, "Readiness gate: red self-report — trading blocked today"
+        except Exception:
+            pass
 
     # Concurrent positions — pure safety cap (capital-preservation).
     # A scanner-verified 10/10 setup may bypass the soft cap up to

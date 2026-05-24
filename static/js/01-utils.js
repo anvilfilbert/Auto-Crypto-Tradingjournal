@@ -620,3 +620,66 @@ function mdToHtml(text) {
   return parts.join('');
 }
 
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Collapsible nav sections (added 2026-05-24)
+// Click .nav-sep to collapse/expand items below; state persists in localStorage.
+// ══════════════════════════════════════════════════════════════════════════════
+
+(function initCollapsibleNav() {
+  const STORAGE_KEY = 'navCollapsedSections';
+
+  function getCollapsed() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveCollapsed(set) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
+    } catch (e) { /* quota or disabled — ignore */ }
+  }
+
+  function applyState() {
+    const collapsed = getCollapsed();
+    document.querySelectorAll('.nav-sep[data-section]').forEach(sep => {
+      const section = sep.getAttribute('data-section');
+      const isCollapsed = collapsed.has(section);
+      sep.classList.toggle('collapsed', isCollapsed);
+      document.querySelectorAll(`.nav-item[data-section-of="${section}"]`).forEach(item => {
+        item.classList.toggle('section-hidden', isCollapsed);
+      });
+    });
+  }
+
+  function toggleSection(section) {
+    const collapsed = getCollapsed();
+    if (collapsed.has(section)) {
+      collapsed.delete(section);
+    } else {
+      collapsed.add(section);
+    }
+    saveCollapsed(collapsed);
+    applyState();
+  }
+
+  function wireUp() {
+    document.querySelectorAll('.nav-sep[data-section]').forEach(sep => {
+      sep.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleSection(sep.getAttribute('data-section'));
+      });
+    });
+    applyState();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireUp);
+  } else {
+    wireUp();
+  }
+})();
