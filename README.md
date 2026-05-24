@@ -49,16 +49,6 @@ Institutional-grade portfolio metrics — VaR, position correlation, P&L attribu
 <tr>
 <td colspan="2" valign="top">
 
-### 📖 Trade Journal
-
-Full history across both exchanges with rich filters: search · symbol · direction · result · setup-type · date range. Click any row to add notes, tags, or grade the execution.
-
-<img src="docs/images/showcase/04-journal.png" alt="Trade Journal" width="100%">
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
 
 ### 🧠 AI Architecture
 
@@ -79,24 +69,6 @@ Persistent reminder + documentation hub for the planned [Acki Nacki / DODEX](htt
 </tr>
 </table>
 
-<details>
-<summary><b>📊 What else is in the box</b> (click to expand)</summary>
-
-- **Dashboard** — KPIs, monthly target tracker, equity curve, wallet history, current streak, recent trades
-- **Deep Dive Analytics** — breakdown by symbol / month / hour / setup type / **skill cohort** (consensus model · bear phase · archetype · PO3 stacking · TP-count)
-- **Edge Lab** — setup-type analysis, execution-grade impact, AI pattern detector, planned-vs-realized R:R
-- **Chart Explorer** — LightweightCharts popup with S/R overlay, WaveTrend pane, at-level highlights, FVG zones, **multi-TP ladder** rendering (one line per Bitget plan order)
-- **Call Analyzer** — paste an analyst call → instant 7-agent AI scoring + annotated chart
-- **Hindsight Analysis** — retroactive trade re-scoring with full chart context at entry time
-- **Pending Limit Orders** — pop-out chart per order + AI verdict with retry hint on truncated responses
-- **Live Sync** — Bitget USDT-M + Blofin every 5 min; CSV import for historical
-- **Docs section** — three dedicated reference pages: Data Sources, AI Architecture, Scanner Pipeline, plus the new Acki Nacki — DoDEX prep page
-- **Settings** — token-usage dashboard with per-module spend, prompt-cache hit rate, runway estimate
-- **Topbar scan timer** — countdown to next scan / stopwatch while running, next to the dual clock
-
-> Numbers shown in screenshots are illustrative — wired to local demo data, not real account state.
-
-</details>
 
 ---
 
