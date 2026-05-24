@@ -367,6 +367,85 @@ def _collect_stats(conn) -> dict:
         FROM (SELECT realized_pnl FROM positions ORDER BY close_time DESC LIMIT 20)
     """).fetchone())
 
+    # ── Skill-provenance slices (added 2026-05-24) ──────────────────────────
+    # Six dimensions populated at trade-open by the auto-trader chain.
+    # ONLY auto_ai positions carry these — manual trades have NULLs.
+    # The rulebook was previously blind to these dimensions; AI couldn't
+    # cite "low_conviction archetype = 0% WR" or "opus_overrides = +EV"
+    # because the stats dict didn't include them.
+    by_consensus_model = rows("""
+        SELECT consensus_model_used AS consensus_model, COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(AVG(realized_pnl),4) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND consensus_model_used IS NOT NULL
+        GROUP BY consensus_model_used HAVING n >= 3 ORDER BY total_pnl DESC
+    """)
+    by_bear_phase = rows("""
+        SELECT bear_phase_at_open AS bear_phase, COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(AVG(realized_pnl),4) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND bear_phase_at_open IS NOT NULL
+        GROUP BY bear_phase_at_open HAVING n >= 3 ORDER BY total_pnl DESC
+    """)
+    by_archetype = rows("""
+        SELECT archetype_at_open AS archetype, COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(AVG(realized_pnl),4) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND archetype_at_open IS NOT NULL
+        GROUP BY archetype_at_open HAVING n >= 3 ORDER BY total_pnl DESC
+    """)
+    by_po3_bucket = rows("""
+        SELECT CASE
+                 WHEN po3_total IS NULL THEN 'unknown'
+                 WHEN po3_total < 0     THEN 'negative (fighting)'
+                 WHEN po3_total = 0     THEN 'neutral (no PO3)'
+                 WHEN po3_total <= 0.3  THEN 'one modifier (+small)'
+                 WHEN po3_total <= 0.6  THEN 'two modifiers'
+                 ELSE                        'three+ modifiers (max stack)'
+               END AS po3_bucket,
+               COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(AVG(realized_pnl),4) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE chain='auto_ai'
+        GROUP BY po3_bucket HAVING n >= 3 ORDER BY total_pnl DESC
+    """)
+    by_opus_overrides = rows("""
+        SELECT CASE WHEN opus_had_overrides=1 THEN 'with_overrides' ELSE 'no_overrides' END AS overrides,
+               COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(AVG(realized_pnl),4) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE chain='auto_ai' AND consensus_model_used IS NOT NULL
+        GROUP BY overrides HAVING n >= 3 ORDER BY total_pnl DESC
+    """)
+    by_tp_count = rows("""
+        SELECT COALESCE(tp_levels_count, 0) AS tp_count, COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(AVG(realized_pnl),4) AS avg_pnl,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE chain='auto_ai'
+        GROUP BY tp_count HAVING n >= 3 ORDER BY tp_count ASC
+    """)
+    # Close-reason mix (mostly auto_ai but include manual for completeness)
+    by_close_reason = rows("""
+        SELECT close_reason, COUNT(*) AS n,
+               ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
+               ROUND(SUM(realized_pnl),2) AS total_pnl
+        FROM positions
+        WHERE close_reason IS NOT NULL AND close_reason != ''
+        GROUP BY close_reason HAVING n >= 2 ORDER BY total_pnl DESC
+    """)
+
     return {
         "overall": overall, "recent_20": recent,
         "by_setup": by_setup, "by_weekday": by_weekday, "by_session": by_session,
@@ -374,6 +453,16 @@ def _collect_stats(conn) -> dict:
         "by_weekday_30d": by_weekday_30d, "by_setup_30d": by_setup_30d,
         "worst_symbols": worst, "best_symbols": best,
         "score_calibration": get_calibration_data(conn),
+        # Skill-provenance dimensions (auto_ai chain only — fields are NULL
+        # on manual trades by design). Lets the AI reason about WHICH
+        # SKILLS are working not just which symbols/hours.
+        "by_consensus_model": by_consensus_model,
+        "by_bear_phase":      by_bear_phase,
+        "by_archetype":       by_archetype,
+        "by_po3_bucket":      by_po3_bucket,
+        "by_opus_overrides":  by_opus_overrides,
+        "by_tp_count":        by_tp_count,
+        "by_close_reason":    by_close_reason,
     }
 
 
@@ -400,6 +489,14 @@ def _ask_claude(stats: dict, total: int) -> list:
         ("BY EXECUTION GRADE", "by_grade"),
         ("WORST SYMBOLS", "worst_symbols"),
         ("BEST SYMBOLS", "best_symbols"),
+        # ── Auto-trader skill cohorts (chain='auto_ai' only) ────────────
+        ("BY CONSENSUS MODEL — auto_ai chain (Sonnet vs Opus)", "by_consensus_model"),
+        ("BY BEAR-PHASE AT ENTRY — auto_ai chain (distribution/decline/capitulation/recovery)", "by_bear_phase"),
+        ("BY ARCHETYPE — auto_ai chain (breakout/reversal/continuation/range/low_conviction)", "by_archetype"),
+        ("BY PO3 STACKING — auto_ai chain (range × FVG × session modifiers)", "by_po3_bucket"),
+        ("BY OPUS OVERRIDES — auto_ai chain (did Opus override scanner targets?)", "by_opus_overrides"),
+        ("BY TP COUNT — auto_ai chain (multi-TP ladder depth)", "by_tp_count"),
+        ("BY CLOSE REASON — all chains (TP / SL / BE_stop / MAE_cut / trail / manual)", "by_close_reason"),
     ]:
         rows = stats.get(key, [])
         if rows:
@@ -430,7 +527,11 @@ def _ask_claude(stats: dict, total: int) -> list:
         "  warning     — a behaviour or condition where the data shows the trader loses money\n"
         "  strength    — a behaviour or condition where the data shows the trader makes money\n"
         "  habit       — execution-discipline observation (timing, sizing, hold duration, etc.)\n"
-        "  calibration — note about how accurate their setup scores have been\n\n"
+        "  calibration — note about how accurate their setup scores have been\n"
+        "  skill       — observation about which auto-trader skill cohort is working / failing\n"
+        "                (consensus_model, bear_phase, archetype, po3_bucket, opus_overrides,\n"
+        "                tp_count, or close_reason). Use this when the BY * — auto_ai chain\n"
+        "                slices show a meaningful gap.\n\n"
         "STRICT EVIDENCE RULES (non-negotiable):\n"
         "  0. PREFER RECENT DATA WHEN IT DIVERGES FROM LIFETIME. When the\n"
         "     '(last 30d)' slice disagrees with the lifetime slice for the\n"
@@ -450,7 +551,7 @@ def _ask_claude(stats: dict, total: int) -> list:
         "(execution_grade, hold time vs outcome, MFE captured vs left on table when present).\n"
         "  5. Min 5 trades per pattern. Skip categories with insufficient data — do not invent.\n\n"
         "Return ONLY valid JSON. No markdown. No prose outside the JSON array.\n"
-        '[{"type":"warning|strength|habit|calibration","title":"max 7 words",'
+        '[{"type":"warning|strength|habit|calibration|skill","title":"max 7 words",'
         '"rule":"1-2 sentences with specific numbers","confidence":"high|medium|low","data_points":0}]'
     )
 
