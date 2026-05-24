@@ -57,15 +57,6 @@ Institutional-grade portfolio metrics — VaR, position correlation, P&L attribu
 <img src="docs/images/showcase/06-ai-architecture.png" alt="AI Architecture docs page" width="100%">
 
 </td>
-<td width="50%" valign="top">
-
-### 💱 DODEX Integration (preparation)
-
-Persistent reminder + documentation hub for the planned [Acki Nacki / DODEX](https://www.dex.do/) dark-order DEX module. Phase tracker, locked-in decisions, installed components (Node sidecar probe + upstream watcher), open questions, and cross-links to the canonical references in [`docs/dodex/`](docs/dodex/).
-
-<img src="docs/images/showcase/05-dodex.png" alt="Acki Nacki / DODEX Integration page" width="100%">
-
-</td>
 </tr>
 </table>
 
