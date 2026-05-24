@@ -62,7 +62,24 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
     later analytics can aggregate by *skill* not just by symbol/hour."""
     sym  = signal.get("symbol")
     dir_ = signal.get("direction")
-    tp_levels_json = json.dumps(signal.get("tp_levels") or []) if signal.get("tp_levels") else None
+    # Merge Bitget's per-tier attach outcomes into the stored ladder so the
+    # Phase-2 fill-detector knows which tiers were actually placed (vs
+    # being silently dropped by Bitget for size-floor or precision reasons).
+    # Without this, `_detect_tp_fills` would false-positive every tier as
+    # "filled" simply because Bitget never knew about them.
+    tp_levels = signal.get("tp_levels") or []
+    attach_results = (order_result or {}).get("tp_attach_results") or []
+    if tp_levels and attach_results:
+        attach_by_idx = {a.get("idx"): a for a in attach_results}
+        for lvl in tp_levels:
+            ar = attach_by_idx.get(lvl.get("idx"))
+            lvl["attached"] = bool(ar and ar.get("ok"))
+    elif tp_levels:
+        # Legacy / partial-data path — assume ONLY TP1 attached so the
+        # detector ignores TP2+ instead of falsely marking them filled.
+        for i, lvl in enumerate(tp_levels):
+            lvl["attached"] = (i == 0)
+    tp_levels_json = json.dumps(tp_levels) if tp_levels else None
     cur = conn.execute("""
         INSERT INTO positions(
             symbol, base_asset, direction,
@@ -504,6 +521,14 @@ def _detect_tp_fills(conn, db_pos: dict, live: dict) -> list[dict]:
     newly_filled: list[dict] = []
     for tp in db_tps:
         if tp.get("hit"):
+            continue
+        # Phase-1 positions (opened before 2026-05-24 10:36 CEST) have
+        # tp_levels JSON in the DB but only TP1 was ever actually attached
+        # to Bitget as a plan order. The detector must NOT infer "filled"
+        # from absence-in-pending for those tiers — they were never there.
+        # Trade-open writes `attached=True` per tier when Bitget accepted
+        # the place-tpsl-order. Skip any tier without that flag.
+        if not tp.get("attached"):
             continue
         try:
             price_key = round(float(tp.get("price") or 0), 6)

@@ -72,11 +72,14 @@ def conn():
     return c
 
 
-def _three_tier_ladder():
+def _three_tier_ladder(attached=True):
+    """Three-tier ladder with `attached=True` by default — the detector skips
+    tiers without this flag to avoid false-positives on Phase-1 positions
+    where only TP1 ever made it to Bitget as a plan order (2026-05-24 bug)."""
     return [
-        {"idx": 1, "price": 100.0, "pct": 40.0, "hit": False, "hit_at": None},
-        {"idx": 2, "price": 110.0, "pct": 40.0, "hit": False, "hit_at": None},
-        {"idx": 3, "price": 120.0, "pct": 20.0, "hit": False, "hit_at": None},
+        {"idx": 1, "price": 100.0, "pct": 40.0, "hit": False, "hit_at": None, "attached": attached},
+        {"idx": 2, "price": 110.0, "pct": 40.0, "hit": False, "hit_at": None, "attached": attached},
+        {"idx": 3, "price": 120.0, "pct": 20.0, "hit": False, "hit_at": None, "attached": attached},
     ]
 
 
@@ -156,6 +159,31 @@ def test_multiple_tiers_filled_at_once(conn):
     filled = executor._detect_tp_fills(conn, pos, live)
     idxs = sorted(t["idx"] for t in filled)
     assert idxs == [1, 2]
+
+
+def test_phase1_ladder_not_falsely_marked_filled(conn):
+    """Regression for the 2026-05-24 cascade: positions opened before Phase 2
+    shipped only had TP1 attached to Bitget — but their tp_levels JSON in
+    the DB lists all 3 tiers. The detector saw TP2 & TP3 absent from
+    pending plan orders and falsely flagged them as filled. Fix: only count
+    a tier as eligible-for-detection if it has `attached=True` (set at
+    trade-open from tp_attach_results).
+    """
+    # Phase-1 era ladder: attached only on TP1
+    ladder = _three_tier_ladder(attached=False)
+    ladder[0]["attached"] = True   # only TP1 was placed
+    conn.execute("INSERT INTO positions VALUES (1, 'X', 'Long', 100, ?)",
+                 (json.dumps(ladder),))
+    pos = dict(conn.execute("SELECT * FROM positions WHERE id=1").fetchone())
+    # Bitget pending = empty (the position closed via TP1 + SL hits previously,
+    # nothing left on the plan-orders endpoint)
+    live = {"tp_levels": []}
+    filled = executor._detect_tp_fills(conn, pos, live)
+    # TP2 and TP3 must NOT be flagged — they were never on Bitget
+    not_attached_fills = [f for f in filled if not f.get("attached")]
+    assert not_attached_fills == [], (
+        f"Phase-1 unattached tiers falsely flagged as filled: {not_attached_fills}"
+    )
 
 
 def test_tick_rounding_doesnt_false_positive(conn):
