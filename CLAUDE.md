@@ -516,3 +516,29 @@ Tables that respect chain: `positions`, `trade_hindsight`, `trader_rulebook`, `f
 
 ### Decision log (`futures_ai_log`)
 Every accept/reject lands here with `(ts, event, payload_json)`. Events: `state_change`, `rejected_killswitch`, `rejected_consensus`, `rejected_sizing`, `consensus_skipped`, `consensus_approved`, `paper_open`, `real_open`, `lev_mismatch`, `paper_close`, `real_close`, `breaker_tripped`. The Futures-AI page reads this for the "Recent decisions" panel.
+
+## Training Module (`training/` package — sidecar)
+
+Standalone-capable crypto trading curriculum. **Zero imports from the journal codebase.** Runs in two modes from the same files:
+
+- **Mounted inside the journal** at `/training` (single try/except in `app.py` ~line 74). Visible as 🎓 Training tab in the nav (above Acki section).
+- **Standalone** via `python -m training --port 5050` — verified working with only `flask` + `pyyaml` as runtime deps.
+
+51 graded units across 6 tiers (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution → Capstone). ~520 quiz questions. 24 visual diagrams (dark-themed PNGs generated via `training/scripts/generate_chart_diagrams.py`, wired into lessons via idempotent `training/scripts/insert_diagrams_into_lessons.py`).
+
+### Coupling rules (enforced)
+- training/ MUST NOT import journal modules (chart_*, trading/*, database.py, etc.). Delete training/ → journal works. Delete the try/except in app.py → training detaches cleanly.
+- Own SQLite at `training/training.db` — separate from `trading_journal.db`. Schema: 5 tables (`lessons`, `lesson_progress`, `quiz_attempts`, `widget_attempts`, `review_queue`).
+- CSS namespaced `.training-*` — no clash with journal styles.
+- JS in own module — no global symbol pollution.
+
+### Runtime config
+`training/config.yaml` — `unlock_mode: open` (testing, all lessons clickable) or `enforce` (production, requires passing quizzes). Reloads per-request, no restart needed.
+
+### Important gotcha
+- `from training.db import init_db` SHADOWS the journal's own `init_db`. Always alias when importing into journal context (see `app.py`: `_t_init_db`, `_t_seed`).
+- Browser caches `training.js` aggressively — bump `?v=N` in `templates/base.html` after JS edits.
+- Never derive API URLs from `window.location.pathname` in JS — always pass via `data-*` attributes from server-rendered `url_for()`. Two bugs in this category were fixed during the build.
+
+### Reset / standalone install / details
+See `training/README.md` for verified install instructions, systemd unit example, and the reset-progress procedure.
