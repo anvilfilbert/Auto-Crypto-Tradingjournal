@@ -22,3 +22,5 @@ data/dodex_watch/
 
 # Local conversation memory buffer (not source code)
 .remember/
+scripts/journal-session_*.zip
+scripts/journal-session_*.tar.xz
