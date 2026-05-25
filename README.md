@@ -8,7 +8,9 @@
 
 Self-hosted crypto futures trading journal with live exchange sync, a 7-agent AI pipeline, interactive Telegram assistant, and deep performance analytics. Runs on a Raspberry Pi 5 (or any Linux box).
 <br>
-The trading module can be used completely standalone or integrated into the Journal. See README in training-folder.
+<br>
+<b><i>The trading module can be used completely standalone or integrated into the Journal. See README in training-folder.</i></b>
+<br>
 <br>
 
 <p align="center">
