@@ -1,49 +1,156 @@
 # Trading Journal — Training Module
 
-Interactive crypto trading curriculum. Standalone-capable: runs inside the
-journal at `/training`, OR as its own Flask app.
+Interactive crypto-trading curriculum. 51 graded units across 6 tiers
+(Foundations → Chart Reading → Indicators → Advanced → Macro → Execution
+→ Capstone). ~520 quiz questions. 24 visual diagrams.
 
-## Run standalone
+Runs in two modes from the same code:
+- **Mounted** inside the trading-journal app at `/training`
+- **Standalone** as its own Flask server on any port
+
+## Install on a fresh machine (verified)
 
 ```bash
-cd training
-pip install -r requirements.txt
-python -m training --port 5050
-# open http://localhost:5050
+# 1. Prerequisites — Python 3.10+ and pip
+python3 --version    # should be 3.10 or higher
+pip3 --version
+
+# 2. Get the code — either git clone the full repo, or copy just the training/ folder
+git clone https://github.com/anvilfilbert/Auto-Crypto-Tradingjournal.git
+cd Auto-Crypto-Tradingjournal/training
+# OR if you only want the training module:
+# scp -r training/ pi@<host>:/path/to/install/
+
+# 3. Install Python dependencies
+pip3 install -r requirements.txt
+
+# 4. Run the standalone server
+python3 -m training --port 5050
+
+# 5. Open in browser
+# http://<the-Pi's-IP>:5050/
 ```
 
-## Run inside the journal
+That's it. On first run, the SQLite database (`training.db`) is created
+automatically in the current working directory and seeded with the 51-lesson
+catalog.
 
-The journal mounts this package's blueprint at `/training`. Nothing extra to do
-on this side — just keep `training/` next to the journal sources.
+## Command-line options
 
-## What's in here
+```
+python3 -m training [--port 5050] [--host 0.0.0.0] [--db ./training.db] [--debug]
+```
 
-- `app.py` — Flask app factory (standalone)
-- `blueprint.py` — Flask Blueprint (mountable)
-- `routes.py` — view + API handlers (used by both modes)
-- `db.py` — SQLite schema + queries (own DB, separate from journal's)
-- `content/` — lesson JSONs, quiz YAMLs, diagrams, catalog
-- `templates/` — Jinja2 views (own base.html, scoped CSS)
-- `static/` — CSS, JS, generated chart PNGs
+| Flag | Default | Notes |
+|---|---|---|
+| `--port` | 5050 | Pick any free port |
+| `--host` | 0.0.0.0 | Bind all interfaces (LAN-accessible) |
+| `--db` | `./training.db` | Where SQLite file lives |
+| `--debug` | off | Flask debug + autoreload |
 
-## Curriculum
+## Verify it's working
 
-51 graded units in 6 tiers. See `content/catalog.json` for the index.
-Each lesson lives at `content/lessons/<slug>.json` and its quiz at
-`content/quizzes/<id>.yaml`.
+```bash
+# Health check — should report 51 lessons
+curl -s http://localhost:5050/api/status
 
-## Adding a lesson
+# Should print: {"data":{"lessons_passed":0,"lessons_total":51,"lessons_with_content":51,"unlock_mode":"open"},"ok":true}
+```
 
-1. Add an entry to `content/catalog.json`.
-2. Create `content/lessons/NN-slug.json` with typed blocks (`text`,
-   `callout`, `image`, `widget`).
-3. Create `content/quizzes/NN.yaml` with 10 MCQ questions.
-4. Restart — `seed_catalog_if_empty` only seeds the catalog on a fresh DB.
-   For existing DBs, manually insert via SQL or recreate the DB.
+## Configuration
 
-## Why standalone
+Edit `training/config.yaml`:
 
-Zero imports from the journal. If something breaks in the journal, training
-keeps running. If you want to ship the curriculum publicly later, you copy
-the `training/` folder and run.
+```yaml
+# 'enforce' = lessons unlock only after passing previous quiz (production)
+# 'open'    = all lessons clickable regardless of progress (testing)
+unlock_mode: open
+```
+
+Setting reloads per-request — no restart needed.
+
+## Running it as a system service (optional, on Linux)
+
+Create `/etc/systemd/system/training.service`:
+
+```ini
+[Unit]
+Description=Trading Journal — Training Module
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/path/to/training
+ExecStart=/usr/bin/python3 -m training --port 5050 --db /path/to/training/training.db
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now training
+sudo systemctl status training
+```
+
+## File layout
+
+```
+training/
+├── __init__.py / __main__.py / app.py / blueprint.py / routes.py / db.py
+├── config.py / config.yaml          ← runtime settings (unlock_mode etc.)
+├── content/                          ← all curriculum (markdown-like JSON + YAML quizzes)
+│   ├── catalog.json                  ← 51-lesson index
+│   ├── lessons/                      ← one JSON per lesson
+│   └── quizzes/                      ← one YAML per quiz
+├── static/
+│   ├── css/training.css              ← scoped under .training-* (no clash)
+│   ├── js/training.js                ← quiz submit + reset logic
+│   └── charts/                       ← 24 pre-generated PNG diagrams
+├── templates/                        ← Jinja2 — own base.html, scoped to itself
+├── scripts/
+│   ├── generate_chart_diagrams.py    ← matplotlib chart generator
+│   └── insert_diagrams_into_lessons.py
+├── requirements.txt                  ← flask>=3.0, pyyaml>=6.0  (only 2 deps)
+└── training.db                       ← created on first run (gitignored)
+```
+
+## Resetting all progress (e.g., friend wants to start fresh)
+
+Click "**Reset all progress**" on the path view (top right of progress bar) —
+double-confirmation dialog. Wipes lesson_progress + quiz_attempts, keeps
+lessons catalog and content.
+
+Or via API:
+```bash
+curl -X POST http://localhost:5050/api/reset-progress \
+  -H 'Content-Type: application/json' -d '{"confirm":"RESET"}'
+```
+
+## What's NOT included
+
+- **No multi-user support** — single user per database. If two people share
+  the install, they share progress. For separate progress: run two instances
+  with different `--db` paths.
+- **No auth** — anyone with network access can browse and reset. Add a
+  reverse proxy with basic auth if you want a barrier.
+- **No interactive widgets yet** — the 12 planned interactive components
+  (position-size calculator, draw-the-S/R, etc.) are stub placeholders. Text
+  + diagrams only for now.
+- **Charts are pre-rendered PNGs** — no Python plotting deps needed at
+  runtime. Only `pip install matplotlib` if you want to regenerate diagrams
+  via `python3 -m training.scripts.generate_chart_diagrams`.
+
+## Coupling rules (for anyone editing this)
+
+- `training/` imports NOTHING from the parent journal codebase
+- Own SQLite file, separate from journal's `trading_journal.db`
+- CSS namespaced `.training-*` — no global pollution
+- JS in own module — no shared globals
+
+Delete the `training/` directory → journal works without it. Remove the
+single try/except block in journal's `app.py` → journal works without
+mounting. Truly independent.
