@@ -1,0 +1,123 @@
+id: "43"
+lesson_id: 43
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Which is the MAJOR scheduled event that most strongly moves crypto?"
+    type: mcq
+    choices:
+      - "Random tweets."
+      - "FOMC rate decision + press conference (8x/year) — can move crypto 3-7% within minutes of the announcement. Other major events: CPI, NFP, PCE."
+      - "Local elections."
+      - "Sports results."
+    correct: 1
+    topic_tag: news_events
+    explanation: "FOMC is the biggest single scheduled event affecting risk assets including crypto. The combination of rate decision + Powell's press conference often creates 30-60 minutes of extreme volatility with 2-5% moves in BOTH directions before settling. CPI and NFP are also major movers."
+
+  - id: q2
+    text: "Can retail traders RELIABLY predict the direction of FOMC moves?"
+    type: mcq
+    choices:
+      - "Yes — with enough analysis."
+      - "No — institutional traders see data milliseconds first, the current price already reflects consensus expectations, and post-print whipsaws are common. Predicting direction = gambling without edge."
+      - "Only with insider information."
+      - "Always upward."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Three structural reasons retail can't predict: (1) data latency disadvantage, (2) consensus already priced in, (3) initial reactions often reverse. Anyone who could predict consistently would run a hedge fund. Don't compete in a game where the edge is structurally not yours."
+
+  - id: q3
+    text: "Best approach for HANDLING major events?"
+    type: mcq
+    choices:
+      - "Hold positions with full leverage."
+      - "FLATTEN positions 30-60 min before the event. Sit out the volatility. Re-enter post-event if technical setup forms with clear directional bias. Missed gains beat catastrophic losses."
+      - "Open new positions just before the event."
+      - "Chase the initial price spike."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Flatten + wait is the highest-EV approach for most retail. Holding through the event risks volatility wicks hitting SLs even on otherwise-correct positions. Post-event, the market reveals direction more clearly — trade with confirmed direction using technical setups, not pre-event guesses."
+
+  - id: q4
+    text: "POST-EVENT trading approach:"
+    type: mcq
+    choices:
+      - "Trade the first minute aggressively."
+      - "Wait 15-30 minutes for initial volatility to subside. Once a clear directional bias emerges, trade WITH that direction using technical confirmation (S/R + reversal/continuation patterns). Higher edge than pre-event guessing."
+      - "Just close all positions forever."
+      - "Random direction."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Post-event trades are MUCH higher edge than pre-event. The market reveals direction; you trade with confirmed move using technical signals. Post-FOMC, post-CPI moves often trend cleanly for hours-days once the initial chop settles. Patience pays."
+
+  - id: q5
+    text: "Where to find a calendar of upcoming macro events?"
+    type: mcq
+    choices:
+      - "Make it up."
+      - "Free economic calendars: forexfactory.com/calendar, investing.com/economic-calendar, tradingeconomics.com. Filter HIGH impact (red) events. Check weekly to plan around them."
+      - "Stop trading entirely."
+      - "Only paid services."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Multiple free, high-quality economic calendars exist. Check the calendar at start of each week. Highlight the high-impact events (FOMC, CPI, NFP). Plan trading around them — either flatten on event day or trade post-event setups."
+
+  - id: q6
+    text: "If you MUST hold positions through an event:"
+    type: mcq
+    choices:
+      - "Keep full leverage."
+      - "Reduce position size dramatically (e.g., from $5K notional to $1K), widen stops to absorb wick volatility (e.g., 3-4× ATR instead of 1.5×), accept possibility of giving back recent gains. For most retail, flattening is still the better answer."
+      - "Increase leverage."
+      - "Add to losing positions."
+    correct: 1
+    topic_tag: news_events
+    explanation: "If holding through is required (rare), risk-reduce: smaller size + wider stops + accepting the risk asymmetry. But for most retail traders, the simplest correct answer is flatten. The expected value of holding through events with normal sizing is negative due to volatility wicks hitting stops."
+
+  - id: q7
+    text: "Crypto-specific MAJOR events include:"
+    type: mcq
+    choices:
+      - "Random tweets only."
+      - "ETF approvals/rejections, halvings, major exchange events (hacks/regulations), token unlocks, network upgrades. Each can produce 5-15% moves in affected coins. Apply same flatten-then-trade-post-event framework."
+      - "Only macro events matter."
+      - "All crypto is unaffected by events."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Crypto has its own event types beyond macro. ETF events (largest moves typically — institutional flows enter/exit). Halvings (supply-driven, more gradual). Exchange events (asset-specific). Network upgrades (coin-specific). Track via coinmarketcal.com or similar. Same rules: don't predict; flatten + trade post-event."
+
+  - id: q8
+    text: "Worked example: You're long BTC +3% from 2 days ago. FOMC announcement in 30 minutes. Smart action?"
+    type: mcq
+    choices:
+      - "Hold the position with full leverage to maximize potential."
+      - "CLOSE the position now. Secure the +3% profit. Watch FOMC + initial reaction. Re-enter only if clear bullish bias forms post-event with technical confirmation. Missed potential gains beat losing the +3% (and more) to volatility wicks."
+      - "Increase leverage right before."
+      - "Open a new short to hedge."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Profit-preservation logic. You have +3% already secured. The downside of holding through FOMC (volatility wick taking out your SL on a 5% move) is significant. The upside (continuation through the event) is uncertain. Asymmetric risk = take the certain win, re-enter post-event with confirmed direction if appropriate."
+
+  - id: q9
+    text: "Why are POST-EVENT moves often more tradeable than pre-event?"
+    type: mcq
+    choices:
+      - "Random."
+      - "The market has REVEALED its direction. Initial chop settled. You can use technical setups (S/R, reversal patterns, volume) on confirmed directional moves. Pre-event = guessing; post-event = trading with confirmed signal."
+      - "Volume drops."
+      - "Pre-event is always better."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Pre-event: you have zero information advantage; just guessing. Post-event: the market has revealed direction; you can confirm with technicals; the move often trends cleanly for hours-days. The post-event period after the initial 15-30 min chop is one of the highest-quality trade windows of any given week with a major event."
+
+  - id: q10
+    text: "If your trading strategy includes 'I always trade FOMC for the volatility' — what does this typically result in?"
+    type: mcq
+    choices:
+      - "Consistent profits."
+      - "Net losses over time. Without directional edge + volatility wicks frequently hitting stops + fees on increased trading = mathematically losing approach. Better to either flatten or wait for post-event confirmed setups."
+      - "Win rate above 90%."
+      - "Free money."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Pre-event speculation has negative expectancy for most retail. Volatility creates excitement but doesn't translate to edge. The math: random direction × extreme volatility × clustered stops = many losses. The win sometimes is dwarfed by the regular losses. Pros either flatten or wait. Following that pattern is much higher EV than 'trading the volatility'."

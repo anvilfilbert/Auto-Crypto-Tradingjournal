@@ -1,0 +1,123 @@
+id: "44"
+lesson_id: 44
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Crypto-equity correlation is:"
+    type: mcq
+    choices:
+      - "Always exactly +1.0."
+      - "Variable — ranges roughly 0 to +0.9 in different regimes. Sometimes near-perfect correlation, sometimes nearly decoupled. The current regime determines how much macro signals affect crypto trading."
+      - "Always negative."
+      - "Constant at +0.5."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Correlation isn't fixed. Bear markets and macro stress events push correlation higher (everything sells together). Crypto-specific catalysts and bull market FOMO push correlation lower (crypto decouples). The current regime should inform your trading approach."
+
+  - id: q2
+    text: "HIGH correlation regime (BTC-equity correlation +0.7+) means:"
+    type: mcq
+    choices:
+      - "Trade crypto independently."
+      - "Macro signals dominate. Lead with macro analysis. Crypto setups against macro direction often fail. If macro risk-off, even strong crypto charts struggle."
+      - "Crypto is irrelevant."
+      - "Random."
+    correct: 1
+    topic_tag: correlation
+    explanation: "High correlation = crypto moves with broader risk markets. The macro tape leads; crypto follows. Trading crypto against the macro direction = low win rate during these regimes. Lead with DXY/VIX/ES analysis; use it to weight crypto setup conviction."
+
+  - id: q3
+    text: "DECOUPLED regime (correlation near 0) means:"
+    type: mcq
+    choices:
+      - "Always trade with macro."
+      - "Crypto is on its own narrative. Macro signals matter less; crypto-specific catalysts dominate. Focus on crypto setups (chart, BTC.D, on-chain) primarily."
+      - "Crypto is dead."
+      - "Random."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Decoupling happens when crypto-specific catalysts (ETF approval, halving narrative, exchange events) override macro flows. During these phases, BTC chart + BTC.D + ETF flows matter more than NASDAQ/DXY. Trade crypto setups primarily; macro is background."
+
+  - id: q4
+    text: "Has BTC's correlation with equities INCREASED or DECREASED over recent years?"
+    type: mcq
+    choices:
+      - "Decreased dramatically."
+      - "INCREASED — gradually rising as institutional adoption grows. ETF approvals brought institutional flows that trade BTC similarly to other risk assets. The 'digital gold' inverse-equity narrative has weakened."
+      - "Stayed exactly the same."
+      - "Random changes."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Pre-2020 BTC was largely independent. Post-2020, especially post-2022 ETF approvals, institutional flows have brought BTC into 'risk asset' bucket alongside equities. Implication: macro analysis (DXY, VIX, ES) matters MORE for crypto trading today than 5 years ago. The trader who ignores macro is using outdated mental models."
+
+  - id: q5
+    text: "What CAUSES regime SHIFTS?"
+    type: mcq
+    choices:
+      - "Random."
+      - "Major catalysts: ETF approval/rejection, halving narratives, exchange events, banking crises, sustained macro stress events. Each can shift correlation dramatically within days-weeks."
+      - "Always seasonal."
+      - "Only government action."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Regime shifts have causes. ETF events tend to DECOUPLE crypto temporarily (crypto-specific bullish or bearish narrative). Macro stress events COUPLE everything tighter (risk-off correlations spike toward 1). Bull/bear cycle phases also matter. Track major catalysts to anticipate regime changes."
+
+  - id: q6
+    text: "If you're in a HIGH correlation regime and your perfect BTC technical setup conflicts with risk-off macro, what's the smart action?"
+    type: mcq
+    choices:
+      - "Trade the BTC setup with max leverage."
+      - "Either SKIP the trade or reduce size significantly. During high correlation, macro flows override individual technical signals. Beautiful crypto charts often fail when macro tape is hostile."
+      - "Increase leverage."
+      - "Ignore macro entirely."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Regime-aware sizing. High correlation + macro headwind = your setup probably won't work despite good chart. Either pass or reduce conviction. The decoupled regime is when individual setups have full value; the correlated regime is when macro dominates and individual setups have weaker signal."
+
+  - id: q7
+    text: "Sign you're in a DECOUPLED regime:"
+    type: mcq
+    choices:
+      - "All assets moving together."
+      - "BTC rallying 5% on a day when NASDAQ is flat or down. The independent move itself is the decoupling signal. Often triggered by crypto-specific news (ETF, halving narrative)."
+      - "VIX spiking."
+      - "DXY rising."
+    correct: 1
+    topic_tag: correlation
+    explanation: "The act of decoupling is the visible signal. BTC moving meaningfully while equities don't = crypto is being driven by its own dynamics. Often follows a major crypto-specific catalyst. During decoupled regimes, watch crypto narratives closely; macro becomes background."
+
+  - id: q8
+    text: "How OFTEN should you re-evaluate the current correlation regime?"
+    type: mcq
+    choices:
+      - "Daily."
+      - "Roughly monthly is sufficient. Check 30/60-day rolling correlation. Note major catalysts that might shift dynamics. Adjust your macro-vs-technical weighting accordingly. Regimes don't change every day."
+      - "Once a year."
+      - "Never."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Regimes are slower-moving than individual setups. Monthly re-evaluation captures major shifts. Check rolling correlation, note catalyst events, adjust your framework. Don't agonize over daily fluctuations in correlation — the regime is the broader pattern."
+
+  - id: q9
+    text: "Worked example: VIX spiked to 32, BTC-NASDAQ correlation rising to +0.85, NASDAQ fell 4% today, BTC down 5%. Regime?"
+    type: mcq
+    choices:
+      - "Decoupled."
+      - "HIGH CORRELATION + risk-off. Macro signals leading crypto down. Don't try to long BTC despite individual setup quality. Wait for VIX to normalize and correlation to ease before resuming crypto-specific setups."
+      - "Bull market."
+      - "Random."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Classic high-correlation risk-off environment. BTC tightly tracking NASDAQ down. Trading BTC longs against this macro tape = fighting the larger flow. Sit out or short until macro stabilizes. Even strong BTC chart setups will struggle against tight correlation + risk-off."
+
+  - id: q10
+    text: "Worked example: Spot BTC ETF just approved. BTC rallied 10% while NASDAQ flat. Correlation dropped from +0.7 to +0.2 over the week. Regime?"
+    type: mcq
+    choices:
+      - "High correlation."
+      - "DECOUPLED — crypto-specific catalyst (ETF) is driving BTC. Macro matters less. Trade crypto setups primarily: BTC chart, BTC.D, ETF flow data. Macro is background context but not the primary driver."
+      - "Bear market."
+      - "Random."
+    correct: 1
+    topic_tag: correlation
+    explanation: "ETF approval is a major crypto-specific catalyst. BTC rallying independently of equities = decoupling. The narrative is dominating. Approach: trade crypto signals primarily during this phase. The decoupling won't last forever — correlation eventually re-asserts — but while it's active, crypto-specific analysis takes priority."

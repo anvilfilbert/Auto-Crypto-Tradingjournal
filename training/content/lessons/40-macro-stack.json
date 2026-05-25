@@ -1,0 +1,113 @@
+{
+  "slug": "40-macro-stack",
+  "subtitle": "Crypto doesn't trade in a vacuum. When DXY rises, when VIX spikes, when S&P 500 futures fall — crypto reacts within hours. The macro stack tells you the GLOBAL risk environment that determines whether crypto setups are likely to work or fail.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've built complete chart-reading skills, indicator mastery, and advanced concepts. Tier 5 zooms out: what's happening in the BROADER financial world that affects crypto?</p><p>Crypto is a risk asset. When global risk appetite goes up, crypto tends to rally. When global risk-off hits (war scare, rate hike surprise, banking crisis), crypto often falls WITH (or harder than) equities. Knowing the macro stack tells you when your chart setups have a tailwind vs a headwind.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The four key macro indicators"
+    },
+    {
+      "type": "table",
+      "headers": ["Indicator", "What it measures", "Crypto correlation"],
+      "rows": [
+        ["<strong>DXY (US Dollar Index)</strong>", "Strength of USD vs basket of major currencies", "INVERSE — strong dollar = pressure on crypto (and other assets priced in USD)"],
+        ["<strong>VIX</strong>", "Implied volatility of S&P 500 (fear gauge)", "INVERSE typically — VIX spike = risk-off = crypto sells. Sometimes decouples in crypto-specific events."],
+        ["<strong>S&P 500 futures (ES)</strong>", "Largest-cap US equity index", "POSITIVE — when ES rallies, crypto often follows. When ES falls, crypto often falls harder."],
+        ["<strong>10-year Treasury yield (TNX)</strong>", "Long-term US interest rate; risk-free rate", "Generally INVERSE for risk assets — rising yields make crypto less attractive"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The risk-on / risk-off framework"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Two macro regimes that matter most",
+      "content": "<p><strong>RISK-ON</strong>: investors comfortable, looking for returns. Equities rally, crypto rallies, yields stable or falling, DXY weak, VIX low.</p><p><strong>RISK-OFF</strong>: fear dominates, investors run to safety. Equities sell, crypto sells (often harder), yields fall (flight to bonds), DXY spikes, VIX spikes.</p><p>In risk-off, ALL risk assets fall together regardless of individual stories. Your perfect BTC technical setup means nothing if the global tape is in risk-off — the broader flow overrides individual chart signals.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The hierarchy of correlation"
+    },
+    {
+      "type": "text",
+      "content": "<p>In risk events, risk assets fall in a predictable order:</p><ol><li><strong>Tech/growth stocks</strong> (NASDAQ futures, QQQ) — high-beta to risk; fall first.</li><li><strong>BTC + ETH</strong> — closely follow the move; often slightly delayed.</li><li><strong>Major alts</strong> (SOL, BNB, XRP, AVAX) — fall in line with BTC but amplified (1.5-2x BTC's move).</li><li><strong>Mid-cap alts</strong> — amplified further (2-3x BTC's move).</li><li><strong>Small-cap alts</strong> — wildest moves; can fall 30-50% in a few hours during severe risk-off.</li></ol><p>This hierarchy means: when you see equity tech rolling over, you have a head-start signal that crypto pain is coming. Especially for high-leverage alt longs, equity weakness is your early warning.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "DXY in detail"
+    },
+    {
+      "type": "text",
+      "content": "<p>The US Dollar Index (DXY) measures USD strength vs EUR, JPY, GBP, CAD, SEK, CHF (weighted). Why it matters for crypto:</p><ul><li>Crypto is priced in USD. Strong USD = relative weakness in crypto's USD price even if crypto's intrinsic value is unchanged.</li><li>USD strength reflects global flight-to-safety. Same dynamic that pushes investors INTO USD pushes them OUT of risk assets.</li><li>Many crypto correlations operate through DXY. ETH-USD weakness during DXY rallies isn't ETH-specific; it's USD-specific.</li></ul><p>Watch DXY when crypto is in a key technical zone. If DXY is rallying (e.g., approaching 105+), expect downward pressure on crypto. If DXY is falling (e.g., breaking below 100), expect tailwind for crypto.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "VIX and what spikes mean"
+    },
+    {
+      "type": "text",
+      "content": "<p>VIX measures implied volatility on S&P 500 options. It's known as the 'fear gauge' because it spikes when investors are buying puts (insurance against decline):</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["VIX range", "Market sentiment", "Crypto implication"],
+      "rows": [
+        ["10-15", "Complacency / low fear", "Crypto can grind higher; risk-on environment"],
+        ["15-20", "Normal volatility", "No strong macro signal; trade technicals"],
+        ["20-25", "Elevated fear", "Caution — risk-off may be brewing"],
+        ["25-35", "Significant fear", "Risk-off in progress; tighten crypto longs, consider reducing leverage"],
+        ["35+", "Major fear spike", "Severe risk-off; crypto often crashes 10-20%; defensive posturing critical"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "VIX above 30 = different market",
+      "content": "<p>When VIX spikes above 30, normal technical setups stop working. Liquidity dries up, correlations spike toward 1 (everything moves together), and volatility regimes change. Your beautiful S/R levels can break by 5-10% on a single candle as flight-to-cash dynamics dominate.</p><p>During VIX > 30 environments: reduce leverage, widen stops (or sit out), don't try to fade volatility. These are environments to SURVIVE, not to maximize on. Wait for VIX to normalize before resuming aggressive setups.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "S&P 500 futures (ES) as the lead indicator"
+    },
+    {
+      "type": "text",
+      "content": "<p>ES (S&P 500 e-mini futures) trades nearly 24/7 and often LEADS crypto by minutes to hours during risk events. When equities open and fall sharply, crypto typically follows within the hour.</p><p>Practical: have an ES chart visible alongside your BTC chart during US market hours (14:30-21:00 UTC). When ES breaks key levels or shows strong directional moves, crypto reacts quickly.</p><ul><li>ES strong rally + crypto setup bullish = aligned, high-conviction long</li><li>ES strong sell-off + crypto setup bullish = conflicting; the macro flow usually wins</li><li>ES neutral or sideways + crypto setup = trade the crypto technicals normally</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "When crypto decouples"
+    },
+    {
+      "type": "text",
+      "content": "<p>Crypto isn't always correlated to equities. Periods of decoupling include:</p><ul><li>Crypto-specific news (major ETF approval, regulatory news, exchange failure).</li><li>Halving cycles when crypto-specific supply dynamics dominate.</li><li>When crypto is in deep markdown — already crashed below where it 'should' be relative to equities.</li><li>Bull markets when retail crypto FOMO temporarily decouples from equity correlation.</li></ul><p>Decoupling isn't permanent. Eventually the correlation reasserts. But during decoupling phases, crypto-specific setups dominate macro signals.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Practical macro check workflow"
+    },
+    {
+      "type": "text",
+      "content": "<ol><li><strong>Before any crypto trade</strong>, glance at the macro stack: DXY level + trend, VIX level, ES today's action.</li><li><strong>Classify the macro regime</strong>: clearly risk-on, clearly risk-off, or neutral?</li><li><strong>Match your crypto bias to the regime</strong>. Bullish crypto setups + risk-on = aligned, higher quality. Bullish crypto + risk-off = conflicting, lower quality (or skip).</li><li><strong>Reduce leverage during VIX spikes</strong>. Even high-conviction setups can be steamrolled by macro flows.</li><li><strong>Watch ES during US hours</strong> as a lead indicator for crypto direction.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>Setup: BTC has a clean bullish setup on 4H — pullback to support, hammer candle, volume, RSI bullish divergence. Looks like A+ long.</p><p>Macro check:</p><ul><li>DXY at 103 and rallying hard (broke 102 resistance with momentum)</li><li>VIX at 27 (elevated)</li><li>ES selling off, breaking below 200 SMA on daily</li></ul><p>The macro is CLEARLY risk-off. Despite the beautiful BTC setup, the broader environment is hostile.</p><p>Smart decision: REDUCE size by half (or skip), use tighter SL, take partial profits faster. The setup might still work — but the probability is meaningfully lower than the same setup during risk-on.</p><p>Alternatively, you could wait for the macro to stabilize (DXY pulls back, VIX falls below 20, ES stabilizes) and revisit the BTC setup then. The technicals will often re-form once macro headwinds ease.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Check the macro stack before every trade.</strong> DXY, VIX, ES. 30 seconds.</li><li><strong>Match crypto bias to macro regime.</strong> Aligned = higher quality. Conflicting = reduce size or skip.</li><li><strong>VIX above 30 = different market.</strong> Survive, don't maximize. Wait for normalization before aggressive setups.</li></ol><p>Next lesson: BTC dominance and altcoin seasons — how to navigate the rotation between BTC and alts.</p>"
+    }
+  ]
+}

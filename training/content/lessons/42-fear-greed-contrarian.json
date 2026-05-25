@@ -1,0 +1,97 @@
+{
+  "slug": "42-fear-greed-contrarian",
+  "subtitle": "The Fear & Greed index measures crypto sentiment on a 0-100 scale. Extreme Fear (under 25) is historically the BEST buying opportunity. Extreme Greed (over 75) is historically the WORST time to buy. The simplest contrarian indicator in crypto.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>'Be fearful when others are greedy, and greedy when others are fearful.' That single Warren Buffett quote captures the entire crypto Fear & Greed framework. The math of mean reversion at sentiment extremes works in any market — crypto's index just makes it measurable.</p><p>The crypto Fear & Greed Index publishes daily and gives a single number 0-100 capturing aggregate sentiment. Extremes are contrarian signals. The middle is just neutral.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What the index measures"
+    },
+    {
+      "type": "text",
+      "content": "<p>Fear & Greed (provided by alternative.me) combines several inputs into one score:</p><ul><li><strong>Volatility (25%)</strong>: current vs average. Higher volatility = fear.</li><li><strong>Market momentum (25%)</strong>: current vs 30/90 day averages. Lower momentum = fear.</li><li><strong>Social media (15%)</strong>: Reddit/Twitter sentiment analysis.</li><li><strong>Surveys (15%)</strong>: weekly user surveys.</li><li><strong>Dominance (10%)</strong>: BTC dominance moves. Sudden BTC dominance rises = fear.</li><li><strong>Trends (10%)</strong>: Google search trends for crypto-related terms.</li></ul><p>The aggregate produces a number that's reasonably representative of where retail sentiment sits. It's not perfect but it's a quick read.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The Fear & Greed scale"
+    },
+    {
+      "type": "table",
+      "headers": ["Range", "Label", "Historical interpretation"],
+      "rows": [
+        ["0-25", "<strong>Extreme Fear</strong>", "Best buying opportunities historically. Capitulation events; everyone wants to sell. Contrarian LONG signal."],
+        ["25-45", "Fear", "Moderate caution. Some long opportunities forming."],
+        ["45-55", "Neutral", "No strong sentiment signal. Trade technicals normally."],
+        ["55-75", "Greed", "Caution increasing. Don't size up longs aggressively."],
+        ["75-100", "<strong>Extreme Greed</strong>", "Historically the WORST buying opportunity. Euphoria peaks; everyone wants to buy. Contrarian SHORT signal."]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The contrarian principle",
+      "content": "<p>At the EXTREMES, the index works as a contrarian indicator because:</p><ul><li>Extreme Fear = everyone who wanted to sell, sold. No more sellers = no downward pressure left.</li><li>Extreme Greed = everyone who wanted to buy, bought. No more buyers = no upward pressure left.</li></ul><p>Mean reversion is the structural response to these extremes. Combined with technical signals (S/R level + reversal pattern + volume), Fear & Greed extremes mark some of the best contrarian trade setups available.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 25 and 75 thresholds"
+    },
+    {
+      "type": "text",
+      "content": "<p>Most useful action thresholds:</p><ul><li><strong>F&G below 25 (Extreme Fear)</strong>: bias LONG. Look for technical bottoming patterns + key support + bullish reversal candle + volume. The most lucrative buy zones in crypto history have been at F&G 10-20 with confirming chart signals.</li><li><strong>F&G above 75 (Extreme Greed)</strong>: bias SHORT or take profits. Look for technical topping patterns + key resistance + bearish reversal candle + volume. The worst times to add longs have historically been at F&G 80-100.</li><li><strong>F&G 25-75</strong>: no strong contrarian signal. Trade your technicals normally.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't trade Fear & Greed alone",
+      "content": "<p>Same rule as every other indicator — standalone signals are weaker than confluence. F&G at 18 means 'set up to look for longs', not 'long immediately'. You still need technical confirmation: support level + reversal candle + volume.</p><p>F&G can stay at 15-20 for weeks during prolonged bear markets. Buying just because the index is low has produced many losing trades. Buying when F&G is at extreme + technicals confirm = much higher probability.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "F&G in cycle context"
+    },
+    {
+      "type": "text",
+      "content": "<p>F&G has historical patterns within crypto cycles:</p><ul><li><strong>Bear market lows</strong>: F&G typically hits 5-15 (Extreme Fear). Often persists for weeks or months during deep bears.</li><li><strong>Early bull market</strong>: F&G grinding higher from fear into neutral.</li><li><strong>Mid bull market</strong>: F&G regularly hitting 60-80.</li><li><strong>Late bull / blow-off top</strong>: F&G sustained at 80-95 (Extreme Greed). This is often within weeks of major tops.</li><li><strong>Cycle top</strong>: F&G can flash to 95+ briefly, then drop precipitously as the trend reverses.</li><li><strong>Bear market beginning</strong>: F&G dropping from 80+ to 30-40 within a few weeks.</li></ul><p>Recognizing where you are in the cycle (via F&G + price action) tells you whether you're in 'bias long, expect dips to buy' (early/mid bull) or 'bias take profits' (late bull) or 'patience and wait for bottoming' (bear).</p>"
+    },
+    {
+      "type": "heading",
+      "content": "F&G + technical confluence"
+    },
+    {
+      "type": "table",
+      "headers": ["F&G level", "Technical setup", "Trade quality"],
+      "rows": [
+        ["Extreme Fear (15)", "Major HTF support + bullish reversal candle + volume + RSI bullish divergence", "A+ LONG setup — historically these zones produce exceptional R:R"],
+        ["Extreme Greed (88)", "Major HTF resistance + bearish reversal candle + volume + RSI bearish divergence", "A+ SHORT setup — late-cycle topping patterns often play out"],
+        ["Neutral F&G (55)", "Any technical setup", "Trade normally; F&G provides no extra signal"],
+        ["Extreme Fear (12) + no technical signal", "Just the F&G low, nothing else", "Wait. F&G alone doesn't time the bottom."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Common F&G mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<ol><li><strong>Buying every Fear print without technical confirmation.</strong> F&G can stay low for months during bears. Wait for confirmed bottoming pattern + level + volume.</li><li><strong>Selling every Greed print blindly.</strong> Same issue mirror. Bull markets can sustain high F&G for weeks.</li><li><strong>Ignoring F&G entirely.</strong> Even though it's not a precision timing tool, the extremes are real contrarian markers. Worth a 10-second check before any major position.</li><li><strong>Trusting F&G for INTRADAY signals.</strong> The index updates daily. Use it for swing/positional context, not for 5-minute timing.</li><li><strong>Trading against F&G during macro extremes.</strong> F&G 95 during clear bull euphoria + you decide to long because 'this time is different' = trying to fight history.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>Scenario: BTC has been crashing for 2 months. Down from $75K to $45K. The current 4H candle prints at $44,200 — a previous swing low + round number + 200-week MA confluence. Bullish engulfing pattern + 3× average volume + RSI bullish divergence on 4H.</p><p>F&G check: index at 16 (Extreme Fear).</p><p>Signal stack:</p><ul><li>Major HTF support ✓</li><li>Bullish reversal candle ✓</li><li>Above-average volume ✓</li><li>RSI bullish divergence ✓</li><li>F&G Extreme Fear (16) — contrarian buy signal ✓</li></ul><p>This is the A+ contrarian long setup. Multiple confluences across different lenses (technical + sentiment + structure). Trade:</p><ul><li><strong>Entry</strong>: Limit BUY at $44,500</li><li><strong>SL</strong>: $42,500 (below the swing low + buffer)</li><li><strong>TP1</strong>: $50,000 (round number + structural resistance)</li><li><strong>TP2</strong>: $55,000 (next major level)</li><li><strong>TP3</strong>: hold for full reversal back toward $60K if structure continues</li></ul><p>Without F&G at extreme, the same technical setup is still good but the contrarian sentiment confirmation adds significant probability boost. F&G at neutral 50 with the same chart setup = standard quality trade. F&G at 88 with the same chart setup = warning that the bounce might be brief because broader sentiment isn't supportive.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>F&G &lt; 25 = look for LONG setups.</strong> Combine with technical confirmation.</li><li><strong>F&G &gt; 75 = look for SHORT setups OR take profits.</strong> Don't add longs at extreme greed.</li><li><strong>F&G alone is not a timing tool.</strong> It can stay at extremes for weeks. Need technical confirmation for entries.</li></ol><p>Next lesson: news-event trading — FOMC, CPI, NFP and how to handle (or avoid) macro event volatility.</p>"
+    }
+  ]
+}

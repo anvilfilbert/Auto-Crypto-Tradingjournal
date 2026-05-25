@@ -1,0 +1,89 @@
+{
+  "slug": "41-btc-dominance-alt-seasons",
+  "subtitle": "BTC dominance (BTC.D) is the % of total crypto market cap that BTC represents. When BTC.D falls, capital is rotating into alts — 'alt season'. When BTC.D rises, capital flees alts back to BTC ('safety in BTC'). Read this rotation correctly and you'll know when to size up which type of position.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>The crypto market isn't monolithic. Within crypto, capital constantly rotates between BTC and alts. Sometimes alts outperform; sometimes they dramatically underperform. BTC dominance (BTC.D) measures this rotation directly.</p><p>For a trader, knowing whether you're in 'BTC season' or 'alt season' determines:</p><ul><li>Which assets to focus on (BTC only? majors? mid-caps? small-caps?)</li><li>How aggressively to size alt positions</li><li>When to rotate profits from alts back to BTC (or vice versa)</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "What BTC.D is"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC.D = BTC's market cap / Total crypto market cap × 100. It's expressed as a percentage. Historical range roughly 35-70%:</p><ul><li>BTC.D 35-45% = peak alt season (alts massively outperforming)</li><li>BTC.D 45-55% = mid-range, mixed conditions</li><li>BTC.D 55-65% = BTC-dominated; alts struggling</li><li>BTC.D 65%+ = extreme BTC dominance (often during bear markets or major rotation events)</li></ul><p>The TREND in BTC.D matters more than the absolute level. Rising BTC.D = capital fleeing alts. Falling BTC.D = capital flowing into alts.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What 'alt season' actually means"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Alt season = sustained outperformance of alts vs BTC",
+      "content": "<p>It's not just 'alts going up'. Alt season specifically means:</p><ul><li>Alts gaining FASTER than BTC for sustained period (weeks to months).</li><li>BTC.D falling consistently.</li><li>Mid-cap and small-cap alts often gaining 100-500% in weeks.</li><li>Retail attention shifts from BTC to alts (Twitter sentiment, search trends).</li></ul><p>Alt seasons historically come AFTER BTC's main bull run completes. BTC makes its blow-off top; capital rotates down the cap ladder into ETH first, then majors, then mid-caps, then small-caps. The rotation can produce explosive moves in alts while BTC consolidates or even slowly declines.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The typical cycle"
+    },
+    {
+      "type": "table",
+      "headers": ["Phase", "BTC.D behavior", "What to trade"],
+      "rows": [
+        ["<strong>BTC accumulation (early bull)</strong>", "BTC.D rising slowly", "BTC longs"],
+        ["<strong>BTC main rally</strong>", "BTC.D peaking, then starting to fall", "BTC primarily; majors as BTC peaks"],
+        ["<strong>ETH rotation</strong>", "BTC.D falling steadily", "ETH and ETH-correlated majors (SOL, MATIC if cycle-relevant)"],
+        ["<strong>Major alt rotation</strong>", "BTC.D continuing down", "Major alts (top 20-50 by cap)"],
+        ["<strong>Small-cap alt season</strong>", "BTC.D low, mid/small caps euphoric", "Mid and small caps — peak retail activity"],
+        ["<strong>Cycle top</strong>", "BTC.D bottoming, starting to rise sharply", "TAKE PROFITS — rotation back to BTC = bear market signal"],
+        ["<strong>Bear market</strong>", "BTC.D rising as alts crash harder than BTC", "Short alts, hold BTC or stables"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "How to read BTC.D for trading decisions"
+    },
+    {
+      "type": "text",
+      "content": "<ul><li><strong>BTC.D rising sharply (e.g., 3%+ in a week)</strong>: capital is fleeing alts. REDUCE alt exposure. Either rotate to BTC or take profits.</li><li><strong>BTC.D falling sharply</strong>: alt season in progress. Size up alts (within risk rules) — they may have multi-week outperformance.</li><li><strong>BTC.D stable</strong>: no rotation signal. Trade individual setups on their merits.</li><li><strong>BTC.D at extreme highs (65%+)</strong>: alts have likely been crushed for months; either still in late bear or early reversal. Watch for stabilization before alt longs.</li><li><strong>BTC.D at extreme lows (35-40%)</strong>: alt season at maximum euphoria. Often a TOP SIGNAL — start taking alt profits.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't chase late alt season",
+      "content": "<p>The last 5-10% of an alt-season rally produces the most dramatic-looking returns but is also the most dangerous. Retail piles in at peak euphoria; BTC.D bottoms; capital rotates back to BTC (or stables); alts crash 40-70% as the rotation reverses.</p><p>Signs you're in late alt season: dog/meme coins doing 10× weekly, random small-caps pumping on no news, social media universally bullish on alts, 'BTC.D will go to 30%' becomes consensus. When you see these, START taking profits — don't add more.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Alt season setup confluence"
+    },
+    {
+      "type": "text",
+      "content": "<p>The highest-quality alt trades occur when:</p><ol><li>BTC.D is in a falling trend (alt rotation in progress).</li><li>Macro is risk-on (broader global conditions supportive).</li><li>BTC is in markup phase (not yet topping) OR consolidating after a top.</li><li>The specific alt has its own technical setup (S/R, structure, indicators).</li><li>Volume on the alt is rising (real participation, not just thin pumps).</li></ol><p>When 4-5 of these align, the alt can run hard. When only 1-2 align (e.g., 'just BTC.D falling but macro risk-off'), expect smaller, choppier moves.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When to rotate profits BACK to BTC"
+    },
+    {
+      "type": "text",
+      "content": "<p>If you've ridden alts during alt season, knowing when to rotate back to BTC (or stables) is critical. Signs to rotate out:</p><ul><li>BTC.D starts rising consistently for 1-2 weeks (rotation reversal).</li><li>Your alt positions have made 100%+ — secure profits even if more upside seems possible.</li><li>Macro turning risk-off (DXY rising, VIX spiking).</li><li>BTC is showing distribution signs (Wyckoff lesson 33).</li><li>Social/sentiment universally bullish on alts (contrarian signal).</li></ul><p>Rotating back to BTC during peak alt season is HARD psychologically — alts are still pumping and FOMO is intense. But it's exactly the time when the math (BTC.D bottoming + alt profits at max) tells you to.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>Scenario: BTC just topped at $75K after a 6-month bull run. Currently $72K and consolidating. BTC.D has fallen from 56% to 51% over the last 3 weeks. ETH has rallied from $3,200 to $4,100 (28% gain) while BTC has been flat.</p><p>Interpretation: alt rotation has started. ETH is leading. Major alts will likely follow next. Mid-caps after that.</p><p>Strategy:</p><ul><li>Continue holding BTC at reduced size (took profits at top).</li><li>Increase ETH allocation given the clear leadership.</li><li>Identify major alts with strong fundamentals (top 20-50 by cap) for the next rotation phase.</li><li>Monitor BTC.D weekly. If it continues falling, alt-season progression continues. If it suddenly reverses up, take alt profits and rotate back to BTC or stables.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Track BTC.D trend.</strong> Falling = alt rotation; rising = capital fleeing alts back to BTC.</li><li><strong>Trade WITH the rotation.</strong> Don't long alts when BTC.D is rising sharply; don't long BTC during peak alt season.</li><li><strong>Take alt profits during late alt season.</strong> When BTC.D is bottoming and meme coins are euphoric, the rotation back to BTC is near.</li></ol><p>Next lesson: Fear & Greed index — the most-watched contrarian indicator in crypto.</p>"
+    }
+  ]
+}

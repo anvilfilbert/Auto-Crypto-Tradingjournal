@@ -1,0 +1,123 @@
+id: "40"
+lesson_id: 40
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "DXY (US Dollar Index) is INVERSELY correlated with crypto. Why?"
+    type: mcq
+    choices:
+      - "Random."
+      - "Crypto is priced in USD. Strong USD = relative weakness in crypto's USD price. Plus DXY rallies often reflect flight-to-safety dynamics that push investors OUT of risk assets like crypto."
+      - "USD doesn't matter."
+      - "Only at the top."
+    correct: 1
+    topic_tag: dxy
+    explanation: "Two mechanisms: (1) Crypto is denominated in USD, so USD strength mechanically reduces crypto's USD price. (2) Flight-to-safety dynamics that drive USD higher (war fears, banking crisis) ALSO drive investors out of risk assets — crypto is a risk asset. Both effects work together."
+
+  - id: q2
+    text: "VIX at 35 signals what for crypto?"
+    type: mcq
+    choices:
+      - "Bullish — buying opportunity."
+      - "Major fear spike — severe risk-off in progress. Crypto often crashes 10-20% in such environments. Defensive posturing critical: reduce leverage, tighter stops or sit out, don't fade volatility."
+      - "Random."
+      - "No effect on crypto."
+    correct: 1
+    topic_tag: vix
+    explanation: "VIX 35+ = severe fear spike. Liquidity dries up, correlations spike toward 1, technical setups stop working as macro flows dominate. Survival mode: reduce/eliminate leverage, take partial profits, don't try aggressive trades. Wait for VIX to normalize (below 25) before resuming high-conviction setups."
+
+  - id: q3
+    text: "In risk events, which crypto category typically falls HARDEST?"
+    type: mcq
+    choices:
+      - "BTC."
+      - "Small-cap alts — can fall 30-50% in hours during severe risk-off. The hierarchy: tech stocks → BTC/ETH → major alts (1.5-2× BTC's move) → mid-caps (2-3×) → small-caps (wildest)."
+      - "Stablecoins."
+      - "All equally."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Crypto risk hierarchy is sharp. BTC is the most resilient. Each step down the cap ladder amplifies the move. Small caps face the worst: low liquidity + retail panic + leverage forced unwinds. If you're holding small-cap longs and see equity tech rolling over, take profits early or hedge."
+
+  - id: q4
+    text: "S&P 500 futures (ES) often LEADS crypto by minutes to hours during risk events. How do you use this?"
+    type: mcq
+    choices:
+      - "Trade ES instead of crypto."
+      - "Have an ES chart visible alongside BTC during US hours (14:30-21:00 UTC). When ES makes strong directional moves, crypto typically follows within the hour — early warning signal for crypto direction."
+      - "ES is irrelevant."
+      - "Only check ES weekly."
+    correct: 1
+    topic_tag: macro
+    explanation: "ES leads crypto in real-time during US session. When ES breaks down hard, you have minutes to hours of advance warning before crypto follows. Use it to: tighten crypto longs before the move, position shorts before crypto pain, or step aside entirely. Lead indicator status makes it valuable for crypto traders too."
+
+  - id: q5
+    text: "Risk-OFF environment characterized by:"
+    type: mcq
+    choices:
+      - "Equities rallying, low VIX, weak USD."
+      - "Equities SELLING, VIX SPIKING, USD STRONG (DXY rising), yields FALLING (flight to bonds). All risk assets (including crypto) fall together regardless of individual stories."
+      - "Random."
+      - "Only positive news everywhere."
+    correct: 1
+    topic_tag: macro
+    explanation: "Risk-off = fear dominates. Investors run to safety: bonds (yields fall), USD (DXY rises), insurance (VIX spikes). Risk assets sell across the board — equity correlation with crypto spikes toward 1. Your beautiful BTC technical setup means little when the macro tape is in risk-off."
+
+  - id: q6
+    text: "Best crypto trade approach when MACRO and TECHNICAL setups CONFLICT?"
+    type: mcq
+    choices:
+      - "Trust the technicals fully."
+      - "Reduce size or skip the trade. Macro flows often override individual technical signals during clear macro events. Better to wait for macro stabilization OR for the technical signal to re-form once macro headwind eases."
+      - "Trust the macro and ignore technicals."
+      - "Use 100× leverage to amplify."
+    correct: 1
+    topic_tag: macro
+    explanation: "Macro and technical alignment = higher conviction. Conflict = lower conviction. During clear risk-off, even great-looking BTC setups often fail because broader flows steamroll individual chart signals. Smart response: reduce size to acknowledge the conflict, or skip and wait for alignment. Don't ignore either signal."
+
+  - id: q7
+    text: "DXY rising rapidly + VIX above 25 + ES selling off + BTC bullish setup forming. What's the right action?"
+    type: mcq
+    choices:
+      - "Long aggressively — technicals matter most."
+      - "REDUCE SIZE by half (or skip) and tighten SL. The macro is clearly risk-off; despite the BTC setup, probability of success is meaningfully lower. Wait for macro stabilization OR take a smaller position with tighter management."
+      - "Use 100× leverage."
+      - "Short the setup."
+    correct: 1
+    topic_tag: macro
+    explanation: "Conflicting signals = reduce conviction. The macro is risk-off (DXY up + VIX elevated + ES selling). Even a great BTC chart setup has lower probability in this environment. Smart trader: half-size, tighter management, or skip. The setup might still work — but bet less when conditions are unfavorable."
+
+  - id: q8
+    text: "When does crypto DECOUPLE from equities?"
+    type: mcq
+    choices:
+      - "Never — always correlated."
+      - "Crypto-specific news (ETF approval, regulatory events, exchange failure), halving cycles, deep markdown when crypto has already crashed below equity-correlated levels, bull market FOMO. Decoupling isn't permanent — correlation eventually reasserts."
+      - "Always decoupled."
+      - "Only on weekends."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Crypto correlation isn't constant. Crypto-specific narratives can temporarily override equity correlation — but eventually macro flows reassert. The trader who understands this watches BOTH crypto-specific and macro dynamics, weighting them according to which is currently dominant. Most of the time macro wins; sometimes crypto-specific does."
+
+  - id: q9
+    text: "Practical macro check before trading:"
+    type: mcq
+    choices:
+      - "Read every news article."
+      - "30-second glance: DXY level + recent trend, VIX level, ES today's action. Classify regime (risk-on / risk-off / neutral). Adjust crypto trade conviction accordingly."
+      - "Ignore macro entirely."
+      - "Only check macro weekly."
+    correct: 1
+    topic_tag: macro
+    explanation: "Macro check is a 30-second habit. Tradingview or other platforms show DXY, VIX, ES easily. Classify the regime in seconds. Use that to weight conviction on your crypto trade. This single habit prevents many losses where the chart setup looks great but the broader environment makes it improbable to work."
+
+  - id: q10
+    text: "The 'risk asset hierarchy' during risk-off events (which falls FIRST):"
+    type: mcq
+    choices:
+      - "Small alts."
+      - "Tech/growth stocks (NASDAQ, QQQ) → BTC + ETH → major alts → mid-caps → small-caps (in increasing order of amplification). Tech is the earliest signal; small alts are the worst victims."
+      - "BTC."
+      - "Random order."
+    correct: 1
+    topic_tag: correlation
+    explanation: "Hierarchy reflects beta (sensitivity to risk). Tech stocks are high-beta to risk; fall first. BTC/ETH follow within hours. Each step down the alt cap ladder amplifies the move. Small caps see the worst because of liquidity + leverage + retail panic combinations. Use tech stock moves as early warning for crypto."

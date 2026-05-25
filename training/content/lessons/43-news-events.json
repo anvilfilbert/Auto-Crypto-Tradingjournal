@@ -1,0 +1,97 @@
+{
+  "slug": "43-news-events",
+  "subtitle": "FOMC, CPI, NFP — macro events that can move crypto 5-10% in minutes. Most retail tries to predict the move and gets crushed by volatility. Pros either FLATTEN before the print or trade the post-event direction once the dust settles.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Roughly once or twice a month, a major macro economic release creates extreme volatility in all risk assets — crypto included. The Fed announcing rates, CPI inflation prints, jobs reports. The market often moves 2-5% in BOTH directions within minutes of the announcement before settling.</p><p>Most retail thinks they can predict the direction. They can't. Pros either avoid trading the print entirely or wait until after the dust settles. This lesson covers which events matter, why predicting them is a losing game, and how to actually handle them.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The major events that move crypto"
+    },
+    {
+      "type": "table",
+      "headers": ["Event", "Frequency", "Crypto impact"],
+      "rows": [
+        ["<strong>FOMC rate decision + press conference</strong>", "8x per year", "VERY HIGH — can move crypto 3-7% on the announcement"],
+        ["<strong>FOMC meeting minutes</strong>", "8x per year (3 weeks after meeting)", "Moderate — depends on whether minutes reveal surprises"],
+        ["<strong>CPI (Consumer Price Index)</strong>", "Monthly", "HIGH — inflation data shapes rate expectations; moves all risk assets"],
+        ["<strong>NFP (Nonfarm Payrolls / jobs)</strong>", "Monthly (first Friday)", "HIGH — labor market data shapes recession/rate expectations"],
+        ["<strong>PCE (Fed's preferred inflation gauge)</strong>", "Monthly", "Moderate-High"],
+        ["<strong>GDP</strong>", "Quarterly", "Moderate"],
+        ["<strong>Major central bank decisions (ECB, BoJ)</strong>", "Periodic", "Moderate for crypto via DXY effects"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Why predicting the direction is a losing game"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "You don't have an edge on the print",
+      "content": "<p>Three reasons retail can't predict event-driven moves:</p><ol><li><strong>You don't see the data first.</strong> Institutional traders with paid feeds get the data milliseconds before retail platforms publish it. They've already positioned by the time you see the print.</li><li><strong>The price already reflects expectations.</strong> The market's current price is the consensus forecast. The move happens on the DEVIATION from expectations, which you can't predict more accurately than the market does.</li><li><strong>Post-print 'whipsaws' are common.</strong> Initial moves often reverse within 30-60 minutes as algorithms re-process and traders fade extreme reactions. Catching the initial move is just gambling.</li></ol><p>If a retail trader trying to predict FOMC direction could do it consistently, they'd be running a hedge fund.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Two valid approaches for event days"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Approach 1 — FLATTEN before the event</strong></p><ul><li>Close all open positions 30-60 minutes before the announcement.</li><li>Sit out the actual event volatility.</li><li>Re-enter (or not) after the dust settles, based on which direction prevailed.</li><li>Cost: missing potential favorable moves through the event.</li><li>Benefit: avoiding the worst-case scenario of being on the wrong side of a 5% move.</li></ul><p><strong>Approach 2 — Trade the POST-EVENT direction</strong></p><ul><li>Don't open positions before the event.</li><li>Watch the print + initial 15-30 minutes of price reaction.</li><li>Once the initial volatility subsides and a clear directional bias emerges, trade with that direction using technical confirmation (S/R + reversal/continuation patterns).</li><li>Cost: missing the first few % of the move.</li><li>Benefit: trading with confirmed direction instead of guessing.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "What NOT to do",
+      "content": "<p>The losing approaches:</p><ol><li><strong>Hold open positions through the event with normal leverage.</strong> If your SL gets caught in the volatility wick (almost certain on a major surprise), you lose despite having a good base position.</li><li><strong>Open NEW positions just before the event 'to catch the move'.</strong> Pure gambling — you have no edge on direction.</li><li><strong>Chase the initial print direction within minutes.</strong> Reversals are common; you'll buy the top of the initial spike or short the low of the initial dump.</li></ol><p>Each of these costs more in losing event trades than you'd ever recoup from the wins.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to know events are coming"
+    },
+    {
+      "type": "text",
+      "content": "<p>Free economic calendars list all upcoming events with importance ratings:</p><ul><li>forexfactory.com/calendar — high-quality free</li><li>investing.com/economic-calendar</li><li>tradingeconomics.com/calendar</li></ul><p>Filter for HIGH importance (red impact icons). Check at the start of each trading week — note which days have major events. Plan around them.</p><p>Crypto-specific calendar: coinmarketcal.com — covers crypto-specific events (ETF approvals, halvings, major upgrades). These can move individual coins or sectors.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pre-event positioning"
+    },
+    {
+      "type": "text",
+      "content": "<p>If you must hold positions through an event:</p><ol><li><strong>Reduce position size dramatically.</strong> If you'd normally have $5K notional, hold $1K through the event.</li><li><strong>Widen stops to absorb wick volatility.</strong> A 2× ATR stop on a normal day might need to be 3-4× ATR on event day.</li><li><strong>Or use no SL on perps but hedge with options/inverse position.</strong> Complex; only for experienced traders.</li><li><strong>Accept you might give back recent gains.</strong> Event volatility is asymmetric — losses can be sharper than typical wins.</li></ol><p>For most retail, the simplest correct answer is FLATTEN before major events. Missed gains are better than catastrophic losses.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Post-event opportunities"
+    },
+    {
+      "type": "text",
+      "content": "<p>After major events, the market often establishes a clear directional bias within 1-2 hours. Once that bias is clear, post-event trades can be high-quality:</p><ul><li><strong>Trade the established trend</strong>: if the event clearly resolves bullish (e.g., dovish Fed), look for long setups on pullbacks. The post-event trend can run for days.</li><li><strong>Watch for failed reactions</strong>: sometimes the initial move reverses within hours, leading to opposite-direction trends. Wait for the trend to confirm.</li><li><strong>S/R retest opportunities</strong>: events often break previous S/R levels. The polarity flip (lesson 17) creates clean retest entries.</li></ul><p>Post-event trading is much higher edge than pre-event guessing. The market has already told you the direction; you trade with it using confirmed setups.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Crypto-specific events"
+    },
+    {
+      "type": "text",
+      "content": "<p>Beyond macro events, crypto has its own event types:</p><ul><li><strong>ETF approvals/rejections</strong>: major positive (approval) or negative (rejection) events. Can move BTC 5-15% within hours.</li><li><strong>Halvings</strong>: BTC supply halvings every ~4 years. Anticipated but actual price reaction varies.</li><li><strong>Major exchange events</strong>: hack disclosures, regulatory actions, listings. Asset-specific.</li><li><strong>Token unlocks</strong>: scheduled releases of tokens to early investors. Usually bearish for affected coins.</li><li><strong>Network upgrades</strong>: hard forks, major protocol changes. Can move individual coins.</li></ul><p>Same rules apply: don't try to predict direction; flatten or wait for confirmation post-event.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — FOMC day"
+    },
+    {
+      "type": "text",
+      "content": "<p>FOMC meeting today. Rate decision + press conference at 14:30 UTC. You have an open BTC long position from 2 days ago, currently +3% in profit.</p><p>Smart workflow:</p><ul><li><strong>14:00 UTC (30 min before)</strong>: close the long position. Take the +3% profit. Better to secure gains than risk getting wicked.</li><li><strong>14:30-15:30 UTC</strong>: watch the print + press conference + initial volatility. Don't trade.</li><li><strong>15:30 UTC onwards</strong>: once initial chop settles, assess: did the market clearly resolve bullish or bearish? Are key technical levels broken or held?</li><li><strong>If clear bullish resolution + technical setup forms</strong>: re-enter long with normal sizing.</li><li><strong>If bearish resolution</strong>: consider short setups instead, or stay out.</li><li><strong>If chop continues with no clear direction</strong>: stay out until next day.</li></ul><p>Most retail would: hold through the event with full leverage, watch the SL get hit by a volatility wick, then re-enter at a worse price. Avoid this. Flatten + wait is much higher EV.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Check the economic calendar weekly.</strong> Note high-impact events. Plan around them.</li><li><strong>FLATTEN before major events.</strong> Missed gains beat catastrophic losses to volatility wicks.</li><li><strong>Trade POST-event direction with technical confirmation.</strong> Don't predict; let the market reveal direction, then trade with it.</li></ol><p>Next lesson: correlation regimes — when crypto follows equities, when it decouples, and how to trade each regime.</p>"
+    }
+  ]
+}

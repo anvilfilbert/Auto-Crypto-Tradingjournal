@@ -1,0 +1,123 @@
+id: "41"
+lesson_id: 41
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "BTC dominance (BTC.D) measures:"
+    type: mcq
+    choices:
+      - "BTC price."
+      - "BTC's market cap as a PERCENTAGE of total crypto market cap. Indicates whether capital is concentrated in BTC or rotating to alts."
+      - "BTC volume."
+      - "Random number."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "BTC.D = BTC market cap / Total crypto market cap × 100. Historical range roughly 35-70%. Reading the TREND (falling = alts gaining; rising = capital fleeing alts to BTC) matters more than the absolute level for short-term decisions."
+
+  - id: q2
+    text: "FALLING BTC.D signals what?"
+    type: mcq
+    choices:
+      - "BTC pumping."
+      - "Capital rotating FROM BTC INTO alts ('alt season' in progress). Alts gaining faster than BTC. Time to consider alt longs (within risk rules)."
+      - "Bear market."
+      - "Random."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "Falling BTC.D = alts outperforming BTC. This is alt season — the rotation phase where capital chases higher returns down the cap ladder. Major alts first, then mid-caps, eventually small-caps. Sized appropriately, alts during this phase can produce explosive returns (100-500%)."
+
+  - id: q3
+    text: "RISING BTC.D signals what?"
+    type: mcq
+    choices:
+      - "Alts will rally."
+      - "Capital fleeing alts back to BTC. Either: (a) macro bear market starting (alts crash harder), or (b) BTC catching new bid relative to alts. REDUCE alt exposure when BTC.D rises sharply."
+      - "Stablecoins gaining."
+      - "Nothing significant."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "Rising BTC.D = alts losing share to BTC. This happens when investors flee speculative alts for the safety of BTC (during bear markets) or when BTC rallies hardest at the start of a new bull. Either way, alt positions face headwinds during sustained BTC.D uptrends. Reduce or rotate."
+
+  - id: q4
+    text: "When does 'alt season' typically PEAK?"
+    type: mcq
+    choices:
+      - "When BTC.D is at all-time highs."
+      - "When BTC.D is at extreme lows (35-40%), mid/small caps are euphoric (random small-caps pumping on no news), and social/sentiment is universally bullish on alts. Often a TOP signal — start taking profits."
+      - "Random timing."
+      - "Beginning of bear markets."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "Late alt season has signature signs: BTC.D at multi-year lows, meme/dog coins doing 10× weekly, random low-cap pumps without news, universal social euphoria about alts. These are contrarian signals — when everyone is bullish on alts, the rotation back to BTC (or stables) is near. Take profits during this phase, don't add."
+
+  - id: q5
+    text: "The TYPICAL crypto cycle rotation order (during a bull market):"
+    type: mcq
+    choices:
+      - "Small alts first, then BTC."
+      - "BTC first (early bull) → BTC peaks → ETH rotation → major alts → mid-cap alts → small-cap alts at cycle peak. Then capital rotates back to BTC (or stables) at the top."
+      - "All assets simultaneously."
+      - "Random order."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "Capital flows down the cap ladder during a bull cycle. BTC leads because institutional money enters first. As BTC stalls, ETH catches the bid. Then majors, mid-caps, eventually meme/small-caps at peak euphoria. The rotation back to BTC at cycle peak = bear market signal. Position accordingly."
+
+  - id: q6
+    text: "Best WORKFLOW for using BTC.D in trading decisions:"
+    type: mcq
+    choices:
+      - "Ignore it."
+      - "Check BTC.D weekly. Note the trend (rising / falling / sideways). Adjust focus: falling = alt opportunities; rising = BTC focus or stables. Sharp moves in BTC.D = strong rotation signals worth acting on."
+      - "Check it once a year."
+      - "Only check during news events."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "BTC.D is a slower-moving signal than individual chart setups. Weekly check is sufficient. The TREND matters most. Use to guide ASSET FOCUS (where to look for trades), not exact entries. Sharp BTC.D moves (3%+ in a week) are strong rotation signals worth responding to."
+
+  - id: q7
+    text: "BTC.D rising sharply + your portfolio is heavy in alts. What's the smart action?"
+    type: mcq
+    choices:
+      - "Add more alts at the dip."
+      - "TAKE PROFITS on alts or rotate to BTC/stables. Rising BTC.D often precedes alt underperformance (sometimes severe). Securing alt gains during the rotation is critical — alts can erase gains rapidly during 'risk-off within crypto' events."
+      - "Wait and hope."
+      - "Increase leverage on alts."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "Sharp BTC.D rises often mark transitions: cycle peak, bear market beginning, or major macro shift. Alts typically suffer most during these transitions (100% rallies can erase to 30% gains within weeks). Securing profits in BTC or stables protects what you've earned during alt season. Don't let alt gains turn into alt losses."
+
+  - id: q8
+    text: "Worked example: BTC topped at $75K, now consolidating at $72K. BTC.D fell from 56% to 51% over 3 weeks. ETH rallied $3.2K → $4.1K (+28%) while BTC flat. What stage?"
+    type: mcq
+    choices:
+      - "Bear market."
+      - "ALT ROTATION PHASE — ETH leading the alt season. Major alts will likely follow next, then mid-caps. Increase ETH and major alt allocations; reduce BTC focus; monitor BTC.D weekly for rotation continuation or reversal."
+      - "Random."
+      - "Peak BTC season."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "ETH outperforming flat BTC + falling BTC.D = classic alt rotation start. ETH usually leads the rotation; majors follow within weeks; mid-caps come later. Position accordingly: ride ETH, prepare for major alt opportunities. Monitor BTC.D for trend continuation (alt season alive) or reversal (rotation ending, take profits)."
+
+  - id: q9
+    text: "Why is rotating back to BTC during peak alt season psychologically HARD?"
+    type: mcq
+    choices:
+      - "It isn't hard."
+      - "Alts are still pumping; FOMO is intense; everyone is sharing alt gains. Selling alts during euphoria FEELS like leaving money on the table — but it's exactly the right move when BTC.D is bottoming. Discipline > vibes."
+      - "BTC is illegal in some countries."
+      - "Stables don't exist."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Peak alt season is maximum FOMO. Selling feels wrong because momentum is still strong and others are still making money. But mathematically (BTC.D at multi-year lows, retail euphoria signal) it's exactly the time to take profits. Discipline overrides emotion: trust the framework you've learned, not the social pressure of the moment."
+
+  - id: q10
+    text: "Best ALT TRADE setup requires which confluences?"
+    type: mcq
+    choices:
+      - "Just one signal."
+      - "BTC.D in falling trend + macro risk-on + BTC in markup or consolidating + alt has its own technical setup (S/R, structure) + alt volume rising. 4-5 confluences = high quality."
+      - "Random."
+      - "Only chart setup matters."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "Best alt trades stack multiple confirmations: macro rotation favorable (BTC.D falling), broader environment favorable (macro risk-on), BTC behavior favorable (not in distribution), specific technical (the alt's own chart), participation (volume). When 4-5 align, the alt can run hard. When fewer align, expect choppier moves."

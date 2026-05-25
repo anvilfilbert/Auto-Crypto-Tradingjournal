@@ -1,0 +1,86 @@
+{
+  "slug": "44-correlation-regimes",
+  "subtitle": "Crypto-equity correlation isn't constant. Sometimes it's near +1 (everything moves together), sometimes near 0 (crypto trades on its own narrative). The regime determines whether macro signals override crypto-specific setups. Read the regime; adjust accordingly.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've learned the macro stack (DXY, VIX, ES) and how it affects crypto. But that influence isn't constant. Sometimes crypto is glued to equities — every NASDAQ move shows up in BTC. Other times crypto trades on its own narrative — BTC rallies despite tech weakness because of an ETF approval, or crashes alone after a major exchange failure.</p><p>Knowing which CORRELATION REGIME you're in tells you whether to lean on macro signals or trade crypto-specific setups primarily.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Measuring correlation"
+    },
+    {
+      "type": "text",
+      "content": "<p>Correlation between BTC and equities (typically S&P 500 or NASDAQ) is measured statistically over rolling time windows. Range: -1 to +1.</p><ul><li><strong>+1.0</strong>: BTC and equities move in perfect sync</li><li><strong>+0.5 to +1.0</strong>: high correlation — they generally move together</li><li><strong>0 to +0.5</strong>: weak correlation — sometimes together, sometimes not</li><li><strong>0</strong>: no correlation — independent moves</li><li><strong>-0.5 to 0</strong>: weak inverse correlation</li><li><strong>-1.0</strong>: perfect inverse (extremely rare)</li></ul><p>Most charting platforms can plot rolling correlation. Periods like 30-day or 60-day BTC-vs-NASDAQ correlation tell you the current regime.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The three main regimes"
+    },
+    {
+      "type": "table",
+      "headers": ["Regime", "Correlation", "What it means for trading"],
+      "rows": [
+        ["<strong>HIGH correlation</strong>", "+0.6 to +0.9", "Crypto moves with equities. Macro signals (DXY, VIX, ES) dominate. Trade crypto WITH macro bias; counter-macro setups have low win rate."],
+        ["<strong>NEUTRAL / mixed</strong>", "0 to +0.4", "Crypto partially independent. Trade crypto setups normally; macro is a soft factor."],
+        ["<strong>DECOUPLED</strong>", "Near 0 or slightly negative", "Crypto on its own. Macro signals matter little; crypto-specific narratives dominate. Trade individual setups primarily."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "What causes regime shifts"
+    },
+    {
+      "type": "text",
+      "content": "<p>Correlation regimes change for predictable reasons:</p><ul><li><strong>Macro stress events</strong>: high correlation spikes during risk events. Everything moves together when fear is dominant.</li><li><strong>Crypto-specific catalysts</strong>: ETF approval, major regulatory news, exchange failure, halving. These temporarily decouple crypto from broader risk markets.</li><li><strong>Bull/bear market phases</strong>: crypto often decouples DURING raging bull markets (retail crypto FOMO ignores equity weakness) and re-couples DURING bear markets (everything sells together).</li><li><strong>Liquidity conditions</strong>: tight global liquidity = high correlation; abundant liquidity = lower correlation.</li><li><strong>Long-term trends</strong>: BTC's correlation with equities has been gradually rising as institutional adoption grows (institutions trade BTC similarly to other risk assets).</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Crypto is becoming MORE correlated over time",
+      "content": "<p>Historically (pre-2020), BTC was largely independent of equities. Post-2020, the correlation has trended higher — especially post-2022 ETF approvals brought institutional flows. The 'digital gold' narrative (BTC as inverse-equity hedge) has weakened.</p><p>Implication: macro signals matter MORE for crypto trading today than they did 5 years ago. The trader who ignores DXY/VIX/ES is operating with outdated mental models. Macro awareness is increasingly essential.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trading approaches by regime"
+    },
+    {
+      "type": "table",
+      "headers": ["Regime", "Approach", "What to watch"],
+      "rows": [
+        ["HIGH correlation", "Lead with macro analysis. If macro risk-on, look for crypto longs. If macro risk-off, look for crypto shorts or sit out. Crypto-only setups against macro often fail.", "DXY, VIX, ES daily"],
+        ["NEUTRAL / mixed", "Balanced. Crypto setups are primary; macro is supplementary context. Reduce conviction when crypto setup conflicts with macro direction.", "Check macro before sizing up"],
+        ["DECOUPLED", "Crypto narratives dominate. Focus on crypto-specific signals (BTC dominance, ETF news, on-chain metrics). Macro is background.", "Crypto news, BTC.D, ETF flows"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "How to spot regime SHIFTS in real time"
+    },
+    {
+      "type": "text",
+      "content": "<p>Regime shifts often happen visibly. Watch for:</p><ul><li><strong>Major catalyst</strong>: BTC ETF approval, major exchange failure, banking crisis, etc. These often trigger regime shifts immediately.</li><li><strong>Correlation breaking</strong>: BTC rallies 5% on a day when NASDAQ is flat or down. The decoupling itself is the signal.</li><li><strong>Sentiment shift</strong>: F&G changes dramatically due to crypto-specific news without equity sentiment shifting similarly.</li><li><strong>BTC.D moves independent of equity moves</strong>: capital flowing within crypto regardless of broader risk environment.</li></ul><p>Recognizing the regime shift early lets you adjust strategy before the new dynamics fully play out.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked examples"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Example 1 — HIGH correlation regime</strong>: VIX has spiked to 32 over the last 2 weeks. BTC and NASDAQ correlation rising to +0.85. NASDAQ fell 4% today. BTC is down 5% in the same window. Bearish equity environment dominating.</p><p>Approach: assume macro signals lead crypto. Don't try to long BTC despite individual setup quality. Wait for VIX to normalize and correlation to ease before resuming crypto-specific setups. Even strong crypto charts often fail when macro is pulling everything down.</p><p><strong>Example 2 — DECOUPLED regime</strong>: Spot BTC ETF was just approved (major positive crypto catalyst). BTC rallied 10% on the news while NASDAQ was flat. 30-day correlation has dropped from +0.7 to +0.2 over the past week.</p><p>Approach: trade crypto-specific setups primarily. The ETF narrative is driving BTC; macro signals matter less. Position based on BTC's chart, BTC.D, ETF flow data. Macro is background context but not the primary driver.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't assume regime persistence",
+      "content": "<p>Regimes change. A decoupled phase eventually re-couples. A high-correlation period eventually relaxes. Don't assume the current regime will continue indefinitely.</p><p>Practical: re-evaluate the regime monthly. Check rolling correlation. Note major catalysts that might shift dynamics. Adjust your macro-vs-technical weighting accordingly.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Identify the current correlation regime.</strong> 30/60-day BTC-vs-NASDAQ correlation tells you whether macro signals dominate or crypto narratives do.</li><li><strong>Adjust trading approach by regime.</strong> High correlation = lead with macro. Decoupled = crypto-specific signals primary. Mixed = both factors.</li><li><strong>Watch for regime SHIFTS.</strong> Major catalysts and breaking correlations signal new dynamics. Adjust before the regime fully plays out.</li></ol><p>You've now completed Tier 5. The Tier 5 Final tests macro and context integration. Then Tier 6 (Execution & Journaling) completes the curriculum.</p>"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "slug": "45-t5-final",
+  "subtitle": "Tier 5 Final — 8 cumulative questions covering lessons 40-44. Pass with 7/8 to unlock Tier 6 (Execution & Journaling).",
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "info",
+      "title": "About this final",
+      "content": "<p>Tier 5 covered the macro and contextual layer — how DXY/VIX/ES affect crypto, BTC dominance and alt season, Fear & Greed contrarian framework, news events, correlation regimes. Smaller tier (5 lessons) so the final is 8 questions.</p><p>Pass threshold: <strong>7/8 required</strong>.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What Tier 5 covered"
+    },
+    {
+      "type": "table",
+      "headers": ["#", "Lesson", "Core idea"],
+      "rows": [
+        ["40", "Macro stack", "DXY (inverse), VIX (inverse spikes), ES (lead indicator), 10Y yield. Risk-on vs risk-off regime defines crypto tailwind/headwind."],
+        ["41", "BTC dominance + alt seasons", "Falling BTC.D = alt rotation; rising = capital fleeing alts to BTC. Trade WITH the rotation."],
+        ["42", "Fear & Greed contrarian", "Extreme Fear (under 25) = look for longs. Extreme Greed (over 75) = look for shorts/take profits. Combine with technical confirmation."],
+        ["43", "News events", "FOMC/CPI/NFP move crypto 3-7%. Flatten before or trade post-event. Don't predict direction."],
+        ["44", "Correlation regimes", "Crypto-equity correlation varies. High correlation = macro leads; decoupled = crypto narratives dominate."]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>If you pass at 7/8, Tier 6 (Execution & Journaling) unlocks — Trade Apgar pre-trade scorecard, pre-session readiness, journaling, trade review, building your own system, then the capstone.</p>"
+    }
+  ]
+}

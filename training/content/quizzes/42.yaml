@@ -1,0 +1,123 @@
+id: "42"
+lesson_id: 42
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "The crypto Fear & Greed Index measures sentiment on a 0-100 scale. Which is the contrarian interpretation?"
+    type: mcq
+    choices:
+      - "Buy at 95 (greed), sell at 5 (fear)."
+      - "BUY at extreme fear (under 25), SELL/take profits at extreme greed (over 75). Mean-reversion at sentiment extremes is the structural pattern."
+      - "F&G is irrelevant."
+      - "Random direction."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Contrarian principle: at sentiment extremes, the crowd is wrong on direction because the imbalance is structural. Extreme Fear = everyone sold = no sellers left = price has nowhere to fall. Extreme Greed = everyone bought = no buyers left = price has nowhere to rise. Mean reversion at the extremes; trade with confirmation."
+
+  - id: q2
+    text: "F&G index at 18 (Extreme Fear) — what's the smart action?"
+    type: mcq
+    choices:
+      - "Short aggressively."
+      - "Set up to LOOK for long opportunities. Combine with technical bottoming patterns (HTF support + reversal candle + volume + RSI divergence). Don't long blindly just because F&G is low."
+      - "Ignore."
+      - "Buy randomly."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "F&G low = bias long. But timing requires technical confirmation. F&G can stay at 15-20 for weeks during deep bears. Wait for confirmed bottoming setup. The combination (extreme fear + technical confirmation) produces the best buy zones in crypto history."
+
+  - id: q3
+    text: "F&G at 88 (Extreme Greed) — what's the smart action?"
+    type: mcq
+    choices:
+      - "Add to longs immediately."
+      - "Either take profits on existing longs OR look for SHORT setups. Combine with technical topping patterns. Don't add longs at extreme greed — historically the worst time to buy."
+      - "Ignore F&G."
+      - "Long with maximum leverage."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Extreme greed marks late-cycle euphoria. The most lucrative trade setups during these conditions are SHORTS (with technical confirmation: resistance + bearish reversal candle + volume + RSI divergence). Continuing to add longs at this stage is following the crowd into the worst entries."
+
+  - id: q4
+    text: "Can F&G stay at EXTREME levels for extended periods?"
+    type: mcq
+    choices:
+      - "No — always reverses within a day."
+      - "Yes — F&G can stay at 15-20 (Extreme Fear) for weeks during deep bears, or at 80-90 (Extreme Greed) for weeks during late bull markets. Need technical confirmation for timing."
+      - "Only on weekends."
+      - "Only during halvings."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Extremes can persist. The index measures current sentiment, not when it reverses. During strong trends, sentiment stays extreme until the trend exhausts. Don't trade F&G alone — it tells you 'look for opposite direction setups' but doesn't time the exact reversal. Technical confirmation is what times the entry."
+
+  - id: q5
+    text: "Best USE of F&G in trading?"
+    type: mcq
+    choices:
+      - "Intraday timing."
+      - "Swing/positional context — use the extreme levels (under 25 or over 75) as bias indicators for the multi-day to multi-week trade horizon. Combine with technical setups. Don't use for intraday timing — the index updates daily."
+      - "Replacement for technical analysis."
+      - "5-minute entry signal."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "F&G updates daily and reflects multi-day sentiment. Useful for swing/positional bias (days to weeks). Not appropriate for intraday or 5-minute timing — too slow to update for those timeframes. Best use: 'check F&G when planning major position changes' rather than 'use F&G for every trade entry'."
+
+  - id: q6
+    text: "F&G + technical confluence — example of A+ LONG setup:"
+    type: mcq
+    choices:
+      - "F&G at 50 + random chart."
+      - "F&G < 20 (extreme fear) + major HTF support + bullish reversal candle + above-average volume + RSI bullish divergence. Multi-factor confluence at sentiment extreme = exceptional buy zone."
+      - "F&G at 88 + breakout chase."
+      - "Anything random."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Best contrarian setups combine sentiment + technical. F&G extreme = sentiment edge. HTF support + reversal pattern + volume + RSI divergence = technical edge. Together they identify the structurally-best buy zones — historically these have produced 50-200%+ returns when the bottoms are caught."
+
+  - id: q7
+    text: "Common F&G MISTAKE:"
+    type: mcq
+    choices:
+      - "Combining with technicals."
+      - "Buying every 'Fear' print WITHOUT technical confirmation. F&G can stay low for months during bears. Need confirmed bottoming pattern (support + reversal + volume) for actual entry."
+      - "Ignoring it completely."
+      - "Reading it daily."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "F&G alone is a hint, not a trigger. Buying every Fear print without confirmation = catching falling knives during prolonged bears. The setup: extreme F&G + confirmed technical bottom + volume = high-quality. F&G alone = wait."
+
+  - id: q8
+    text: "Worked example: BTC down 40% over 2 months to $44K. Now at MAJOR support + bullish engulfing + 3× volume + RSI bullish divergence. F&G at 16. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — too many signals."
+      - "A+ LONG setup. 5 confluences: extreme F&G + major HTF support + reversal candle + volume + RSI divergence. Multi-lens confirmation. Consider sizing up to 2-3% if rules allow. Defined SL below the swing low."
+      - "Short the bounce."
+      - "Random."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Textbook contrarian A+ setup. Each layer adds confirmation: extreme F&G (sentiment edge), major support (structure), reversal candle (entry trigger), volume (participation), RSI divergence (momentum reversal). 5-factor confluence at deep bear sentiment is rare and high-value. These are the trades that pay disproportionately."
+
+  - id: q9
+    text: "F&G during late bull market (cycle top approaching) typically:"
+    type: mcq
+    choices:
+      - "Drops to extreme fear."
+      - "Sustained at 80-95 (Extreme Greed) for weeks, can flash to 95+ briefly at the very top, then drops precipitously as the trend reverses. Recognize this for 'take profits' timing."
+      - "Stays neutral."
+      - "Random."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Late-bull F&G pattern: sustained high readings (everyone bullish for weeks), brief euphoric spike at the actual top, then sharp decline as price reverses. The sustained Greed phase = take profits, don't add. The euphoric spike = often the literal top day. Watch this pattern as part of cycle-top recognition."
+
+  - id: q10
+    text: "F&G alone vs F&G + technical confluence — which is the more reliable trade signal?"
+    type: mcq
+    choices:
+      - "F&G alone is sufficient."
+      - "F&G + technical confluence is MUCH more reliable. F&G alone can stay at extremes for weeks without reversal. Technical confirmation (support/resistance + reversal candle + volume) times the actual entry. Combination produces high-quality contrarian setups."
+      - "Technicals alone."
+      - "Random."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Single-tool trading has limitations. F&G provides sentiment edge but no precise timing. Technicals provide entry timing but lack sentiment context. Together: extreme sentiment + confirmed technical = both edges combined. This is the recurring theme of the course — confluence across multiple lenses dramatically improves trade quality vs any single signal."

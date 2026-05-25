@@ -1,0 +1,99 @@
+id: "45"
+lesson_id: 45
+pass_threshold: 7
+questions:
+  - id: q1
+    text: "DXY (US Dollar Index) is INVERSELY correlated with crypto. Why?"
+    type: mcq
+    choices:
+      - "Random."
+      - "Crypto is priced in USD AND DXY rallies reflect flight-to-safety dynamics that push investors out of risk assets. Both effects pressure crypto down."
+      - "Random."
+      - "USD doesn't affect crypto."
+    correct: 1
+    topic_tag: dxy
+    explanation: "Two mechanisms: crypto USD-denominated (strong USD = mechanically lower crypto price) + flight-to-safety dynamics during DXY rallies push investors out of crypto. Both drive the inverse correlation."
+
+  - id: q2
+    text: "VIX at 35 signals what for crypto?"
+    type: mcq
+    choices:
+      - "Bullish."
+      - "Severe risk-off; crypto often crashes 10-20% during VIX 35+ spikes. Survival mode: reduce/eliminate leverage. Wait for normalization (under 25) before aggressive setups."
+      - "No effect."
+      - "Random."
+    correct: 1
+    topic_tag: vix
+    explanation: "VIX 35+ = major fear spike. Liquidity dries up, correlations spike to 1, technicals stop working. Survive, don't maximize. Wait for VIX normalization before resuming aggressive setups."
+
+  - id: q3
+    text: "Falling BTC.D (BTC dominance) signals what?"
+    type: mcq
+    choices:
+      - "BTC pumping alone."
+      - "Capital ROTATING from BTC INTO alts ('alt season'). Time to consider major alt longs, then mid-caps as the rotation progresses down the cap ladder."
+      - "Bear market."
+      - "Random."
+    correct: 1
+    topic_tag: btc_dominance
+    explanation: "Falling BTC.D = alts gaining share. Alt season in progress. Capital flows down cap ladder: ETH first → majors → mid-caps → small-caps. Trade WITH the rotation; take profits when BTC.D bottoms and starts rising again."
+
+  - id: q4
+    text: "F&G at 18 (Extreme Fear) — smart approach?"
+    type: mcq
+    choices:
+      - "Short."
+      - "Set up to LOOK for long opportunities + wait for technical confirmation (HTF support + reversal candle + volume + RSI divergence). Don't long blindly — F&G can stay low for weeks."
+      - "Ignore."
+      - "Random."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Extreme Fear = contrarian long bias. But timing requires technical confirmation. F&G can stay at 15-20 for weeks during deep bears. The combination (extreme F&G + technical bottoming) produces the best buy zones in crypto history."
+
+  - id: q5
+    text: "F&G at 88 (Extreme Greed) — smart approach?"
+    type: mcq
+    choices:
+      - "Add to longs."
+      - "Take profits on existing longs OR look for SHORT setups with technical confirmation. Historically the worst time to ADD longs. Late-cycle euphoria signal."
+      - "Maximum leverage."
+      - "Ignore."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Extreme Greed = late-cycle euphoria. The most profitable trades during these conditions are SHORTS (with technical confirmation: resistance + bearish reversal + volume). Adding longs at this stage = following crowd into the worst entries."
+
+  - id: q6
+    text: "Best approach for major macro events (FOMC, CPI, NFP)?"
+    type: mcq
+    choices:
+      - "Hold positions through with full leverage."
+      - "FLATTEN positions 30-60 min before. Sit out the volatility. Re-enter post-event ONLY if technical setup forms with confirmed directional bias. Don't predict — let market reveal direction."
+      - "Open new positions just before."
+      - "Use 100× leverage."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Flatten + wait is highest EV. Pre-event prediction has no edge. Post-event trading (after 15-30 min of chop) with confirmed direction + technical setups is much higher quality. Missed gains from flattening beat catastrophic losses to volatility wicks."
+
+  - id: q7
+    text: "HIGH correlation regime (BTC-equity correlation +0.7+) means:"
+    type: mcq
+    choices:
+      - "Trade crypto independently."
+      - "Macro signals lead. Crypto moves with broader risk markets. Reduce conviction on crypto setups that conflict with macro direction; beautiful crypto charts often fail when macro is risk-off."
+      - "Crypto is dead."
+      - "Random."
+    correct: 1
+    topic_tag: correlation
+    explanation: "High correlation = macro dominates. Crypto follows broader risk tape. Lead with DXY/VIX/ES analysis; use to weight crypto setup conviction. Trading against macro during high correlation = low win rate regardless of technical quality."
+
+  - id: q8
+    text: "Single most important Tier 5 takeaway?"
+    type: mcq
+    choices:
+      - "Ignore macro."
+      - "Crypto doesn't trade in a vacuum. Macro stack (DXY/VIX/ES) + BTC.D + sentiment (F&G) + correlation regime + scheduled events ALL affect crypto. Integrate macro context with your technical and order-flow analysis from earlier tiers."
+      - "Trade more frequently."
+      - "Only use one tool."
+    correct: 1
+    topic_tag: macro
+    explanation: "Tier 5's central theme: crypto is a risk asset embedded in a broader financial system. Macro flows (DXY, VIX, ES) + sector dynamics (BTC.D) + sentiment (F&G) + event risk + correlation regime all affect setup probability. The trader who integrates all of these with the technical foundation from earlier tiers has 360-degree market awareness."
