@@ -11,14 +11,44 @@
       "content": "The 5 dimensions"
     },
     {
+      "type": "image",
+      "src": "charts/50-apgar-scoreboard.png",
+      "alt": "Trade Apgar 5-dimension scorecard with scoring scale 0-2 per dimension",
+      "caption": "Five dimensions, scored 0-2 each, max 10. Pass: total ≥7 AND no zeros in any dimension."
+    },
+    {
       "type": "table",
-      "headers": ["Dimension", "Question", "Scoring"],
+      "headers": [
+        "Dimension",
+        "Question",
+        "Scoring"
+      ],
       "rows": [
-        ["<strong>1. Setup quality</strong>", "Does this setup match my pre-defined criteria? Did I plan it or is it impulse?", "2 = pre-planned A-setup. 1 = pre-planned B-setup. 0 = impulse trade not on plan."],
-        ["<strong>2. R:R</strong>", "Is the risk:reward at least 1:2? Ideally 1:3+?", "2 = R:R ≥ 1:3. 1 = R:R 1:2 to 1:3. 0 = R:R < 1:2."],
-        ["<strong>3. Confluences</strong>", "How many independent signals support this trade? (S/R + candle + volume + indicator + multi-TF alignment + macro etc.)", "2 = 4+ confluences. 1 = 2-3 confluences. 0 = 0-1 confluences."],
-        ["<strong>4. Macro/regime alignment</strong>", "Is this trade aligned with macro and HTF bias?", "2 = fully aligned (macro + HTF + setup all same direction). 1 = neutral. 0 = counter-trend / against macro."],
-        ["<strong>5. Personal state</strong>", "Am I calm, rested, focused? Within my daily loss limit? Not on tilt?", "2 = great state. 1 = okay. 0 = tired/emotional/in drawdown/after recent loss."]
+        [
+          "<strong>1. Setup quality</strong>",
+          "Does this setup match my pre-defined criteria? Did I plan it or is it impulse?",
+          "2 = pre-planned A-setup. 1 = pre-planned B-setup. 0 = impulse trade not on plan."
+        ],
+        [
+          "<strong>2. R:R</strong>",
+          "Is the risk:reward at least 1:2? Ideally 1:3+?",
+          "2 = R:R ≥ 1:3. 1 = R:R 1:2 to 1:3. 0 = R:R < 1:2."
+        ],
+        [
+          "<strong>3. Confluences</strong>",
+          "How many independent signals support this trade? (S/R + candle + volume + indicator + multi-TF alignment + macro etc.)",
+          "2 = 4+ confluences. 1 = 2-3 confluences. 0 = 0-1 confluences."
+        ],
+        [
+          "<strong>4. Macro/regime alignment</strong>",
+          "Is this trade aligned with macro and HTF bias?",
+          "2 = fully aligned (macro + HTF + setup all same direction). 1 = neutral. 0 = counter-trend / against macro."
+        ],
+        [
+          "<strong>5. Personal state</strong>",
+          "Am I calm, rested, focused? Within my daily loss limit? Not on tilt?",
+          "2 = great state. 1 = okay. 0 = tired/emotional/in drawdown/after recent loss."
+        ]
       ]
     },
     {

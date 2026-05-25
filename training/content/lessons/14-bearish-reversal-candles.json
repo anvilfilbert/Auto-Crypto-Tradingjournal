@@ -11,17 +11,43 @@
       "content": "Pattern #1 — Shooting Star"
     },
     {
+      "type": "image",
+      "src": "charts/03-bearish-reversal-patterns.png",
+      "alt": "Four bearish reversal candle patterns side by side",
+      "caption": "Mirror of bullish patterns. Shooting Star, Bearish Engulfing, Evening Star, Dark Cloud."
+    },
+    {
       "type": "text",
       "content": "<p><strong>What it looks like:</strong> A candle with a small body near the BOTTOM of its range, with a long UPPER wick at least 2× the body length. Mirror of the Hammer.</p><p><strong>What it means:</strong> Buyers pushed price up hard during the period (creating the long upper wick). Then sellers absorbed all that buying and pushed price back down to close near the period's low. The up-attempt was REJECTED.</p>"
     },
     {
       "type": "table",
-      "headers": ["Element", "Specification", "Why"],
+      "headers": [
+        "Element",
+        "Specification",
+        "Why"
+      ],
       "rows": [
-        ["Body size", "Small — bottom 30% of candle's range", "Most of the range was the failed upward attempt"],
-        ["Upper wick", "At least 2× body length, ideally 3×+", "Longer rejection = stronger signal"],
-        ["Lower wick", "Minimal or none", "Sellers were in control by close"],
-        ["Context required", "MUST form after an uptrend at or near resistance", "Random shooting stars in chop are noise"]
+        [
+          "Body size",
+          "Small — bottom 30% of candle's range",
+          "Most of the range was the failed upward attempt"
+        ],
+        [
+          "Upper wick",
+          "At least 2× body length, ideally 3×+",
+          "Longer rejection = stronger signal"
+        ],
+        [
+          "Lower wick",
+          "Minimal or none",
+          "Sellers were in control by close"
+        ],
+        [
+          "Context required",
+          "MUST form after an uptrend at or near resistance",
+          "Random shooting stars in chop are noise"
+        ]
       ]
     },
     {
@@ -40,13 +66,37 @@
     },
     {
       "type": "table",
-      "headers": ["Element", "Specification", "Why"],
+      "headers": [
+        "Element",
+        "Specification",
+        "Why"
+      ],
       "rows": [
-        ["First candle", "Bullish (green), continuation of recent uptrend", "Sets up the reversal"],
-        ["Second candle", "Bearish (red), body engulfs first candle's body", "The magnitude of the reversal IS the signal"],
-        ["Second candle's open", "AT OR ABOVE first candle's close", "Confirms the gap-up attempt that got rejected"],
-        ["Second candle's close", "BELOW first candle's open", "Net effect: completely undone the prior candle"],
-        ["Volume", "Higher on the second candle, ideally", "Confirms real participation in the reversal"]
+        [
+          "First candle",
+          "Bullish (green), continuation of recent uptrend",
+          "Sets up the reversal"
+        ],
+        [
+          "Second candle",
+          "Bearish (red), body engulfs first candle's body",
+          "The magnitude of the reversal IS the signal"
+        ],
+        [
+          "Second candle's open",
+          "AT OR ABOVE first candle's close",
+          "Confirms the gap-up attempt that got rejected"
+        ],
+        [
+          "Second candle's close",
+          "BELOW first candle's open",
+          "Net effect: completely undone the prior candle"
+        ],
+        [
+          "Volume",
+          "Higher on the second candle, ideally",
+          "Confirms real participation in the reversal"
+        ]
       ]
     },
     {
@@ -59,11 +109,27 @@
     },
     {
       "type": "table",
-      "headers": ["Candle", "Shape", "What it tells you"],
+      "headers": [
+        "Candle",
+        "Shape",
+        "What it tells you"
+      ],
       "rows": [
-        ["Candle 1", "Large bullish body", "Uptrend continuation"],
-        ["Candle 2 (the 'star')", "Small body, often with gap up. Color doesn't matter much.", "Indecision — buyers lost control but sellers haven't taken over yet"],
-        ["Candle 3", "Large bearish body closing in lower half (ideally lower third) of candle 1's body", "Sellers decisively took control"]
+        [
+          "Candle 1",
+          "Large bullish body",
+          "Uptrend continuation"
+        ],
+        [
+          "Candle 2 (the 'star')",
+          "Small body, often with gap up. Color doesn't matter much.",
+          "Indecision — buyers lost control but sellers haven't taken over yet"
+        ],
+        [
+          "Candle 3",
+          "Large bearish body closing in lower half (ideally lower third) of candle 1's body",
+          "Sellers decisively took control"
+        ]
       ]
     },
     {
@@ -86,12 +152,37 @@
     },
     {
       "type": "table",
-      "headers": ["Pattern", "Number of candles", "Typical strength", "Best context"],
+      "headers": [
+        "Pattern",
+        "Number of candles",
+        "Typical strength",
+        "Best context"
+      ],
       "rows": [
-        ["Shooting Star", "1", "Moderate", "At clear resistance after sustained uptrend"],
-        ["Dark Cloud Cover", "2", "Moderate-Strong", "At resistance with confirmed candle 2"],
-        ["Bearish Engulfing", "2", "Strong", "At resistance or after extended uptrend"],
-        ["Evening Star", "3", "Very Strong", "At major resistance, end of multi-day uptrend"]
+        [
+          "Shooting Star",
+          "1",
+          "Moderate",
+          "At clear resistance after sustained uptrend"
+        ],
+        [
+          "Dark Cloud Cover",
+          "2",
+          "Moderate-Strong",
+          "At resistance with confirmed candle 2"
+        ],
+        [
+          "Bearish Engulfing",
+          "2",
+          "Strong",
+          "At resistance or after extended uptrend"
+        ],
+        [
+          "Evening Star",
+          "3",
+          "Very Strong",
+          "At major resistance, end of multi-day uptrend"
+        ]
       ]
     },
     {

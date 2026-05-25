@@ -11,17 +11,59 @@
       "content": "The key Fibonacci ratios"
     },
     {
+      "type": "image",
+      "src": "charts/24-fibonacci-retracement.png",
+      "alt": "Price chart with Fibonacci retracement levels 0.236 through 0.786 marked",
+      "caption": "Fib retracement levels on a swing from 55 to 68. 0.5 and 0.618 are the most-watched institutional pullback zones."
+    },
+    {
       "type": "table",
-      "headers": ["Ratio", "Type", "What it represents"],
+      "headers": [
+        "Ratio",
+        "Type",
+        "What it represents"
+      ],
       "rows": [
-        ["<strong>0.236</strong>", "Retracement", "Shallow pullback — barely a correction"],
-        ["<strong>0.382</strong>", "Retracement", "Moderate pullback — first significant level"],
-        ["<strong>0.500</strong>", "Retracement", "Halfway back — not actually a Fibonacci ratio but commonly used"],
-        ["<strong>0.618</strong>", "Retracement", "<strong>The golden ratio</strong> — deepest 'healthy' pullback; below this often signals trend break"],
-        ["<strong>0.786</strong>", "Retracement", "Deep pullback — trend on borrowed time"],
-        ["<strong>1.272</strong>", "Extension", "First profit target beyond the original move"],
-        ["<strong>1.618</strong>", "Extension", "Major extension target — the golden ratio applied to extensions"],
-        ["<strong>2.618</strong>", "Extension", "Strong trend extension"]
+        [
+          "<strong>0.236</strong>",
+          "Retracement",
+          "Shallow pullback — barely a correction"
+        ],
+        [
+          "<strong>0.382</strong>",
+          "Retracement",
+          "Moderate pullback — first significant level"
+        ],
+        [
+          "<strong>0.500</strong>",
+          "Retracement",
+          "Halfway back — not actually a Fibonacci ratio but commonly used"
+        ],
+        [
+          "<strong>0.618</strong>",
+          "Retracement",
+          "<strong>The golden ratio</strong> — deepest 'healthy' pullback; below this often signals trend break"
+        ],
+        [
+          "<strong>0.786</strong>",
+          "Retracement",
+          "Deep pullback — trend on borrowed time"
+        ],
+        [
+          "<strong>1.272</strong>",
+          "Extension",
+          "First profit target beyond the original move"
+        ],
+        [
+          "<strong>1.618</strong>",
+          "Extension",
+          "Major extension target — the golden ratio applied to extensions"
+        ],
+        [
+          "<strong>2.618</strong>",
+          "Extension",
+          "Strong trend extension"
+        ]
       ]
     },
     {

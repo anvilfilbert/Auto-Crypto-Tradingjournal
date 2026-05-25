@@ -21,20 +21,66 @@
       "content": "<p>RSI behaves differently in different market regimes. The first job before using RSI for any signal is to classify the regime:</p><ul><li><strong>Bullish regime:</strong> RSI averaging above 50, often touching 70-80. Bullish range is roughly 40-80. RSI of 40 is the \"oversold\" of this regime, not 30.</li><li><strong>Bearish regime:</strong> RSI averaging below 50, often touching 20-30. Bearish range is roughly 20-60. RSI of 60 is the \"overbought\" of this regime, not 70.</li><li><strong>Ranging regime:</strong> RSI oscillates 30-70 with regular reaches to both ends. Here the classic 30/70 levels work as mean reversion signals.</li></ul><p>Same RSI value means different things in different regimes. Always classify first.</p>"
     },
     {
+      "type": "image",
+      "src": "charts/21-rsi-regimes.png",
+      "alt": "Two RSI charts showing bullish regime (40-80 range) and bearish regime (20-60 range)",
+      "caption": "Same RSI values mean different things in different regimes. RSI 70+ in bullish trend = normal, NOT a sell signal."
+    },
+    {
       "type": "heading",
       "content": "Regime-aware RSI reading"
     },
     {
       "type": "table",
-      "headers": ["RSI value", "In bullish regime", "In bearish regime", "In ranging regime"],
+      "headers": [
+        "RSI value",
+        "In bullish regime",
+        "In bearish regime",
+        "In ranging regime"
+      ],
       "rows": [
-        ["80+", "Strong momentum continuation. Don't short.", "Anomaly — possible regime change.", "Mean-reversion short setup."],
-        ["70", "Normal trend strength. Don't short.", "Strong rally — fade.", "Mean-reversion short setup."],
-        ["60", "Trend healthy.", "Approaching resistance zone — potential short.", "Mid-range; no signal."],
-        ["50", "Bullish pullback OR trend weakening.", "Bearish bounce ending.", "Mid-range; no signal."],
-        ["40", "Bullish PULLBACK ZONE — potential long.", "Trend healthy bearish.", "Mid-range; no signal."],
-        ["30", "Anomaly — possible regime change.", "Strong continuation. Don't long.", "Mean-reversion long setup."],
-        ["20-", "Major dip — reversal signal in bullish regime.", "Strong selling continuation.", "Strong mean-reversion long setup."]
+        [
+          "80+",
+          "Strong momentum continuation. Don't short.",
+          "Anomaly — possible regime change.",
+          "Mean-reversion short setup."
+        ],
+        [
+          "70",
+          "Normal trend strength. Don't short.",
+          "Strong rally — fade.",
+          "Mean-reversion short setup."
+        ],
+        [
+          "60",
+          "Trend healthy.",
+          "Approaching resistance zone — potential short.",
+          "Mid-range; no signal."
+        ],
+        [
+          "50",
+          "Bullish pullback OR trend weakening.",
+          "Bearish bounce ending.",
+          "Mid-range; no signal."
+        ],
+        [
+          "40",
+          "Bullish PULLBACK ZONE — potential long.",
+          "Trend healthy bearish.",
+          "Mid-range; no signal."
+        ],
+        [
+          "30",
+          "Anomaly — possible regime change.",
+          "Strong continuation. Don't long.",
+          "Mean-reversion long setup."
+        ],
+        [
+          "20-",
+          "Major dip — reversal signal in bullish regime.",
+          "Strong selling continuation.",
+          "Strong mean-reversion long setup."
+        ]
       ]
     },
     {
@@ -47,10 +93,22 @@
     },
     {
       "type": "table",
-      "headers": ["Pattern", "Description", "Signal"],
+      "headers": [
+        "Pattern",
+        "Description",
+        "Signal"
+      ],
       "rows": [
-        ["<strong>Bearish failure swing</strong>", "RSI hits >70, drops below 70, rises again but FAILS to reach the previous high (lower high on RSI)", "Reversal signal — momentum exhaustion at the top"],
-        ["<strong>Bullish failure swing</strong>", "RSI hits <30, rises above 30, drops again but FAILS to reach the previous low (higher low on RSI)", "Reversal signal — selling exhausted at the bottom"]
+        [
+          "<strong>Bearish failure swing</strong>",
+          "RSI hits >70, drops below 70, rises again but FAILS to reach the previous high (lower high on RSI)",
+          "Reversal signal — momentum exhaustion at the top"
+        ],
+        [
+          "<strong>Bullish failure swing</strong>",
+          "RSI hits <30, rises above 30, drops again but FAILS to reach the previous low (higher low on RSI)",
+          "Reversal signal — selling exhausted at the bottom"
+        ]
       ]
     },
     {
@@ -64,17 +122,48 @@
       "content": "Divergences — the second most powerful RSI signal"
     },
     {
+      "type": "image",
+      "src": "charts/22-rsi-divergence.png",
+      "alt": "Price making higher highs while RSI makes lower highs — bearish divergence",
+      "caption": "Bearish RSI divergence: price up but momentum down. Warning signal — combine with key level + reversal candle to trade."
+    },
+    {
       "type": "text",
       "content": "<p>Divergence is when PRICE and RSI move in opposite directions. The disagreement signals that the price move isn't backed by underlying momentum.</p>"
     },
     {
       "type": "table",
-      "headers": ["Divergence type", "Price", "RSI", "Signal"],
+      "headers": [
+        "Divergence type",
+        "Price",
+        "RSI",
+        "Signal"
+      ],
       "rows": [
-        ["<strong>Regular bullish divergence</strong>", "Lower low", "Higher low (RSI making higher lows while price makes lower lows)", "Bullish reversal — selling momentum exhausting"],
-        ["<strong>Regular bearish divergence</strong>", "Higher high", "Lower high", "Bearish reversal — buying momentum exhausting"],
-        ["<strong>Hidden bullish divergence</strong>", "Higher low", "Lower low", "Trend continuation up — buying momentum still strong"],
-        ["<strong>Hidden bearish divergence</strong>", "Lower high", "Higher high", "Trend continuation down — selling momentum still strong"]
+        [
+          "<strong>Regular bullish divergence</strong>",
+          "Lower low",
+          "Higher low (RSI making higher lows while price makes lower lows)",
+          "Bullish reversal — selling momentum exhausting"
+        ],
+        [
+          "<strong>Regular bearish divergence</strong>",
+          "Higher high",
+          "Lower high",
+          "Bearish reversal — buying momentum exhausting"
+        ],
+        [
+          "<strong>Hidden bullish divergence</strong>",
+          "Higher low",
+          "Lower low",
+          "Trend continuation up — buying momentum still strong"
+        ],
+        [
+          "<strong>Hidden bearish divergence</strong>",
+          "Lower high",
+          "Higher high",
+          "Trend continuation down — selling momentum still strong"
+        ]
       ]
     },
     {

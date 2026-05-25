@@ -12,10 +12,22 @@
     },
     {
       "type": "table",
-      "headers": ["Concept", "What it is", "Why it works"],
+      "headers": [
+        "Concept",
+        "What it is",
+        "Why it works"
+      ],
       "rows": [
-        ["<strong>Support</strong>", "A price level (or zone) where buying interest has historically been strong enough to STOP a price decline.", "Buyers from earlier remember the price; sellers know buyers will defend it; both watch and react."],
-        ["<strong>Resistance</strong>", "A price level (or zone) where selling interest has historically been strong enough to STOP a price advance.", "Mirror: sellers from earlier defend the level; buyers know they'll defend it."]
+        [
+          "<strong>Support</strong>",
+          "A price level (or zone) where buying interest has historically been strong enough to STOP a price decline.",
+          "Buyers from earlier remember the price; sellers know buyers will defend it; both watch and react."
+        ],
+        [
+          "<strong>Resistance</strong>",
+          "A price level (or zone) where selling interest has historically been strong enough to STOP a price advance.",
+          "Mirror: sellers from earlier defend the level; buyers know they'll defend it."
+        ]
       ]
     },
     {
@@ -27,20 +39,58 @@
       "content": "How to identify S/R levels"
     },
     {
+      "type": "image",
+      "src": "charts/05-support-resistance.png",
+      "alt": "Price chart showing horizontal support and resistance zones with multiple touches",
+      "caption": "Price bouncing between support (green) and resistance (red) zones over time. Each touch validates the level."
+    },
+    {
       "type": "text",
       "content": "<p>Several types of levels qualify as S/R. The strongest are usually combinations of multiple types:</p>"
     },
     {
       "type": "table",
-      "headers": ["Type", "How to spot", "Reliability"],
+      "headers": [
+        "Type",
+        "How to spot",
+        "Reliability"
+      ],
       "rows": [
-        ["<strong>Swing highs/lows</strong>", "Previous local peaks or troughs on the chart — clear pivot points where price reversed direction", "Very high — direct historical proof of level reactions"],
-        ["<strong>Round numbers</strong>", "Psychological levels ending in 00 or 000 ($60,000, $1.00, $0.10)", "High — retail attention magnets"],
-        ["<strong>Prior breakout/breakdown levels</strong>", "Levels that once acted as resistance and were broken — often become support (and vice versa). Polarity flip.", "High — well-known concept, widely watched"],
-        ["<strong>Volume profile peaks</strong>", "Prices where the most volume traded historically — high acceptance zones", "High — proves real participation at that price"],
-        ["<strong>Moving averages</strong>", "200 MA, 50 MA — dynamic S/R that updates each candle", "Medium-High — covered in lesson 21"],
-        ["<strong>Fibonacci retracements</strong>", "0.382, 0.5, 0.618 levels from recent swing", "Medium — works when many traders use the same swing"],
-        ["<strong>Trendlines</strong>", "Diagonal lines connecting swing highs/lows", "Medium — covered in lesson 18"]
+        [
+          "<strong>Swing highs/lows</strong>",
+          "Previous local peaks or troughs on the chart — clear pivot points where price reversed direction",
+          "Very high — direct historical proof of level reactions"
+        ],
+        [
+          "<strong>Round numbers</strong>",
+          "Psychological levels ending in 00 or 000 ($60,000, $1.00, $0.10)",
+          "High — retail attention magnets"
+        ],
+        [
+          "<strong>Prior breakout/breakdown levels</strong>",
+          "Levels that once acted as resistance and were broken — often become support (and vice versa). Polarity flip.",
+          "High — well-known concept, widely watched"
+        ],
+        [
+          "<strong>Volume profile peaks</strong>",
+          "Prices where the most volume traded historically — high acceptance zones",
+          "High — proves real participation at that price"
+        ],
+        [
+          "<strong>Moving averages</strong>",
+          "200 MA, 50 MA — dynamic S/R that updates each candle",
+          "Medium-High — covered in lesson 21"
+        ],
+        [
+          "<strong>Fibonacci retracements</strong>",
+          "0.382, 0.5, 0.618 levels from recent swing",
+          "Medium — works when many traders use the same swing"
+        ],
+        [
+          "<strong>Trendlines</strong>",
+          "Diagonal lines connecting swing highs/lows",
+          "Medium — covered in lesson 18"
+        ]
       ]
     },
     {
@@ -77,11 +127,27 @@
     },
     {
       "type": "table",
-      "headers": ["Approach", "When to use", "Trade setup"],
+      "headers": [
+        "Approach",
+        "When to use",
+        "Trade setup"
+      ],
       "rows": [
-        ["<strong>Bounce trade</strong>", "Price approaches established support in an uptrend (or resistance in downtrend)", "Limit BUY just above support, SL below the zone, TP at next resistance"],
-        ["<strong>Breakout trade</strong>", "Price has tested S/R multiple times and is now thrusting through with volume", "Stop-BUY just above breakout (or stop-SELL below breakdown), SL on the other side"],
-        ["<strong>Retest entry</strong>", "S/R level just broke; wait for pullback to the broken level (now flipped polarity)", "Limit order at the broken level, SL beyond the structural high/low that caused the break"]
+        [
+          "<strong>Bounce trade</strong>",
+          "Price approaches established support in an uptrend (or resistance in downtrend)",
+          "Limit BUY just above support, SL below the zone, TP at next resistance"
+        ],
+        [
+          "<strong>Breakout trade</strong>",
+          "Price has tested S/R multiple times and is now thrusting through with volume",
+          "Stop-BUY just above breakout (or stop-SELL below breakdown), SL on the other side"
+        ],
+        [
+          "<strong>Retest entry</strong>",
+          "S/R level just broke; wait for pullback to the broken level (now flipped polarity)",
+          "Limit order at the broken level, SL beyond the structural high/low that caused the break"
+        ]
       ]
     },
     {

@@ -11,17 +11,43 @@
       "content": "The core concept — swings define structure"
     },
     {
+      "type": "image",
+      "src": "charts/06-market-structure.png",
+      "alt": "Side-by-side comparison of uptrend HH/HL pattern and downtrend LH/LL pattern",
+      "caption": "Uptrend = Higher Highs + Higher Lows. Downtrend = Lower Highs + Lower Lows. Three-second trend identification."
+    },
+    {
       "type": "text",
       "content": "<p>A \"swing\" is a local peak or trough on the chart — a pivot point where price reversed direction. Look at any chart and identify the swing points: the highs and lows where price changed direction.</p><ul><li><strong>Swing high (SH)</strong>: a peak with lower prices on both sides. Often easier to see if you look at a higher timeframe.</li><li><strong>Swing low (SL)</strong>: a trough with higher prices on both sides.</li></ul><p>The PATTERN of recent swings tells you the trend:</p>"
     },
     {
       "type": "table",
-      "headers": ["Pattern", "Meaning", "Visual"],
+      "headers": [
+        "Pattern",
+        "Meaning",
+        "Visual"
+      ],
       "rows": [
-        ["<strong>Higher High (HH) + Higher Low (HL)</strong>", "<strong>Uptrend</strong>. Each peak is higher than the previous; each trough is higher than the previous.", "Stairsteps upward"],
-        ["<strong>Lower High (LH) + Lower Low (LL)</strong>", "<strong>Downtrend</strong>. Each peak is lower; each trough is lower.", "Stairsteps downward"],
-        ["<strong>Equal Highs / Equal Lows / no pattern</strong>", "<strong>Ranging / sideways</strong>. No directional bias.", "Choppy, no clear direction"],
-        ["<strong>HH then a LH</strong>", "<strong>Possible reversal forming</strong>. Trend might be shifting.", "First warning sign"]
+        [
+          "<strong>Higher High (HH) + Higher Low (HL)</strong>",
+          "<strong>Uptrend</strong>. Each peak is higher than the previous; each trough is higher than the previous.",
+          "Stairsteps upward"
+        ],
+        [
+          "<strong>Lower High (LH) + Lower Low (LL)</strong>",
+          "<strong>Downtrend</strong>. Each peak is lower; each trough is lower.",
+          "Stairsteps downward"
+        ],
+        [
+          "<strong>Equal Highs / Equal Lows / no pattern</strong>",
+          "<strong>Ranging / sideways</strong>. No directional bias.",
+          "Choppy, no clear direction"
+        ],
+        [
+          "<strong>HH then a LH</strong>",
+          "<strong>Possible reversal forming</strong>. Trend might be shifting.",
+          "First warning sign"
+        ]
       ]
     },
     {
@@ -35,15 +61,33 @@
       "content": "Break of Structure (BoS) — trend continuation"
     },
     {
+      "type": "image",
+      "src": "charts/09-bos-choch.png",
+      "alt": "BoS (continuation) vs CHoCH (reversal) diagrams side by side",
+      "caption": "BoS: price breaks beyond prior swing = trend continues. CHoCH: price breaks the OTHER side = trend may be reversing."
+    },
+    {
       "type": "text",
       "content": "<p><strong>Break of Structure (BoS)</strong> is when price makes a NEW high (in an uptrend) or NEW low (in a downtrend), confirming the trend continues.</p><p>Example: BTC is in an uptrend with recent swing high at $62,000 and recent swing low at $59,000. Price breaks above $62,000 to make a new high at $63,500. This is a BULLISH Break of Structure — the uptrend is confirmed continuing.</p>"
     },
     {
       "type": "table",
-      "headers": ["Direction", "BoS pattern", "Trade implication"],
+      "headers": [
+        "Direction",
+        "BoS pattern",
+        "Trade implication"
+      ],
       "rows": [
-        ["Uptrend BoS", "Price breaks above the most recent swing HIGH", "Bullish — trend continues; look for long entries on pullbacks"],
-        ["Downtrend BoS", "Price breaks below the most recent swing LOW", "Bearish — trend continues; look for short entries on retraces"]
+        [
+          "Uptrend BoS",
+          "Price breaks above the most recent swing HIGH",
+          "Bullish — trend continues; look for long entries on pullbacks"
+        ],
+        [
+          "Downtrend BoS",
+          "Price breaks below the most recent swing LOW",
+          "Bearish — trend continues; look for short entries on retraces"
+        ]
       ]
     },
     {
@@ -56,10 +100,22 @@
     },
     {
       "type": "table",
-      "headers": ["Previous trend", "CHoCH signal", "What it means"],
+      "headers": [
+        "Previous trend",
+        "CHoCH signal",
+        "What it means"
+      ],
       "rows": [
-        ["Uptrend (HH/HL)", "Price breaks BELOW the most recent swing LOW", "Bearish CHoCH — uptrend invalidated; potential downtrend starting"],
-        ["Downtrend (LH/LL)", "Price breaks ABOVE the most recent swing HIGH", "Bullish CHoCH — downtrend invalidated; potential uptrend starting"]
+        [
+          "Uptrend (HH/HL)",
+          "Price breaks BELOW the most recent swing LOW",
+          "Bearish CHoCH — uptrend invalidated; potential downtrend starting"
+        ],
+        [
+          "Downtrend (LH/LL)",
+          "Price breaks ABOVE the most recent swing HIGH",
+          "Bullish CHoCH — downtrend invalidated; potential uptrend starting"
+        ]
       ]
     },
     {
@@ -82,12 +138,32 @@
     },
     {
       "type": "table",
-      "headers": ["Setup", "Description", "Trade approach"],
+      "headers": [
+        "Setup",
+        "Description",
+        "Trade approach"
+      ],
       "rows": [
-        ["<strong>BoS pullback</strong>", "Uptrend makes new HH (BoS). Wait for pullback to retest the broken structure level (now support).", "Long the bounce off broken structure. SL below the recent HL. TP at next resistance."],
-        ["<strong>Failed BoS = CHoCH start</strong>", "Price tries to break new HH but fails (wick beyond, close back below). Often the first sign of weakness.", "Don't long the failed breakout. Wait for CHoCH confirmation, then short."],
-        ["<strong>CHoCH retest</strong>", "After CHoCH, price retraces back to the broken swing high (in case of downtrend reversal) — often gets rejected.", "Short the rejection at the broken structure level."],
-        ["<strong>Higher-TF support + lower-TF CHoCH</strong>", "Daily uptrend support meets a 1H CHoCH (1H downtrend breaks).", "High-probability long entry — HTF bias + LTF timing aligned."]
+        [
+          "<strong>BoS pullback</strong>",
+          "Uptrend makes new HH (BoS). Wait for pullback to retest the broken structure level (now support).",
+          "Long the bounce off broken structure. SL below the recent HL. TP at next resistance."
+        ],
+        [
+          "<strong>Failed BoS = CHoCH start</strong>",
+          "Price tries to break new HH but fails (wick beyond, close back below). Often the first sign of weakness.",
+          "Don't long the failed breakout. Wait for CHoCH confirmation, then short."
+        ],
+        [
+          "<strong>CHoCH retest</strong>",
+          "After CHoCH, price retraces back to the broken swing high (in case of downtrend reversal) — often gets rejected.",
+          "Short the rejection at the broken structure level."
+        ],
+        [
+          "<strong>Higher-TF support + lower-TF CHoCH</strong>",
+          "Daily uptrend support meets a 1H CHoCH (1H downtrend breaks).",
+          "High-probability long entry — HTF bias + LTF timing aligned."
+        ]
       ]
     },
     {

@@ -52,10 +52,22 @@
     },
     {
       "type": "table",
-      "headers": ["Margin mode", "What happens", "Account aftermath"],
+      "headers": [
+        "Margin mode",
+        "What happens",
+        "Account aftermath"
+      ],
       "rows": [
-        ["<strong>Isolated (each pos has own $500)</strong>", "Each position is at -$400 of its $500 isolated margin. None liquidated yet (still have $100 buffer each). Loss is contained per position.", "Account down $2,000 unrealized, no liquidations triggered, you can manage normally."],
-        ["<strong>Cross (shared pool)</strong>", "$2,000 unrealized loss eats free margin. Free goes from $7,500 → $5,500. Still safe, positions stay open. BUT: if drop continues to 12-15%, free margin depletes, exchange starts auto-deleveraging your positions at the worst moment.", "Risk of cascading liquidation across ALL positions even though they're correlated and the move was temporary."]
+        [
+          "<strong>Isolated (each pos has own $500)</strong>",
+          "Each position is at -$400 of its $500 isolated margin. None liquidated yet (still have $100 buffer each). Loss is contained per position.",
+          "Account down $2,000 unrealized, no liquidations triggered, you can manage normally."
+        ],
+        [
+          "<strong>Cross (shared pool)</strong>",
+          "$2,000 unrealized loss eats free margin. Free goes from $7,500 → $5,500. Still safe, positions stay open. BUT: if drop continues to 12-15%, free margin depletes, exchange starts auto-deleveraging your positions at the worst moment.",
+          "Risk of cascading liquidation across ALL positions even though they're correlated and the move was temporary."
+        ]
       ]
     },
     {
@@ -85,21 +97,72 @@
       "content": "Liquidation prices — quick reference"
     },
     {
+      "type": "image",
+      "src": "charts/11-liquidation-distance.png",
+      "alt": "Horizontal bar chart showing liquidation distances at 1x through 100x leverage",
+      "caption": "Each leverage step roughly halves your liquidation distance. 100x = liquidated on any normal 1% move."
+    },
+    {
       "type": "text",
       "content": "<p>Approximate liquidation distance at various leverage levels (assuming ~0.5% maintenance margin requirement):</p>"
     },
     {
       "type": "table",
-      "headers": ["Leverage", "Distance to liquidation", "What \"down 5%\" means", "Practical use"],
+      "headers": [
+        "Leverage",
+        "Distance to liquidation",
+        "What \"down 5%\" means",
+        "Practical use"
+      ],
       "rows": [
-        ["1×", "~99% (essentially can't liquidate before zero)", "-5%", "Spot-equivalent. Newbie-safe."],
-        ["2×", "~50%", "-10%", "Very conservative."],
-        ["3×", "~33%", "-15%", "Newcomer-friendly perp leverage."],
-        ["5×", "~20%", "-25%", "Common retail choice. Reasonable."],
-        ["10×", "~10%", "<strong>-50%</strong>", "Common but risky if SL > 5% away."],
-        ["20×", "~5%", "<strong>Likely liquidated</strong>", "Need very tight SLs. Skill required."],
-        ["50×", "~2%", "<strong>Always liquidated</strong>", "Scalp/breakout only. Most retail blow up here."],
-        ["100×", "~1%", "<strong>Always liquidated</strong>", "Effectively gambling at this level."]
+        [
+          "1×",
+          "~99% (essentially can't liquidate before zero)",
+          "-5%",
+          "Spot-equivalent. Newbie-safe."
+        ],
+        [
+          "2×",
+          "~50%",
+          "-10%",
+          "Very conservative."
+        ],
+        [
+          "3×",
+          "~33%",
+          "-15%",
+          "Newcomer-friendly perp leverage."
+        ],
+        [
+          "5×",
+          "~20%",
+          "-25%",
+          "Common retail choice. Reasonable."
+        ],
+        [
+          "10×",
+          "~10%",
+          "<strong>-50%</strong>",
+          "Common but risky if SL > 5% away."
+        ],
+        [
+          "20×",
+          "~5%",
+          "<strong>Likely liquidated</strong>",
+          "Need very tight SLs. Skill required."
+        ],
+        [
+          "50×",
+          "~2%",
+          "<strong>Always liquidated</strong>",
+          "Scalp/breakout only. Most retail blow up here."
+        ],
+        [
+          "100×",
+          "~1%",
+          "<strong>Always liquidated</strong>",
+          "Effectively gambling at this level."
+        ]
       ]
     },
     {

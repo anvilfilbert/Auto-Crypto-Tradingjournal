@@ -12,12 +12,32 @@
     },
     {
       "type": "table",
-      "headers": ["Indicator", "What it measures", "Crypto correlation"],
+      "headers": [
+        "Indicator",
+        "What it measures",
+        "Crypto correlation"
+      ],
       "rows": [
-        ["<strong>DXY (US Dollar Index)</strong>", "Strength of USD vs basket of major currencies", "INVERSE — strong dollar = pressure on crypto (and other assets priced in USD)"],
-        ["<strong>VIX</strong>", "Implied volatility of S&P 500 (fear gauge)", "INVERSE typically — VIX spike = risk-off = crypto sells. Sometimes decouples in crypto-specific events."],
-        ["<strong>S&P 500 futures (ES)</strong>", "Largest-cap US equity index", "POSITIVE — when ES rallies, crypto often follows. When ES falls, crypto often falls harder."],
-        ["<strong>10-year Treasury yield (TNX)</strong>", "Long-term US interest rate; risk-free rate", "Generally INVERSE for risk assets — rising yields make crypto less attractive"]
+        [
+          "<strong>DXY (US Dollar Index)</strong>",
+          "Strength of USD vs basket of major currencies",
+          "INVERSE — strong dollar = pressure on crypto (and other assets priced in USD)"
+        ],
+        [
+          "<strong>VIX</strong>",
+          "Implied volatility of S&P 500 (fear gauge)",
+          "INVERSE typically — VIX spike = risk-off = crypto sells. Sometimes decouples in crypto-specific events."
+        ],
+        [
+          "<strong>S&P 500 futures (ES)</strong>",
+          "Largest-cap US equity index",
+          "POSITIVE — when ES rallies, crypto often follows. When ES falls, crypto often falls harder."
+        ],
+        [
+          "<strong>10-year Treasury yield (TNX)</strong>",
+          "Long-term US interest rate; risk-free rate",
+          "Generally INVERSE for risk assets — rising yields make crypto less attractive"
+        ]
       ]
     },
     {
@@ -43,6 +63,12 @@
       "content": "DXY in detail"
     },
     {
+      "type": "image",
+      "src": "charts/40-macro-correlation.png",
+      "alt": "DXY rising (top) and BTC falling (bottom) — inverse correlation example",
+      "caption": "DXY (USD) and BTC trade inversely most of the time. Rising DXY = headwind for crypto via both pricing and risk-off dynamics."
+    },
+    {
       "type": "text",
       "content": "<p>The US Dollar Index (DXY) measures USD strength vs EUR, JPY, GBP, CAD, SEK, CHF (weighted). Why it matters for crypto:</p><ul><li>Crypto is priced in USD. Strong USD = relative weakness in crypto's USD price even if crypto's intrinsic value is unchanged.</li><li>USD strength reflects global flight-to-safety. Same dynamic that pushes investors INTO USD pushes them OUT of risk assets.</li><li>Many crypto correlations operate through DXY. ETH-USD weakness during DXY rallies isn't ETH-specific; it's USD-specific.</li></ul><p>Watch DXY when crypto is in a key technical zone. If DXY is rallying (e.g., approaching 105+), expect downward pressure on crypto. If DXY is falling (e.g., breaking below 100), expect tailwind for crypto.</p>"
     },
@@ -56,13 +82,37 @@
     },
     {
       "type": "table",
-      "headers": ["VIX range", "Market sentiment", "Crypto implication"],
+      "headers": [
+        "VIX range",
+        "Market sentiment",
+        "Crypto implication"
+      ],
       "rows": [
-        ["10-15", "Complacency / low fear", "Crypto can grind higher; risk-on environment"],
-        ["15-20", "Normal volatility", "No strong macro signal; trade technicals"],
-        ["20-25", "Elevated fear", "Caution — risk-off may be brewing"],
-        ["25-35", "Significant fear", "Risk-off in progress; tighten crypto longs, consider reducing leverage"],
-        ["35+", "Major fear spike", "Severe risk-off; crypto often crashes 10-20%; defensive posturing critical"]
+        [
+          "10-15",
+          "Complacency / low fear",
+          "Crypto can grind higher; risk-on environment"
+        ],
+        [
+          "15-20",
+          "Normal volatility",
+          "No strong macro signal; trade technicals"
+        ],
+        [
+          "20-25",
+          "Elevated fear",
+          "Caution — risk-off may be brewing"
+        ],
+        [
+          "25-35",
+          "Significant fear",
+          "Risk-off in progress; tighten crypto longs, consider reducing leverage"
+        ],
+        [
+          "35+",
+          "Major fear spike",
+          "Severe risk-off; crypto often crashes 10-20%; defensive posturing critical"
+        ]
       ]
     },
     {

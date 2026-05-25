@@ -11,21 +11,63 @@
       "content": "The drawdown asymmetry"
     },
     {
+      "type": "image",
+      "src": "charts/10-drawdown-recovery.png",
+      "alt": "Bar chart showing gain percentage needed to recover from drawdowns from 5% up to 90%",
+      "caption": "Recovery math: small losses compound benignly; big losses compound viciously."
+    },
+    {
       "type": "text",
       "content": "<p>Losses and gains aren't symmetric. To recover from a loss, you need a LARGER gain. This asymmetry compounds brutally as losses grow.</p>"
     },
     {
       "type": "table",
-      "headers": ["Loss from peak", "Gain required to break even", "Why it matters"],
+      "headers": [
+        "Loss from peak",
+        "Gain required to break even",
+        "Why it matters"
+      ],
       "rows": [
-        ["−5%", "+5.3%", "Trivial recovery"],
-        ["−10%", "+11.1%", "Easy"],
-        ["−20%", "+25%", "Annoying but doable"],
-        ["−30%", "+42.9%", "Hard"],
-        ["−40%", "+66.7%", "Painful — requires a full bull run"],
-        ["−50%", "+100%", "You need to DOUBLE the account"],
-        ["−70%", "+233%", "Most never recover"],
-        ["−90%", "+900%", "Functionally dead"]
+        [
+          "−5%",
+          "+5.3%",
+          "Trivial recovery"
+        ],
+        [
+          "−10%",
+          "+11.1%",
+          "Easy"
+        ],
+        [
+          "−20%",
+          "+25%",
+          "Annoying but doable"
+        ],
+        [
+          "−30%",
+          "+42.9%",
+          "Hard"
+        ],
+        [
+          "−40%",
+          "+66.7%",
+          "Painful — requires a full bull run"
+        ],
+        [
+          "−50%",
+          "+100%",
+          "You need to DOUBLE the account"
+        ],
+        [
+          "−70%",
+          "+233%",
+          "Most never recover"
+        ],
+        [
+          "−90%",
+          "+900%",
+          "Functionally dead"
+        ]
       ]
     },
     {
@@ -42,13 +84,43 @@
     },
     {
       "type": "table",
-      "headers": ["Risk per trade", "After 5 losses", "After 10 losses", "Drawdown"],
+      "headers": [
+        "Risk per trade",
+        "After 5 losses",
+        "After 10 losses",
+        "Drawdown"
+      ],
       "rows": [
-        ["1%", "95.1%", "90.4%", "Comfortable"],
-        ["2%", "90.4%", "81.7%", "Manageable"],
-        ["5%", "77.4%", "59.9%", "Painful (40% DD)"],
-        ["10%", "59.0%", "34.9%", "Account-killing (65% DD)"],
-        ["20%", "32.8%", "10.7%", "Nearly destroyed"]
+        [
+          "1%",
+          "95.1%",
+          "90.4%",
+          "Comfortable"
+        ],
+        [
+          "2%",
+          "90.4%",
+          "81.7%",
+          "Manageable"
+        ],
+        [
+          "5%",
+          "77.4%",
+          "59.9%",
+          "Painful (40% DD)"
+        ],
+        [
+          "10%",
+          "59.0%",
+          "34.9%",
+          "Account-killing (65% DD)"
+        ],
+        [
+          "20%",
+          "32.8%",
+          "10.7%",
+          "Nearly destroyed"
+        ]
       ]
     },
     {

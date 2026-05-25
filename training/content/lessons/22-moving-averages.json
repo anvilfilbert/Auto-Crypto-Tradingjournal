@@ -20,10 +20,25 @@
     },
     {
       "type": "table",
-      "headers": ["Type", "Calculation", "Behavior", "Best use"],
+      "headers": [
+        "Type",
+        "Calculation",
+        "Behavior",
+        "Best use"
+      ],
       "rows": [
-        ["<strong>SMA (Simple)</strong>", "Equal weight to every candle in the period", "Slower to react; smoother curve; lags more", "Long-term trend filter (200 SMA), major levels"],
-        ["<strong>EMA (Exponential)</strong>", "Recent candles weighted more heavily than older ones", "Faster to react; less lag; more responsive to recent moves", "Active trading (9/21/50 EMA), shorter-term signals"]
+        [
+          "<strong>SMA (Simple)</strong>",
+          "Equal weight to every candle in the period",
+          "Slower to react; smoother curve; lags more",
+          "Long-term trend filter (200 SMA), major levels"
+        ],
+        [
+          "<strong>EMA (Exponential)</strong>",
+          "Recent candles weighted more heavily than older ones",
+          "Faster to react; less lag; more responsive to recent moves",
+          "Active trading (9/21/50 EMA), shorter-term signals"
+        ]
       ]
     },
     {
@@ -38,13 +53,37 @@
     },
     {
       "type": "table",
-      "headers": ["MA", "Period", "What it represents"],
+      "headers": [
+        "MA",
+        "Period",
+        "What it represents"
+      ],
       "rows": [
-        ["9 EMA / 20 EMA", "Very short", "Recent momentum; intraday support/resistance"],
-        ["21 EMA", "Short", "Common day-trader MA; reacts quickly"],
-        ["50 EMA / 50 SMA", "Medium", "Mid-term trend; often acts as dynamic S/R"],
-        ["100 SMA", "Long", "Major trend filter for swing trading"],
-        ["200 SMA", "Very long", "<strong>The most important MA in markets.</strong> Defines bull/bear macro state. Widely watched by institutional traders."]
+        [
+          "9 EMA / 20 EMA",
+          "Very short",
+          "Recent momentum; intraday support/resistance"
+        ],
+        [
+          "21 EMA",
+          "Short",
+          "Common day-trader MA; reacts quickly"
+        ],
+        [
+          "50 EMA / 50 SMA",
+          "Medium",
+          "Mid-term trend; often acts as dynamic S/R"
+        ],
+        [
+          "100 SMA",
+          "Long",
+          "Major trend filter for swing trading"
+        ],
+        [
+          "200 SMA",
+          "Very long",
+          "<strong>The most important MA in markets.</strong> Defines bull/bear macro state. Widely watched by institutional traders."
+        ]
       ]
     },
     {
@@ -63,17 +102,43 @@
     },
     {
       "type": "table",
-      "headers": ["Use", "How it works", "Reliability"],
+      "headers": [
+        "Use",
+        "How it works",
+        "Reliability"
+      ],
       "rows": [
-        ["<strong>1. Dynamic support/resistance</strong>", "Price often bounces off (or rejects at) MAs the same way it does horizontal S/R. 50/100/200 MAs especially act as dynamic levels.", "High — combine with horizontal S/R confluence"],
-        ["<strong>2. Trend filter</strong>", "Only trade long when price > 200 MA. Only trade short when price < 200 MA. Simple but powerful filter.", "High — removes counter-trend trades"],
-        ["<strong>3. Slope read</strong>", "MA pointing up = uptrend. MA pointing down = downtrend. MA flat = range. Simple visual confirmation of structure.", "High — fast read"],
-        ["<strong>4. Crossover signals (e.g., Golden Cross / Death Cross)</strong>", "Short MA crosses above long MA (Golden Cross) = bullish; below (Death Cross) = bearish.", "Medium — lots of false signals; works better as confirmation than as entry trigger"]
+        [
+          "<strong>1. Dynamic support/resistance</strong>",
+          "Price often bounces off (or rejects at) MAs the same way it does horizontal S/R. 50/100/200 MAs especially act as dynamic levels.",
+          "High — combine with horizontal S/R confluence"
+        ],
+        [
+          "<strong>2. Trend filter</strong>",
+          "Only trade long when price > 200 MA. Only trade short when price < 200 MA. Simple but powerful filter.",
+          "High — removes counter-trend trades"
+        ],
+        [
+          "<strong>3. Slope read</strong>",
+          "MA pointing up = uptrend. MA pointing down = downtrend. MA flat = range. Simple visual confirmation of structure.",
+          "High — fast read"
+        ],
+        [
+          "<strong>4. Crossover signals (e.g., Golden Cross / Death Cross)</strong>",
+          "Short MA crosses above long MA (Golden Cross) = bullish; below (Death Cross) = bearish.",
+          "Medium — lots of false signals; works better as confirmation than as entry trigger"
+        ]
       ]
     },
     {
       "type": "heading",
       "content": "Golden Cross / Death Cross — the famous (and overrated) signals"
+    },
+    {
+      "type": "image",
+      "src": "charts/20-ma-golden-cross.png",
+      "alt": "Price chart with 50 MA crossing above 200 MA — golden cross marked",
+      "caption": "Golden Cross: fast MA crosses above slow MA. Confirmation of regime change, not entry trigger (lagging signal)."
     },
     {
       "type": "text",

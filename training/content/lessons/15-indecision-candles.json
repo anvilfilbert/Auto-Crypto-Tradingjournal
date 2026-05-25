@@ -11,17 +11,43 @@
       "content": "Pattern #1 — Doji"
     },
     {
+      "type": "image",
+      "src": "charts/04-indecision-candles.png",
+      "alt": "Four doji and spinning top variants",
+      "caption": "Doji variants. Dragonfly at support and Gravestone at resistance behave like Hammer/Shooting Star."
+    },
+    {
       "type": "text",
       "content": "<p><strong>What it looks like:</strong> A candle where open and close are at essentially the same price — body is a thin horizontal line (or nearly so). Wicks may be present on either side or both.</p><p><strong>What it means:</strong> Buyers and sellers fought to a perfect draw over the period. Neither side won the body. Whatever wicks exist show attempted moves that got rejected back to the open.</p>"
     },
     {
       "type": "table",
-      "headers": ["Doji variant", "Shape", "Bias"],
+      "headers": [
+        "Doji variant",
+        "Shape",
+        "Bias"
+      ],
       "rows": [
-        ["<strong>Standard Doji</strong>", "Equal wicks on both sides, body = thin line", "Pure indecision"],
-        ["<strong>Dragonfly Doji</strong>", "Body at top of candle, long lower wick, no upper wick", "Slight bullish bias — at support, can be a reversal signal"],
-        ["<strong>Gravestone Doji</strong>", "Body at bottom of candle, long upper wick, no lower wick", "Slight bearish bias — at resistance, can be a reversal signal"],
-        ["<strong>Long-legged Doji</strong>", "Very long wicks on both sides, body still tiny", "Wide-range indecision — high uncertainty"]
+        [
+          "<strong>Standard Doji</strong>",
+          "Equal wicks on both sides, body = thin line",
+          "Pure indecision"
+        ],
+        [
+          "<strong>Dragonfly Doji</strong>",
+          "Body at top of candle, long lower wick, no upper wick",
+          "Slight bullish bias — at support, can be a reversal signal"
+        ],
+        [
+          "<strong>Gravestone Doji</strong>",
+          "Body at bottom of candle, long upper wick, no lower wick",
+          "Slight bearish bias — at resistance, can be a reversal signal"
+        ],
+        [
+          "<strong>Long-legged Doji</strong>",
+          "Very long wicks on both sides, body still tiny",
+          "Wide-range indecision — high uncertainty"
+        ]
       ]
     },
     {
@@ -44,13 +70,37 @@
     },
     {
       "type": "table",
-      "headers": ["Context", "Doji / Spinning Top means", "Trade implication"],
+      "headers": [
+        "Context",
+        "Doji / Spinning Top means",
+        "Trade implication"
+      ],
       "rows": [
-        ["At major support during downtrend", "Sellers exhausted; buyers stepping in", "Watch for bullish reversal confirmation on next candle"],
-        ["At major resistance during uptrend", "Buyers exhausted; sellers stepping in", "Watch for bearish reversal confirmation on next candle"],
-        ["After 3-5 consecutive strong directional candles", "Trend losing steam; pause or reversal possible", "Tighten SL on existing positions"],
-        ["In the middle of a sideways range", "Just chop noise", "Skip — no signal value"],
-        ["After news / event spike", "Market digesting information", "Wait for direction confirmation before trading"]
+        [
+          "At major support during downtrend",
+          "Sellers exhausted; buyers stepping in",
+          "Watch for bullish reversal confirmation on next candle"
+        ],
+        [
+          "At major resistance during uptrend",
+          "Buyers exhausted; sellers stepping in",
+          "Watch for bearish reversal confirmation on next candle"
+        ],
+        [
+          "After 3-5 consecutive strong directional candles",
+          "Trend losing steam; pause or reversal possible",
+          "Tighten SL on existing positions"
+        ],
+        [
+          "In the middle of a sideways range",
+          "Just chop noise",
+          "Skip — no signal value"
+        ],
+        [
+          "After news / event spike",
+          "Market digesting information",
+          "Wait for direction confirmation before trading"
+        ]
       ]
     },
     {

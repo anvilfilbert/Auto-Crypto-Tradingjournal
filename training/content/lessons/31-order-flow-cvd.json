@@ -20,17 +20,43 @@
     },
     {
       "type": "table",
-      "headers": ["Concept", "Definition", "What it shows"],
+      "headers": [
+        "Concept",
+        "Definition",
+        "What it shows"
+      ],
       "rows": [
-        ["<strong>Volume Delta</strong>", "Aggressive buy volume MINUS aggressive sell volume in a given period", "Net aggression direction for that bar"],
-        ["<strong>Cumulative Volume Delta (CVD)</strong>", "Running sum of all volume deltas over time, plotted as a line", "Cumulative net aggression direction"],
-        ["Rising CVD", "More aggressive buying than selling", "Buyers in control"],
-        ["Falling CVD", "More aggressive selling than buying", "Sellers in control"]
+        [
+          "<strong>Volume Delta</strong>",
+          "Aggressive buy volume MINUS aggressive sell volume in a given period",
+          "Net aggression direction for that bar"
+        ],
+        [
+          "<strong>Cumulative Volume Delta (CVD)</strong>",
+          "Running sum of all volume deltas over time, plotted as a line",
+          "Cumulative net aggression direction"
+        ],
+        [
+          "Rising CVD",
+          "More aggressive buying than selling",
+          "Buyers in control"
+        ],
+        [
+          "Falling CVD",
+          "More aggressive selling than buying",
+          "Sellers in control"
+        ]
       ]
     },
     {
       "type": "heading",
       "content": "CVD divergence — the most powerful order flow signal"
+    },
+    {
+      "type": "image",
+      "src": "charts/30-cvd-divergence.png",
+      "alt": "Top: price rising. Bottom: CVD falling — bearish divergence",
+      "caption": "Hollow trend: price rises but order flow (CVD) falls. Passive bids absorbing aggressive selling — often precedes reversal."
     },
     {
       "type": "callout",
@@ -52,14 +78,42 @@
     },
     {
       "type": "table",
-      "headers": ["Price action", "CVD behavior", "Interpretation"],
+      "headers": [
+        "Price action",
+        "CVD behavior",
+        "Interpretation"
+      ],
       "rows": [
-        ["Strong uptrend", "CVD trending up steadily", "Real trend backed by aggressive buyers"],
-        ["Strong uptrend", "CVD FLAT or declining", "Hollow trend — sellers absorbing buyers; reversal warning"],
-        ["Strong downtrend", "CVD trending down steadily", "Real trend backed by aggressive sellers"],
-        ["Strong downtrend", "CVD FLAT or rising", "Hollow trend — buyers absorbing sellers; bounce coming"],
-        ["Sideways chop", "CVD oscillating around zero", "Balanced flow; range conditions"],
-        ["Sideways chop", "CVD trending in one direction", "Hidden accumulation/distribution — breakout in CVD direction likely"]
+        [
+          "Strong uptrend",
+          "CVD trending up steadily",
+          "Real trend backed by aggressive buyers"
+        ],
+        [
+          "Strong uptrend",
+          "CVD FLAT or declining",
+          "Hollow trend — sellers absorbing buyers; reversal warning"
+        ],
+        [
+          "Strong downtrend",
+          "CVD trending down steadily",
+          "Real trend backed by aggressive sellers"
+        ],
+        [
+          "Strong downtrend",
+          "CVD FLAT or rising",
+          "Hollow trend — buyers absorbing sellers; bounce coming"
+        ],
+        [
+          "Sideways chop",
+          "CVD oscillating around zero",
+          "Balanced flow; range conditions"
+        ],
+        [
+          "Sideways chop",
+          "CVD trending in one direction",
+          "Hidden accumulation/distribution — breakout in CVD direction likely"
+        ]
       ]
     },
     {

@@ -19,15 +19,49 @@
       "content": "Body and wicks — the visual decoding"
     },
     {
+      "type": "image",
+      "src": "charts/01-candle-anatomy.png",
+      "alt": "Labeled bullish and bearish candles showing body, upper wick, lower wick",
+      "caption": "Body shows where price SETTLED. Wicks show rejected attempts. Long wick = strong rejection."
+    },
+    {
       "type": "table",
-      "headers": ["Visual element", "What it represents", "Meaning"],
+      "headers": [
+        "Visual element",
+        "What it represents",
+        "Meaning"
+      ],
       "rows": [
-        ["<strong>Body</strong> (thick rectangle)", "Range between Open and Close", "The SETTLED outcome of the period — who won between O and C"],
-        ["<strong>Body color: green/white</strong>", "Close > Open", "Bullish candle — price ended higher than it started"],
-        ["<strong>Body color: red/black</strong>", "Close < Open", "Bearish candle — price ended lower than it started"],
-        ["<strong>Upper wick</strong> (thin line above body)", "Range between high of candle and body top", "Sellers REJECTED a push higher — failed bullish attempt"],
-        ["<strong>Lower wick</strong> (thin line below body)", "Range between low of candle and body bottom", "Buyers REJECTED a push lower — failed bearish attempt"],
-        ["<strong>No wick</strong> on one side", "Body extends to the high or low", "No rejection on that side — clean directional move"]
+        [
+          "<strong>Body</strong> (thick rectangle)",
+          "Range between Open and Close",
+          "The SETTLED outcome of the period — who won between O and C"
+        ],
+        [
+          "<strong>Body color: green/white</strong>",
+          "Close > Open",
+          "Bullish candle — price ended higher than it started"
+        ],
+        [
+          "<strong>Body color: red/black</strong>",
+          "Close < Open",
+          "Bearish candle — price ended lower than it started"
+        ],
+        [
+          "<strong>Upper wick</strong> (thin line above body)",
+          "Range between high of candle and body top",
+          "Sellers REJECTED a push higher — failed bullish attempt"
+        ],
+        [
+          "<strong>Lower wick</strong> (thin line below body)",
+          "Range between low of candle and body bottom",
+          "Buyers REJECTED a push lower — failed bearish attempt"
+        ],
+        [
+          "<strong>No wick</strong> on one side",
+          "Body extends to the high or low",
+          "No rejection on that side — clean directional move"
+        ]
       ]
     },
     {
@@ -42,14 +76,42 @@
     },
     {
       "type": "table",
-      "headers": ["Shape", "Description", "What it tells you"],
+      "headers": [
+        "Shape",
+        "Description",
+        "What it tells you"
+      ],
       "rows": [
-        ["<strong>Large bullish body, no wicks</strong>", "Open at low, close at high. Marubozu.", "Strong, decisive buying. No rejection. Continuation likely."],
-        ["<strong>Large bearish body, no wicks</strong>", "Open at high, close at low. Bearish Marubozu.", "Strong selling. Continuation likely."],
-        ["<strong>Small body, long upper wick</strong>", "Body near low, upper wick 2-3× body length", "Sellers rejected the push higher. Bearish bias for next candle."],
-        ["<strong>Small body, long lower wick</strong>", "Body near high, lower wick 2-3× body length", "Buyers rejected the push lower. Bullish bias for next candle."],
-        ["<strong>Small body, both wicks long</strong>", "Body in middle, wicks on both sides", "Indecision — covered in lesson 15. Wait for confirmation."],
-        ["<strong>Tiny body, no wicks</strong>", "Open ≈ Close, no rejection on either side", "Indecision in a quiet market. Low information."]
+        [
+          "<strong>Large bullish body, no wicks</strong>",
+          "Open at low, close at high. Marubozu.",
+          "Strong, decisive buying. No rejection. Continuation likely."
+        ],
+        [
+          "<strong>Large bearish body, no wicks</strong>",
+          "Open at high, close at low. Bearish Marubozu.",
+          "Strong selling. Continuation likely."
+        ],
+        [
+          "<strong>Small body, long upper wick</strong>",
+          "Body near low, upper wick 2-3× body length",
+          "Sellers rejected the push higher. Bearish bias for next candle."
+        ],
+        [
+          "<strong>Small body, long lower wick</strong>",
+          "Body near high, lower wick 2-3× body length",
+          "Buyers rejected the push lower. Bullish bias for next candle."
+        ],
+        [
+          "<strong>Small body, both wicks long</strong>",
+          "Body in middle, wicks on both sides",
+          "Indecision — covered in lesson 15. Wait for confirmation."
+        ],
+        [
+          "<strong>Tiny body, no wicks</strong>",
+          "Open ≈ Close, no rejection on either side",
+          "Indecision in a quiet market. Low information."
+        ]
       ]
     },
     {

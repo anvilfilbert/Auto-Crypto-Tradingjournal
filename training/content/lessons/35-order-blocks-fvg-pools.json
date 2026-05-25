@@ -11,15 +11,33 @@
       "content": "Order Block — where institutions entered"
     },
     {
+      "type": "image",
+      "src": "charts/33-order-block.png",
+      "alt": "Price chart showing bullish order block, impulsive move up, then pullback returning to OB",
+      "caption": "Bullish OB: last red candle before impulsive up-move. Price often returns to retest the zone — high-quality long entry."
+    },
+    {
       "type": "text",
       "content": "<p>An ORDER BLOCK (OB) is the LAST bearish candle BEFORE a strong bullish move (bullish OB), or the last bullish candle before a strong bearish move (bearish OB). The idea: large institutional positions accumulated at that candle, and price often returns to that zone for retests.</p>"
     },
     {
       "type": "table",
-      "headers": ["Type", "How to identify", "What it represents"],
+      "headers": [
+        "Type",
+        "How to identify",
+        "What it represents"
+      ],
       "rows": [
-        ["<strong>Bullish Order Block</strong>", "Last RED candle BEFORE a strong impulsive UP move that breaks structure", "Institutional buying zone — price often returns here for support"],
-        ["<strong>Bearish Order Block</strong>", "Last GREEN candle BEFORE a strong impulsive DOWN move that breaks structure", "Institutional selling zone — price often returns here for resistance"]
+        [
+          "<strong>Bullish Order Block</strong>",
+          "Last RED candle BEFORE a strong impulsive UP move that breaks structure",
+          "Institutional buying zone — price often returns here for support"
+        ],
+        [
+          "<strong>Bearish Order Block</strong>",
+          "Last GREEN candle BEFORE a strong impulsive DOWN move that breaks structure",
+          "Institutional selling zone — price often returns here for resistance"
+        ]
       ]
     },
     {
@@ -46,10 +64,22 @@
     },
     {
       "type": "table",
-      "headers": ["Pool type", "Location", "What gets triggered"],
+      "headers": [
+        "Pool type",
+        "Location",
+        "What gets triggered"
+      ],
       "rows": [
-        ["<strong>Buy-side liquidity</strong>", "Just ABOVE a recent swing high", "Short stops fire as price wicks above — provides buy orders smart money wants"],
-        ["<strong>Sell-side liquidity</strong>", "Just BELOW a recent swing low", "Long stops fire as price wicks below — provides sell orders smart money wants"]
+        [
+          "<strong>Buy-side liquidity</strong>",
+          "Just ABOVE a recent swing high",
+          "Short stops fire as price wicks above — provides buy orders smart money wants"
+        ],
+        [
+          "<strong>Sell-side liquidity</strong>",
+          "Just BELOW a recent swing low",
+          "Long stops fire as price wicks below — provides sell orders smart money wants"
+        ]
       ]
     },
     {

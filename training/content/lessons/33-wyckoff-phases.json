@@ -11,13 +11,44 @@
       "content": "The four phases"
     },
     {
+      "type": "image",
+      "src": "charts/31-wyckoff-cycle.png",
+      "alt": "Full Wyckoff cycle showing accumulation, markup, distribution, markdown phases over time",
+      "caption": "The Wyckoff cycle. Each phase has its own characteristics — recognize which one you're in to pick the right trade type."
+    },
+    {
       "type": "table",
-      "headers": ["Phase", "What's happening", "Price action", "Volume pattern"],
+      "headers": [
+        "Phase",
+        "What's happening",
+        "Price action",
+        "Volume pattern"
+      ],
       "rows": [
-        ["<strong>1. Accumulation</strong>", "Smart money quietly buying at lows after a downtrend", "Sideways range, often after a significant decline", "Volume gradually rising on up-days, drying up on down-days"],
-        ["<strong>2. Markup</strong>", "Price breaks out of accumulation range — smart money pushes price up", "Clear uptrend, HH/HL structure forming", "Volume expanding on up-moves, normal on pullbacks"],
-        ["<strong>3. Distribution</strong>", "Smart money quietly selling to retail at highs after a uptrend", "Sideways range at the top, after sustained markup", "Volume rising on down-days, drying up on up-days (opposite of accumulation)"],
-        ["<strong>4. Markdown</strong>", "Price breaks down from distribution — smart money has exited, price falls", "Clear downtrend, LH/LL structure forming", "Volume expanding on down-moves"]
+        [
+          "<strong>1. Accumulation</strong>",
+          "Smart money quietly buying at lows after a downtrend",
+          "Sideways range, often after a significant decline",
+          "Volume gradually rising on up-days, drying up on down-days"
+        ],
+        [
+          "<strong>2. Markup</strong>",
+          "Price breaks out of accumulation range — smart money pushes price up",
+          "Clear uptrend, HH/HL structure forming",
+          "Volume expanding on up-moves, normal on pullbacks"
+        ],
+        [
+          "<strong>3. Distribution</strong>",
+          "Smart money quietly selling to retail at highs after a uptrend",
+          "Sideways range at the top, after sustained markup",
+          "Volume rising on down-days, drying up on up-days (opposite of accumulation)"
+        ],
+        [
+          "<strong>4. Markdown</strong>",
+          "Price breaks down from distribution — smart money has exited, price falls",
+          "Clear downtrend, LH/LL structure forming",
+          "Volume expanding on down-moves"
+        ]
       ]
     },
     {
@@ -78,12 +109,32 @@
     },
     {
       "type": "table",
-      "headers": ["Transition", "Setup type", "Risk"],
+      "headers": [
+        "Transition",
+        "Setup type",
+        "Risk"
+      ],
       "rows": [
-        ["Markdown → Accumulation", "Reversal setups at major support; spring patterns", "Catching falling knife if markdown continues"],
-        ["Accumulation → Markup", "Breakout trades from the range; pullback to broken range as support", "False breakouts (markups that fizzle)"],
-        ["Markup → Distribution", "Reversal setups at major resistance; upthrust patterns", "Selling early during continuation of markup"],
-        ["Distribution → Markdown", "Breakdown trades from the range; bounce to broken range as resistance", "False breakdowns (deviation back into the range)"]
+        [
+          "Markdown → Accumulation",
+          "Reversal setups at major support; spring patterns",
+          "Catching falling knife if markdown continues"
+        ],
+        [
+          "Accumulation → Markup",
+          "Breakout trades from the range; pullback to broken range as support",
+          "False breakouts (markups that fizzle)"
+        ],
+        [
+          "Markup → Distribution",
+          "Reversal setups at major resistance; upthrust patterns",
+          "Selling early during continuation of markup"
+        ],
+        [
+          "Distribution → Markdown",
+          "Breakdown trades from the range; bounce to broken range as resistance",
+          "False breakdowns (deviation back into the range)"
+        ]
       ]
     },
     {

@@ -19,14 +19,44 @@
       "content": "The Fear & Greed scale"
     },
     {
+      "type": "image",
+      "src": "charts/41-fear-greed-zones.png",
+      "alt": "Fear and Greed Index scale with color-coded zones — Extreme Fear at bottom (red, BUY ZONE), Extreme Greed at top (green, SELL ZONE)",
+      "caption": "Under 25 = contrarian buy zone. Over 75 = contrarian sell zone. Middle 25-75 = neutral, trade technicals normally."
+    },
+    {
       "type": "table",
-      "headers": ["Range", "Label", "Historical interpretation"],
+      "headers": [
+        "Range",
+        "Label",
+        "Historical interpretation"
+      ],
       "rows": [
-        ["0-25", "<strong>Extreme Fear</strong>", "Best buying opportunities historically. Capitulation events; everyone wants to sell. Contrarian LONG signal."],
-        ["25-45", "Fear", "Moderate caution. Some long opportunities forming."],
-        ["45-55", "Neutral", "No strong sentiment signal. Trade technicals normally."],
-        ["55-75", "Greed", "Caution increasing. Don't size up longs aggressively."],
-        ["75-100", "<strong>Extreme Greed</strong>", "Historically the WORST buying opportunity. Euphoria peaks; everyone wants to buy. Contrarian SHORT signal."]
+        [
+          "0-25",
+          "<strong>Extreme Fear</strong>",
+          "Best buying opportunities historically. Capitulation events; everyone wants to sell. Contrarian LONG signal."
+        ],
+        [
+          "25-45",
+          "Fear",
+          "Moderate caution. Some long opportunities forming."
+        ],
+        [
+          "45-55",
+          "Neutral",
+          "No strong sentiment signal. Trade technicals normally."
+        ],
+        [
+          "55-75",
+          "Greed",
+          "Caution increasing. Don't size up longs aggressively."
+        ],
+        [
+          "75-100",
+          "<strong>Extreme Greed</strong>",
+          "Historically the WORST buying opportunity. Euphoria peaks; everyone wants to buy. Contrarian SHORT signal."
+        ]
       ]
     },
     {
@@ -63,12 +93,32 @@
     },
     {
       "type": "table",
-      "headers": ["F&G level", "Technical setup", "Trade quality"],
+      "headers": [
+        "F&G level",
+        "Technical setup",
+        "Trade quality"
+      ],
       "rows": [
-        ["Extreme Fear (15)", "Major HTF support + bullish reversal candle + volume + RSI bullish divergence", "A+ LONG setup — historically these zones produce exceptional R:R"],
-        ["Extreme Greed (88)", "Major HTF resistance + bearish reversal candle + volume + RSI bearish divergence", "A+ SHORT setup — late-cycle topping patterns often play out"],
-        ["Neutral F&G (55)", "Any technical setup", "Trade normally; F&G provides no extra signal"],
-        ["Extreme Fear (12) + no technical signal", "Just the F&G low, nothing else", "Wait. F&G alone doesn't time the bottom."]
+        [
+          "Extreme Fear (15)",
+          "Major HTF support + bullish reversal candle + volume + RSI bullish divergence",
+          "A+ LONG setup — historically these zones produce exceptional R:R"
+        ],
+        [
+          "Extreme Greed (88)",
+          "Major HTF resistance + bearish reversal candle + volume + RSI bearish divergence",
+          "A+ SHORT setup — late-cycle topping patterns often play out"
+        ],
+        [
+          "Neutral F&G (55)",
+          "Any technical setup",
+          "Trade normally; F&G provides no extra signal"
+        ],
+        [
+          "Extreme Fear (12) + no technical signal",
+          "Just the F&G low, nothing else",
+          "Wait. F&G alone doesn't time the bottom."
+        ]
       ]
     },
     {

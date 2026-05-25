@@ -11,6 +11,12 @@
       "content": "Spring — the accumulation finale"
     },
     {
+      "type": "image",
+      "src": "charts/32-spring-upthrust.png",
+      "alt": "Spring pattern at range support (left) and Upthrust at range resistance (right)",
+      "caption": "Spring: wick below support, close back above = accumulation completes. Upthrust: mirror at distribution. Tight SL + wide TP = exceptional R:R."
+    },
+    {
       "type": "text",
       "content": "<p>A SPRING occurs at the end of an accumulation phase. The pattern:</p><ol><li>Price has been ranging in an accumulation zone (e.g., $48K-$55K) for weeks.</li><li>Price WICKS BELOW the range support ($48K → $46K, brief).</li><li>Volume spikes during the wick — retail stops fire and panic-sellers exit.</li><li>Price reverses sharply, CLOSING BACK ABOVE the range support.</li><li>The candle prints as a long lower wick (similar to a hammer but at the range bottom).</li><li>Often followed by a strong markup beginning within days.</li></ol><p>The spring is smart money's final accumulation move. They INDUCED retail to sell by wicking below the obvious stop level, then absorbed all those sales at favorable prices. Their accumulation completes; markup follows.</p>"
     },
@@ -26,13 +32,31 @@
     },
     {
       "type": "table",
-      "headers": ["Spring requirement", "Detail"],
+      "headers": [
+        "Spring requirement",
+        "Detail"
+      ],
       "rows": [
-        ["<strong>Setup context</strong>", "Must be at the bottom of an established accumulation range (multiple touches of support already)"],
-        ["<strong>The wick</strong>", "Clear break BELOW the range support, with the candle's lower wick noticeably extending below the level"],
-        ["<strong>Volume on the wick</strong>", "Above-average volume during the wick — stops firing + capitulation selling"],
-        ["<strong>The close</strong>", "Candle must CLOSE BACK ABOVE the range support. The wick is the spring; the close confirms it"],
-        ["<strong>Follow-through</strong>", "Next 1-3 candles confirm the reversal — price holds above support and starts moving up"]
+        [
+          "<strong>Setup context</strong>",
+          "Must be at the bottom of an established accumulation range (multiple touches of support already)"
+        ],
+        [
+          "<strong>The wick</strong>",
+          "Clear break BELOW the range support, with the candle's lower wick noticeably extending below the level"
+        ],
+        [
+          "<strong>Volume on the wick</strong>",
+          "Above-average volume during the wick — stops firing + capitulation selling"
+        ],
+        [
+          "<strong>The close</strong>",
+          "Candle must CLOSE BACK ABOVE the range support. The wick is the spring; the close confirms it"
+        ],
+        [
+          "<strong>Follow-through</strong>",
+          "Next 1-3 candles confirm the reversal — price holds above support and starts moving up"
+        ]
       ]
     },
     {
@@ -49,14 +73,42 @@
     },
     {
       "type": "table",
-      "headers": ["Element", "Spring (bullish)", "Upthrust (bearish)"],
+      "headers": [
+        "Element",
+        "Spring (bullish)",
+        "Upthrust (bearish)"
+      ],
       "rows": [
-        ["Phase context", "End of accumulation", "End of distribution"],
-        ["Direction of wick", "Below range support", "Above range resistance"],
-        ["What gets triggered", "Long stops (sell orders fire)", "Short stops (buy orders fire) + FOMO breakout buyers"],
-        ["Volume signature", "Spike on the wick — capitulation", "Spike on the wick — FOMO chase"],
-        ["Confirmation", "Close back above range support", "Close back below range resistance"],
-        ["What follows", "Markup phase (bullish trend)", "Markdown phase (bearish trend)"]
+        [
+          "Phase context",
+          "End of accumulation",
+          "End of distribution"
+        ],
+        [
+          "Direction of wick",
+          "Below range support",
+          "Above range resistance"
+        ],
+        [
+          "What gets triggered",
+          "Long stops (sell orders fire)",
+          "Short stops (buy orders fire) + FOMO breakout buyers"
+        ],
+        [
+          "Volume signature",
+          "Spike on the wick — capitulation",
+          "Spike on the wick — FOMO chase"
+        ],
+        [
+          "Confirmation",
+          "Close back above range support",
+          "Close back below range resistance"
+        ],
+        [
+          "What follows",
+          "Markup phase (bullish trend)",
+          "Markdown phase (bearish trend)"
+        ]
       ]
     },
     {

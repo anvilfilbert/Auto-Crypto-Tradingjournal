@@ -11,13 +11,44 @@
       "content": "The four dimensions"
     },
     {
+      "type": "image",
+      "src": "charts/51-readiness-traffic-light.png",
+      "alt": "Pre-session readiness traffic-light grid: Sleep / Mood / Recent P&L / Preparation, each with green/yellow/red criteria",
+      "caption": "Four-dimension check. ALL GREEN = full trading. Mixed = reduced mode. ANY RED = no trading today."
+    },
+    {
       "type": "table",
-      "headers": ["Dimension", "Green = ", "Yellow = ", "Red = "],
+      "headers": [
+        "Dimension",
+        "Green = ",
+        "Yellow = ",
+        "Red = "
+      ],
       "rows": [
-        ["<strong>Sleep</strong>", "7+ hours, woke up rested", "5-7 hours, somewhat tired", "Under 5 hours, exhausted or hung over"],
-        ["<strong>Mood</strong>", "Calm, focused, neutral", "Stressed but functional", "Angry, anxious, depressed, emotionally charged"],
-        ["<strong>Recent P&L</strong>", "Within normal range; not in drawdown", "Slight drawdown but manageable", "Down 5%+ from peak; on tilt risk"],
-        ["<strong>Preparation</strong>", "Reviewed setups + macro context; have a plan", "Some prep but rushed", "Zero prep, jumping in cold"]
+        [
+          "<strong>Sleep</strong>",
+          "7+ hours, woke up rested",
+          "5-7 hours, somewhat tired",
+          "Under 5 hours, exhausted or hung over"
+        ],
+        [
+          "<strong>Mood</strong>",
+          "Calm, focused, neutral",
+          "Stressed but functional",
+          "Angry, anxious, depressed, emotionally charged"
+        ],
+        [
+          "<strong>Recent P&L</strong>",
+          "Within normal range; not in drawdown",
+          "Slight drawdown but manageable",
+          "Down 5%+ from peak; on tilt risk"
+        ],
+        [
+          "<strong>Preparation</strong>",
+          "Reviewed setups + macro context; have a plan",
+          "Some prep but rushed",
+          "Zero prep, jumping in cold"
+        ]
       ]
     },
     {

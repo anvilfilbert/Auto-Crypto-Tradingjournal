@@ -16,12 +16,32 @@
     },
     {
       "type": "table",
-      "headers": ["Gap type", "Description", "Common outcome"],
+      "headers": [
+        "Gap type",
+        "Description",
+        "Common outcome"
+      ],
       "rows": [
-        ["<strong>Gap up</strong>", "Open above previous close, leaving empty space below", "Often gets 'filled' (price returns to that empty space) within hours-days"],
-        ["<strong>Gap down</strong>", "Open below previous close, leaving empty space above", "Same — often filled"],
-        ["<strong>Breakaway gap</strong>", "Gap that launches a new trend (e.g., on major news)", "Less likely to fill — trend takes over"],
-        ["<strong>Exhaustion gap</strong>", "Gap at the end of a long trend, marking climax", "Usually gets filled quickly — trend was over"]
+        [
+          "<strong>Gap up</strong>",
+          "Open above previous close, leaving empty space below",
+          "Often gets 'filled' (price returns to that empty space) within hours-days"
+        ],
+        [
+          "<strong>Gap down</strong>",
+          "Open below previous close, leaving empty space above",
+          "Same — often filled"
+        ],
+        [
+          "<strong>Breakaway gap</strong>",
+          "Gap that launches a new trend (e.g., on major news)",
+          "Less likely to fill — trend takes over"
+        ],
+        [
+          "<strong>Exhaustion gap</strong>",
+          "Gap at the end of a long trend, marking climax",
+          "Usually gets filled quickly — trend was over"
+        ]
       ]
     },
     {
@@ -43,15 +63,33 @@
       "content": "How to identify an FVG"
     },
     {
+      "type": "image",
+      "src": "charts/08-fvg-example.png",
+      "alt": "Three-candle pattern showing a Fair Value Gap imbalance zone",
+      "caption": "Bullish FVG: zone between candle 1's high and candle 3's low is the imbalance. Price often returns to fill."
+    },
+    {
       "type": "text",
       "content": "<p>Look at any three consecutive candles. Check whether there's empty space between candle 1's wick and candle 3's wick — a price zone the middle candle blew through without surrounding candles covering.</p>"
     },
     {
       "type": "table",
-      "headers": ["FVG type", "Three-candle pattern", "What it means"],
+      "headers": [
+        "FVG type",
+        "Three-candle pattern",
+        "What it means"
+      ],
       "rows": [
-        ["<strong>Bullish FVG</strong>", "Candle 1 (any). Candle 2 strong bullish, creates a gap upward. Candle 3 opens higher than candle 1's HIGH.", "Price ran up so fast that the range between candle 1's high and candle 3's low has imbalance. That zone is an unfilled bullish FVG."],
-        ["<strong>Bearish FVG</strong>", "Candle 1 (any). Candle 2 strong bearish, creates a gap downward. Candle 3 opens lower than candle 1's LOW.", "Price dropped so fast that the range between candle 1's low and candle 3's high has imbalance. That zone is an unfilled bearish FVG."]
+        [
+          "<strong>Bullish FVG</strong>",
+          "Candle 1 (any). Candle 2 strong bullish, creates a gap upward. Candle 3 opens higher than candle 1's HIGH.",
+          "Price ran up so fast that the range between candle 1's high and candle 3's low has imbalance. That zone is an unfilled bullish FVG."
+        ],
+        [
+          "<strong>Bearish FVG</strong>",
+          "Candle 1 (any). Candle 2 strong bearish, creates a gap downward. Candle 3 opens lower than candle 1's LOW.",
+          "Price dropped so fast that the range between candle 1's low and candle 3's high has imbalance. That zone is an unfilled bearish FVG."
+        ]
       ]
     },
     {
@@ -66,13 +104,31 @@
     },
     {
       "type": "table",
-      "headers": ["Context", "FVG behavior"],
+      "headers": [
+        "Context",
+        "FVG behavior"
+      ],
       "rows": [
-        ["FVG in a strong trending market", "Likely to fill on pullbacks; provides reliable entry zones"],
-        ["FVG at the start of a new trend (post-reversal)", "Strong support/resistance zone — often defended"],
-        ["FVG in chop / sideways market", "Less reliable — price meanders and FVGs may stay unfilled indefinitely"],
-        ["FVG during major news / event", "Less reliable — fundamental drivers can override technical levels"],
-        ["FVG that's already been filled once", "Lower probability of being defended again"]
+        [
+          "FVG in a strong trending market",
+          "Likely to fill on pullbacks; provides reliable entry zones"
+        ],
+        [
+          "FVG at the start of a new trend (post-reversal)",
+          "Strong support/resistance zone — often defended"
+        ],
+        [
+          "FVG in chop / sideways market",
+          "Less reliable — price meanders and FVGs may stay unfilled indefinitely"
+        ],
+        [
+          "FVG during major news / event",
+          "Less reliable — fundamental drivers can override technical levels"
+        ],
+        [
+          "FVG that's already been filled once",
+          "Lower probability of being defended again"
+        ]
       ]
     },
     {

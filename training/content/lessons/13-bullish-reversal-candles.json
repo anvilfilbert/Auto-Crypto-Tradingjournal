@@ -11,17 +11,43 @@
       "content": "Pattern #1 — Hammer"
     },
     {
+      "type": "image",
+      "src": "charts/02-bullish-reversal-patterns.png",
+      "alt": "Four bullish reversal candle patterns side by side",
+      "caption": "All four bullish reversal patterns. Notice each requires a small body + rejection of the prior direction."
+    },
+    {
       "type": "text",
       "content": "<p><strong>What it looks like:</strong> A candle with a small body near the top of the candle's range, and a long lower wick at least 2× the body length. Color of body can be green or red — green is slightly more bullish but the shape is the key signal.</p><p><strong>What it means:</strong> Sellers pushed price down hard during the period (creating the long lower wick). Then buyers absorbed all that selling and pushed price back up to close near the period's high. The down-attempt was REJECTED.</p>"
     },
     {
       "type": "table",
-      "headers": ["Element", "Specification", "Why"],
+      "headers": [
+        "Element",
+        "Specification",
+        "Why"
+      ],
       "rows": [
-        ["Body size", "Small — top 30% of candle's range", "Most of the range was the failed downward attempt"],
-        ["Lower wick", "At least 2× body length, ideally 3×+", "The longer the rejection, the stronger the signal"],
-        ["Upper wick", "Minimal or none", "Buyers were in control by the close"],
-        ["Context required", "MUST form after a downtrend at or near support", "Random hammers in chop are noise"]
+        [
+          "Body size",
+          "Small — top 30% of candle's range",
+          "Most of the range was the failed downward attempt"
+        ],
+        [
+          "Lower wick",
+          "At least 2× body length, ideally 3×+",
+          "The longer the rejection, the stronger the signal"
+        ],
+        [
+          "Upper wick",
+          "Minimal or none",
+          "Buyers were in control by the close"
+        ],
+        [
+          "Context required",
+          "MUST form after a downtrend at or near support",
+          "Random hammers in chop are noise"
+        ]
       ]
     },
     {
@@ -40,13 +66,37 @@
     },
     {
       "type": "table",
-      "headers": ["Element", "Specification", "Why"],
+      "headers": [
+        "Element",
+        "Specification",
+        "Why"
+      ],
       "rows": [
-        ["First candle", "Bearish (red), continuation of recent downtrend", "Sets up the reversal"],
-        ["Second candle", "Bullish (green), body engulfs first candle's body completely", "The reversal magnitude is the signal"],
-        ["Second candle's open", "AT OR BELOW first candle's close", "Confirms the gap-down attempt that got rejected"],
-        ["Second candle's close", "ABOVE first candle's open", "Net effect: completely undone the prior candle"],
-        ["Volume", "Higher on the second candle, ideally", "Confirms real participation in the reversal"]
+        [
+          "First candle",
+          "Bearish (red), continuation of recent downtrend",
+          "Sets up the reversal"
+        ],
+        [
+          "Second candle",
+          "Bullish (green), body engulfs first candle's body completely",
+          "The reversal magnitude is the signal"
+        ],
+        [
+          "Second candle's open",
+          "AT OR BELOW first candle's close",
+          "Confirms the gap-down attempt that got rejected"
+        ],
+        [
+          "Second candle's close",
+          "ABOVE first candle's open",
+          "Net effect: completely undone the prior candle"
+        ],
+        [
+          "Volume",
+          "Higher on the second candle, ideally",
+          "Confirms real participation in the reversal"
+        ]
       ]
     },
     {
@@ -63,11 +113,27 @@
     },
     {
       "type": "table",
-      "headers": ["Candle", "Shape", "What it tells you"],
+      "headers": [
+        "Candle",
+        "Shape",
+        "What it tells you"
+      ],
       "rows": [
-        ["Candle 1", "Large bearish body", "Downtrend continuation"],
-        ["Candle 2 (the 'star')", "Small body, often with gap. Color doesn't matter much.", "Indecision — sellers lost control but buyers haven't taken over yet"],
-        ["Candle 3", "Large bullish body closing in upper half (ideally upper third) of candle 1's body", "Buyers decisively took control"]
+        [
+          "Candle 1",
+          "Large bearish body",
+          "Downtrend continuation"
+        ],
+        [
+          "Candle 2 (the 'star')",
+          "Small body, often with gap. Color doesn't matter much.",
+          "Indecision — sellers lost control but buyers haven't taken over yet"
+        ],
+        [
+          "Candle 3",
+          "Large bullish body closing in upper half (ideally upper third) of candle 1's body",
+          "Buyers decisively took control"
+        ]
       ]
     },
     {
@@ -90,12 +156,37 @@
     },
     {
       "type": "table",
-      "headers": ["Pattern", "Number of candles", "Typical strength", "Best context"],
+      "headers": [
+        "Pattern",
+        "Number of candles",
+        "Typical strength",
+        "Best context"
+      ],
       "rows": [
-        ["Hammer", "1", "Moderate", "At clear support after sustained downtrend"],
-        ["Piercing Line", "2", "Moderate-Strong", "At support with confirmed candle 2"],
-        ["Bullish Engulfing", "2", "Strong", "At support or after extended downtrend"],
-        ["Morning Star", "3", "Very Strong", "At major support, end of multi-day downtrend"]
+        [
+          "Hammer",
+          "1",
+          "Moderate",
+          "At clear support after sustained downtrend"
+        ],
+        [
+          "Piercing Line",
+          "2",
+          "Moderate-Strong",
+          "At support with confirmed candle 2"
+        ],
+        [
+          "Bullish Engulfing",
+          "2",
+          "Strong",
+          "At support or after extended downtrend"
+        ],
+        [
+          "Morning Star",
+          "3",
+          "Very Strong",
+          "At major support, end of multi-day downtrend"
+        ]
       ]
     },
     {

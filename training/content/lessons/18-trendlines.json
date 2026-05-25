@@ -12,17 +12,43 @@
     },
     {
       "type": "table",
-      "headers": ["Trendline type", "How to draw", "What it represents"],
+      "headers": [
+        "Trendline type",
+        "How to draw",
+        "What it represents"
+      ],
       "rows": [
-        ["<strong>Uptrend support line</strong>", "Diagonal line connecting at least two consecutive higher swing LOWS, sloped upward", "Buyers stepping in at progressively higher prices — dynamic support that follows the trend"],
-        ["<strong>Downtrend resistance line</strong>", "Diagonal line connecting at least two consecutive lower swing HIGHS, sloped downward", "Sellers active at progressively lower prices — dynamic resistance"],
-        ["<strong>Horizontal trendline (range)</strong>", "Horizontal line at top (resistance) or bottom (support) of a sideways range", "Effectively the same as S/R from lesson 17"],
-        ["<strong>Channel lines</strong>", "Two parallel trendlines — one along swing highs, one along swing lows", "Defines the trending range — price oscillates between the lines"]
+        [
+          "<strong>Uptrend support line</strong>",
+          "Diagonal line connecting at least two consecutive higher swing LOWS, sloped upward",
+          "Buyers stepping in at progressively higher prices — dynamic support that follows the trend"
+        ],
+        [
+          "<strong>Downtrend resistance line</strong>",
+          "Diagonal line connecting at least two consecutive lower swing HIGHS, sloped downward",
+          "Sellers active at progressively lower prices — dynamic resistance"
+        ],
+        [
+          "<strong>Horizontal trendline (range)</strong>",
+          "Horizontal line at top (resistance) or bottom (support) of a sideways range",
+          "Effectively the same as S/R from lesson 17"
+        ],
+        [
+          "<strong>Channel lines</strong>",
+          "Two parallel trendlines — one along swing highs, one along swing lows",
+          "Defines the trending range — price oscillates between the lines"
+        ]
       ]
     },
     {
       "type": "heading",
       "content": "The 3-touch rule"
+    },
+    {
+      "type": "image",
+      "src": "charts/07-trendlines.png",
+      "alt": "Uptrend and downtrend trendlines with marked touch points",
+      "caption": "Uptrend support trendline (left) connects higher lows. Downtrend resistance (right) connects lower highs. Touches marked in green/red."
     },
     {
       "type": "callout",
@@ -40,13 +66,31 @@
     },
     {
       "type": "table",
-      "headers": ["Wrong way", "Right way"],
+      "headers": [
+        "Wrong way",
+        "Right way"
+      ],
       "rows": [
-        ["Connecting any two points that look 'about right'", "Use clear swing pivots — points where price had a meaningful reaction (3+ candles in opposite direction after)"],
-        ["Forcing a line through 4 points even if it requires bending or fudging", "If 4 points don't fit cleanly, the line isn't real. Either pick the 3 best, or there's no trendline"],
-        ["Using only wicks", "Use bodies. Closes near the line are more meaningful than brief wicks touching it"],
-        ["Drawing a trendline through points 1 month apart with no relationship", "Use recent, related swing points. Old structure rarely produces meaningful trendlines"],
-        ["Drawing 10 trendlines on a single chart", "2-4 meaningful trendlines per chart maximum"]
+        [
+          "Connecting any two points that look 'about right'",
+          "Use clear swing pivots — points where price had a meaningful reaction (3+ candles in opposite direction after)"
+        ],
+        [
+          "Forcing a line through 4 points even if it requires bending or fudging",
+          "If 4 points don't fit cleanly, the line isn't real. Either pick the 3 best, or there's no trendline"
+        ],
+        [
+          "Using only wicks",
+          "Use bodies. Closes near the line are more meaningful than brief wicks touching it"
+        ],
+        [
+          "Drawing a trendline through points 1 month apart with no relationship",
+          "Use recent, related swing points. Old structure rarely produces meaningful trendlines"
+        ],
+        [
+          "Drawing 10 trendlines on a single chart",
+          "2-4 meaningful trendlines per chart maximum"
+        ]
       ]
     },
     {
@@ -81,11 +125,27 @@
     },
     {
       "type": "table",
-      "headers": ["Channel type", "Slope", "Trade approach"],
+      "headers": [
+        "Channel type",
+        "Slope",
+        "Trade approach"
+      ],
       "rows": [
-        ["<strong>Ascending channel</strong>", "Sloped upward — uptrend with regular pullbacks", "Buy at lower line (support); sell at upper line (resistance); breakouts go in trend direction"],
-        ["<strong>Descending channel</strong>", "Sloped downward — downtrend with regular bounces", "Short at upper line; cover at lower line; breakdowns continue trend"],
-        ["<strong>Horizontal channel</strong>", "Sideways — range-bound", "Buy at lower line; sell at upper line; breakouts go either direction"]
+        [
+          "<strong>Ascending channel</strong>",
+          "Sloped upward — uptrend with regular pullbacks",
+          "Buy at lower line (support); sell at upper line (resistance); breakouts go in trend direction"
+        ],
+        [
+          "<strong>Descending channel</strong>",
+          "Sloped downward — downtrend with regular bounces",
+          "Short at upper line; cover at lower line; breakdowns continue trend"
+        ],
+        [
+          "<strong>Horizontal channel</strong>",
+          "Sideways — range-bound",
+          "Buy at lower line; sell at upper line; breakouts go either direction"
+        ]
       ]
     },
     {

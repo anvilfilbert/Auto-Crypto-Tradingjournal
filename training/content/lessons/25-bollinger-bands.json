@@ -12,11 +12,27 @@
     },
     {
       "type": "table",
-      "headers": ["Component", "Formula", "What it represents"],
+      "headers": [
+        "Component",
+        "Formula",
+        "What it represents"
+      ],
       "rows": [
-        ["Middle band", "20-period SMA (default)", "The mean — average price over recent period"],
-        ["Upper band", "Middle + 2 × standard deviation", "Statistical upper limit — most price action stays below"],
-        ["Lower band", "Middle - 2 × standard deviation", "Statistical lower limit — most price action stays above"]
+        [
+          "Middle band",
+          "20-period SMA (default)",
+          "The mean — average price over recent period"
+        ],
+        [
+          "Upper band",
+          "Middle + 2 × standard deviation",
+          "Statistical upper limit — most price action stays below"
+        ],
+        [
+          "Lower band",
+          "Middle - 2 × standard deviation",
+          "Statistical lower limit — most price action stays above"
+        ]
       ]
     },
     {
@@ -29,12 +45,32 @@
     },
     {
       "type": "table",
-      "headers": ["Band state", "What it shows", "Trade implication"],
+      "headers": [
+        "Band state",
+        "What it shows",
+        "Trade implication"
+      ],
       "rows": [
-        ["<strong>Wide bands</strong>", "High volatility — recent price has been swinging widely", "Wait for contraction or trade existing trend; mean-reversion harder"],
-        ["<strong>Squeezed bands (narrow)</strong>", "Low volatility — market is unusually calm", "Expansion incoming — set up for breakout in either direction"],
-        ["<strong>Price riding upper band</strong>", "Strong uptrend — momentum keeps pushing price to upper extreme", "Don't short the band touch; trend is strong"],
-        ["<strong>Price riding lower band</strong>", "Strong downtrend — momentum keeps pushing price to lower extreme", "Don't long the band touch; trend is strong"]
+        [
+          "<strong>Wide bands</strong>",
+          "High volatility — recent price has been swinging widely",
+          "Wait for contraction or trade existing trend; mean-reversion harder"
+        ],
+        [
+          "<strong>Squeezed bands (narrow)</strong>",
+          "Low volatility — market is unusually calm",
+          "Expansion incoming — set up for breakout in either direction"
+        ],
+        [
+          "<strong>Price riding upper band</strong>",
+          "Strong uptrend — momentum keeps pushing price to upper extreme",
+          "Don't short the band touch; trend is strong"
+        ],
+        [
+          "<strong>Price riding lower band</strong>",
+          "Strong downtrend — momentum keeps pushing price to lower extreme",
+          "Don't long the band touch; trend is strong"
+        ]
       ]
     },
     {
@@ -42,6 +78,12 @@
       "kind": "key",
       "title": "The squeeze — the most useful BB signal",
       "content": "<p>Bands compressing dramatically signals that volatility has collapsed. Markets don't stay calm forever. The squeeze almost always resolves with an EXPANSION — bands widen rapidly as a directional move develops.</p><p>The direction of the expansion isn't predicted by the squeeze itself. The squeeze just tells you a move is coming. You combine with other signals (volume, trend, key levels) to bias direction. Or trade the breakout in whichever direction confirms.</p>"
+    },
+    {
+      "type": "image",
+      "src": "charts/23-bollinger-squeeze.png",
+      "alt": "Bollinger bands showing low-volatility squeeze followed by explosive expansion",
+      "caption": "Squeeze (narrow bands) precedes expansion. Direction not predicted by squeeze itself — wait for breakout to confirm."
     },
     {
       "type": "heading",
@@ -67,11 +109,27 @@
     },
     {
       "type": "table",
-      "headers": ["Strategy", "When to use", "Trade approach"],
+      "headers": [
+        "Strategy",
+        "When to use",
+        "Trade approach"
+      ],
       "rows": [
-        ["<strong>Mean reversion</strong>", "Range-bound or low-volatility markets", "Buy at lower band, sell at upper band — price tends to return to the middle"],
-        ["<strong>Trend following</strong>", "Strong trending markets — price rides the band", "Buy on pullbacks toward middle band (in uptrend); sell on pullbacks toward middle (downtrend)"],
-        ["<strong>Breakout trading</strong>", "After a squeeze", "Trade the directional move beyond the bands"]
+        [
+          "<strong>Mean reversion</strong>",
+          "Range-bound or low-volatility markets",
+          "Buy at lower band, sell at upper band — price tends to return to the middle"
+        ],
+        [
+          "<strong>Trend following</strong>",
+          "Strong trending markets — price rides the band",
+          "Buy on pullbacks toward middle band (in uptrend); sell on pullbacks toward middle (downtrend)"
+        ],
+        [
+          "<strong>Breakout trading</strong>",
+          "After a squeeze",
+          "Trade the directional move beyond the bands"
+        ]
       ]
     },
     {
@@ -94,13 +152,37 @@
     },
     {
       "type": "table",
-      "headers": ["BB signal + other signal", "What it means", "Trade quality"],
+      "headers": [
+        "BB signal + other signal",
+        "What it means",
+        "Trade quality"
+      ],
       "rows": [
-        ["Squeeze + low ATR + low volume", "Maximum calm — biggest expansions often follow", "High — wait for breakout"],
-        ["Price at lower band + RSI oversold + at support", "Strong mean-reversion long signal in ranges", "High — multi-factor confirmation"],
-        ["Price riding upper band + bullish MACD + strong volume", "Strong trend; don't fade", "Continuation likely"],
-        ["Price at upper band + bearish RSI divergence + bearish candle", "Strong reversal warning", "High — short setup forming"],
-        ["Squeeze + at key resistance + bearish bias", "Expect breakout DOWN; pre-position with limit short above current price", "Medium-High — directional bias from context"]
+        [
+          "Squeeze + low ATR + low volume",
+          "Maximum calm — biggest expansions often follow",
+          "High — wait for breakout"
+        ],
+        [
+          "Price at lower band + RSI oversold + at support",
+          "Strong mean-reversion long signal in ranges",
+          "High — multi-factor confirmation"
+        ],
+        [
+          "Price riding upper band + bullish MACD + strong volume",
+          "Strong trend; don't fade",
+          "Continuation likely"
+        ],
+        [
+          "Price at upper band + bearish RSI divergence + bearish candle",
+          "Strong reversal warning",
+          "High — short setup forming"
+        ],
+        [
+          "Squeeze + at key resistance + bearish bias",
+          "Expect breakout DOWN; pre-position with limit short above current price",
+          "Medium-High — directional bias from context"
+        ]
       ]
     },
     {
