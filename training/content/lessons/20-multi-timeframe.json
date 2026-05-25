@@ -1,0 +1,111 @@
+{
+  "slug": "20-multi-timeframe",
+  "subtitle": "A trade taken with only one timeframe is half a trade. Higher timeframes set the direction. Lower timeframes refine the entry. The 1D bias / 4H confirmation / 1H entry pattern triples your edge over single-TF trading.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Every trader looks at multiple timeframes — but most do it wrong. They flip between charts looking for whichever one confirms what they already want to trade. The right approach is structured: a specific role for each timeframe, with rules about which one dominates.</p><p>This lesson is the final piece of Tier 2. After this you'll have the complete chart-reading toolkit: candles, S/R, trendlines, structure, AND the multi-TF framework that tells you which signals to take seriously and which to ignore.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The three-timeframe framework"
+    },
+    {
+      "type": "text",
+      "content": "<p>The standard pattern uses three timeframes, each with a specific role:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Timeframe", "Role", "What you read"],
+      "rows": [
+        ["<strong>Highest TF (1D or 4H)</strong>", "<strong>BIAS</strong> — gives the primary direction. This determines whether you're looking for longs or shorts.", "Major S/R levels, big-picture market structure, dominant trend"],
+        ["<strong>Middle TF (4H or 1H)</strong>", "<strong>CONFIRMATION</strong> — confirms that current price action aligns with the higher TF bias.", "Pullback completion, structure forming in the bias direction, key levels being respected"],
+        ["<strong>Lowest TF (1H or 15m)</strong>", "<strong>ENTRY TIMING</strong> — gives the precise entry signal.", "Reversal candles, CHoCH, FVG fills, specific level reactions"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>For typical crypto perp trading, the standard is <strong>1D bias / 4H confirmation / 1H entry</strong>. For longer-term swings, scale up: <strong>1W bias / 1D confirmation / 4H entry</strong>. For scalps, scale down: <strong>4H bias / 1H confirmation / 15m entry</strong>. Same pattern, different ratios.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The cardinal rule",
+      "content": "<p><strong>Lower timeframes must align with higher timeframes for a high-probability trade.</strong></p><p>If 1D says uptrend, you should be looking for LONGS only (skip short setups). The 1D bias dominates. If you see a beautiful short setup on the 1H but the 1D is in a clear uptrend, you're trying to swim upstream. You might be right occasionally, but the win rate is much lower than trades aligned with the higher TF.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The HTF-LTF mismatch decision tree"
+    },
+    {
+      "type": "table",
+      "headers": ["1D bias", "1H signal", "What to do"],
+      "rows": [
+        ["Uptrend", "Bullish reversal at support", "<strong>TAKE</strong> — aligned. High-probability long."],
+        ["Uptrend", "Bearish reversal at resistance", "<strong>SKIP</strong> — against HTF bias. Either skip or treat as a tiny short with very tight management."],
+        ["Downtrend", "Bearish reversal at resistance", "<strong>TAKE</strong> — aligned. High-probability short."],
+        ["Downtrend", "Bullish reversal at support", "<strong>SKIP</strong> — against HTF bias. Counter-trend trade, low win rate."],
+        ["Ranging", "Either reversal at range boundaries", "<strong>TRADE EITHER</strong> — no HTF bias, both directions valid within the range."],
+        ["Strong trend, no LTF signal yet", "Wait", "Don't force. Wait for the LTF signal to form."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Practical workflow — top-down analysis"
+    },
+    {
+      "type": "text",
+      "content": "<p>Step-by-step process for a new chart:</p><ol><li><strong>Open the 1D chart.</strong> What's the market structure? HH/HL = uptrend. LH/LL = downtrend. Neither = range. Note the major S/R levels (3-5 zones).</li><li><strong>Drop to 4H.</strong> Where is price relative to the 1D structure? Pulling back to support? Bouncing toward resistance? Already broken structure? Note the most recent 4H swing high and low.</li><li><strong>Drop to 1H.</strong> Look for entry signals (candle patterns, CHoCH, FVG fills) that align with the 1D bias AND the 4H position. Time the entry precisely.</li><li><strong>Cross-check.</strong> Is the 1H signal pointing the same direction as 1D bias? If yes → consider the trade. If no → skip and wait.</li></ol><p>This takes 2-5 minutes once you have the habit. Skipping any step = trading blind on partial information.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't 'find' the bias from the LTF",
+      "content": "<p>Common mistake: trader sees a strong 1H bullish signal, then opens the 1D and SCANS FOR REASONS to confirm bullish. \"Oh look, this small support level on the 1D — that justifies the long.\"</p><p>Backwards. ALWAYS start from the highest TF and work down. The 1D tells you what direction to look for. The 1H gives you the entry. Reversing the order leads to confirmation bias — you'll always find a reason to take the trade you already want.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trade quality scoring — how many TFs align?"
+    },
+    {
+      "type": "table",
+      "headers": ["Alignment", "Description", "Trade quality"],
+      "rows": [
+        ["<strong>3 TFs aligned</strong>", "1D bias bullish + 4H bullish structure + 1H bullish entry signal", "<strong>A+ setup</strong> — bet size up (3-4% if your rules allow)"],
+        ["<strong>2 TFs aligned</strong>", "1D bias + 4H or 1H signal", "Standard setup — normal 1-2% sizing"],
+        ["<strong>1 TF aligned</strong>", "Only the entry TF shows the signal", "Marginal — usually skip"],
+        ["<strong>0 TFs aligned (counter-trend)</strong>", "Entry against the HTF bias", "Skip in nearly all cases"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "When counter-trend trades are OK (rarely)"
+    },
+    {
+      "type": "text",
+      "content": "<p>Experienced traders occasionally take counter-trend trades. Rules:</p><ul><li><strong>Major HTF level holding.</strong> Counter-trend longs in a daily downtrend ONLY if price is at major daily support (e.g., previous massive swing low + 200 daily MA + Fibonacci 0.618 + round number).</li><li><strong>Smaller size.</strong> Half the normal risk. Counter-trend has lower win rate, so adjust accordingly.</li><li><strong>Tighter SL and faster TP.</strong> Don't expect the trade to run forever — you're targeting a bounce, not a full reversal. Take profit early.</li><li><strong>The trade isn't your bread and butter.</strong> Counter-trend should be 10% of your trades or less. The other 90% trade with the HTF bias.</li></ul><p>For Tier 1 and Tier 2 audiences: <strong>don't take counter-trend trades</strong>. Stick to aligned setups. You'll trade less but more profitably. Counter-trend is a Tier 4+ skill that requires real experience reading exhaustion signals.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When the HTF is unclear"
+    },
+    {
+      "type": "text",
+      "content": "<p>Sometimes the highest TF is in a clean range or just transitioning between trends — no clear bias. What to do?</p><ul><li><strong>Drop to the next TF up</strong> and use that as bias. If 1D is unclear, check 1W.</li><li><strong>Trade as range</strong>. Both directions are valid within the range boundaries. Buy support, sell resistance, no directional bias.</li><li><strong>Sit out</strong>. \"Unclear bias\" is often the best time to NOT trade. Wait for the HTF to make a directional decision. Some traders force trades during these periods and get chopped. The patient ones wait for clarity.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>Top-down analysis on BTC:</p><p><strong>1D chart:</strong> Clean uptrend. HH/HL confirmed. Most recent HH at $66,000. Most recent HL at $62,000. Currently at $63,500 in a pullback. Major support zone $60,500-$62,000. Major resistance $66,000.</p><p><strong>4H chart:</strong> Pulling back within the 1D uptrend. Most recent 4H swing low at $62,800 (within the HL zone of 1D). 4H structure is mixed — could be forming a new HL here.</p><p><strong>1H chart:</strong> Price is bouncing at $62,800. Last 4 candles show: bearish, bearish, bullish hammer at support, bullish engulfing on above-average volume. This is a 1H bullish reversal signal at a level that aligns with the 4H pullback bottom and the 1D HL zone.</p><p><strong>Trade decision:</strong> 3 TFs aligned bullish. 1D uptrend ✓. 4H pullback completing at support ✓. 1H reversal pattern at the level ✓. This is an A+ setup.</p><ul><li><strong>Entry:</strong> Limit BUY at $63,100 (just above the engulfing candle's close)</li><li><strong>SL:</strong> $62,300 (below the hammer's low + below the structural 4H low)</li><li><strong>TP1:</strong> $65,500 (just below 1D resistance at $66K)</li><li><strong>TP2:</strong> $68,000 (next 1D HH potential)</li></ul><p>R:R ≈ 1:3 to TP1, 1:6 to TP2. Three TFs aligned = consider sizing up (2-3% risk instead of 1%) if your rules allow.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Always do top-down.</strong> 1D → 4H → 1H. Start with HTF, work down. Never reverse the order.</li><li><strong>Lower TFs must align with higher.</strong> If 1D says uptrend, only take longs. If 1D says downtrend, only take shorts. Range = either direction valid.</li><li><strong>Trade quality = TF alignment count.</strong> 3 TFs aligned = A+ setup, consider sizing up. 1 TF aligned = marginal, usually skip.</li></ol><p>You've finished the core chart-reading skills. The Tier 2 Final tests integration of all 9 lessons. Then Tier 3 starts with indicators — but you already have the foundation that makes indicators actually useful instead of cluttering noise.</p>"
+    }
+  ]
+}

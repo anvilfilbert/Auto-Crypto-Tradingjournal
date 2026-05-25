@@ -1,0 +1,123 @@
+id: "17"
+lesson_id: 17
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "What makes a price level act as 'support' or 'resistance'?"
+    type: mcq
+    choices:
+      - "Random chance — S/R is just a coincidence."
+      - "Past buying/selling interest at that level. Traders remember and react there. Orders accumulate, making the level self-reinforcing."
+      - "Exchange rules."
+      - "Government regulation."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "S/R works because of memory + commitment. Traders who acted at a level before will act there again. Orders cluster. The cumulative behavior creates real liquidity, which then attracts more reaction. It's psychological + structural, not magical."
+
+  - id: q2
+    text: "Which qualifies as a HIGH-RELIABILITY S/R level?"
+    type: mcq
+    choices:
+      - "A random price you noticed once."
+      - "A swing high + round number + Fibonacci 0.618 + 200 MA all aligned at roughly the same price. Multiple confluences make it a major level many groups of traders watch."
+      - "Just one Fibonacci level by itself."
+      - "Last Wednesday's closing price."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Confluence is the strength multiplier. One indicator's number is weak — only the traders using THAT indicator care. When 4-5 independent things mark the same level, multiple trader populations are watching — and the level becomes a self-fulfilling magnet for reactions."
+
+  - id: q3
+    text: "How should you DRAW an S/R level on the chart?"
+    type: mcq
+    choices:
+      - "A perfectly precise single line at the exact pixel of the high."
+      - "A zone — markets are messy, exact prices vary. A zone of $58,150-$58,400 covering multiple touches is more useful than a line at exactly $58,275."
+      - "Draw lines at every minor pivot."
+      - "Diagonal only, never horizontal."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "S/R is zones, not pixel-perfect lines. Markets react in ranges of a few percent. Drawing zones acknowledges this reality — and gives your entries and SLs realistic buffer. A trade-grade chart has 3-6 well-defined zones, not 30 hairline lines."
+
+  - id: q4
+    text: "A clean support level at $58,000 just BROKE (price closed at $57,500). What's the smartest expectation for the next move?"
+    type: mcq
+    choices:
+      - "Bounce back up — support always holds."
+      - "POLARITY FLIP — the broken support often becomes resistance on a retest. Wait for a pullback to $58,000, then watch for rejection (short opportunity)."
+      - "Massive rally."
+      - "Continue dropping forever, no bounces ever."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Polarity flip is one of the most reliable concepts in trading. Broken support → resistance. Broken resistance → support. The level still matters; just from the other side. Trapped longs from above defend their breakeven; new shorts add at the cleanest level. The retest-and-rejection pattern often produces excellent risk:reward shorts."
+
+  - id: q5
+    text: "Why do BEGINNERS often draw 20-30 S/R lines on a single chart, and why is this bad?"
+    type: mcq
+    choices:
+      - "More lines = more accurate."
+      - "It's a common trap — every price 'looks like' S/R if you squint. Result: chart becomes meaningless noise; every price is 'near support'. Cure: draw only 3-6 highest-conviction zones with clear confluences."
+      - "It's required for the brokerage software."
+      - "More lines mean better trading."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Overdrawing is the classic beginner mistake. The point of S/R is to identify the FEW levels that really matter. If everything is potentially S/R, nothing is. Filter ruthlessly: only zones with multiple confluences + historical reactions + ideally higher TF + volume confirmation."
+
+  - id: q6
+    text: "Higher timeframe S/R vs lower timeframe S/R — which has more weight?"
+    type: mcq
+    choices:
+      - "Lower TF — faster signals."
+      - "HIGHER TF — represents more participation, more capital, more time. A daily S/R outweighs a 1-hour S/R. Always start drawing from highest TF you trade."
+      - "Same weight."
+      - "Whichever was drawn first."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Larger timeframes integrate more trading volume and more participants. A level that has reacted on the daily/weekly is institutional-grade. A level that only matters on the 5-minute might be noise. Start with weekly/daily levels, then work down to your trading timeframe. Lower TFs respect higher TF S/R, not the other way around."
+
+  - id: q7
+    text: "Price approaches established support in an uptrend, with a bullish reversal candle forming on above-average volume. The classic trade is:"
+    type: mcq
+    choices:
+      - "SHORT — fight the level."
+      - "BOUNCE TRADE — limit BUY just above support, SL below the zone, TP at next resistance. The level + reversal pattern + volume confluence is high probability."
+      - "Buy options on a different asset."
+      - "Wait until the level breaks then chase."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "This is the textbook S/R bounce setup. Established support (multiple confluences) + bullish reversal candle (lesson 13) + volume confirmation = three independent signals aligning. Trade WITH the level, not against it. SL below the zone gives clean invalidation if the bounce fails."
+
+  - id: q8
+    text: "A support level has been touched 12 times over 4 weeks. What's the smartest interpretation?"
+    type: mcq
+    choices:
+      - "The level is becoming stronger with each touch."
+      - "The level is being WEAKENED — each touch consumes some of the orders that defend it. After 10+ touches, breakdown becomes increasingly likely."
+      - "Touch count doesn't matter."
+      - "12 touches guarantees the level holds forever."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "First few touches strengthen S/R (each reaction proves the level matters). But after 8-10+ touches, the orders defending the level get gradually consumed. Eventually the level breaks. This is why old, heavily-tested levels often break unexpectedly — they were already nearly exhausted. Don't assume a heavily-tested level will hold forever."
+
+  - id: q9
+    text: "When drawing S/R, should you use CLOSING prices or WICKS to mark the level?"
+    type: mcq
+    choices:
+      - "Always use wicks — they show the extremes."
+      - "Generally use CLOSING prices — they show where price was accepted by the market. Wicks show brief rejection but didn't get sustained. Closes near a level are stronger evidence than wicks touching it."
+      - "Use opening prices only."
+      - "Use both equally."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Closes show where the market actually agreed to trade. Wicks show brief moves that got immediately reversed. A level where multiple bodies CLOSED is much stronger than a level that wicks touched. Wicks count for context (they suggest the level matters) but closes are the stronger evidence of acceptance."
+
+  - id: q10
+    text: "What should you always know on every chart you trade?"
+    type: mcq
+    choices:
+      - "The exchange's CEO."
+      - "Where the next S/R level is ABOVE current price and BELOW current price — these define your TPs (where to take profit toward) and SLs (where the thesis is invalidated)."
+      - "The Sharpe ratio of every BTC trade in history."
+      - "The exact funding rate to 8 decimal places."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Always know where the next S/R is in both directions from current price. Up = your profit target. Down = where the trade goes from 'in profit' to 'thesis invalidated'. Without this you're trading blind. With it, you have defined R:R for every entry."

@@ -1,0 +1,123 @@
+id: "15"
+lesson_id: 15
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "A Doji's defining feature is:"
+    type: mcq
+    choices:
+      - "A very large body."
+      - "Open and close at essentially the same price — body is a thin horizontal line. Indecision: buyers and sellers fought to a draw."
+      - "No volume."
+      - "Two candles together."
+    correct: 1
+    topic_tag: indecision
+    explanation: "Doji = open ≈ close. The body is essentially flat. Whatever wicks exist show the failed attempts in either direction. The pattern says: neither buyers nor sellers won this period. Pure indecision."
+
+  - id: q2
+    text: "A Dragonfly Doji has body at the TOP of the candle with a long lower wick. This is essentially the same signal as:"
+    type: mcq
+    choices:
+      - "A bearish engulfing pattern."
+      - "A Hammer (just with even smaller body) — bullish rejection of lower prices, especially meaningful at support."
+      - "A morning star."
+      - "Nothing — dojis don't signal anything."
+    correct: 1
+    topic_tag: indecision
+    explanation: "Dragonfly Doji and Hammer are functionally siblings — both show buyers rejected sellers and pushed price back up. The Dragonfly's body is just smaller (essentially zero). Same trade rules apply: meaningful only at support after a downtrend, with volume confirmation."
+
+  - id: q3
+    text: "A Gravestone Doji at major resistance after a sustained uptrend is functionally similar to:"
+    type: mcq
+    choices:
+      - "A Hammer."
+      - "A Shooting Star — bearish rejection at the top, body at bottom of candle with long upper wick."
+      - "A Doji means nothing."
+      - "A bullish engulfing."
+    correct: 1
+    topic_tag: indecision
+    explanation: "Gravestone Doji is the bearish equivalent — body at bottom, long upper wick. Same logical signal as a Shooting Star: buyers rejected at the top. At resistance + after uptrend + with volume = potential reversal cue."
+
+  - id: q4
+    text: "After 5 consecutive strong bullish candles, a doji forms (no other context). What's the smartest interpretation?"
+    type: mcq
+    choices:
+      - "Strong continuation — the doji means accumulation before more upside."
+      - "Trend losing momentum — the doji's appearance after sustained strong candles is a tell. Consider tightening SL on long positions, taking partial profits. Don't add to the position."
+      - "Time to short aggressively."
+      - "Random noise — no signal value."
+    correct: 1
+    topic_tag: indecision
+    explanation: "When a strong directional run suddenly produces a doji, the trend's force is fading. The pause is a warning — often precedes a consolidation or pullback. Most useful as a defensive signal for existing longs (tighten SL, take partial), not as a fresh entry signal (need confirmation first)."
+
+  - id: q5
+    text: "You see a doji form in the middle of a 4-day sideways range, with no preceding trend and no key level nearby. What does it signal?"
+    type: mcq
+    choices:
+      - "Reversal incoming."
+      - "Strong trend signal."
+      - "Pure noise — doji in chop with no context is information-free. Skip."
+      - "Time to enter long."
+    correct: 2
+    topic_tag: indecision
+    explanation: "Indecision candles in chop = nothing. The market is already in a state of indecision (sideways range); another small candle confirms that. Useful information requires CONTRAST. Doji at a meaningful level after a trend = useful. Doji in chop = noise."
+
+  - id: q6
+    text: "In a Morning Star reversal pattern, what role does an indecision candle (often a doji) play?"
+    type: mcq
+    choices:
+      - "It's the entry signal — trade after seeing it."
+      - "It's the MIDDLE candle (the 'star'). It shows the bearish trend has lost momentum but bulls haven't taken over yet — wait for candle 3 to confirm before trading."
+      - "It's the final candle."
+      - "Indecision candles aren't part of reversal patterns."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "Morning Star: bearish → small body (often doji) → bullish. The doji IS the indecision pause between the old trend and the new direction. Critical: don't trade after the doji alone. Wait for candle 3 to confirm. Beginners often trade after candle 2 and get reversed when the downtrend resumes."
+
+  - id: q7
+    text: "BTC dropped from $66K to $58K, then prints a Dragonfly Doji exactly at $58K (a key support level) on the highest volume of the past 24 hours. What's the smartest next step?"
+    type: mcq
+    choices:
+      - "Long immediately at the doji's close."
+      - "WAIT for the next candle to confirm. If it's bullish with above-average volume → Morning-Star-like reversal sequence, trade with proper risk. If it's bearish breaking below support → thesis invalidated, skip."
+      - "Short — the down trend will continue."
+      - "Take a 5× leveraged long with all available capital."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "The doji at support with volume is the START of a potential reversal story, not the trade signal yet. Wait for the next candle. If it confirms (bullish push with volume), the multi-candle pattern is complete and you have a high-quality entry. If it denies (continued bearish push), the thesis failed — no trade. Patience > anticipation."
+
+  - id: q8
+    text: "How is the Spinning Top different from a Doji?"
+    type: mcq
+    choices:
+      - "They're identical."
+      - "Spinning Top has a small but visible body (open and close are close but not equal). Doji has open = close (essentially no body). Both signal indecision; doji is the more extreme version."
+      - "Spinning Top always means reversal."
+      - "Doji is bullish, spinning top is bearish."
+    correct: 1
+    topic_tag: indecision
+    explanation: "Spinning Top is the slightly weaker indecision signal. Open and close ARE different — there's a small body. Both candles have wicks on both sides. Doji is the purest form of indecision. Same context rules apply: meaningful at key levels, noise in chop."
+
+  - id: q9
+    text: "What's the WORST common mistake with indecision candles?"
+    type: mcq
+    choices:
+      - "Ignoring them."
+      - "Trading every doji or spinning top as if it's automatically a reversal signal — when most appear in chop and mean nothing. Leads to over-trading and steady bleed."
+      - "Waiting for confirmation."
+      - "Using them only at support/resistance."
+    correct: 1
+    topic_tag: indecision
+    explanation: "The 'doji-trading trap'. Beginners learn doji = indecision = reversal, then trade them everywhere. Most dojis appear in noise contexts and reverse nothing. Each false-trade costs fees, slippage, and confidence. Cure: write down WHY (context) for every doji-based trade before clicking. No clear context = no trade."
+
+  - id: q10
+    text: "The most VALUABLE use of indecision candles for an active trader is:"
+    type: mcq
+    choices:
+      - "Fresh entry signals."
+      - "As DEFENSIVE warnings on existing positions — doji after a strong trending move = tighten SL, take partial profits, don't add. The trend's momentum is fading."
+      - "Calling exact tops."
+      - "Determining position size."
+    correct: 1
+    topic_tag: indecision
+    explanation: "Indecision is most useful as a defensive signal. It rarely qualifies as a strong enough fresh-entry signal on its own. But for a position you're ALREADY in, the message 'momentum fading' is actionable — tighten SL, take partials, stop adding. The trade you already have benefits from this information more than a new trade based on the doji alone would."

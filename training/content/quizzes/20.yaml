@@ -1,0 +1,123 @@
+id: "20"
+lesson_id: 20
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "In the 3-timeframe framework, what's the role of the HIGHEST timeframe?"
+    type: mcq
+    choices:
+      - "Entry timing — pinpoint exact entry candle."
+      - "BIAS — gives the primary direction (long, short, or range) that determines which signals to consider."
+      - "Risk management calculator."
+      - "Random noise."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Highest TF = bias (the direction). Middle TF = confirmation (alignment). Lowest TF = entry timing (precise entry candle). Each TF has a specific role; don't mix them. The HTF tells you whether to look for longs or shorts. Without that, every signal becomes a coin flip."
+
+  - id: q2
+    text: "1D shows uptrend (HH/HL). 1H shows a beautiful bearish engulfing at resistance. What's the smartest action?"
+    type: mcq
+    choices:
+      - "SHORT — engulfing patterns always work."
+      - "SKIP — the 1H signal is against the 1D bias. Counter-trend trades have low win rates. Wait for an aligned long setup instead."
+      - "Long aggressively."
+      - "Use the 1H signal as the new bias."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Cardinal rule: lower TFs must align with higher for high-probability trades. A 1H short against a 1D uptrend is fighting the bigger flow. Most of the time, the larger trend reasserts itself and the counter-trend trade fails. Wait for an aligned setup."
+
+  - id: q3
+    text: "What's the WRONG order to do top-down analysis?"
+    type: mcq
+    choices:
+      - "1D → 4H → 1H — start with HTF, work down."
+      - "1H → 4H → 1D — start with the lowest TF, then 'find' the bias from higher TFs to confirm what you already want."
+      - "Both are equally valid."
+      - "Only look at one TF."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Reversing the order leads to CONFIRMATION BIAS — you'll find reasons to confirm the trade you already want. Always HTF first to set bias, then work down for timing. The bias should DRIVE which entry signals you take, not the other way around."
+
+  - id: q4
+    text: "Trade quality scoring: 3 TFs aligned (1D bullish + 4H bullish structure + 1H bullish entry signal) — what's the implication?"
+    type: mcq
+    choices:
+      - "Skip — too many signals."
+      - "A+ SETUP — high-probability trade. Consider sizing UP (3-4% if your rules allow). All three TFs in alignment is rare and valuable."
+      - "Standard — nothing special."
+      - "Counter-trend."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "3-TF alignment is rare and high-quality. These are the trades where you can consider sizing up (within reason — 3-4% on rare A+ setups). 2 TFs aligned = standard 1-2% sizing. 1 TF only = usually skip. 0 aligned (counter-trend) = skip in nearly all cases."
+
+  - id: q5
+    text: "1D is in a strong uptrend. You see a 1H bullish reversal candle at a level that's: (a) within the 1D pullback zone AND (b) on the 4H structural low. How would you classify this trade?"
+    type: mcq
+    choices:
+      - "Marginal — only 1 TF signal."
+      - "A+ — all 3 TFs aligned. 1D bullish ✓, 4H showing pullback bottom ✓, 1H entry signal at the level ✓. High-probability setup."
+      - "Counter-trend."
+      - "Range trade."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Three-TF alignment: 1D bias gives you long, 4H position confirms pullback ending at support, 1H gives precise entry timing. This is exactly what 'high-probability setup' means. Rare enough to deserve patience finding them; valuable enough to size up when you do."
+
+  - id: q6
+    text: "When is a counter-trend trade OK?"
+    type: mcq
+    choices:
+      - "Whenever you feel confident."
+      - "Rarely — only at major HTF levels with smaller size, tighter SL, faster TP. For beginners and intermediates: don't take counter-trend trades at all."
+      - "Always — counter-trend is more profitable."
+      - "Only on Fridays."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Counter-trend is an advanced skill that requires reading exhaustion signals. For most traders (especially through Tier 2), skip counter-trend entirely. Stick to aligned setups. Even experienced traders limit counter-trend to ~10% of activity with reduced size and tight management. The 'fighting upstream' analogy is accurate."
+
+  - id: q7
+    text: "1D chart is in a clear sideways range (no HH/HL or LH/LL — equal highs and equal lows). What's the smart approach?"
+    type: mcq
+    choices:
+      - "Force a directional trade anyway."
+      - "Either: (a) drop to 1W for bias, (b) trade as range — both directions valid within range boundaries, or (c) sit out until clarity returns. Range or unclear bias is often the best time to NOT trade."
+      - "Always go long."
+      - "Use a coin flip to decide direction."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "When the HTF is in clean range with no directional bias, both directions are technically valid (buy support, sell resistance within the range). But many traders force trades during these periods and get chopped. The patient ones wait for directional clarity. 'Unclear' is usually the right time to wait, not force."
+
+  - id: q8
+    text: "For typical crypto perp DAY trading, what TF combination is the standard?"
+    type: mcq
+    choices:
+      - "1W bias / 1D confirmation / 4H entry"
+      - "1D bias / 4H confirmation / 1H entry"
+      - "4H bias / 1H confirmation / 15m entry"
+      - "1m bias / 5m confirmation / 1m entry"
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "1D/4H/1H is the standard for day-to-swing perp trading. Longer swings (multi-day holds) → 1W/1D/4H. Scalps → 4H/1H/15m. Same pattern, different scale. Crypto's volatility makes the 1D/4H/1H combo particularly useful — covers a few-days-to-weeks holding period."
+
+  - id: q9
+    text: "Why is trade quality directly tied to the NUMBER of TFs aligned?"
+    type: mcq
+    choices:
+      - "It's just superstition."
+      - "Each TF is an INDEPENDENT signal. When multiple independent signals all point the same way, the probability of being correct is multiplied. 3-TF alignment means 3 different time-scale flows all agreeing — much harder to fake."
+      - "More TFs = more fees."
+      - "More TFs = slower processing."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "TFs measure different participant time-scales. 1D = institutional/swing positioning. 4H = active swing traders. 1H = day traders. When all three agree, you have institutional + swing + day-trader alignment — the trend is supported across all time scales. 1 TF alone could be noise; 3 TFs together rarely is."
+
+  - id: q10
+    text: "After you've done the full top-down analysis and identified that NO trade meets your criteria — what do you do?"
+    type: mcq
+    choices:
+      - "Force a trade anyway."
+      - "Don't trade. The skill of NOT trading when criteria aren't met is half of professional trading. Sitting out preserves capital for the next high-quality setup."
+      - "Take a 'mini' position to feel involved."
+      - "Switch to a different exchange."
+    correct: 1
+    topic_tag: psychology
+    explanation: "The biggest skill that separates pros from retail isn't 'taking better trades' — it's NOT taking the bad ones. If criteria aren't met, do nothing. Wait. Watch. The market is open every day; another A+ setup will appear. Sitting out is hard psychologically but mathematically the right answer."

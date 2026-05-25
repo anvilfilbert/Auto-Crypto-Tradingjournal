@@ -1,0 +1,123 @@
+id: "18"
+lesson_id: 18
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "How many TOUCHES does a trendline need before it's considered confirmed and tradeable?"
+    type: mcq
+    choices:
+      - "One — any line is a trendline."
+      - "Two — connect the dots."
+      - "THREE — two points is just geometry/hypothesis. The third touch with a clear reaction confirms it as a real, tradeable level."
+      - "Ten — only after extensive testing."
+    correct: 2
+    topic_tag: trendlines
+    explanation: "Two points can always be connected — it doesn't prove a trendline exists. The third touch with a real reaction (bounce + reversal candle + volume) is the proof. Until then, you have a hypothesis. Trading hypothetical trendlines = high false-signal rate."
+
+  - id: q2
+    text: "How should you DRAW an uptrend support trendline?"
+    type: mcq
+    choices:
+      - "Connect two random low points on the chart."
+      - "Connect consecutive HIGHER lows — points where price reversed up from progressively higher levels. Sloped upward."
+      - "Connect any low to any high."
+      - "Horizontal lines only."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Uptrend support = sloped upward = connecting consecutive higher lows. Each low is a level where buyers stepped in. The sloped line shows buyers stepping in at PROGRESSIVELY higher levels — the definition of an uptrend. Each touch needs to be a clear pivot, not random fluctuation."
+
+  - id: q3
+    text: "Which is the WRONG way to draw a trendline?"
+    type: mcq
+    choices:
+      - "Connect 3 clear consecutive swing pivots with clean reactions."
+      - "Force a line through 4 points by bending or fudging — if 4 points don't fit cleanly, the line isn't real. Either pick the 3 best or skip drawing it."
+      - "Use bodies/closes, not just wicks."
+      - "Draw 2-4 meaningful lines per chart maximum."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Forcing a line through poorly-fitting points = wishful thinking. The market doesn't owe you a trendline. If you have to bend the line or include random points, the trendline doesn't exist — just go without one. Forcing produces false signals that lose money."
+
+  - id: q4
+    text: "What counts as a 'decisive break' of a trendline?"
+    type: mcq
+    choices:
+      - "Any wick that touches the other side."
+      - "Body CLOSING beyond the line + above-average volume + no immediate reclaim on the next candle."
+      - "Just a price tick past the line."
+      - "Doesn't matter — any movement counts."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Three confirmations needed: (1) Close beyond, not just wick — wicks often reject; (2) Volume — proves real participation; (3) No immediate reclaim — sometimes the break candle is followed by a reclaim candle ('fakeout'). All three together = real break."
+
+  - id: q5
+    text: "After a confirmed trendline break, the CLASSIC trade setup is:"
+    type: mcq
+    choices:
+      - "Buy the breakout immediately at any price."
+      - "BREAK AND RETEST — wait for price to pull back to the broken line (now flipped polarity, acting as opposite-direction S/R). Trade the rejection with SL beyond the rejection candle's high/low."
+      - "Short the breakout for sure."
+      - "Buy options on a different asset."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Break-and-retest is one of the highest-quality trendline trades. The retest gives you a much better entry than chasing the break. Polarity flip — broken support becomes resistance and vice versa — means the level still matters, just from the other side. Trade the rejection with clear SL."
+
+  - id: q6
+    text: "When using long-term trendlines on multi-month charts, what chart scale should you prefer?"
+    type: mcq
+    choices:
+      - "Linear."
+      - "LOG (logarithmic) — equal percentage moves take equal vertical distance, which is what trendlines should track. Linear distorts the slope when prices vary over wide ranges."
+      - "Doesn't matter."
+      - "Only the close-only scale."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "On linear scale, a 10% move from $1k looks the same vertically as a 10% move from $100k — making the trendline visually wrong over long ranges. Log scale fixes this by making equal percentage moves equal vertical distances, which is how trendlines actually work as percentage-based S/R. For intraday/swing, linear is fine; for long-term, use log."
+
+  - id: q7
+    text: "A channel is:"
+    type: mcq
+    choices:
+      - "A single trendline."
+      - "Two parallel trendlines — one connecting swing highs, one connecting swing lows. Price oscillates between them. Useful for predicting motion range and trade boundaries."
+      - "A type of indicator."
+      - "Only horizontal lines."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Channel = two parallel trendlines forming a 'corridor' that contains price. Ascending channels (uptrend), descending (downtrend), horizontal (range). Trade boundaries: buy near lower line, sell near upper line. Channels eventually break — break WITH trend = acceleration; break AGAINST trend = reversal."
+
+  - id: q8
+    text: "Why is using WICKS instead of BODIES to draw trendlines often a mistake?"
+    type: mcq
+    choices:
+      - "Wicks are more reliable."
+      - "Closes (bodies) show where price was ACCEPTED by the market. Wicks show brief moves that got immediately rejected. The level where prices closed is the stronger evidence of where the market truly respects."
+      - "Wicks are invisible."
+      - "Bodies don't exist on trendlines."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Wicks are noise — brief overshoots that didn't sustain. Closes are commitment — that's where the market actually agreed to trade. A trendline drawn through closes is a stronger structural reference. Wicks may inform context (showing the level matters) but the precise line should follow closes."
+
+  - id: q9
+    text: "How many meaningful trendlines should you typically have on a single chart?"
+    type: mcq
+    choices:
+      - "20-30 — more is better."
+      - "2-4 high-quality trendlines maximum. Marginal trendlines = noise; chart becomes meaningless. Filter ruthlessly to only the levels that clearly meet the 3-touch + clean pivots + recent + meaningful slope criteria."
+      - "Exactly 1, no more."
+      - "Zero — trendlines are useless."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Same principle as horizontal S/R — quality over quantity. 2-4 clearly-defined trendlines (with 3+ touches each, clear reactions, recent + relevant) gives you usable structure. 30 marginal lines = chart noise. The few well-drawn lines are worth more than many poorly-drawn ones."
+
+  - id: q10
+    text: "Worked example: uptrend support trendline confirmed at $56.5K, $58.2K, $60.4K. Today price is at $63.5K. As of Day 16 the projected line is at $62.8K. A pullback to the line forms a hammer with volume. Smart trade?"
+    type: mcq
+    choices:
+      - "SHORT — trends always reverse."
+      - "Limit BUY at $62.9K (just above the trendline + hammer signal), SL $61.8K (below the trendline with wick buffer), TP1 $64.5K, TP2 $66K."
+      - "Wait forever — no trade exists."
+      - "All-in at any price."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Confirmed trendline + price reaching it + bullish reversal candle + volume = high-quality long entry. SL below the trendline gives clean invalidation (if it breaks, the trend's broken). TPs at logical levels gives defined R:R. This is the textbook trendline bounce trade — same as the horizontal S/R bounce but on a sloped level."

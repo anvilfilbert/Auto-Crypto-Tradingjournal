@@ -1,0 +1,100 @@
+{
+  "slug": "12-candle-anatomy",
+  "subtitle": "Each candle tells a story about a battle. Body = the settled fight. Wicks = the rejected attempts. Learn to read one candle and you've started learning to read the entire chart.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Tier 1 was the survival foundation — risk, position sizing, psychology. Tier 2 is about READING the market. Everything starts with the candle.</p><p>A single candle compresses a battle between buyers and sellers over a fixed time period (1 minute, 5 minutes, 1 hour, whatever timeframe you've selected). The shape of that candle tells you who won, who tried and failed, and how decisive it was. Learn to read one candle and you've started learning to read the entire chart.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The four prices in every candle"
+    },
+    {
+      "type": "text",
+      "content": "<p>Each candle records exactly four prices for its time window:</p><ul><li><strong>Open (O)</strong> — the price at the start of the window</li><li><strong>High (H)</strong> — the highest price reached during the window</li><li><strong>Low (L)</strong> — the lowest price reached during the window</li><li><strong>Close (C)</strong> — the price at the end of the window</li></ul><p>These four numbers (OHLC) get turned into a visual candle:</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Body and wicks — the visual decoding"
+    },
+    {
+      "type": "table",
+      "headers": ["Visual element", "What it represents", "Meaning"],
+      "rows": [
+        ["<strong>Body</strong> (thick rectangle)", "Range between Open and Close", "The SETTLED outcome of the period — who won between O and C"],
+        ["<strong>Body color: green/white</strong>", "Close > Open", "Bullish candle — price ended higher than it started"],
+        ["<strong>Body color: red/black</strong>", "Close < Open", "Bearish candle — price ended lower than it started"],
+        ["<strong>Upper wick</strong> (thin line above body)", "Range between high of candle and body top", "Sellers REJECTED a push higher — failed bullish attempt"],
+        ["<strong>Lower wick</strong> (thin line below body)", "Range between low of candle and body bottom", "Buyers REJECTED a push lower — failed bearish attempt"],
+        ["<strong>No wick</strong> on one side", "Body extends to the high or low", "No rejection on that side — clean directional move"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The core idea — wicks are rejected attempts",
+      "content": "<p>A wick is the market trying to push price in one direction, then FAILING. The body is where price settled. The longer the wick relative to the body, the stronger the rejection.</p><p>A long upper wick on a candle at resistance = sellers won the round. They pushed back hard against the buyers who tried to break through. That's a sign of weakness for the buy side.</p><p>A long lower wick on a candle at support = buyers won the round. They absorbed sellers and pushed back up. That's a sign of strength.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Reading specific candle shapes"
+    },
+    {
+      "type": "table",
+      "headers": ["Shape", "Description", "What it tells you"],
+      "rows": [
+        ["<strong>Large bullish body, no wicks</strong>", "Open at low, close at high. Marubozu.", "Strong, decisive buying. No rejection. Continuation likely."],
+        ["<strong>Large bearish body, no wicks</strong>", "Open at high, close at low. Bearish Marubozu.", "Strong selling. Continuation likely."],
+        ["<strong>Small body, long upper wick</strong>", "Body near low, upper wick 2-3× body length", "Sellers rejected the push higher. Bearish bias for next candle."],
+        ["<strong>Small body, long lower wick</strong>", "Body near high, lower wick 2-3× body length", "Buyers rejected the push lower. Bullish bias for next candle."],
+        ["<strong>Small body, both wicks long</strong>", "Body in middle, wicks on both sides", "Indecision — covered in lesson 15. Wait for confirmation."],
+        ["<strong>Tiny body, no wicks</strong>", "Open ≈ Close, no rejection on either side", "Indecision in a quiet market. Low information."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Body size matters — strong vs weak candles"
+    },
+    {
+      "type": "text",
+      "content": "<p>The size of the body relative to recent candles matters as much as the color:</p><ul><li><strong>Strong body</strong> (larger than recent average) = high conviction. The move is meaningful.</li><li><strong>Weak body</strong> (smaller than recent average) = low conviction. The market is hesitating. Often a precursor to reversal or chop.</li></ul><p>Example: BTC has been making large bullish candles for an hour. Then a small green body appears — body half the size of recent candles. That's loss of momentum. The next candle being bearish wouldn't be a surprise.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Volume — the missing dimension"
+    },
+    {
+      "type": "text",
+      "content": "<p>Two candles can look identical and mean different things based on the volume that accompanied them. Volume is the SIZE of the conviction.</p><ul><li><strong>Large body + high volume</strong> = strong conviction with real participation. Trust the move.</li><li><strong>Large body + low volume</strong> = weak conviction. The body looks bullish but few participants pushed it. Often gets faded.</li><li><strong>Long wick + high volume on wick portion</strong> = many participants tried that direction and got rejected. Strong reversal signal.</li><li><strong>Long wick + low volume</strong> = thin push that fizzled. Less reliable as a signal.</li></ul><p>Lesson 24 (Volume + VWAP) covers volume in detail. For now: <strong>candles + volume together tell a story; candles alone are half the story</strong>.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Timeframe matters",
+      "content": "<p>The same candle shape on different timeframes has wildly different significance:</p><ul><li>A long upper wick on a 5-minute chart = some sellers stepped in for a few minutes. Often noise.</li><li>A long upper wick on a 4-hour chart at resistance = sellers stepped in over 4 hours. Real signal.</li><li>A long upper wick on a daily chart at all-time high = institutional sellers stepped in over a full day. Major signal.</li></ul><p>Higher timeframes carry MORE weight. A bearish daily candle outweighs ten bullish 5-minute candles. We'll cover this fully in lesson 19 (multi-timeframe analysis).</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Context > candle shape"
+    },
+    {
+      "type": "text",
+      "content": "<p>The single most important habit when reading candles: <strong>look at WHERE the candle formed, not just WHAT the candle is</strong>.</p><p>A bullish engulfing candle in the middle of a sideways range = meaningless noise.</p><p>The same bullish engulfing candle right at a major support level + high volume = potentially significant reversal signal.</p><p>Same shape. Different context. Different value.</p><p>This is why beginners who learn just \"the patterns\" lose money — they trade the shape without the context. The remaining lessons in Tier 2 teach you the CONTEXT (S/R, trendlines, structure, multi-TF) that makes candle patterns meaningful.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Quick read exercise"
+    },
+    {
+      "type": "text",
+      "content": "<p>For each scenario, what's the first observation you'd make?</p><ol><li><strong>BTC daily candle: large red body, no upper wick, small lower wick, after a 5-day uptrend.</strong> → Strong bearish reversal. Sellers took over decisively. Lower wick shows minor buying attempt that was overwhelmed.</li><li><strong>BTC 4H candle at support: small green body, long lower wick (3× body), high volume.</strong> → Bullish rejection signal. Sellers pushed price low, buyers absorbed and pushed back. The volume confirms it wasn't a fluke.</li><li><strong>BTC 1H candle: tiny body, equal wicks on both sides, low volume.</strong> → Indecision in a quiet market. Low information. Wait for the next candle.</li><li><strong>BTC 5min candle: large green body, long upper wick (4× body), in the middle of a sideways range.</strong> → Mixed signal. Body says bullish, wick says rejection. Range context says noise. Skip — wait for trend clarity.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three habits:</p><ol><li><strong>Read body first, then wicks.</strong> Body = settled outcome. Wicks = rejected attempts.</li><li><strong>Body size matters.</strong> Strong body = conviction. Weak body = hesitation.</li><li><strong>Context > shape.</strong> The same candle at support means something completely different than the same candle in the middle of nothing.</li></ol><p>The next three lessons cover specific candle PATTERNS (bullish reversals, bearish reversals, indecision). All of them assume you can read individual candles first.</p>"
+    }
+  ]
+}

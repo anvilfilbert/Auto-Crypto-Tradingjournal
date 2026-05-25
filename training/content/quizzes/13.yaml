@@ -1,0 +1,123 @@
+id: "13"
+lesson_id: 13
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "A Hammer candle requires: small body near the top of the range AND a long lower wick. Approximately how long should the lower wick be relative to the body?"
+    type: mcq
+    choices:
+      - "Lower wick equal to body length"
+      - "Lower wick at least 2× body length, ideally 3×+"
+      - "Lower wick smaller than body"
+      - "Lower wick length doesn't matter"
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "The Hammer's whole point is the long lower wick — sellers pushed price way down, buyers absorbed everything and pushed back up. A wick 2-3× the body shows decisive rejection. Wick equal to body = ambiguous; wick smaller than body = no real rejection signal."
+
+  - id: q2
+    text: "A Bullish Engulfing pattern's defining feature is:"
+    type: mcq
+    choices:
+      - "The second candle's body completely covers the first candle's body — opening at or below previous close and closing above previous open."
+      - "Two red candles in a row."
+      - "A single candle with no wicks."
+      - "Three small candles in any color combination."
+    correct: 0
+    topic_tag: reversal_patterns
+    explanation: "Bullish Engulfing = the green candle 2's body wraps around (engulfs) the red candle 1's body. The opening matches/exceeds previous close, the close exceeds previous open. Visual: the second candle's body is bigger AND covers the first's. Sellers who got in on candle 1 are now at a loss within one period — strong reversal of sentiment."
+
+  - id: q3
+    text: "The Morning Star pattern requires three candles. The MIDDLE candle (the 'star') is:"
+    type: mcq
+    choices:
+      - "A large bullish candle."
+      - "A small body of either color, often with a gap from candle 1 — representing INDECISION between bears and bulls."
+      - "Another large bearish candle continuing the trend."
+      - "A doji that must be exactly green."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "The star's small body shows that selling momentum has died (no more strong bearish bodies) but bulls haven't taken control yet — indecision. Candle 3 then confirms reversal with a strong bullish push. The star is the pause between the old trend and the new direction."
+
+  - id: q4
+    text: "You see a perfect Bullish Engulfing pattern form in the middle of a 2-week sideways range, on average volume. How should you treat it?"
+    type: mcq
+    choices:
+      - "Strong reversal signal — engulfing always works."
+      - "Probably noise — there's no clear downtrend to reverse FROM, and no meaningful level. Pattern shape without context = often false signal."
+      - "Time to short instead."
+      - "Wait for daily close to confirm."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "Reversal patterns reverse SOMETHING. In a sideways range, there's no trend to reverse. The pattern in chop is just one of many similar shapes that the random walk produces. Save the pattern recognition for clear contexts: at established support, after a sustained downtrend, with confirming volume."
+
+  - id: q5
+    text: "Ranked from WEAKEST to STRONGEST signal (assuming all in proper context with downtrend + support + volume):"
+    type: mcq
+    choices:
+      - "Morning Star → Bullish Engulfing → Piercing Line → Hammer"
+      - "Hammer → Piercing Line → Bullish Engulfing → Morning Star"
+      - "All four are equal in strength."
+      - "Engulfing is weakest; Hammer is strongest."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "More candles in the pattern + greater magnitude of reversal = stronger signal. Hammer (1 candle) is the weakest, Morning Star (3 candles confirmed) is the strongest. Engulfing is between because it shows 2 periods of decisive action. None work without context — but among them, the multi-candle confirmations have higher reliability."
+
+  - id: q6
+    text: "Why is the volume on the reversal candle (or candle 3 of Morning Star) so important?"
+    type: mcq
+    choices:
+      - "It tells you the price."
+      - "Volume confirms whether the reversal had real participation. High volume = institutional/widespread action = more reliable. Low volume = thin push = often gets faded."
+      - "Volume has no effect on candle patterns."
+      - "Only volume color matters."
+    correct: 1
+    topic_tag: volume
+    explanation: "A bullish reversal candle on low volume = a few traders pushed price; not a real reversal. The same candle on 2-3× average volume = real participation, real shift in sentiment. Volume is the magnitude of the signal. Pattern + volume confirms; pattern alone is a guess."
+
+  - id: q7
+    text: "Where should you place your STOP LOSS on a hammer trade?"
+    type: mcq
+    choices:
+      - "Above the hammer's high."
+      - "Below the hammer's LOW (the bottom of the lower wick). If price breaks below the hammer's low, the rejection failed."
+      - "At the hammer's open price."
+      - "Far away to give the trade room — 10% below entry."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "The hammer's low marks the level where sellers were rejected. If price comes back to break through that low, the rejection didn't hold — the trade thesis is invalidated. SL goes just below the wick. Tighter SL = better R:R, but too tight risks normal price noise stopping you out."
+
+  - id: q8
+    text: "Higher-timeframe context — a bullish engulfing forms on the 1H chart against a strong 4H downtrend. What's likely to happen?"
+    type: mcq
+    choices:
+      - "1H signal always wins — short-term beats long-term."
+      - "The 1H reversal often fails because the larger 4H downtrend resumes. Higher TFs carry more weight. Better to wait for HTF alignment."
+      - "The pattern is invalid."
+      - "Always trade the 1H signal first."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Multi-TF alignment is everything. A small TF reversal against a strong large TF trend has a low win rate — you're trying to swim upstream against bigger flows. The same signal WITH the higher TF (1H reversal + 4H is also turning up at support) is much higher probability. Lesson 19 covers this in depth."
+
+  - id: q9
+    text: "The 5-point context checklist for tradeable bullish reversals includes all EXCEPT:"
+    type: mcq
+    choices:
+      - "Pattern at meaningful level (support, MA, etc.)"
+      - "Clear preceding downtrend"
+      - "Above-average volume on the reversal candle"
+      - "The trader currently feels lucky"
+    correct: 3
+    topic_tag: reversal_patterns
+    explanation: "Feelings aren't in the checklist. The five real boxes: meaningful level, preceding downtrend, confirming volume, higher-timeframe alignment, additional confluence (RSI divergence, etc.). When 4-5 boxes are checked, the trade has high probability. When 1-2 are checked, skip and wait for better."
+
+  - id: q10
+    text: "After hours of watching, you finally see what looks like a hammer. You're tired and bored. You haven't run the checklist. What's the smartest action?"
+    type: mcq
+    choices:
+      - "Take the trade — finally an opportunity."
+      - "Step away for 10 minutes, then return and run the checklist before considering the trade. Boredom-trading + skipping context check = high-loss combination."
+      - "Increase position size for excitement."
+      - "Short instead."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Boredom is a known driver of bad trades. Combined with skipping process (the checklist), you're entering with the highest possible chance of being wrong. The cure: step away, calm down, run the process. If the setup is real, it'll still be there in 10 minutes. If it's not, you saved a losing trade."

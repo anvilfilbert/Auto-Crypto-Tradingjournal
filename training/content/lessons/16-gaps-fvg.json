@@ -1,0 +1,123 @@
+{
+  "slug": "16-gaps-fvg",
+  "subtitle": "Crypto is a 24/7 market, so traditional weekend gaps barely exist. But INTRA-CANDLE gaps — Fair Value Gaps — happen constantly and are one of the most reliable structural patterns to trade. Learn what they are and why they fill.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>In traditional equity markets, gaps are big news — markets close overnight, news breaks, the open prints far from the previous close. Traders build entire strategies around \"gap fills\".</p><p>Crypto markets are 24/7, so traditional gaps are rare (only on thinly-traded venues or during sudden flash moves). But the SAME LOGIC applies to a different phenomenon: <strong>Fair Value Gaps</strong> (FVGs) — intra-candle imbalances where price jumped so fast that not every price level got traded properly.</p><p>This lesson covers traditional gaps briefly, then dives into FVGs which are more relevant for crypto trading.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Traditional gaps — the basic concept"
+    },
+    {
+      "type": "text",
+      "content": "<p>A gap occurs when a candle OPENS at a meaningfully different price than the previous candle's CLOSE, creating empty space on the chart with no trades.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Gap type", "Description", "Common outcome"],
+      "rows": [
+        ["<strong>Gap up</strong>", "Open above previous close, leaving empty space below", "Often gets 'filled' (price returns to that empty space) within hours-days"],
+        ["<strong>Gap down</strong>", "Open below previous close, leaving empty space above", "Same — often filled"],
+        ["<strong>Breakaway gap</strong>", "Gap that launches a new trend (e.g., on major news)", "Less likely to fill — trend takes over"],
+        ["<strong>Exhaustion gap</strong>", "Gap at the end of a long trend, marking climax", "Usually gets filled quickly — trend was over"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "In crypto, traditional gaps are rare",
+      "content": "<p>Because crypto trades 24/7, there's no overnight close to gap from. Traditional gaps only happen during:</p><ul><li>Sudden flash moves (5%+ in seconds, where the orderbook can't fill every level)</li><li>Major news during low-liquidity hours</li><li>Specific contracts like CME Bitcoin futures (which have weekend closures)</li></ul><p>For perp trading on top exchanges, the more useful concept is the Fair Value Gap.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Fair Value Gap (FVG) — the crypto version"
+    },
+    {
+      "type": "text",
+      "content": "<p>A Fair Value Gap is an IMBALANCE in price action — a 3-candle pattern where price moves so fast in one direction that the middle candle's range doesn't overlap with the surrounding candles. The unfilled space represents a level where insufficient trading happened.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to identify an FVG"
+    },
+    {
+      "type": "text",
+      "content": "<p>Look at any three consecutive candles. Check whether there's empty space between candle 1's wick and candle 3's wick — a price zone the middle candle blew through without surrounding candles covering.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["FVG type", "Three-candle pattern", "What it means"],
+      "rows": [
+        ["<strong>Bullish FVG</strong>", "Candle 1 (any). Candle 2 strong bullish, creates a gap upward. Candle 3 opens higher than candle 1's HIGH.", "Price ran up so fast that the range between candle 1's high and candle 3's low has imbalance. That zone is an unfilled bullish FVG."],
+        ["<strong>Bearish FVG</strong>", "Candle 1 (any). Candle 2 strong bearish, creates a gap downward. Candle 3 opens lower than candle 1's LOW.", "Price dropped so fast that the range between candle 1's low and candle 3's high has imbalance. That zone is an unfilled bearish FVG."]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "FVGs tend to fill",
+      "content": "<p>The core insight: markets prefer 'fair value'. When price jumps too fast and leaves imbalance, price often returns to that zone later to 'fill' the gap before continuing in the original direction.</p><p>This is why FVGs are useful for two purposes:</p><ol><li><strong>Entry targets</strong>: if a bullish FVG forms during an uptrend, price often pulls back to the FVG zone before resuming up. That's your entry zone.</li><li><strong>Exit/target levels</strong>: if you're shorting and there's an unfilled bullish FVG above current price, expect price to potentially reach back up to fill it before continuing down.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "When FVGs work — and when they don't"
+    },
+    {
+      "type": "table",
+      "headers": ["Context", "FVG behavior"],
+      "rows": [
+        ["FVG in a strong trending market", "Likely to fill on pullbacks; provides reliable entry zones"],
+        ["FVG at the start of a new trend (post-reversal)", "Strong support/resistance zone — often defended"],
+        ["FVG in chop / sideways market", "Less reliable — price meanders and FVGs may stay unfilled indefinitely"],
+        ["FVG during major news / event", "Less reliable — fundamental drivers can override technical levels"],
+        ["FVG that's already been filled once", "Lower probability of being defended again"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Using FVGs in practice"
+    },
+    {
+      "type": "text",
+      "content": "<p>The simplest FVG-based trade pattern:</p><ol><li>You identify a strong uptrend on the 1H chart.</li><li>You spot a bullish FVG that formed during the recent rally (e.g., between $62,000 and $62,400 — a 0.6% imbalance zone).</li><li>You set a limit BUY order at $62,200 (middle of the FVG).</li><li>Your SL goes BELOW the FVG, at the lower edge of the imbalance ($62,000) or slightly below.</li><li>TP is the next resistance or the next FVG upward.</li></ol><p>If price pulls back to your level, you fill at a good entry, with a defined risk. If price runs away without pulling back, you didn't get in but you didn't lose either.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Not every FVG fills",
+      "content": "<p>FVGs are PROBABILITIES, not certainties. Approximate fill rates in different conditions:</p><ul><li>Trending markets with FVG in trade direction: 70-80% fill rate</li><li>Trending markets with FVG against direction: 50-60% fill rate</li><li>Chop with FVG: 40-50% — essentially random</li><li>Major news disruption: even less predictable</li></ul><p>This is why you don't bet your account on a single FVG filling. Use them as ENTRY ZONES with defined risk, not as guaranteed targets. SL below the FVG protects you when it doesn't hold.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "FVG size matters"
+    },
+    {
+      "type": "text",
+      "content": "<p>Not all FVGs are equal. Larger FVGs (wider imbalance zones) tend to be more significant — they represent bigger imbalances and stronger directional momentum. A tiny FVG of 0.1% might fill on noise; a 1% FVG required substantial momentum to create.</p><p>Filter rule: only trade FVGs that are at least 0.3-0.5% wide on the timeframe you're using. Smaller ones are too noisy to be reliable signals.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "FVGs and the broader Smart Money Concepts (SMC) framework"
+    },
+    {
+      "type": "text",
+      "content": "<p>FVGs are part of a broader set of concepts you'll hear referred to as \"Smart Money Concepts\" or SMC. The full SMC framework includes Order Blocks, Liquidity Pools, Premium/Discount zones, Breaker Blocks, and more — covered in Tier 4 (lesson 35).</p><p>The TLDR for SMC: institutional traders leave 'footprints' on the chart that retail traders can identify and trade alongside. Some of these concepts (FVGs, order blocks) have empirical merit. Some of the SMC ecosystem is marketing-heavy and provides less value than its proponents claim. We'll cover the empirically useful parts in Tier 4 — for now, FVG is the most directly useful concept to start with.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC is in a 2-day uptrend on the 4H chart. Three consecutive 4H candles produce this pattern:</p><ul><li>Candle 1: small green body, range $61,800-$62,200</li><li>Candle 2: large green body, range $62,000-$63,200 (strong impulsive move)</li><li>Candle 3: small green body, range $63,000-$63,400</li></ul><p>The FVG is the zone between candle 1's HIGH ($62,200) and candle 3's LOW ($63,000) — a 1.3% imbalance. That's a significant gap.</p><p>You expect price to pull back to fill this zone before continuing up. Trade setup:</p><ul><li><strong>Entry:</strong> Limit BUY at $62,600 (middle of the FVG)</li><li><strong>SL:</strong> $62,000 (below candle 2's low — invalidation if the trend is breaking)</li><li><strong>TP1:</strong> Recent high at $63,400</li><li><strong>TP2:</strong> Next resistance at $64,500</li></ul><p>R:R ≈ 1:1.3 to TP1, 1:3.2 to TP2. If price pulls back, you fill at a meaningful zone with defined risk. If price doesn't pull back and just keeps going up, you skipped a trade that wasn't ready to give you a good entry.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Traditional gaps are rare in 24/7 crypto. The relevant version is the Fair Value Gap (FVG) — 3-candle imbalance patterns where price ran so fast it left a vacuum zone that often gets filled.</p><p>FVGs are best used as ENTRY ZONES in trending markets, with SL beyond the gap's far edge. They are probabilities (70-80% fill in good conditions), not certainties.</p><p>Tier 4 (lesson 35) goes deeper into the broader SMC concepts. For now, master the basic FVG identification and entry-zone usage.</p>"
+    }
+  ]
+}

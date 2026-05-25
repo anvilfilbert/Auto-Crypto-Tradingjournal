@@ -1,0 +1,112 @@
+{
+  "slug": "18-trendlines",
+  "subtitle": "Trendlines are the diagonal version of horizontal S/R. A line connecting two swing lows is a potential support trendline. The third touch is what makes it real. Most retail draw trendlines wrong — here's how to draw them right.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>If horizontal S/R is the foundation, trendlines are its diagonal cousin. Same logic — price levels where reactions cluster — but the levels MOVE over time, sloped up or down with the trend.</p><p>Trendlines are powerful when drawn correctly. They're worthless when drawn carelessly. The line through two random points means nothing. The line through three confirmed touches with reactions is a major level. Most retail draw them the wrong way.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What a trendline is"
+    },
+    {
+      "type": "table",
+      "headers": ["Trendline type", "How to draw", "What it represents"],
+      "rows": [
+        ["<strong>Uptrend support line</strong>", "Diagonal line connecting at least two consecutive higher swing LOWS, sloped upward", "Buyers stepping in at progressively higher prices — dynamic support that follows the trend"],
+        ["<strong>Downtrend resistance line</strong>", "Diagonal line connecting at least two consecutive lower swing HIGHS, sloped downward", "Sellers active at progressively lower prices — dynamic resistance"],
+        ["<strong>Horizontal trendline (range)</strong>", "Horizontal line at top (resistance) or bottom (support) of a sideways range", "Effectively the same as S/R from lesson 17"],
+        ["<strong>Channel lines</strong>", "Two parallel trendlines — one along swing highs, one along swing lows", "Defines the trending range — price oscillates between the lines"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The 3-touch rule"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Two points = a hypothesis. Three touches = a real trendline.",
+      "content": "<p>Any two points can be connected with a line. That's geometry, not analysis. A real trendline requires THREE TOUCHES, each one with a clear reaction. Until the third touch reacts, you have a hypothesis — not a tradeable level.</p><p>Process:</p><ol><li>You spot two consecutive higher lows (potential uptrend support). Draw the line as a hypothesis.</li><li>Wait for price to pull back toward the line a third time.</li><li>If price reaches the line and BOUNCES (with a bullish reversal candle + volume), the trendline is confirmed.</li><li>NOW you can trade subsequent retests of the line with confidence.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "How to draw trendlines correctly"
+    },
+    {
+      "type": "text",
+      "content": "<p>Common mistakes vs correct approach:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Wrong way", "Right way"],
+      "rows": [
+        ["Connecting any two points that look 'about right'", "Use clear swing pivots — points where price had a meaningful reaction (3+ candles in opposite direction after)"],
+        ["Forcing a line through 4 points even if it requires bending or fudging", "If 4 points don't fit cleanly, the line isn't real. Either pick the 3 best, or there's no trendline"],
+        ["Using only wicks", "Use bodies. Closes near the line are more meaningful than brief wicks touching it"],
+        ["Drawing a trendline through points 1 month apart with no relationship", "Use recent, related swing points. Old structure rarely produces meaningful trendlines"],
+        ["Drawing 10 trendlines on a single chart", "2-4 meaningful trendlines per chart maximum"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Log scale vs linear scale matters",
+      "content": "<p>On long-term charts (months/years), use LOG scale for trendlines. On log scale, equal percentage moves take equal vertical distance — which is what trendlines should track. On linear scale, a 10% move from $1,000 looks the same as a 10% move from $100,000 visually, distorting the slope.</p><p>For intraday/swing trading (hours/days), linear scale is fine. The price range is small enough that log vs linear doesn't make a meaningful difference.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trendline breaks — what they mean"
+    },
+    {
+      "type": "text",
+      "content": "<p>A trendline break is a TRADEABLE event. When price decisively closes through a confirmed trendline, the trend that the line described is broken.</p><p>What counts as a 'decisive break':</p><ul><li><strong>Close beyond the line, not just a wick.</strong> A wick that pokes through and rejects = the line held. A body that closes beyond = real break.</li><li><strong>The break candle has above-average volume.</strong> Volume confirms participation in the break, not just thin-liquidity noise.</li><li><strong>The next candle does NOT immediately reclaim the line.</strong> Sometimes a break candle is followed by a reclaim candle on the next bar — a 'fakeout'. Wait for confirmation.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "The retest pattern"
+    },
+    {
+      "type": "text",
+      "content": "<p>One of the most reliable trendline trade setups: the BREAK AND RETEST.</p><ol><li>Price decisively breaks below a confirmed uptrend support trendline.</li><li>Price pulls back UP toward the broken trendline (now acting as resistance — polarity flip).</li><li>Price reaches the broken line, prints a bearish reversal candle, and rejects.</li><li>SHORT the rejection with SL above the rejection candle's high, TP at the next horizontal support below.</li></ol><p>The retest gives you a much better entry than chasing the break itself, AND provides clean invalidation (if price closes back above the line, the break was fake — exit).</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Channels — when price respects parallel lines"
+    },
+    {
+      "type": "text",
+      "content": "<p>Sometimes the swing highs AND swing lows in a trend can both be connected with parallel lines, forming a channel. Channels are powerful because they predict the range of motion you can expect.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Channel type", "Slope", "Trade approach"],
+      "rows": [
+        ["<strong>Ascending channel</strong>", "Sloped upward — uptrend with regular pullbacks", "Buy at lower line (support); sell at upper line (resistance); breakouts go in trend direction"],
+        ["<strong>Descending channel</strong>", "Sloped downward — downtrend with regular bounces", "Short at upper line; cover at lower line; breakdowns continue trend"],
+        ["<strong>Horizontal channel</strong>", "Sideways — range-bound", "Buy at lower line; sell at upper line; breakouts go either direction"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Channels eventually break",
+      "content": "<p>Channels are temporary structures. Every channel eventually breaks — either resolving into a new trend (channel break with continuation) or transitioning to chop (no clear trend). Don't assume the channel will hold forever; trade within it but be ready for the break.</p><p>The break of a channel in the direction OF the prior trend (e.g., ascending channel breaks UP through resistance) often signals acceleration. The break AGAINST the trend (e.g., ascending channel breaks DOWN through support) often signals reversal.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC on the 4H chart shows the following over 2 weeks:</p><ul><li>Higher low at $56,500 (Day 1)</li><li>Higher low at $58,200 (Day 5)</li><li>Higher low at $60,400 (Day 10) — third touch, with bullish hammer + volume → trendline CONFIRMED</li></ul><p>You've now got a confirmed uptrend support trendline. As of today (Day 14), price is at $63,500 and the trendline has slope continuing upward — by Day 16 the line will be at approximately $62,800.</p><p>Trade plan if price pulls back to the trendline:</p><ul><li><strong>Entry:</strong> Limit BUY at $62,900 (just above the projected trendline)</li><li><strong>SL:</strong> $61,800 (clearly below the trendline, allowing some wick room)</li><li><strong>TP1:</strong> $64,500 (mid-channel)</li><li><strong>TP2:</strong> $66,000 (next horizontal resistance)</li></ul><p>If instead price BREAKS below the trendline with conviction (decisive close at $62,000 with volume), the setup flips:</p><ul><li>Wait for retest pullback to $62,800 area (broken trendline now resistance)</li><li>SHORT the rejection at $62,500</li><li>SL at $63,500</li><li>TP at $60,000 first, $58,000 second</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three trendline rules:</p><ol><li><strong>3 touches before it's real.</strong> Two touches = hypothesis only.</li><li><strong>Closes count, not wicks.</strong> The line is where price ACCEPTS the level, not where it briefly touches.</li><li><strong>Breaks need confirmation.</strong> Body beyond + above-average volume + no immediate reclaim. Then trade the retest.</li></ol><p>2-4 meaningful trendlines per chart, max. Like horizontal S/R, fewer high-quality levels >> many marginal ones.</p>"
+    }
+  ]
+}

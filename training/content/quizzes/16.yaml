@@ -1,0 +1,123 @@
+id: "16"
+lesson_id: 16
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Why are traditional 'overnight gaps' rare in crypto compared to equities?"
+    type: mcq
+    choices:
+      - "Crypto exchanges block them."
+      - "Crypto trades 24/7 — there's no overnight close to gap from. Traditional gaps only occur on contracts with closures (e.g., CME BTC futures) or during sudden flash moves."
+      - "Crypto prices don't move overnight."
+      - "Traders aren't allowed to enter overnight orders."
+    correct: 1
+    topic_tag: gaps
+    explanation: "Stocks close at 4pm and reopen at 9:30am — overnight news can cause big opening gaps. Crypto's continuous trading means most gaps disappear immediately. Exceptions: CME futures (weekends), flash crashes (orderbook can't fill every level), thin venues during low-liquidity hours."
+
+  - id: q2
+    text: "A Fair Value Gap (FVG) is identified by:"
+    type: mcq
+    choices:
+      - "A single candle with no body."
+      - "Three consecutive candles where price ran so fast that there's a vertical price zone between candle 1's wick and candle 3's wick that wasn't covered by either — an imbalance zone."
+      - "Two candles forming a flag."
+      - "A single bullish candle."
+    correct: 1
+    topic_tag: fvg
+    explanation: "FVG is a 3-candle structural pattern. Look at candle 1's high (for bullish FVG) and candle 3's low. If there's a gap between them — a zone the middle candle blew through without overlap from the others — that's the imbalance. Crypto's version of the traditional gap."
+
+  - id: q3
+    text: "FVGs tend to FILL because:"
+    type: mcq
+    choices:
+      - "Random chance."
+      - "Markets prefer 'fair value' — when price runs too fast leaving an imbalance zone, it often returns later to trade that range before continuing in the original direction."
+      - "Exchanges force them to."
+      - "It's a rule of physics."
+    correct: 1
+    topic_tag: fvg
+    explanation: "When momentum carries price past every level too quickly, the imbalance creates a magnet. Sellers above and buyers below find the level attractive for re-engagement. The market 'rebalances' by trading through the gap, then often resumes the original direction. This is the empirical core of why FVG-based entry strategies work."
+
+  - id: q4
+    text: "Best use of an FVG that forms during a strong uptrend?"
+    type: mcq
+    choices:
+      - "Short the FVG immediately."
+      - "Set a LIMIT BUY in the FVG zone — price often pulls back to fill the FVG before resuming the uptrend. Entry zone with defined risk (SL below the FVG)."
+      - "Ignore — FVGs don't matter."
+      - "Use as exit signal only."
+    correct: 1
+    topic_tag: fvg
+    explanation: "In a trending market, FVGs provide pullback entry zones. Limit order in the FVG, SL just below it, target the next resistance. You get a much better entry than chasing the current price, with clear invalidation (SL hit = FVG didn't hold, thesis broken)."
+
+  - id: q5
+    text: "Approximate fill rate of FVGs in a strong trending market in the direction of the trade?"
+    type: mcq
+    choices:
+      - "100% — they always fill."
+      - "70-80% — high probability but not guaranteed. Sized + SL'd accordingly."
+      - "30% — random."
+      - "0% — they never fill."
+    correct: 1
+    topic_tag: fvg
+    explanation: "FVGs in good trending contexts fill ~70-80% of the time — high probability. But not 100%. Some setups, the trend just continues without pulling back. This is why you use them as ENTRY ZONES with defined risk (SL below the FVG), not as guaranteed targets. The probability is your edge; the SL handles the cases that don't pan out."
+
+  - id: q6
+    text: "Why do you place SL BELOW (or above for bearish) the Fair Value Gap?"
+    type: mcq
+    choices:
+      - "Random preference."
+      - "The FVG zone is where the thesis lives. If price breaks beyond the FVG, the imbalance failed to hold — the trend you were trading is probably done. SL below gives clear invalidation."
+      - "Exchanges require it there."
+      - "Always at exactly $1 below."
+    correct: 1
+    topic_tag: fvg
+    explanation: "FVG defended = thesis intact. FVG broken = thesis broken. SL just below the FVG (with a small buffer for noise) gives you a defined risk and a clean invalidation point. If hit, the trade was wrong; you exit without rationalizing or hoping."
+
+  - id: q7
+    text: "FVG size — which is more likely to be a reliable signal?"
+    type: mcq
+    choices:
+      - "A 0.05% FVG on a 1-minute chart."
+      - "A 1.3% FVG on a 4H chart formed during a strong impulsive move — larger imbalance required more momentum to create, more meaningful structurally."
+      - "Size doesn't matter for FVGs."
+      - "Smaller is always better."
+    correct: 1
+    topic_tag: fvg
+    explanation: "Larger FVGs on higher timeframes are more meaningful. They required real institutional-size momentum to create. Tiny FVGs on small timeframes are usually noise — random imbalances that mean nothing. Filter rule: only trade FVGs of at least 0.3-0.5% on the timeframe you're using."
+
+  - id: q8
+    text: "FVG in chop (sideways range) — how reliable?"
+    type: mcq
+    choices:
+      - "Very reliable — same as trending."
+      - "Less reliable (40-50% fill, basically random) — without a directional trend, FVGs lose their predictive power. Skip them in chop."
+      - "Always fills within hours."
+      - "Never matters."
+    correct: 1
+    topic_tag: fvg
+    explanation: "FVGs work because directional momentum created the imbalance and the same directional flow tends to bring price back to fill it. In chop with no directional flow, the FVG is just random noise that may or may not get touched. Skip them — wait for trending conditions where the probability tilts in your favor."
+
+  - id: q9
+    text: "FVGs are part of which broader trading framework?"
+    type: mcq
+    choices:
+      - "Wyckoff theory."
+      - "Smart Money Concepts (SMC) — covered more fully in Tier 4. FVG is one of the empirically useful concepts from SMC; some other SMC concepts are more marketing than edge."
+      - "Modern Portfolio Theory."
+      - "Quantitative finance."
+    correct: 1
+    topic_tag: smc
+    explanation: "SMC includes Order Blocks, Liquidity Pools, FVGs, Breaker Blocks, Premium/Discount zones, etc. Some have real empirical edge (FVG, properly-defined Order Blocks). Others are more theory than results. The tier 4 lesson on SMC covers what to take seriously vs what to discount."
+
+  - id: q10
+    text: "Worked example from the lesson: bullish FVG between $62,200 and $63,000 in an uptrend. SL goes where?"
+    type: mcq
+    choices:
+      - "$63,400 (above the FVG)."
+      - "$62,000 (below the FVG and below candle 2's low — invalidation if the impulsive move's structure breaks)."
+      - "$60,000 (very wide)."
+      - "$62,600 (middle of the FVG)."
+    correct: 1
+    topic_tag: fvg
+    explanation: "SL goes BELOW the FVG (with a buffer below the supporting structure — candle 2's low in this case). $62,000 is just below the structural low of the impulse — clear invalidation. SL inside the FVG ($62,600) would get triggered by normal fluctuation. SL above the FVG ($63,400) would be against the trade direction. Below the structure is the right zone."

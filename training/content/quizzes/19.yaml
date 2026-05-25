@@ -1,0 +1,123 @@
+id: "19"
+lesson_id: 19
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "What's the structural definition of an UPTREND?"
+    type: mcq
+    choices:
+      - "Price going up most days."
+      - "A sequence of HIGHER HIGHS and HIGHER LOWS (HH/HL) — each peak higher than the previous, each trough higher than the previous. Stairsteps upward."
+      - "RSI above 50."
+      - "Volume increasing."
+    correct: 1
+    topic_tag: trend
+    explanation: "HH/HL is the textbook, objective definition. Forget feelings about whether the market 'looks bullish'. The structure either shows higher highs and higher lows or it doesn't. This makes trend identification objective and quick."
+
+  - id: q2
+    text: "Break of Structure (BoS) in an UPTREND happens when:"
+    type: mcq
+    choices:
+      - "Price drops 10%."
+      - "Price makes a NEW HIGH above the most recent swing high — confirming the uptrend continues."
+      - "Price reverses sharply."
+      - "Volume disappears."
+    correct: 1
+    topic_tag: structure
+    explanation: "BoS = price breaks the previous structural high. In an uptrend, that means a new HH. It confirms the trend is alive and continuing. Look for long entries on pullbacks after BoS."
+
+  - id: q3
+    text: "Change of Character (CHoCH) in an UPTREND is signaled by:"
+    type: mcq
+    choices:
+      - "Another higher high."
+      - "Price breaking BELOW the most recent swing LOW — the uptrend's HL structure is broken; potential downtrend starting."
+      - "Random noise."
+      - "Volume increase only."
+    correct: 1
+    topic_tag: structure
+    explanation: "An uptrend lives on its HLs. When price breaks BELOW the most recent HL, the HH/HL pattern is broken — that's the CHoCH. It's a warning that the trend may be ending. Confirmation requires the next move forming a new LH/LL pattern (true new downtrend)."
+
+  - id: q4
+    text: "After a CHoCH, what's the smart next move?"
+    type: mcq
+    choices:
+      - "Immediately enter a position in the new direction."
+      - "Wait for CONFIRMATION — the next move forming new structure (LH/LL after bullish-to-bearish CHoCH). CHoCH alone often produces fakeouts; waiting gives much higher win rate at the cost of missing the first few %."
+      - "Take a 100× leverage gamble."
+      - "Wait for the moon."
+    correct: 1
+    topic_tag: structure
+    explanation: "CHoCH is a WARNING, not a confirmed trend change. After the CHoCH, watch for new structure: did price actually form a new LH and then break to a new LL? That's confirmation. Trading just the CHoCH without confirmation has many false signals. Patience > anticipation."
+
+  - id: q5
+    text: "Daily chart shows an uptrend (HH/HL). 1H chart shows a downtrend (LH/LL) within a 4H pullback. How should you trade?"
+    type: mcq
+    choices:
+      - "Short — 1H downtrend matters most."
+      - "Wait for the 1H downtrend to end (1H CHoCH bullish) — then LONG, aligned with the daily uptrend bias. HTF gives bias; LTF gives timing."
+      - "Trade both directions simultaneously."
+      - "Stop trading entirely."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Higher TF rules bias; lower TF rules timing. Daily uptrend = primary bias is long. The 1H downtrend within it is just a pullback within the larger trend — perfect for entry timing. Wait for the pullback to end (1H CHoCH bullish, 1H bottoming structure), then long. Going short against the daily uptrend = fighting the bigger flow."
+
+  - id: q6
+    text: "Worked example: BTC clearly making HH/HL on the 4H. Most recent HL at $61K. You want to long. Where does SL go for a 'BoS pullback' trade?"
+    type: mcq
+    choices:
+      - "Above the entry."
+      - "Below the most recent HL ($60.5K — gives small buffer below $61K). If price closes below the HL, the uptrend structure is invalidated."
+      - "At a random $58K level."
+      - "No SL needed."
+    correct: 1
+    topic_tag: structure
+    explanation: "The uptrend lives on its most recent HL holding. If that HL breaks (price closes below), the HH/HL structure is broken = CHoCH = trend invalidated. Your SL belongs exactly there — just below the HL. Tight, structural, clean invalidation. Anything wider is taking unnecessary risk; anything tighter is too close to noise."
+
+  - id: q7
+    text: "What's the FAILED BoS pattern?"
+    type: mcq
+    choices:
+      - "Price makes new highs forever."
+      - "Price tries to break above the previous swing high (BoS attempt) but FAILS — wicks beyond, then closes back below the previous high. Often the first sign of weakness in an uptrend."
+      - "Price goes sideways forever."
+      - "A new HL forms."
+    correct: 1
+    topic_tag: structure
+    explanation: "Failed BoS = breakout that didn't sustain. The wick beyond suggests buyers tried but sellers absorbed and pushed back. Often precedes a CHoCH. Don't long the failed breakout (already shown weak). Wait for full CHoCH confirmation, then consider shorts."
+
+  - id: q8
+    text: "On a chart you'd never seen, the LAST 4 pivots are: low $58K, high $61K, low $59K, high $63K. What's the structure?"
+    type: mcq
+    choices:
+      - "Downtrend (LH/LL)."
+      - "UPTREND (HH/HL) — the low went UP from $58K to $59K (HL) and the high went UP from $61K to $63K (HH). Stairsteps upward."
+      - "Ranging."
+      - "Indecision."
+    correct: 1
+    topic_tag: structure
+    explanation: "$58K → $59K (HL ✓), $61K → $63K (HH ✓). Both higher = uptrend by structural definition. Bias = long. Look for buy setups on pullbacks toward the HL or broken structure."
+
+  - id: q9
+    text: "Why is market structure considered SIMPLER than most indicators?"
+    type: mcq
+    choices:
+      - "It requires advanced math."
+      - "Two observations per chart (most recent swing high and most recent swing low) tell you the trend. No indicators, no calculations, no lag. Just visual pattern recognition that's quick to apply."
+      - "It requires expensive software."
+      - "It only works on weekends."
+    correct: 1
+    topic_tag: structure
+    explanation: "Indicators add layers of calculation between you and price. Market structure reads price directly. Three seconds of analysis (HH/HL? LH/LL? Neither?) and you have the trend. No lag (indicators always lag), no false signals from indicator settings. The most useful frameworks are the simplest."
+
+  - id: q10
+    text: "Higher-TF support level + 1H bullish CHoCH happening at the same level. What does this combination represent?"
+    type: mcq
+    choices:
+      - "Confusion."
+      - "High-probability long entry — HTF bias (level holding) + LTF timing (CHoCH confirms reversal of the local downtrend). Two independent signals aligned."
+      - "Bearish setup."
+      - "Time to short."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "This is the classic 'HTF bias + LTF timing' alignment. Daily/4H S/R level holds = the bigger trend respects this level. 1H CHoCH = the local downtrend (pullback within the bigger uptrend) has just reversed. Together = the pullback ended at HTF support; primary trend resuming. Highest-quality long setup."

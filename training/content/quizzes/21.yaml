@@ -1,0 +1,147 @@
+id: "21"
+lesson_id: 21
+pass_threshold: 10
+questions:
+  - id: q1
+    text: "A candle's BODY represents the price range between:"
+    type: mcq
+    choices:
+      - "High and Low"
+      - "Open and Close — the settled outcome of the period"
+      - "Volume and price"
+      - "Bid and ask"
+    correct: 1
+    topic_tag: candles
+    explanation: "Body = Open to Close (where price settled). Wicks = High beyond body (failed up-attempt) + Low below body (failed down-attempt). The body shows commitment; wicks show rejection."
+
+  - id: q2
+    text: "A Hammer candle at major support after a sustained downtrend, with above-average volume — what's the smart trade?"
+    type: mcq
+    choices:
+      - "Skip — patterns don't matter."
+      - "Limit LONG just above the hammer's close, SL below the hammer's low, TP at next resistance. Pattern + context + volume = high-quality bullish reversal setup."
+      - "SHORT the hammer aggressively."
+      - "Wait for 100 more hammers."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "Pattern (hammer = rejection) + context (at support after downtrend) + volume confirmation = three independent signals aligned. Classic textbook bullish reversal entry. SL below the wick gives clean invalidation. TP at next S/R for defined R:R."
+
+  - id: q3
+    text: "A Doji forming in the middle of a sideways range with no preceding trend and no key level nearby signals what?"
+    type: mcq
+    choices:
+      - "Strong reversal."
+      - "Pure noise — indecision candles in chop without context are information-free. Skip."
+      - "Bearish continuation."
+      - "Bullish breakout."
+    correct: 1
+    topic_tag: indecision
+    explanation: "Doji = indecision. The market is already in a state of indecision (sideways range); another small candle adds no information. Useful indecision candles require contrast — appearing at a key level after a trend (e.g., morning star middle candle). In chop alone = noise."
+
+  - id: q4
+    text: "Best use of a Fair Value Gap (FVG) that forms during a strong uptrend?"
+    type: mcq
+    choices:
+      - "Short the FVG immediately."
+      - "Set a LIMIT BUY in the FVG zone — price often pulls back to fill the FVG before resuming the uptrend. Entry zone with SL below the FVG."
+      - "Ignore — FVGs are random."
+      - "Hold positions through it without action."
+    correct: 1
+    topic_tag: fvg
+    explanation: "FVG in trending market = high-probability pullback entry zone (~70-80% fill rate in good conditions). Limit order in the FVG, SL just below it. You get a much better entry than chasing the current price, with defined risk and clear invalidation."
+
+  - id: q5
+    text: "When should you DRAW a horizontal support/resistance level?"
+    type: mcq
+    choices:
+      - "Whenever you see any low or high — draw as many as possible."
+      - "Only at levels with clear confluences (swing pivot + round number + Fib + MA, etc.) — typically 3-6 high-quality zones per chart, not 30."
+      - "Only on Mondays."
+      - "Never — they don't matter."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Quality over quantity. The point of drawing S/R is to identify the FEW levels that matter. If 30 lines are drawn, every price is 'near' something and the chart becomes meaningless. 3-6 zones with multiple confluences each gives you usable structure."
+
+  - id: q6
+    text: "A support level at $58K just broke (price closed at $57K with volume). What's the smartest expectation?"
+    type: mcq
+    choices:
+      - "Buy the dip — support always holds eventually."
+      - "POLARITY FLIP — broken support often becomes resistance on retest. Wait for pullback to $58K, watch for rejection, then SHORT."
+      - "Massive rally back to all-time-highs."
+      - "Hold all longs forever."
+    correct: 1
+    topic_tag: support_resistance
+    explanation: "Polarity flip is one of the most reliable concepts in TA. Once support is decisively broken (close beyond), the level often acts as resistance from the new side. The retest-and-rejection pattern produces excellent risk:reward shorts. Don't try to 'catch the falling knife' by buying the break."
+
+  - id: q7
+    text: "How many TOUCHES does a trendline need before it's considered tradeable?"
+    type: mcq
+    choices:
+      - "1"
+      - "2"
+      - "3 — two points is geometry/hypothesis only. The third touch with clear reaction confirms it as a real, tradeable level."
+      - "10"
+    correct: 2
+    topic_tag: trendlines
+    explanation: "Two points connect any pair — that's geometry, not analysis. The third touch with a clear reaction (bounce + reversal candle + volume) proves the line is real. Until then, treat the line as a hypothesis. Trading hypothetical trendlines = high false-signal rate."
+
+  - id: q8
+    text: "An UPTREND is defined structurally as:"
+    type: mcq
+    choices:
+      - "Price going up most days."
+      - "A sequence of HIGHER HIGHS and HIGHER LOWS (HH/HL) — each peak higher than previous, each trough higher than previous."
+      - "RSI above 70."
+      - "Volume increasing every candle."
+    correct: 1
+    topic_tag: structure
+    explanation: "HH/HL is the objective structural definition. Forget vibes — the structure either shows progressive higher highs AND higher lows, or it doesn't. This is the cleanest framework for trend identification. LH/LL = downtrend. Neither = range."
+
+  - id: q9
+    text: "Change of Character (CHoCH) in an uptrend is signaled by:"
+    type: mcq
+    choices:
+      - "Another HH."
+      - "Price breaking BELOW the most recent swing LOW (HL) — the uptrend's HH/HL structure broken; potential downtrend starting."
+      - "Volume increase."
+      - "RSI overbought."
+    correct: 1
+    topic_tag: structure
+    explanation: "Uptrend lives on its HLs holding. When price breaks below the most recent HL, the HH/HL pattern is broken — that's the CHoCH. It's a WARNING that the trend may be ending. Real confirmation = the next move forming LH/LL (true new downtrend)."
+
+  - id: q10
+    text: "1D shows uptrend (HH/HL). 1H shows a strong bearish engulfing at resistance. What's the smart action?"
+    type: mcq
+    choices:
+      - "SHORT immediately — engulfing patterns are reliable."
+      - "SKIP — the 1H signal is against the 1D bias. Counter-trend trades have low win rates. Wait for an aligned long setup instead."
+      - "Long with 100× leverage."
+      - "Take both directions simultaneously."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Cardinal rule: lower TF must align with higher for high-probability trades. A 1H short against a 1D uptrend is fighting the bigger flow. Most of the time, the larger trend reasserts itself. Wait for aligned setups — they have far better win rates than counter-trend gambles."
+
+  - id: q11
+    text: "What's an A+ multi-TF setup?"
+    type: mcq
+    choices:
+      - "Any one TF showing a signal."
+      - "ALL 3 TFs aligned — 1D bias + 4H confirmation + 1H entry signal all pointing the same direction. Rare and high-value; consider sizing up (3-4% if rules allow)."
+      - "Counter-trend with high leverage."
+      - "Random direction."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Three-TF alignment is rare and high-quality. Each TF measures different participant time-scales (institutional / swing / day-trader). When all three agree, the probability of being right is much higher than any single TF alone. These are the trades where you can deviate slightly upward from 1% sizing on rare setups."
+
+  - id: q12
+    text: "What's the cardinal habit when doing top-down chart analysis?"
+    type: mcq
+    choices:
+      - "Start with 1m chart and work up."
+      - "ALWAYS start with the HIGHEST timeframe (1D for crypto trading) and work DOWN. HTF sets bias; LTF refines entry. Never reverse the order — leads to confirmation bias."
+      - "Random TF order."
+      - "Only look at one TF."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Top-down (HTF first) sets the bias before you look for entries. This prevents the confirmation-bias trap where you start with a desired trade and find lower-TF reasons to justify it. The HTF should DRIVE your decisions, not validate them after the fact."

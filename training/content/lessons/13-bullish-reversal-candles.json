@@ -1,0 +1,130 @@
+{
+  "slug": "13-bullish-reversal-candles",
+  "subtitle": "Four candle patterns that signal a potential reversal from down to up. None of them work in isolation — they need to form at meaningful levels and ideally on high volume. Learn the shapes here, then learn the context in later lessons.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>This lesson is the visual vocabulary for bullish reversals. Lesson 14 covers the mirror: bearish reversals. The fundamental insight: most reversal patterns are about ONE side decisively rejecting the prior trend, with the body and wicks of one or two candles telling the story.</p><p>Critical caveat — these patterns are dramatically more reliable WITH CONTEXT (at support, after a downtrend, on high volume) than without. The shape alone is necessary but not sufficient. We'll lean into that throughout.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #1 — Hammer"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> A candle with a small body near the top of the candle's range, and a long lower wick at least 2× the body length. Color of body can be green or red — green is slightly more bullish but the shape is the key signal.</p><p><strong>What it means:</strong> Sellers pushed price down hard during the period (creating the long lower wick). Then buyers absorbed all that selling and pushed price back up to close near the period's high. The down-attempt was REJECTED.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Element", "Specification", "Why"],
+      "rows": [
+        ["Body size", "Small — top 30% of candle's range", "Most of the range was the failed downward attempt"],
+        ["Lower wick", "At least 2× body length, ideally 3×+", "The longer the rejection, the stronger the signal"],
+        ["Upper wick", "Minimal or none", "Buyers were in control by the close"],
+        ["Context required", "MUST form after a downtrend at or near support", "Random hammers in chop are noise"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Hammer at support = high-quality signal",
+      "content": "<p>A hammer in the middle of a sideways range = ignore. A hammer at the bottom of a downtrend, at a known support level, with high volume = potential reversal. The candle shape is the same, but the context completely changes its value.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #2 — Bullish Engulfing"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> Two-candle pattern. First candle is bearish (red). Second candle is bullish (green) and its body completely ENGULFS the first candle's body — opening below the previous close and closing above the previous open.</p><p><strong>What it means:</strong> The first candle continued the downtrend. The second candle wiped out all of that downward progress AND added more in the opposite direction. Sellers got fully overwhelmed within a single candle.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Element", "Specification", "Why"],
+      "rows": [
+        ["First candle", "Bearish (red), continuation of recent downtrend", "Sets up the reversal"],
+        ["Second candle", "Bullish (green), body engulfs first candle's body completely", "The reversal magnitude is the signal"],
+        ["Second candle's open", "AT OR BELOW first candle's close", "Confirms the gap-down attempt that got rejected"],
+        ["Second candle's close", "ABOVE first candle's open", "Net effect: completely undone the prior candle"],
+        ["Volume", "Higher on the second candle, ideally", "Confirms real participation in the reversal"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Why it's a stronger signal than a hammer:</strong> a hammer is one candle showing rejection. Engulfing shows TWO periods of decisive action — the failed continuation + the actual reversal. The market had to commit to the new direction over multiple periods.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #3 — Morning Star"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> Three-candle pattern. Candle 1: large bearish body (continuation of downtrend). Candle 2: small body of either color, often with a gap-down from candle 1 — this is the \"star\" representing indecision. Candle 3: large bullish body that closes well into the body of candle 1.</p><p><strong>What it means:</strong> Sellers were in control on day 1. The market hesitated on day 2 (the small body shows neither side dominated). Then buyers took over on day 3 with a strong push that reclaimed much of the loss.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Candle", "Shape", "What it tells you"],
+      "rows": [
+        ["Candle 1", "Large bearish body", "Downtrend continuation"],
+        ["Candle 2 (the 'star')", "Small body, often with gap. Color doesn't matter much.", "Indecision — sellers lost control but buyers haven't taken over yet"],
+        ["Candle 3", "Large bullish body closing in upper half (ideally upper third) of candle 1's body", "Buyers decisively took control"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Morning Star needs three full candles",
+      "content": "<p>Don't pre-empt the pattern. You can't call \"morning star\" after candle 2. The pattern requires candle 3 to confirm. Trading after candle 2 = guessing.</p><p>The wait costs you some entry price (the move starts at candle 3) but dramatically improves your win rate. Patterns confirmed > patterns predicted.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #4 — Piercing Line"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> Two-candle pattern. Candle 1: bearish (red), continuation of downtrend. Candle 2: bullish (green) that opens BELOW candle 1's close (gap down) and closes ABOVE the midpoint of candle 1's body.</p><p><strong>What it means:</strong> Sellers tried to extend the downtrend with the gap down at the open of candle 2. Buyers absorbed that, then pushed price back up to recover more than half of candle 1's decline. Strong reversal of sentiment.</p><p><strong>Difference vs Bullish Engulfing:</strong> Piercing Line's candle 2 closes ABOVE the midpoint but BELOW the open of candle 1. Engulfing closes above the open. Engulfing is stronger; piercing is the milder version of the same idea.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Comparing all four — strength ranking"
+    },
+    {
+      "type": "table",
+      "headers": ["Pattern", "Number of candles", "Typical strength", "Best context"],
+      "rows": [
+        ["Hammer", "1", "Moderate", "At clear support after sustained downtrend"],
+        ["Piercing Line", "2", "Moderate-Strong", "At support with confirmed candle 2"],
+        ["Bullish Engulfing", "2", "Strong", "At support or after extended downtrend"],
+        ["Morning Star", "3", "Very Strong", "At major support, end of multi-day downtrend"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The context checklist — what makes any of these tradeable"
+    },
+    {
+      "type": "text",
+      "content": "<p>For ANY bullish reversal pattern, run through this checklist before treating it as a trade signal:</p><ol><li><strong>Is the pattern at a meaningful level?</strong> Major support, prior structure pivot, key MA, round number. If \"no\" → it's noise.</li><li><strong>Is there a clear preceding downtrend?</strong> Reversal patterns need something to reverse FROM. If price was already sideways → skip.</li><li><strong>Is volume confirming?</strong> The reversal candle (or candle 3 for morning star) should have above-average volume. Low volume = weak signal.</li><li><strong>Are higher timeframes aligned?</strong> A bullish reversal on the 1H against a strong 4H downtrend often fails. Multi-TF alignment matters (lesson 19).</li><li><strong>Is there confluence with other signals?</strong> RSI divergence + bullish reversal candle + support + high volume = very high quality. Pattern alone = much weaker.</li></ol><p>4-5 boxes checked = high probability setup. 1-2 boxes = skip and wait.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "danger",
+      "title": "The classic beginner mistake",
+      "content": "<p>Learning the four patterns above and then SHORTING anywhere they appear in chop because \"this is a bullish reversal so the trend must reverse\". The pattern in chop is noise. Without trend to reverse and support to bounce from, the pattern means nothing. Beginners lose money trading shapes; experienced traders trade shapes only at high-quality levels with confirming volume.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — putting it together"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC has been in a downtrend for 5 days, dropping from $65K to $58K. Today price tags the $58K level (a previous swing low + round number support). The 4H candle that touches $58K has these properties:</p><ul><li>Small body near the top of the range — long lower wick 4× body length (HAMMER)</li><li>Volume on this candle is 2.5× the recent average</li><li>RSI on the 4H was at 25 (oversold)</li><li>BTC.D rolling over (alts catching bid)</li></ul><p>This is high-quality. Hammer ✓ + support ✓ + downtrend ✓ + volume ✓ + RSI oversold ✓ + macro favorable ✓. Six boxes checked. You could:</p><ul><li><strong>Entry:</strong> $58,500 limit, just above the hammer's close</li><li><strong>SL:</strong> $57,800 (below the hammer's low)</li><li><strong>TP1:</strong> $60,000 (first round number above)</li><li><strong>TP2:</strong> $62,000 (mid-range)</li></ul><p>R:R ≈ 1:2 to TP1, 1:5 to TP2. Risk = whatever 1% of equity sized to the SL distance gives.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Learn the four shapes by heart: Hammer, Piercing Line, Bullish Engulfing, Morning Star. Then NEVER trade them without running the 5-point context checklist. The shape alone is necessary but not sufficient.</p><p>Next lesson is the mirror: bearish reversal patterns. Same logic, opposite direction.</p>"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "slug": "17-support-resistance",
+  "subtitle": "If you only ever learn ONE chart-reading concept, make it this one. Support and resistance are where prices stop, reverse, and decide direction. Every other pattern in this course works BECAUSE of S/R.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Support and resistance (S/R) are the most important concept in technical analysis. Period. Every candle pattern, every trendline break, every indicator divergence works because it's happening AT a level where buyers or sellers have previously committed capital.</p><p>If you can draw clean S/R lines on a chart and respect them, you've already passed the technical-skill bar for trading profitably. Everything else is refinement.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What support and resistance actually are"
+    },
+    {
+      "type": "table",
+      "headers": ["Concept", "What it is", "Why it works"],
+      "rows": [
+        ["<strong>Support</strong>", "A price level (or zone) where buying interest has historically been strong enough to STOP a price decline.", "Buyers from earlier remember the price; sellers know buyers will defend it; both watch and react."],
+        ["<strong>Resistance</strong>", "A price level (or zone) where selling interest has historically been strong enough to STOP a price advance.", "Mirror: sellers from earlier defend the level; buyers know they'll defend it."]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>S/R is not magic — it's a self-reinforcing reality. People remember where they bought or sold before. They place orders at those levels. The cumulative effect creates real liquidity at those prices, which then continues to attract reactions. It's both psychological and structural.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to identify S/R levels"
+    },
+    {
+      "type": "text",
+      "content": "<p>Several types of levels qualify as S/R. The strongest are usually combinations of multiple types:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Type", "How to spot", "Reliability"],
+      "rows": [
+        ["<strong>Swing highs/lows</strong>", "Previous local peaks or troughs on the chart — clear pivot points where price reversed direction", "Very high — direct historical proof of level reactions"],
+        ["<strong>Round numbers</strong>", "Psychological levels ending in 00 or 000 ($60,000, $1.00, $0.10)", "High — retail attention magnets"],
+        ["<strong>Prior breakout/breakdown levels</strong>", "Levels that once acted as resistance and were broken — often become support (and vice versa). Polarity flip.", "High — well-known concept, widely watched"],
+        ["<strong>Volume profile peaks</strong>", "Prices where the most volume traded historically — high acceptance zones", "High — proves real participation at that price"],
+        ["<strong>Moving averages</strong>", "200 MA, 50 MA — dynamic S/R that updates each candle", "Medium-High — covered in lesson 21"],
+        ["<strong>Fibonacci retracements</strong>", "0.382, 0.5, 0.618 levels from recent swing", "Medium — works when many traders use the same swing"],
+        ["<strong>Trendlines</strong>", "Diagonal lines connecting swing highs/lows", "Medium — covered in lesson 18"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Multiple confluences = strongest S/R",
+      "content": "<p>A level that is a swing high + round number + Fibonacci 0.618 + 200 MA all at the same price = a MAJOR S/R. Multiple independent signals pointing at the same price means many groups of traders are watching that level. Price reactions there are highly likely.</p><p>A level that's just one indicator's number (e.g., \"60,500 is the 0.618 Fib\") with no other confluence = weak. Could matter, could not.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to DRAW S/R correctly"
+    },
+    {
+      "type": "text",
+      "content": "<p>S/R levels are ZONES, not single prices. The market is messy — exact prices vary by a few percent depending on the day. Drawing rules:</p><ol><li><strong>Use closing prices, not wicks.</strong> A wick that touched $60,500 briefly is less meaningful than three candle bodies that closed near $60,200. The closes show where price ACCEPTED the level.</li><li><strong>Draw zones, not pixel-perfect lines.</strong> If swing highs at $60,200, $60,350, and $60,180 all rejected, draw a zone from $60,150-$60,400, not a single line at $60,275.</li><li><strong>Higher timeframes = stronger levels.</strong> A daily S/R outweighs a 1-hour S/R. When drawing, start with the highest TF you trade and work down.</li><li><strong>Volume confirms the level.</strong> A swing high with massive volume = strong S/R. A swing high with thin volume = weaker.</li><li><strong>Multiple touches strengthen the level.</strong> A level touched once = potential S/R. Touched 3+ times with reactions = confirmed S/R. Touched 10+ times = the level is getting weaker (each touch consumes some of the orders that defend it).</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Overdrawing — the beginner trap",
+      "content": "<p>New traders often draw 20-30 S/R lines on a single chart. Result: every price level is 'near support' or 'near resistance' — the chart becomes meaningless noise.</p><p>The cure: draw only the levels that meet the criteria above. On a typical chart, you should have 3-6 S/R zones, not 30. If you can't quickly point to WHY each line is there (\"swing low + 0.618 + round number\"), it shouldn't be drawn.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Polarity flip — support becomes resistance"
+    },
+    {
+      "type": "text",
+      "content": "<p>One of the most useful concepts: when a support level GETS BROKEN, it often becomes resistance on the way back up (and vice versa for broken resistance becoming support).</p><p>Why this happens:</p><ul><li>Traders who were long from above support are now underwater. They want to exit at break-even — which is right at the broken support level. Their selling creates resistance when price returns there.</li><li>Traders who shorted on the breakdown want to add at favorable prices. The original support level (now resistance) is the cleanest place to add.</li><li>Algorithmic systems explicitly trade polarity-flip rules.</li></ul><p>This is why broken levels often produce \"retest then continue\" patterns — price breaks down, pulls back to the broken level (now resistance), gets rejected, continues down.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trading AT S/R — three approaches"
+    },
+    {
+      "type": "table",
+      "headers": ["Approach", "When to use", "Trade setup"],
+      "rows": [
+        ["<strong>Bounce trade</strong>", "Price approaches established support in an uptrend (or resistance in downtrend)", "Limit BUY just above support, SL below the zone, TP at next resistance"],
+        ["<strong>Breakout trade</strong>", "Price has tested S/R multiple times and is now thrusting through with volume", "Stop-BUY just above breakout (or stop-SELL below breakdown), SL on the other side"],
+        ["<strong>Retest entry</strong>", "S/R level just broke; wait for pullback to the broken level (now flipped polarity)", "Limit order at the broken level, SL beyond the structural high/low that caused the break"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't fight broken levels",
+      "content": "<p>A common mistake: support breaks, you assume \"it'll come back\" and try to BUY the breakdown thinking support will hold. Usually it doesn't. Once support is decisively broken (close beyond, not just a wick), the level is INVALIDATED. Don't trade the bounce assuming a hold; trade the retest assuming a flip (now resistance).</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — drawing and trading S/R"
+    },
+    {
+      "type": "text",
+      "content": "<p>You open the BTC 4H chart and see these levels jump out:</p><ul><li><strong>$58,000 zone</strong>: Three swing lows touched here over 2 weeks. Volume profile peak. Round number magnet. Strong support.</li><li><strong>$62,500 zone</strong>: Most recent swing high. Volume profile peak. Aligned with 200 MA on the 1H. Strong resistance.</li><li><strong>$65,000 zone</strong>: Previous high from a month ago. Round number. Untested for weeks. Mid-strength resistance.</li><li><strong>$54,000 zone</strong>: Old support from 3 weeks ago that broke. If price gets there, watch for polarity flip — might act as resistance now.</li></ul><p>Trading plan based on these levels:</p><ul><li><strong>If price approaches $58,000:</strong> watch for bullish reversal candle (hammer, engulfing) + volume → bounce trade. Entry $58,200, SL $57,500, TP1 $60,000, TP2 $62,500.</li><li><strong>If price approaches $62,500 from below:</strong> watch for bearish reversal pattern → short the rejection. Entry $62,300, SL $63,000, TP1 $60,500, TP2 $58,500.</li><li><strong>If price breaks $58,000 with conviction:</strong> wait for retest of $58,000 as resistance, then short. Don't try to catch the falling knife by buying the break-down.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>S/R is the foundation. Three habits:</p><ol><li><strong>Draw zones, not lines.</strong> Markets are messy.</li><li><strong>Draw few, strong levels.</strong> 3-6 zones per chart, all with multiple confluences. Skip the marginal ones.</li><li><strong>Always know where the next S/R is.</strong> Above your current position and below it. These are your TPs and SLs respectively.</li></ol><p>The next lesson covers trendlines — the diagonal version of horizontal S/R. Then market structure (lesson 19) ties everything together.</p>"
+    }
+  ]
+}

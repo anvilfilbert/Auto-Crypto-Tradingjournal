@@ -1,0 +1,108 @@
+{
+  "slug": "19-market-structure",
+  "subtitle": "Market structure is the cleanest framework for identifying what a trend is and when it changes. Higher Highs and Higher Lows = uptrend. Lower Highs and Lower Lows = downtrend. Break of Structure or Change of Character = the trend just shifted.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You can read individual candles. You can identify S/R and trendlines. Now you need a single framework for answering the most important question: <strong>what is the trend right now?</strong></p><p>Market structure is that framework. It uses just two observations per chart — the most recent swing high and the most recent swing low — to give you an objective read on whether you're in an uptrend, downtrend, or ranging. Simpler than indicators, more reliable than feelings.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The core concept — swings define structure"
+    },
+    {
+      "type": "text",
+      "content": "<p>A \"swing\" is a local peak or trough on the chart — a pivot point where price reversed direction. Look at any chart and identify the swing points: the highs and lows where price changed direction.</p><ul><li><strong>Swing high (SH)</strong>: a peak with lower prices on both sides. Often easier to see if you look at a higher timeframe.</li><li><strong>Swing low (SL)</strong>: a trough with higher prices on both sides.</li></ul><p>The PATTERN of recent swings tells you the trend:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Pattern", "Meaning", "Visual"],
+      "rows": [
+        ["<strong>Higher High (HH) + Higher Low (HL)</strong>", "<strong>Uptrend</strong>. Each peak is higher than the previous; each trough is higher than the previous.", "Stairsteps upward"],
+        ["<strong>Lower High (LH) + Lower Low (LL)</strong>", "<strong>Downtrend</strong>. Each peak is lower; each trough is lower.", "Stairsteps downward"],
+        ["<strong>Equal Highs / Equal Lows / no pattern</strong>", "<strong>Ranging / sideways</strong>. No directional bias.", "Choppy, no clear direction"],
+        ["<strong>HH then a LH</strong>", "<strong>Possible reversal forming</strong>. Trend might be shifting.", "First warning sign"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The most useful question",
+      "content": "<p>When looking at any chart, the first thing to ask: <strong>\"Are we making HH/HL, LH/LL, or neither?\"</strong>. Three seconds of analysis. Instantly tells you the trend bias.</p><p>If HH/HL → bias long. Look for buy setups at support.</p><p>If LH/LL → bias short. Look for short setups at resistance.</p><p>If neither → range trade or skip. Wait for structure to form.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Break of Structure (BoS) — trend continuation"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Break of Structure (BoS)</strong> is when price makes a NEW high (in an uptrend) or NEW low (in a downtrend), confirming the trend continues.</p><p>Example: BTC is in an uptrend with recent swing high at $62,000 and recent swing low at $59,000. Price breaks above $62,000 to make a new high at $63,500. This is a BULLISH Break of Structure — the uptrend is confirmed continuing.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Direction", "BoS pattern", "Trade implication"],
+      "rows": [
+        ["Uptrend BoS", "Price breaks above the most recent swing HIGH", "Bullish — trend continues; look for long entries on pullbacks"],
+        ["Downtrend BoS", "Price breaks below the most recent swing LOW", "Bearish — trend continues; look for short entries on retraces"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Change of Character (CHoCH) — trend reversal"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Change of Character (CHoCH)</strong> is when the structure pattern SHIFTS, signaling a potential trend reversal.</p><p>Example: BTC is in an uptrend (HH/HL). Price was making higher highs at $62K, $63K, $64K. Then it pulls back and breaks BELOW the recent swing LOW (e.g., the previous HL at $61K). This is a BEARISH CHoCH — the uptrend's structure is broken; a downtrend may be starting.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Previous trend", "CHoCH signal", "What it means"],
+      "rows": [
+        ["Uptrend (HH/HL)", "Price breaks BELOW the most recent swing LOW", "Bearish CHoCH — uptrend invalidated; potential downtrend starting"],
+        ["Downtrend (LH/LL)", "Price breaks ABOVE the most recent swing HIGH", "Bullish CHoCH — downtrend invalidated; potential uptrend starting"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "CHoCH ≠ confirmed reversal — wait for the new structure",
+      "content": "<p>A CHoCH is a WARNING that the trend may be changing. It's not a guaranteed reversal. After a bullish CHoCH (downtrend broken), the real confirmation is the next move forming a NEW higher high — that's when the new uptrend's structure is established.</p><p>Trading the CHoCH alone often produces fakeouts. Trading the CHoCH + confirmation of new structure has much higher win rate. The trade-off is missing the very first few percent of the reversal.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Structure across timeframes — a key habit"
+    },
+    {
+      "type": "text",
+      "content": "<p>The structure on different timeframes can be different. This is normal and useful:</p><ul><li>Daily might be in an uptrend (HH/HL)</li><li>4H might be in a pullback (LH forming within the daily uptrend)</li><li>1H might be in a downtrend (LH/LL within the 4H pullback)</li></ul><p>The right way to read this:</p><ol><li><strong>Higher TF gives the BIAS.</strong> Daily uptrend = primary bias is long.</li><li><strong>Lower TF gives the ENTRY TIMING.</strong> 1H downtrend within the daily uptrend = pullback. Look for the 1H to bottom out (CHoCH on 1H) to time the long entry.</li><li><strong>Never trade against the highest TF you respect.</strong> Going short during a daily uptrend just because 1H looks bearish = fighting the bigger flow.</li></ol><p>Lesson 19 (Multi-TF analysis) covers this in much more depth.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common structure setups"
+    },
+    {
+      "type": "table",
+      "headers": ["Setup", "Description", "Trade approach"],
+      "rows": [
+        ["<strong>BoS pullback</strong>", "Uptrend makes new HH (BoS). Wait for pullback to retest the broken structure level (now support).", "Long the bounce off broken structure. SL below the recent HL. TP at next resistance."],
+        ["<strong>Failed BoS = CHoCH start</strong>", "Price tries to break new HH but fails (wick beyond, close back below). Often the first sign of weakness.", "Don't long the failed breakout. Wait for CHoCH confirmation, then short."],
+        ["<strong>CHoCH retest</strong>", "After CHoCH, price retraces back to the broken swing high (in case of downtrend reversal) — often gets rejected.", "Short the rejection at the broken structure level."],
+        ["<strong>Higher-TF support + lower-TF CHoCH</strong>", "Daily uptrend support meets a 1H CHoCH (1H downtrend breaks).", "High-probability long entry — HTF bias + LTF timing aligned."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart shows the following sequence over 5 days:</p><ul><li>Day 1: swing low at $58,000</li><li>Day 1.5: swing high at $61,000</li><li>Day 2: swing low at $59,500 (HIGHER than previous low — HL ✓)</li><li>Day 3: swing high at $62,500 (HIGHER than previous high — HH ✓)</li><li>Day 4: swing low at $61,000 (HIGHER — HL ✓)</li><li>Day 5: BoS — price makes new high at $64,000</li></ul><p>Read: clean uptrend (HH/HL/HH/HL/BoS). Bias = LONG. Where to enter?</p><p>Trade plan:</p><ul><li>Wait for pullback to most recent HL ($61,000) OR to broken structure ($62,500 retest)</li><li><strong>Entry:</strong> Limit BUY at $62,700 (just above $62,500 retest level)</li><li><strong>SL:</strong> $60,500 (below the $61,000 HL — invalidates the uptrend structure)</li><li><strong>TP1:</strong> $64,000 (recent high)</li><li><strong>TP2:</strong> $66,000 (estimated next resistance)</li></ul><p>What invalidates this trade? Price closing below $60,500. That would be a LOWER LOW than the recent HL — first sign of CHoCH and potential trend change. SL is positioned exactly there.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three habits:</p><ol><li><strong>Always answer first: HH/HL? LH/LL? Neither?</strong> Three seconds. Gives you trend bias.</li><li><strong>BoS confirms trend; CHoCH signals reversal.</strong> Use both for entries and exits.</li><li><strong>HTF structure determines bias; LTF structure determines entry timing.</strong> Don't trade against your higher TF.</li></ol><p>Market structure is the single most useful framework for trend identification. Master it and you can replace many indicators that beginners over-rely on.</p>"
+    }
+  ]
+}

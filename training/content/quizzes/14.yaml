@@ -1,0 +1,123 @@
+id: "14"
+lesson_id: 14
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "A Shooting Star candle has:"
+    type: mcq
+    choices:
+      - "Small body near the TOP of the range with a long lower wick."
+      - "Small body near the BOTTOM of the range with a long upper wick at least 2× the body length."
+      - "No wicks at all."
+      - "Two stars."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "Shooting Star is the mirror of the Hammer. Body sits at the bottom; long upper wick shows buyers pushed price high and got rejected — sellers absorbed the buying and pushed back down. At resistance, this signals potential reversal."
+
+  - id: q2
+    text: "A Bearish Engulfing pattern's second candle (the red one) does WHAT relative to the first candle?"
+    type: mcq
+    choices:
+      - "Opens above (or at) the previous close, and closes BELOW the previous open. Body completely engulfs the first candle's body."
+      - "Closes higher than the first candle."
+      - "Opens at the same price as the first."
+      - "Has a smaller body than the first."
+    correct: 0
+    topic_tag: reversal_patterns
+    explanation: "Bearish Engulfing = the red candle 2 wraps the green candle 1's body. Opens at/above previous close, closes below previous open. The reversal magnitude (how much of candle 1 got undone + extended bearish) is the strength of the signal."
+
+  - id: q3
+    text: "The Evening Star pattern's middle candle (the 'star') represents:"
+    type: mcq
+    choices:
+      - "Strong selling pressure."
+      - "Indecision — buyers' momentum is exhausted but sellers haven't taken over yet. Sets up the reversal that candle 3 confirms."
+      - "A continuation of the uptrend."
+      - "The actual peak of the move."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "The star's small body shows the buyers from candle 1 lost momentum. But sellers haven't decisively won yet. It's the pause that often precedes a real reversal — candle 3 confirms the new direction. Don't trade after candle 2 alone; wait for the confirmation."
+
+  - id: q4
+    text: "Why is it psychologically HARDER to act on bearish reversal signals than bullish ones?"
+    type: mcq
+    choices:
+      - "Bearish patterns are technically less accurate."
+      - "Social pressure + recency bias + late-cycle FOMO. When the market is in a bull run, shorting feels contrarian and lonely — even when the technical signal is high quality."
+      - "Exchanges block bearish trades."
+      - "Bearish patterns require special tools."
+    correct: 1
+    topic_tag: psychology
+    explanation: "The patterns work mathematically the same. The challenge is psychological. Bull-run euphoria makes everyone want to long. Shorting at the top means going against the crowd, doing the unpopular trade. Pros do this because the technical signal — not the social mood — drives their decisions. Train yourself to be direction-agnostic."
+
+  - id: q5
+    text: "A trader sees a bullish 5-minute candle make a higher high while RSI makes a lower high. Then a long upper wick appears on the next 1H candle at resistance. What kind of confluence is forming?"
+    type: mcq
+    choices:
+      - "Random noise."
+      - "Multi-factor bearish setup: RSI bearish divergence + shooting-star-shape at resistance. Higher quality than either signal alone."
+      - "Bullish continuation."
+      - "Indecision only."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "Confluence = multiple independent signals pointing the same way. Bearish RSI divergence (price up, momentum down) + a shooting star at resistance = both tell the same story from different angles. When 2-3 independent signals align, the trade probability climbs sharply."
+
+  - id: q6
+    text: "Strength ranking of bearish reversal patterns (weakest to strongest), assuming all in proper context:"
+    type: mcq
+    choices:
+      - "Shooting Star → Dark Cloud → Bearish Engulfing → Evening Star"
+      - "Evening Star → Bearish Engulfing → Dark Cloud → Shooting Star"
+      - "All equal."
+      - "Bearish Engulfing → Hammer → Doji → Shooting Star"
+    correct: 0
+    topic_tag: reversal_patterns
+    explanation: "Same logic as bullish patterns — more candles + greater reversal magnitude = stronger signal. Single-candle Shooting Star is weakest; three-candle confirmed Evening Star is strongest. All four work when in proper context (resistance + uptrend + volume)."
+
+  - id: q7
+    text: "You see what looks like a shooting star on the 1H against a strong 4H uptrend. What's the smartest move?"
+    type: mcq
+    choices:
+      - "Short immediately — the pattern is clear."
+      - "Wait or skip — 1H reversals against a strong 4H trend often fail. Multi-TF alignment matters. Higher-quality signal: when both 4H and 1H are turning bearish at resistance."
+      - "Use higher leverage to compensate."
+      - "Buy instead."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "A small-TF reversal against a strong larger-TF trend has a low win rate. The bigger flow tends to reassert itself. Best bearish reversals form when multiple TFs are showing weakness together — 4H rejection + 1H rejection + matching RSI behavior. Pattern alone, wrong TF context = often a stop-out."
+
+  - id: q8
+    text: "Where should you place your STOP LOSS on a shooting star short trade?"
+    type: mcq
+    choices:
+      - "At the shooting star's close."
+      - "ABOVE the shooting star's HIGH (the top of the upper wick). If price breaks above, the rejection failed and the thesis is invalidated."
+      - "At a random round number."
+      - "10% from entry to give the trade room."
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "The shooting star's high marks the level where buyers were rejected. If price breaks back above that, the rejection didn't hold — the trade is invalidated. SL goes just above the wick. Tight SL = clean R:R; price closing back above the wick is your signal you were wrong."
+
+  - id: q9
+    text: "Trying to 'call THE TOP' of an uptrend without waiting for confirmation typically results in:"
+    type: mcq
+    choices:
+      - "Catching every reversal at perfect timing."
+      - "Multiple stop-outs trying to anticipate the reversal, then often missing the real one when it finally appears."
+      - "Higher win rate."
+      - "Free profits."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Anticipating a top before confirmation is the most common bearish-reversal mistake. You short the first long upper wick. Trend continues, you stop out. You short again. Stop out. By the time the real reversal comes, you're demoralized and miss it. The cure: wait for confirmation (full pattern + close back below + volume). Missing 2-3% of the down-move is fine; trading 10 fake tops is what kills accounts."
+
+  - id: q10
+    text: "Which combination represents the highest-quality bearish reversal setup?"
+    type: mcq
+    choices:
+      - "Random doji + low volume + no clear trend"
+      - "Bearish engulfing + at clear resistance + above-average volume + after sustained uptrend + RSI bearish divergence"
+      - "Just a long upper wick on a 1-minute chart"
+      - "Any red candle"
+    correct: 1
+    topic_tag: reversal_patterns
+    explanation: "5 of 5 context boxes: pattern (engulfing), level (resistance), volume (above avg), trend to reverse (uptrend), confluence (RSI divergence). When all factors align, you get the high-probability trades that pay for many losing ones. Most of trading is filtering OUT lower-quality setups so you can size meaningfully on the 4-5/5 setups when they appear."

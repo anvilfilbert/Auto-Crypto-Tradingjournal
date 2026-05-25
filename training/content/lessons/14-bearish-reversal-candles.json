@@ -1,0 +1,134 @@
+{
+  "slug": "14-bearish-reversal-candles",
+  "subtitle": "The mirror of lesson 13. Same logic, opposite direction. Markets fall faster than they rise — catching the reversal at the top is often the most profitable single trade pattern in trading.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Tops in crypto are sharper than bottoms. A bull market that took 6 months to build can crater 30% in 5 days. That asymmetry is why bearish reversal patterns at resistance can be among the most profitable trades you'll ever make. They're also the trickiest because every up-trending bull is reluctant to short.</p><p>This lesson is the structural mirror of lesson 13. Same shapes, flipped. Same context requirements, flipped. The bias adjustment is the hard part — you have to be willing to short an uptrend that everyone is excited about.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #1 — Shooting Star"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> A candle with a small body near the BOTTOM of its range, with a long UPPER wick at least 2× the body length. Mirror of the Hammer.</p><p><strong>What it means:</strong> Buyers pushed price up hard during the period (creating the long upper wick). Then sellers absorbed all that buying and pushed price back down to close near the period's low. The up-attempt was REJECTED.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Element", "Specification", "Why"],
+      "rows": [
+        ["Body size", "Small — bottom 30% of candle's range", "Most of the range was the failed upward attempt"],
+        ["Upper wick", "At least 2× body length, ideally 3×+", "Longer rejection = stronger signal"],
+        ["Lower wick", "Minimal or none", "Sellers were in control by close"],
+        ["Context required", "MUST form after an uptrend at or near resistance", "Random shooting stars in chop are noise"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Shooting star at resistance = high-quality short signal",
+      "content": "<p>The same shape rules as the hammer apply. At resistance, after an uptrend, with high volume = potential reversal. In the middle of a range = ignore.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #2 — Bearish Engulfing"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> Two-candle pattern. First candle is bullish (green). Second candle is bearish (red) and its body completely ENGULFS the first candle's body — opening above the previous close and closing below the previous open.</p><p><strong>What it means:</strong> Continuation of the uptrend on candle 1. Candle 2 wipes out all of that progress AND extends in the opposite direction. Buyers got fully overwhelmed within one candle.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Element", "Specification", "Why"],
+      "rows": [
+        ["First candle", "Bullish (green), continuation of recent uptrend", "Sets up the reversal"],
+        ["Second candle", "Bearish (red), body engulfs first candle's body", "The magnitude of the reversal IS the signal"],
+        ["Second candle's open", "AT OR ABOVE first candle's close", "Confirms the gap-up attempt that got rejected"],
+        ["Second candle's close", "BELOW first candle's open", "Net effect: completely undone the prior candle"],
+        ["Volume", "Higher on the second candle, ideally", "Confirms real participation in the reversal"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #3 — Evening Star"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> Three-candle mirror of the Morning Star. Candle 1: large bullish body. Candle 2: small body of either color (often with a gap up). Candle 3: large bearish body closing well into candle 1's body.</p><p><strong>What it means:</strong> Buyers in control on day 1. Hesitation on day 2 (small body = no one's winning). Sellers take over on day 3 with a strong push that reclaims much of the gain.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Candle", "Shape", "What it tells you"],
+      "rows": [
+        ["Candle 1", "Large bullish body", "Uptrend continuation"],
+        ["Candle 2 (the 'star')", "Small body, often with gap up. Color doesn't matter much.", "Indecision — buyers lost control but sellers haven't taken over yet"],
+        ["Candle 3", "Large bearish body closing in lower half (ideally lower third) of candle 1's body", "Sellers decisively took control"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't pre-empt the evening star either",
+      "content": "<p>You can't call \"evening star\" after candle 2. Wait for candle 3 to confirm. Trading after candle 2 is guessing whether the indecision resolves down (evening star) or back up (just a brief pause in the uptrend).</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Pattern #4 — Dark Cloud Cover"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>What it looks like:</strong> Two-candle pattern. Candle 1: bullish (green), continuation. Candle 2: bearish (red) that opens ABOVE candle 1's close (gap up) and closes BELOW the midpoint of candle 1's body.</p><p><strong>What it means:</strong> Buyers tried to extend with a gap up at candle 2's open. Sellers absorbed that, then pushed price down to recover more than half of candle 1's gain. Strong sentiment reversal.</p><p><strong>Difference vs Bearish Engulfing:</strong> Dark Cloud's candle 2 closes BELOW the midpoint but ABOVE the open of candle 1. Engulfing closes below the open. Engulfing is stronger; dark cloud is the milder version of the same idea.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Comparing all four — strength ranking"
+    },
+    {
+      "type": "table",
+      "headers": ["Pattern", "Number of candles", "Typical strength", "Best context"],
+      "rows": [
+        ["Shooting Star", "1", "Moderate", "At clear resistance after sustained uptrend"],
+        ["Dark Cloud Cover", "2", "Moderate-Strong", "At resistance with confirmed candle 2"],
+        ["Bearish Engulfing", "2", "Strong", "At resistance or after extended uptrend"],
+        ["Evening Star", "3", "Very Strong", "At major resistance, end of multi-day uptrend"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The mental challenge — shorting bullish markets"
+    },
+    {
+      "type": "text",
+      "content": "<p>Recognizing a bearish reversal pattern is the easy part. ACTING on it is harder than acting on the equivalent bullish reversal. Reasons:</p><ul><li><strong>Social pressure.</strong> When BTC is in a bull run, everyone on social media is celebrating. Shorting feels contrarian and lonely. Bullish reversals after a drop feel comfortable; bearish reversals at the top feel uncomfortable.</li><li><strong>Recency bias.</strong> Your brain extrapolates the recent trend forward. If price has been going up for a week, you intuitively expect it to continue.</li><li><strong>Late-cycle FOMO.</strong> The top often comes when retail are most certain the trend will continue. Newer traders haven't experienced a reversal yet and don't internalize that they happen.</li></ul><p>The cure: trust the patterns + context, not the recent narrative. If a high-quality bearish reversal forms at resistance with volume, the SAME criteria you'd accept for a long apply. Don't filter by direction.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't try to call THE TOP",
+      "content": "<p>The most common bearish-reversal mistake: trying to short the absolute top of an uptrend without confirmation. You see a long upper wick on a 5-minute chart, you short. Trend continues, you're stopped out, demoralized, and miss the real reversal that comes a week later.</p><p>The rule: don't anticipate. Wait for the actual reversal signal — full pattern + close back below resistance + volume confirmation. Missing the first 2-3% of the down-move is fine. Trading 10 fake tops while waiting for the real one is what kills accounts.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The context checklist — bearish version"
+    },
+    {
+      "type": "text",
+      "content": "<p>For ANY bearish reversal pattern, run this checklist:</p><ol><li><strong>Is the pattern at a meaningful resistance level?</strong> Major resistance, prior structure pivot, key MA, round number. If \"no\" → noise.</li><li><strong>Is there a clear preceding uptrend?</strong> Reversal needs something to reverse FROM.</li><li><strong>Is volume confirming on the reversal candle?</strong> Above-average volume = real participation.</li><li><strong>Are higher timeframes aligned or turning?</strong> A 1H bearish reversal against a strong 4H uptrend often fails. Best when both are showing weakness.</li><li><strong>Is there confluence with other signals?</strong> RSI divergence (price made new high but RSI didn't) + bearish reversal pattern + resistance + high volume = excellent setup. Pattern alone = much weaker.</li></ol><p>4-5 boxes = high probability. 1-2 = skip.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC has been in an uptrend for 8 days, rising from $58K to $66K. Today price tags the $66K level (a previous swing high + round number resistance). The 4H candle that reaches $66K has these properties:</p><ul><li>Small body near the bottom of the range — long upper wick 4× body length (SHOOTING STAR)</li><li>Volume on this candle is 3× the recent average</li><li>RSI on the 4H was at 78 (overbought)</li><li>RSI made a LOWER high while price made a HIGHER high (regular bearish divergence)</li></ul><p>Six boxes checked: shooting star ✓ + resistance ✓ + uptrend ✓ + volume ✓ + RSI overbought ✓ + RSI divergence ✓. Trade setup:</p><ul><li><strong>Entry:</strong> $65,500 limit short (just below the shooting star's close)</li><li><strong>SL:</strong> $66,500 (above the shooting star's high)</li><li><strong>TP1:</strong> $63,000 (mid-range support)</li><li><strong>TP2:</strong> $60,000 (round number + prior support)</li></ul><p>R:R ≈ 1:2.5 to TP1, 1:5 to TP2. The down-move can play out fast — markets fall faster than they rise.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Four bearish reversal shapes: Shooting Star, Dark Cloud, Bearish Engulfing, Evening Star. Same strength ranking as bullish.</p><p>Hardest skill: ACTING on bearish reversals when the market mood is euphoric. The trader who can short the top has a structural edge over the perma-bulls who only see longs. The patterns are there; the discipline to trade them in BOTH directions is what separates good from mediocre.</p>"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+id: "12"
+lesson_id: 12
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "A candle's BODY represents what?"
+    type: mcq
+    choices:
+      - "The price range between High and Low for the period."
+      - "The price range between Open and Close — the settled outcome of the period."
+      - "Only the high price."
+      - "The volume traded during the period."
+    correct: 1
+    topic_tag: candles
+    explanation: "Body = Open to Close. Wicks = the full High-to-Low extent beyond the body. Body color tells you direction (green = close above open = bullish; red = close below open = bearish). The body shows where price SETTLED."
+
+  - id: q2
+    text: "A long UPPER wick on a candle at a resistance level signals what?"
+    type: mcq
+    choices:
+      - "Buyers were dominant throughout the period."
+      - "Sellers REJECTED a push higher — buyers tried to break resistance and got pushed back. Bearish signal."
+      - "Random noise; wicks have no meaning."
+      - "Volume was unusually low."
+    correct: 1
+    topic_tag: candles
+    explanation: "A long upper wick = price went high during the period, then fell back. At resistance, this means buyers tried to break through but sellers pushed back hard. The rejected attempt = bearish signal for the next candle. The longer the wick, the stronger the rejection."
+
+  - id: q3
+    text: "Which candle is the MOST BULLISH (strongest indication of continued upside)?"
+    type: mcq
+    choices:
+      - "A small green body with long wicks on both sides."
+      - "A large green body with no wicks at all (Bullish Marubozu) — open at low, close at high, no rejection in either direction."
+      - "A tiny red body with no wicks."
+      - "A doji."
+    correct: 1
+    topic_tag: candles
+    explanation: "Bullish Marubozu = pure buying, no resistance, decisive. Open at the low, close at the high, no wicks means no one challenged the move. This is high-conviction price action. The small green with long wicks would show buying attempted but also significant rejection — much weaker signal."
+
+  - id: q4
+    text: "BTC has been making large bullish candles for an hour. Then a small green body appears (half the size of recent candles). What's the smartest interpretation?"
+    type: mcq
+    choices:
+      - "Trend is accelerating."
+      - "Loss of momentum — the small body shows hesitation. Often a precursor to consolidation or reversal."
+      - "Bullish continuation guaranteed."
+      - "It means nothing — body size doesn't matter."
+    correct: 1
+    topic_tag: candles
+    explanation: "Body size relative to recent candles is a key tell. Smaller body = less conviction. After a strong move, declining body size signals exhaustion or distribution. Doesn't guarantee reversal but it warns that the easy upside is done. Tighter SL or partial profit-take is often warranted here."
+
+  - id: q5
+    text: "Why does VOLUME matter when reading a candle?"
+    type: mcq
+    choices:
+      - "Volume tells you the price."
+      - "Volume tells you how many participants drove the move. A large body on low volume is weak (few traders moved it); a large body on high volume is strong (real participation)."
+      - "Volume is the same as candle color."
+      - "Volume only matters on the daily timeframe."
+    correct: 1
+    topic_tag: volume
+    explanation: "Body shape and color tell you direction; volume tells you the SIZE of conviction. Two identical-looking candles can mean very different things depending on volume. High volume = real participation = trustworthy signal. Low volume = thin push = often gets faded. Candles + volume together; alone is half the story."
+
+  - id: q6
+    text: "Same candle pattern (e.g., bullish engulfing) on a 5-minute chart vs a daily chart — which carries more weight?"
+    type: mcq
+    choices:
+      - "5-minute — faster signal."
+      - "Daily — represents a full day of participation, harder to fake, more institutional involvement."
+      - "Same weight on any timeframe."
+      - "Only matters on weekly."
+    correct: 1
+    topic_tag: multi_tf
+    explanation: "Higher timeframes carry more weight because they reflect more participation, more capital, and more time for the signal to be confirmed. A bullish engulfing on the daily means buyers won the day. The same shape on 5min could be noise that reverses in 10 minutes. Multi-TF analysis (lesson 19) covers this fully."
+
+  - id: q7
+    text: "A bullish engulfing pattern forms in the middle of a sideways trading range. How should you interpret it?"
+    type: mcq
+    choices:
+      - "Strong reversal signal — engulfing patterns always work."
+      - "Probably noise — engulfing patterns matter at meaningful levels (support, resistance, trendlines). In the middle of a range, the pattern lacks context."
+      - "Bearish reversal."
+      - "It's an exit signal for shorts."
+    correct: 1
+    topic_tag: candles
+    explanation: "Context > shape is the entire rule. The same pattern at strong support could be a major reversal. The same pattern in the middle of nowhere is just noise. Beginners learn 'the patterns' and trade them everywhere; experienced traders trade them only at meaningful levels. The remaining Tier 2 lessons teach you what those levels are."
+
+  - id: q8
+    text: "A candle has NO upper wick and NO lower wick — body extends to both extremes. What's that called?"
+    type: mcq
+    choices:
+      - "Doji"
+      - "Marubozu — no rejection in either direction, pure directional move"
+      - "Hammer"
+      - "Shooting star"
+    correct: 1
+    topic_tag: candles
+    explanation: "Marubozu = body without wicks. Strong directional candle — no one pushed back, no rejection. Bullish Marubozu (green) opens at low, closes at high; bearish Marubozu opens at high, closes at low. Both signal high-conviction directional moves. Often appear at the start of strong trends."
+
+  - id: q9
+    text: "Reading a single candle in isolation tells you ALMOST EVERYTHING you need to know to make a trade decision. True or false?"
+    type: mcq
+    choices:
+      - "True — patterns are the whole game."
+      - "False — context (S/R, structure, multi-TF) matters more than the candle shape itself. The same candle means different things in different contexts."
+      - "True for daily candles."
+      - "True if volume is high."
+    correct: 1
+    topic_tag: candles
+    explanation: "The candle is one input. Context (where it formed, what timeframe, what level, what volume) often matters more. Most retail traders lose by trading patterns in isolation. The skill is recognizing when a pattern + a meaningful level + good volume + trend alignment all line up — only then is the signal strong enough to trade with confidence."
+
+  - id: q10
+    text: "A 4H BTC candle at support: small green body, long lower wick 3× body length, high volume. Best interpretation?"
+    type: mcq
+    choices:
+      - "Bearish — the body is small so sellers are winning."
+      - "Bullish rejection signal — sellers pushed price low, buyers absorbed (long lower wick), volume confirms real participation. Often a meaningful reversal candle at support."
+      - "Indecision; ignore."
+      - "Time to short."
+    correct: 1
+    topic_tag: candles
+    explanation: "All three confirmations align: location (support level), shape (long lower wick = rejection of lower prices), volume (high = real participation). This is exactly the kind of multi-factor confirmation that makes patterns tradeable. Compare to the same shape mid-range with low volume — much weaker signal."

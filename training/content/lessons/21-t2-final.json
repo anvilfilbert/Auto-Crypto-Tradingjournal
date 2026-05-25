@@ -1,0 +1,41 @@
+{
+  "slug": "21-t2-final",
+  "subtitle": "Tier 2 Final — 12 cumulative questions covering lessons 12-20. Pass with 10/12 to unlock Tier 3 (Indicators).",
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "info",
+      "title": "About this final",
+      "content": "<p>This is the gate to Tier 3 (Indicators). Higher pass threshold: <strong>10/12 required</strong>.</p><p>The questions cover material from lessons 12-20. Chart reading is the foundation that makes indicators useful — getting these concepts wrong leads to bad indicator interpretation downstream. Better to redo the final than to advance with gaps.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What Tier 2 covered"
+    },
+    {
+      "type": "table",
+      "headers": ["#", "Lesson", "Core idea"],
+      "rows": [
+        ["12", "Candle anatomy + wicks", "Body = settled outcome. Wicks = rejected attempts. Context > shape."],
+        ["13", "Bullish reversal candles", "Hammer / Engulfing / Morning Star / Piercing. Only meaningful in context."],
+        ["14", "Bearish reversal candles", "Shooting Star / Engulfing / Evening Star / Dark Cloud. Mirror of #13."],
+        ["15", "Indecision candles", "Doji / Spinning Top. Mostly noise; meaningful only at key levels."],
+        ["16", "Gaps and FVG", "Traditional gaps rare in 24/7 crypto. FVG is the relevant version."],
+        ["17", "Support & Resistance", "Foundation of all TA. Zones, not lines. 3-6 per chart, max."],
+        ["18", "Trendlines", "Diagonal S/R. 3 touches before tradeable. Bodies, not wicks."],
+        ["19", "Market structure", "HH/HL or LH/LL or neither. BoS continues; CHoCH reverses."],
+        ["20", "Multi-timeframe analysis", "HTF bias / mid-TF confirmation / LTF entry. 3-TF alignment = A+."]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>If you pass at 10/12, Tier 3 (Indicators: MAs, RSI, MACD, Bollinger, Volume, ADX, Fibs, ATR) unlocks. The Tier 2 framework makes indicators 10× more useful — you'll know to ignore indicator signals against HTF bias, to weigh them by confluence at S/R levels, etc.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Before you start",
+      "content": "<p>Take 5 minutes to scan the lesson headlines (lessons 12-20) and refresh the main concepts. The Tier 2 questions test integration across lessons — knowing the names of candle patterns without understanding their context requirement won't be enough. Then click \"Take the quiz\".</p>"
+    }
+  ]
+}
