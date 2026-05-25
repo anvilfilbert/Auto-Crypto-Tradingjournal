@@ -10,7 +10,13 @@
   </div>
   <div class="training-progress-text">
     {{ passed }} of {{ total }} lessons passed
+    <button id="training-reset-btn" class="training-reset-link" onclick="trainingResetProgress()">Reset all progress</button>
   </div>
+  {% if unlock_mode == 'open' %}
+  <div class="training-open-banner">
+    🔓 <strong>Testing mode</strong> — all lessons unlocked regardless of quiz progress. Set <code>unlock_mode: enforce</code> in <code>training/config.yaml</code> to require quiz passing.
+  </div>
+  {% endif %}
 </div>
 
 {% for tier_id, lessons in tiers.items() %}
@@ -62,4 +68,31 @@
 </section>
 {% endfor %}
 
+<footer class="training-path-footer">
+  Progress is stored server-side in <code>training/training.db</code>.
+  Browser cache is irrelevant — clearing it does not reset progress.
+  Use the "Reset all progress" button above for a fresh start.
+</footer>
+
+{% endblock %}
+{% block scripts %}
+<script>
+async function trainingResetProgress() {
+  if (!confirm("This will WIPE ALL quiz progress (yours + anyone else who used this app).\n\nLessons content stays. Lock state resets to fresh.\n\nProceed?")) return;
+  if (!confirm("Final check — really reset? This cannot be undone.")) return;
+  try {
+    const r = await fetch(window.location.pathname.replace(/\/$/, '') + 'api/reset-progress', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({confirm: 'RESET'})
+    }).then(x => x.json());
+    if (r.ok) {
+      alert('Progress reset. Reloading…');
+      window.location.reload();
+    } else {
+      alert('Reset failed: ' + (r.error || 'unknown'));
+    }
+  } catch(e) { alert('Network error: ' + e.message); }
+}
+</script>
 {% endblock %}

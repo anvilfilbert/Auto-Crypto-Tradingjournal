@@ -10,8 +10,9 @@ from flask import current_app, render_template, request, jsonify, abort
 from .blueprint import bp
 from .db import (
     list_lessons_with_progress, get_lesson, mark_lesson_unlocked,
-    record_quiz_attempts,
+    record_quiz_attempts, reset_all_progress,
 )
+from . import config as training_config
 
 
 def _db_path() -> Path:
@@ -42,6 +43,14 @@ def _load_quiz(quiz_id: str) -> dict:
 def path_view():
     """Top-level path view — tier tree with lock/unlock state."""
     lessons = list_lessons_with_progress(_db_path())
+    unlock_mode = training_config.unlock_mode()
+    # In 'open' (testing) mode, override any 'locked' status to 'unlocked' so
+    # all lessons are clickable. Real progress (in_progress / passed badges)
+    # is preserved — only the LOCK is bypassed.
+    if unlock_mode == "open":
+        for l in lessons:
+            if l["status"] == "locked":
+                l["status"] = "unlocked"
     # Group by tier
     tiers = {}
     for l in lessons:
@@ -58,7 +67,8 @@ def path_view():
     total = sum(1 for l in lessons if not l["is_final"] and not l["is_capstone"])
     passed = sum(1 for l in lessons if l["status"] == "passed")
     return render_template("path.html", tiers=tiers, tier_meta=tier_meta,
-                           total=total, passed=passed)
+                           total=total, passed=passed,
+                           unlock_mode=unlock_mode)
 
 
 @bp.route("/lesson/<slug>")
@@ -144,4 +154,21 @@ def api_status():
         "lessons_total": len(lessons),
         "lessons_with_content": sum(1 for l in lessons if l["has_content"]),
         "lessons_passed": sum(1 for l in lessons if l["status"] == "passed"),
+        "unlock_mode": training_config.unlock_mode(),
     }})
+
+
+@bp.route("/api/reset-progress", methods=["POST"])
+def api_reset_progress():
+    """Wipe ALL quiz and lesson progress so a fresh learner starts at zero.
+
+    Clears: lesson_progress, quiz_attempts, widget_attempts, review_queue.
+    Keeps:  lessons catalog, lesson content files, content/ directory.
+    Then re-marks lesson 1 as 'unlocked' so the path view has a starting point.
+    """
+    body = request.get_json() or {}
+    if body.get("confirm") != "RESET":
+        return jsonify({"ok": False,
+                        "error": "Pass {\"confirm\":\"RESET\"} to confirm. This wipes all quiz progress."}), 400
+    reset_all_progress(_db_path())
+    return jsonify({"ok": True, "data": {"message": "All progress reset. Path view will start fresh."}})

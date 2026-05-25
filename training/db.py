@@ -146,6 +146,31 @@ def get_lesson(db_path, slug: str) -> Optional[dict]:
         return dict(row) if row else None
 
 
+def reset_all_progress(db_path) -> None:
+    """Wipe all per-learner progress — used by the 'Reset Progress' UI button.
+
+    Clears every row in lesson_progress, quiz_attempts, widget_attempts,
+    review_queue. Re-seeds lesson 1 as unlocked so the path has a start.
+    Does NOT touch the lessons catalog or content files on disk.
+    """
+    with conn_ctx(db_path) as c:
+        c.execute("DELETE FROM quiz_attempts")
+        c.execute("DELETE FROM widget_attempts")
+        c.execute("DELETE FROM review_queue")
+        c.execute("DELETE FROM lesson_progress")
+        # Re-seed the first Tier-1 lesson as unlocked so the path has a starting point.
+        first = c.execute("""
+            SELECT id FROM lessons
+            WHERE tier = 1 AND order_in_tier = 1
+            LIMIT 1
+        """).fetchone()
+        if first:
+            c.execute("""
+                INSERT INTO lesson_progress (lesson_id, status)
+                VALUES (?, 'unlocked')
+            """, (first["id"],))
+
+
 def mark_lesson_unlocked(db_path, lesson_id: int) -> None:
     with conn_ctx(db_path) as c:
         c.execute("""

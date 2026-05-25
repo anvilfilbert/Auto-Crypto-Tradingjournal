@@ -85,6 +85,49 @@
   font-size: .85rem;
   color: var(--training-muted);
 }
+.training-reset-link {
+  background: transparent;
+  border: none;
+  color: var(--training-muted);
+  font-size: .72rem;
+  margin-left: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.training-reset-link:hover { color: var(--training-red); }
+
+.training-open-banner {
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: rgba(255, 179, 0, .12);
+  border: 1px solid rgba(255, 179, 0, .35);
+  border-radius: 6px;
+  color: var(--training-yellow);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+.training-open-banner code {
+  background: rgba(255, 179, 0, .15);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: .9em;
+}
+
+.training-path-footer {
+  margin-top: 64px;
+  padding: 18px;
+  border-top: 1px solid var(--training-border);
+  text-align: center;
+  font-size: .75rem;
+  color: var(--training-muted);
+  line-height: 1.6;
+}
+.training-path-footer code {
+  background: var(--training-bg3);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
 
 .training-tier {
   margin-bottom: 40px;

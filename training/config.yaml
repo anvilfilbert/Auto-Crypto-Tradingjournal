@@ -1,0 +1,17 @@
+# training/config.yaml — runtime settings for the training module
+# Edit this file and restart the service (or just refresh — settings reload per-request)
+
+# unlock_mode controls how lesson unlocking behaves.
+#
+#   "enforce"  Standard production mode. Lessons unlock only after passing
+#              the previous lesson's quiz. This is the intended learner flow.
+#
+#   "open"     Testing / preview mode. All lessons are accessible regardless
+#              of quiz progress. Useful for:
+#                - Reviewing content quickly during testing
+#                - Letting a guest browse without committing to the path
+#                - Authoring/proofreading new lessons
+#              Note: progress badges (passed / in-progress) still display
+#              accurately based on real quiz attempts — only the LOCK is bypassed.
+#
+unlock_mode: open
