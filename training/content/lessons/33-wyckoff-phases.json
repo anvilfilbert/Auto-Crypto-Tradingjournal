@@ -1,0 +1,104 @@
+{
+  "slug": "33-wyckoff-phases",
+  "subtitle": "Markets cycle through four phases: accumulation → markup → distribution → markdown. Wyckoff identified this 100 years ago and it still works because the underlying psychology of buying/selling is unchanged. Knowing which phase you're in tells you what kind of trade to take.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Markets don't go straight up or down. They cycle. Smart money accumulates at lows, marks up the price, distributes at highs, then marks down. Retail does the opposite — buys after markup, sells after markdown. The result: smart money buys from retail at the top of the cycle and sells to retail at the bottom.</p><p>Wyckoff's phase framework, developed around 1900, describes this cycle. The reason it still works: human psychology hasn't changed. Greed peaks at tops; fear peaks at bottoms. Smart money exploits this predictably.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The four phases"
+    },
+    {
+      "type": "table",
+      "headers": ["Phase", "What's happening", "Price action", "Volume pattern"],
+      "rows": [
+        ["<strong>1. Accumulation</strong>", "Smart money quietly buying at lows after a downtrend", "Sideways range, often after a significant decline", "Volume gradually rising on up-days, drying up on down-days"],
+        ["<strong>2. Markup</strong>", "Price breaks out of accumulation range — smart money pushes price up", "Clear uptrend, HH/HL structure forming", "Volume expanding on up-moves, normal on pullbacks"],
+        ["<strong>3. Distribution</strong>", "Smart money quietly selling to retail at highs after a uptrend", "Sideways range at the top, after sustained markup", "Volume rising on down-days, drying up on up-days (opposite of accumulation)"],
+        ["<strong>4. Markdown</strong>", "Price breaks down from distribution — smart money has exited, price falls", "Clear downtrend, LH/LL structure forming", "Volume expanding on down-moves"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Identifying the phase you're in"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The phase determines your trade type",
+      "content": "<ul><li><strong>Accumulation</strong>: trade range — buy support, sell resistance. Wait for the eventual breakout (markup).</li><li><strong>Markup</strong>: trend trades — buy pullbacks, ride the trend.</li><li><strong>Distribution</strong>: trade range cautiously — bias toward shorts at resistance. Wait for breakdown (markdown).</li><li><strong>Markdown</strong>: trend trades — short bounces, ride the trend down.</li></ul><p>Most retail mistakes: buying in distribution (thinking it's a pullback in markup) and shorting in accumulation (thinking it's continuation of markdown). Both lose because they're misreading the phase.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Accumulation — the bottom"
+    },
+    {
+      "type": "text",
+      "content": "<p>After a substantial decline (markdown), price stops falling and starts ranging. Key signs of accumulation:</p><ul><li>Price range becomes well-defined — clear support and resistance forming.</li><li>Volume shifts — up-days start showing higher volume than down-days.</li><li>Down-day wicks get LONGER (selling rejected) while up-days CLOSE strong.</li><li>RSI typically oscillates 35-55 with bullish divergences possible.</li><li>Often a 'spring' near the end — wick below the range low (stop hunt) that reverses sharply.</li></ul><p>Accumulation can last weeks to months. The trader who recognizes accumulation early can buy near the lows; the trader who waits for confirmation buys later but with higher win rate.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Markup — the trend"
+    },
+    {
+      "type": "text",
+      "content": "<p>Price breaks decisively above the accumulation range. Markup begins:</p><ul><li>Clear HH/HL structure forms.</li><li>Volume expands on up-moves, contracts on pullbacks (healthy trend behavior).</li><li>Pullbacks often retest the broken accumulation range (now support) — high-quality re-entry.</li><li>RSI camps 50-80 (bullish regime).</li><li>The trend can run substantially — markup phases often produce 50-200%+ moves before exhausting.</li></ul><p>Trade approach: buy pullbacks at support, ride the trend, take profit progressively at key resistances.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Distribution — the top"
+    },
+    {
+      "type": "text",
+      "content": "<p>After a sustained markup, price stops advancing and starts ranging at high levels. Key signs of distribution:</p><ul><li>Price range becomes well-defined at high levels.</li><li>Volume shifts — down-days now show higher volume than up-days (smart money selling).</li><li>Up-day wicks get longer (buying rejected) while down-days close strong.</li><li>RSI bearish divergence common.</li><li>Often an 'upthrust' near the end — wick above the range high (stop hunt) that reverses sharply.</li></ul><p>Distribution is the most dangerous phase for late buyers. The price still 'looks bullish' to recent entrants but smart money is distributing. The trader who recognizes distribution early can exit (or short); the trader who chases the recent strength becomes the exit liquidity for smart money.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Distribution looks bullish to most retail",
+      "content": "<p>Because markup just happened, retail FOMOs in during distribution. The range looks like 'consolidation before the next leg up'. Often it's actually distribution. The clues are subtle — volume shift, wicks getting longer, divergences — but they're there.</p><p>Watching for distribution is one of the highest-value skills you can develop. Most retail bag-holders are people who bought during distribution thinking it was accumulation. Don't be one of them.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Markdown — the decline"
+    },
+    {
+      "type": "text",
+      "content": "<p>Price breaks decisively below the distribution range. Markdown begins:</p><ul><li>Clear LH/LL structure forms.</li><li>Volume expands on down-moves.</li><li>Bounces retest broken support (now resistance) — high-quality short entries.</li><li>RSI camps 20-50 (bearish regime).</li><li>The decline can be sharp because longs from markup and distribution are now underwater and become panic sellers.</li></ul><p>Trade approach: short bounces at resistance, ride the trend down. Don't try to 'catch the bottom' until clear signs of accumulation form.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Phase transitions — the trickiest moments"
+    },
+    {
+      "type": "text",
+      "content": "<p>The transitions between phases are where the biggest trade opportunities and biggest losses occur:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Transition", "Setup type", "Risk"],
+      "rows": [
+        ["Markdown → Accumulation", "Reversal setups at major support; spring patterns", "Catching falling knife if markdown continues"],
+        ["Accumulation → Markup", "Breakout trades from the range; pullback to broken range as support", "False breakouts (markups that fizzle)"],
+        ["Markup → Distribution", "Reversal setups at major resistance; upthrust patterns", "Selling early during continuation of markup"],
+        ["Distribution → Markdown", "Breakdown trades from the range; bounce to broken range as resistance", "False breakdowns (deviation back into the range)"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC daily chart over 6 months:</p><ul><li><strong>Months 1-2</strong>: BTC declined from $70K to $50K (markdown).</li><li><strong>Months 3-4</strong>: price ranges $48K-$55K. Volume on up-days gradually rising. Bullish RSI divergence forming. This is accumulation.</li><li><strong>Month 5</strong>: price breaks above $55K resistance with conviction + volume. Pullback to $55K (now support) holds. Markup begins.</li><li><strong>Month 6</strong>: price reaches $75K, then starts ranging $72K-$78K. Up-day wicks getting longer. Volume on down-days now exceeding up-days. Bearish RSI divergence. This is distribution.</li></ul><p>Trade implications by phase:</p><ul><li>During markdown (months 1-2): short bounces. Don't buy dips.</li><li>During accumulation (months 3-4): range trade or wait for breakout.</li><li>During markup early (month 5): buy the breakout + retest. Trend trades.</li><li>Markup mid (month 6 early): continue with longs but tighten stops.</li><li>During distribution (month 6): bias short — fade rallies at resistance. Watch for breakdown.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Four rules:</p><ol><li><strong>Always identify the current phase.</strong> Accumulation, markup, distribution, or markdown.</li><li><strong>The phase determines your trade type.</strong> Range vs trend, long bias vs short bias.</li><li><strong>Watch volume behavior shift.</strong> Up vs down volume tells the story BEFORE price does.</li><li><strong>Phase transitions are highest-opportunity, highest-risk.</strong> Trade them with smaller size until confirmed.</li></ol><p>Next lesson: Wyckoff Spring & Upthrust — the specific phase-transition patterns that mark accumulation-to-markup and distribution-to-markdown.</p>"
+    }
+  ]
+}

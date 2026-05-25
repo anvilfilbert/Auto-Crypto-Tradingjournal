@@ -1,0 +1,123 @@
+id: "31"
+lesson_id: 31
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "What's the difference between an 'aggressive buy' and a 'passive buy'?"
+    type: mcq
+    choices:
+      - "There's no difference."
+      - "Aggressive buy = hit the ask (initiated the trade with a market order or limit through the spread). Passive buy = waited on the book with a limit order. CVD measures aggressive flow."
+      - "Aggressive = bigger size."
+      - "Aggressive only happens on weekends."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "Every trade has an initiator (aggressive/taker) and a waiting counterparty (passive/maker). The aggressive side is the one PRESSING the market — they wanted in/out NOW. CVD measures aggressive flow direction. The aggression is the actual driver of price moves."
+
+  - id: q2
+    text: "CVD (Cumulative Volume Delta) is:"
+    type: mcq
+    choices:
+      - "Random number."
+      - "Running sum of (aggressive buy volume MINUS aggressive sell volume) over time. Shows whether buyers or sellers have been pressing the market on net."
+      - "A type of stop loss."
+      - "Volume in dollars."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "CVD = cumulative net aggression. Each bar's delta (aggressive buys − aggressive sells) gets added to a running total. Plotted as a line below the chart. Direction shows who's been winning the aggression battle over time. The most direct measurement of flow direction available."
+
+  - id: q3
+    text: "Bullish CVD divergence is:"
+    type: mcq
+    choices:
+      - "Price up + CVD up."
+      - "Price makes LOWER LOW but CVD makes HIGHER LOW. Sellers getting weaker even though price is dropping. Buyers absorbing. Reversal warning at the bottom."
+      - "Random."
+      - "Same as bullish RSI divergence with no advantage."
+    correct: 1
+    topic_tag: divergence
+    explanation: "Bullish CVD divergence = price down but order flow up. Aggressive sellers are running out of conviction; buyers absorbing aggressively without letting price drop further. Often more reliable than indicator divergences because it measures actual flow rather than derived momentum."
+
+  - id: q4
+    text: "What is 'absorption' in order flow terms?"
+    type: mcq
+    choices:
+      - "When price moves wildly."
+      - "Heavy aggressive flow (high CVD change) but price barely moves — passive liquidity overwhelming the aggressive side. Aggressive side is exhausting itself. Often precedes reversal."
+      - "Volume drops to zero."
+      - "Random pattern."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "Absorption shows passive overwhelming aggressive. If huge aggressive buying happens but price barely rises = sellers absorbing at that level. The buyers will eventually exhaust; the absorbing sellers will eventually win. Often a precursor to reversal because aggressive players give up."
+
+  - id: q5
+    text: "Strong uptrend in price but CVD is FLAT or declining. What does this signal?"
+    type: mcq
+    choices:
+      - "Continuation guaranteed."
+      - "HOLLOW TREND — price is rising but aggressive buyers aren't driving it. Sellers absorbing. This is a serious reversal warning. Trend looks healthy on price chart but isn't."
+      - "Volume only."
+      - "Bullish acceleration."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "Hollow trend = price doesn't have order-flow backing. Without aggressive buyers pressing, the trend is being held up by some other mechanism (short covering, low liquidity, passive accumulation that will end). Often resolves with a sharp reversal. CVD reveals this BEFORE price action does."
+
+  - id: q6
+    text: "What's a CVD LIMITATION you should be aware of?"
+    type: mcq
+    choices:
+      - "It works perfectly always."
+      - "Exchange-specific (one exchange's CVD may differ from another's), misses spoofing (cancelled orders don't show), and can be affected by funding (longs exiting to avoid funding looks like aggressive selling but isn't a real trend change)."
+      - "It's slow."
+      - "It's expensive."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "CVD has real limitations. Each exchange shows its own; combine across major exchanges for stronger signals. Cancelled orders don't transact, so they're invisible to CVD even though they affect price. Funding payments can distort short-term flow on perps. Use CVD as one strong input, not as the only truth."
+
+  - id: q7
+    text: "Should you trade CVD signals ALONE?"
+    type: mcq
+    choices:
+      - "Yes — CVD is the most reliable single indicator."
+      - "No — same rule as everything else. Standalone CVD has moderate reliability. Combine with chart structure (S/R, candle patterns, multi-TF) for confidence."
+      - "Only on Fridays."
+      - "Never use CVD."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "Confluence rules apply to CVD too. CVD divergence at a major level with reversal candle + volume = high-quality. CVD divergence in chop = noise. The pattern: structure + multiple indicator agreements + flow agreement = the best setups. CVD alone has too many false signals to trade in isolation."
+
+  - id: q8
+    text: "Spot CVD vs Perp CVD — what's the difference?"
+    type: mcq
+    choices:
+      - "Same thing."
+      - "Spot CVD measures actual coin buyers/sellers (cash flow). Perp CVD measures derivatives traders' positioning. Both useful; sometimes they diverge — that itself is information about whether spot vs derivatives are moving the market."
+      - "Perp is fake."
+      - "Spot doesn't exist."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "Spot CVD = real cash crypto buying/selling. Perp CVD = leveraged positioning. They usually align but sometimes diverge. Spot leading perp suggests real organic demand; perp leading spot suggests speculative positioning. Tracking both gives a richer picture of who's actually driving price."
+
+  - id: q9
+    text: "Most reliable setup combining CVD and other tools:"
+    type: mcq
+    choices:
+      - "CVD alone with no other signals."
+      - "CVD divergence + major S/R level + reversal candle + above-average volume + ideally a matching RSI/MACD divergence. Multiple independent confirmations dramatically increase win rate."
+      - "Just look at funding."
+      - "Random combination."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "A+ setups combine: structure (level), pattern (candle), participation (volume), momentum (RSI/MACD divergence), flow (CVD divergence). Each independent signal adds confidence. CVD adds the flow dimension — the deepest layer — to setups already supported by chart structure. The most reliable trades you'll find."
+
+  - id: q10
+    text: "Worked example: BTC rally $60K → $66K. CVD rose from $60K to $63K, slowed $63K-$65K, FELL on final $65K → $66K push. Plus bearish engulfing at $66K resistance with 2.5× volume. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — too many signals."
+      - "A+ SHORT setup. CVD divergence + RSI divergence + major level + reversal candle + volume = 5 confluences. The CVD divergence is what made the setup credible; the candle + level + volume gave the entry trigger."
+      - "Long the breakout."
+      - "Random."
+    correct: 1
+    topic_tag: divergence
+    explanation: "5-confluence A+ setup. CVD divergence isn't the entry trigger by itself — but it's what made the engulfing pattern at resistance credible. Without CVD, the engulfing could be just one signal at a level. With CVD divergence showing buyers exhausting + RSI matching + volume confirming + structural level, the conviction is multi-layered. Consider sizing up to 2-3% if rules allow."

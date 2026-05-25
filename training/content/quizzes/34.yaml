@@ -1,0 +1,123 @@
+id: "34"
+lesson_id: 34
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "A Wyckoff SPRING occurs at the end of which phase?"
+    type: mcq
+    choices:
+      - "Markup."
+      - "ACCUMULATION — spring is the final stop hunt that completes accumulation. Markup typically follows."
+      - "Distribution."
+      - "Markdown."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Spring = accumulation finale. After weeks of quiet accumulation, smart money flushes out remaining weak hands with one final wick below the range. Stops fire, sellers exit, smart money absorbs at the bottom. With no more sellers, price launches into markup."
+
+  - id: q2
+    text: "Key defining feature of a Spring candle:"
+    type: mcq
+    choices:
+      - "Long green body."
+      - "Long LOWER WICK extending BELOW range support + close back ABOVE the support level. Volume spikes during the wick (stops firing)."
+      - "Doji shape."
+      - "Two candles together."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Spring's signature: wick extends BELOW the obvious range support (deliberate stop hunt), then candle closes BACK above the level. The wick is the hunt; the close is the confirmation. Volume spike on the wick = real stop cascade fired. Without the close back above, it's not a confirmed spring."
+
+  - id: q3
+    text: "Should you enter the long DURING the spring wick or AFTER the close?"
+    type: mcq
+    choices:
+      - "During the wick — get the best price."
+      - "AFTER the close back above the range. The wick alone could be a real breakdown; the close confirms it was a hunt. Missing the lowest entry is fine — the trade still has great R:R."
+      - "Either; doesn't matter."
+      - "Only on Tuesdays."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Wicks can keep going. If you enter during the wick and it's actually a real breakdown (not a spring), you're long into a sustained drop. Waiting for the close back above the level confirms the hunt completed. Worse entry price but dramatically higher win rate. Patience > anticipation."
+
+  - id: q4
+    text: "An UPTHRUST is the mirror of a spring — it occurs at the end of which phase?"
+    type: mcq
+    choices:
+      - "Accumulation."
+      - "DISTRIBUTION — upthrust is the final move that completes distribution. Smart money sells remaining inventory to FOMO buyers chasing the false breakout, then markdown follows."
+      - "Markup."
+      - "Random."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Upthrust = distribution finale. Wicks above range resistance, triggers short stops and FOMO breakout buyers, smart money sells into the demand. With no more buyers, price falls into markdown. Mirror logic to the spring."
+
+  - id: q5
+    text: "Where do you place SL on a Spring trade?"
+    type: mcq
+    choices:
+      - "Above the entry."
+      - "Just BELOW the spring wick's LOW (the lowest point of the wick) + small buffer. If price breaks below that low, the spring failed — thesis invalidated."
+      - "At a random round number."
+      - "10% below entry."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "The spring wick low is your invalidation level. If price breaks below that, the spring failed — it was actually a real breakdown. SL just below the wick gives tight risk; the trade either works (massive upside) or stops out for a small loss. The asymmetric R:R is what makes springs so valuable."
+
+  - id: q6
+    text: "What COMPLETES the absorption during a spring (the mechanism for why it works)?"
+    type: mcq
+    choices:
+      - "Random chance."
+      - "Smart money buys all the remaining weak-hand supply (stops + panic-sellers). After the wick, there are NO MORE SELLERS — only strong hands hold. Price has nowhere to go but up."
+      - "Exchange manipulation."
+      - "Volume drops to zero."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "The spring's purpose is liquidity. Smart money needs to complete accumulation but weak hands still hold inventory waiting for break-even exits. The spring wick triggers their stops; smart money absorbs all that supply at the bottom. Post-wick, the only sellers left are at higher prices. The supply imbalance creates the markup."
+
+  - id: q7
+    text: "Approximate R:R on a successful spring trade (entry at close above range, SL below wick, TP at 1× range projection):"
+    type: mcq
+    choices:
+      - "1:1"
+      - "Often 1:3 to 1:5 (or much higher if held for full markup). Tight SL beyond wick + wide TP across phase = exceptional R:R."
+      - "1:0.5"
+      - "Random."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Springs offer asymmetric R:R. SL is tight (just beyond the wick). TP is wide (1× range projection minimum, often much higher if you hold through the full markup). 3-5x R:R per trade. Even with a 40-50% win rate, the math works out very profitably. This is why pros watch for springs specifically."
+
+  - id: q8
+    text: "Signs that what LOOKS like a spring might actually be a real breakdown:"
+    type: mcq
+    choices:
+      - "It can't fail — springs always work."
+      - "The candle that closed back above support doesn't HOLD (next candle closes back below the range), volume on the 'spring' was below average, level was marginal (not established), no follow-through in next 2-3 candles."
+      - "Volume too high."
+      - "Random."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Not every spring works. Failures look like: weak volume on the wick (not real stops firing), spring level wasn't established (only 1-2 prior touches), close back above doesn't hold next candle, no follow-through. SL just below the wick limits loss to ~1-2% per failed spring. The wins (5-10x R:R) more than pay for the losses."
+
+  - id: q9
+    text: "Trading an Upthrust at the end of distribution. Where does SL go?"
+    type: mcq
+    choices:
+      - "Below entry."
+      - "Just ABOVE the upthrust wick's HIGH (the highest point of the wick) + small buffer. If price breaks above that high, the upthrust failed."
+      - "Far away to avoid stops."
+      - "At the entry price."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Upthrust wick high is invalidation. If price breaks above, the supposed upthrust was actually a real breakout that continues. SL just above the wick keeps risk tight while target is the full markdown phase — same asymmetric R:R as the spring, just in the other direction."
+
+  - id: q10
+    text: "Worked example: BTC ranged $48K-$55K for 5 weeks (accumulation). Today a 4H wicks to $46.5K on 3.5× volume, closes at $48.8K. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — wicks don't matter."
+      - "A+ SPRING setup. Wick below range support, volume cascade, close back above. Entry $48.8K, SL $46.2K, TP1 $55K (top of range), TP2 $62K (1× projection), TP3 hold through markup. R:R 1:2.4 to 1:5+."
+      - "Short the breakdown."
+      - "Random."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Textbook spring at end of accumulation. Range established + spring wick + volume cascade + close back above + accumulation context. The R:R is exceptional because the spring is THE phase-transition moment — you're entering at the start of the entire next markup. Consider sizing up to 2-3% if rules allow given the asymmetric R:R."

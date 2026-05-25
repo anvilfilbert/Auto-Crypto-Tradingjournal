@@ -1,0 +1,92 @@
+{
+  "slug": "35-order-blocks-fvg-pools",
+  "subtitle": "Order Blocks, Fair Value Gaps, and Liquidity Pools are the three structural concepts from institutional-flow trading. OB and FVG show WHERE institutions entered. Liquidity Pools show WHERE they hunt stops. Three concepts that turn random support/resistance into structural targets.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've already met Fair Value Gaps (lesson 16). This lesson covers them in more depth alongside two related concepts that institutional traders use to map the chart. These three tools — Order Blocks, FVGs, and Liquidity Pools — give you a different lens on S/R than traditional swing-high/low marking.</p><p>They're part of what's loosely called \"Smart Money Concepts\" (covered in lesson 36) but these three specifically have the most empirical merit and direct trading application.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Order Block — where institutions entered"
+    },
+    {
+      "type": "text",
+      "content": "<p>An ORDER BLOCK (OB) is the LAST bearish candle BEFORE a strong bullish move (bullish OB), or the last bullish candle before a strong bearish move (bearish OB). The idea: large institutional positions accumulated at that candle, and price often returns to that zone for retests.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Type", "How to identify", "What it represents"],
+      "rows": [
+        ["<strong>Bullish Order Block</strong>", "Last RED candle BEFORE a strong impulsive UP move that breaks structure", "Institutional buying zone — price often returns here for support"],
+        ["<strong>Bearish Order Block</strong>", "Last GREEN candle BEFORE a strong impulsive DOWN move that breaks structure", "Institutional selling zone — price often returns here for resistance"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "OB validity requirements",
+      "content": "<p>Not every red candle before an up-move is a valid OB. Requirements:</p><ul><li>The impulsive move AFTER the OB must be STRONG — clean directional candles, no overlap with the OB body.</li><li>The move should break previous structure (a BoS — break of structure).</li><li>The OB zone hasn't been mitigated yet (price hasn't returned to it).</li><li>OB on higher TFs (4H, 1D) is stronger than lower TFs (15m).</li></ul><p>A 'block' that price has already revisited is considered MITIGATED — it loses its predictive power.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "FVG (Fair Value Gap) — quick recap from lesson 16"
+    },
+    {
+      "type": "text",
+      "content": "<p>FVG is a 3-candle pattern where price moves so fast in one direction that the middle candle's range doesn't overlap with the surrounding candles — creating a vertical imbalance zone. Price tends to return to fill these gaps before continuing.</p><p>FVGs combine well with OBs because they often form together:</p><ul><li>The OB candle creates the demand/supply zone.</li><li>The impulsive move AFTER the OB often creates an FVG between candles.</li><li>Both zones (OB + FVG) become high-probability return zones for entry on retests.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Liquidity Pool — where stops cluster"
+    },
+    {
+      "type": "text",
+      "content": "<p>A LIQUIDITY POOL is a zone where retail stop losses cluster — typically just below a swing low (long stops) or just above a swing high (short stops). Smart money targets these pools because they represent FREE LIQUIDITY at the wrong prices.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Pool type", "Location", "What gets triggered"],
+      "rows": [
+        ["<strong>Buy-side liquidity</strong>", "Just ABOVE a recent swing high", "Short stops fire as price wicks above — provides buy orders smart money wants"],
+        ["<strong>Sell-side liquidity</strong>", "Just BELOW a recent swing low", "Long stops fire as price wicks below — provides sell orders smart money wants"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The three concepts working together",
+      "content": "<p>The typical institutional play pattern:</p><ol><li>Price builds an Order Block in one direction.</li><li>Price runs to a Liquidity Pool in the OPPOSITE direction first (stop hunt).</li><li>Price then reverses and returns to the Order Block / Fair Value Gap zone.</li><li>The actual move from the OB to the original target happens — smart money's intended direction.</li></ol><p>Recognizing this 3-step pattern (OB build → liquidity hunt → return to OB) is one of the most reliable setups in the SMC framework. The hunt provides liquidity for smart money to fill at the OB, then the move plays out.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trading Order Blocks"
+    },
+    {
+      "type": "text",
+      "content": "<p>Standard OB trade pattern:</p><ol><li>Identify a clear OB that hasn't been mitigated (e.g., last red candle before a strong up-move that broke structure).</li><li>Wait for price to PULL BACK to the OB zone (the body or wick area of that candle).</li><li>Look for confirmation at the OB: bullish reversal candle + volume increase.</li><li>Enter LONG at the OB. SL just below the OB's low. TP at the next major resistance.</li></ol><p>OBs work because institutional traders often have remaining orders at those zones they couldn't fully fill the first time — they happily add at the same zones on retests.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common OB mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<ol><li><strong>Marking every red candle before an up-move as an OB.</strong> Only the IMPULSIVE moves with clean directional follow-through and structure breaks qualify. Most candles in chop don't qualify.</li><li><strong>Ignoring the timeframe.</strong> 1D OB is far stronger than 5m OB. Use HTF OBs as bias, LTF for entry timing.</li><li><strong>Trading mitigated OBs.</strong> If price has already returned and broken through, the OB is invalidated. Stop watching it.</li><li><strong>Treating OB as a single price.</strong> OB is a ZONE — the candle's body to wick. Plan entry within the zone, not at a single price.</li><li><strong>Ignoring chart context.</strong> An OB against a strong HTF trend has lower win rate than one aligned with the trend.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart. Recent setup:</p><ul><li>Day 1: price ranges $60K-$61K with a final red 4H candle (the OB candidate) at $60,500-$61,000 body, wick to $60,200.</li><li>Day 1 next candle: explosive green candle from $61,000 to $63,500 (a 4% impulsive move, breaks recent structure).</li><li>This creates a Bullish Order Block at $60,500-$61,000 and an FVG between $61,500 and $62,000 (gap caused by the impulsive move).</li><li>Day 2: price continues up to $64,000.</li><li>Day 3-4: price pulls back. Reaches $61,500 (the FVG bottom edge). Bullish hammer candle prints with above-average volume.</li></ul><p>This is a confluence setup: pullback into FVG + above the OB zone + hammer + volume. Trade:</p><ul><li><strong>Entry</strong>: Limit BUY at $61,600 (just inside FVG)</li><li><strong>SL</strong>: $60,300 (below OB low + buffer)</li><li><strong>TP1</strong>: $64,000 (recent high)</li><li><strong>TP2</strong>: $66,000 (next major resistance)</li></ul><p>R:R ≈ 1:1.8 to TP1, 1:3.4 to TP2. The OB + FVG combination provides defined entry zone and clean invalidation.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>OB = last opposite-direction candle before an impulsive move with structure break.</strong> Best on HTFs (4H+).</li><li><strong>FVG = imbalance zone often filled on pullbacks.</strong> Frequently coincides with OB.</li><li><strong>Liquidity Pools = stop clusters that smart money hunts.</strong> The hunt provides liquidity for OB fills.</li></ol><p>Next lesson: SMC overview — the broader Smart Money Concepts framework with honest commentary on what's signal vs marketing.</p>"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "slug": "34-wyckoff-spring-upthrust",
+  "subtitle": "Spring (failed breakdown) and Upthrust (failed breakout) are the most reliable reversal patterns in trading. They mark phase transitions — accumulation ending in a spring, distribution ending in an upthrust. Catch these and you catch the start of major trends.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You learned the four Wyckoff phases in the previous lesson. Now you'll learn the SPECIFIC patterns that mark the phase transitions — the moments when accumulation flips to markup, or distribution flips to markdown.</p><p>These patterns — Spring and Upthrust — are essentially documented stop hunts that mark the COMPLETION of accumulation/distribution. When you spot them in real-time, you've identified the exact moment the next phase begins. The risk:reward on these setups is exceptional because the stop loss can be tight (just beyond the spring wick) while the target is the entire next phase.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Spring — the accumulation finale"
+    },
+    {
+      "type": "text",
+      "content": "<p>A SPRING occurs at the end of an accumulation phase. The pattern:</p><ol><li>Price has been ranging in an accumulation zone (e.g., $48K-$55K) for weeks.</li><li>Price WICKS BELOW the range support ($48K → $46K, brief).</li><li>Volume spikes during the wick — retail stops fire and panic-sellers exit.</li><li>Price reverses sharply, CLOSING BACK ABOVE the range support.</li><li>The candle prints as a long lower wick (similar to a hammer but at the range bottom).</li><li>Often followed by a strong markup beginning within days.</li></ol><p>The spring is smart money's final accumulation move. They INDUCED retail to sell by wicking below the obvious stop level, then absorbed all those sales at favorable prices. Their accumulation completes; markup follows.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Why springs work — the mechanics",
+      "content": "<p>During a long accumulation, smart money has been quietly buying — but there are always some shares/coins held by weak hands (retail traders who bought higher and are waiting for break-even). To complete accumulation, smart money needs to flush those weak hands out.</p><p>The spring wick triggers their stops at the worst possible price. Smart money buys their shares at the bottom. After the wick, the supply is gone — only strong hands remain. Price has nowhere to go but up. This is why springs often precede explosive moves: there are no more sellers.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Identifying a spring in real-time"
+    },
+    {
+      "type": "table",
+      "headers": ["Spring requirement", "Detail"],
+      "rows": [
+        ["<strong>Setup context</strong>", "Must be at the bottom of an established accumulation range (multiple touches of support already)"],
+        ["<strong>The wick</strong>", "Clear break BELOW the range support, with the candle's lower wick noticeably extending below the level"],
+        ["<strong>Volume on the wick</strong>", "Above-average volume during the wick — stops firing + capitulation selling"],
+        ["<strong>The close</strong>", "Candle must CLOSE BACK ABOVE the range support. The wick is the spring; the close confirms it"],
+        ["<strong>Follow-through</strong>", "Next 1-3 candles confirm the reversal — price holds above support and starts moving up"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Upthrust — the distribution finale"
+    },
+    {
+      "type": "text",
+      "content": "<p>An UPTHRUST is the mirror of a spring — the pattern that marks the end of distribution:</p><ol><li>Price has been ranging in a distribution zone (e.g., $72K-$78K) for weeks.</li><li>Price WICKS ABOVE the range resistance ($78K → $80K, brief).</li><li>Volume spikes — short-stops fire, FOMO buyers chase the breakout.</li><li>Price reverses sharply, CLOSING BACK BELOW the range resistance.</li><li>The candle prints as a long upper wick (similar to shooting star but at the range top).</li><li>Often followed by a strong markdown within days.</li></ol><p>Smart money's final distribution move. They INDUCED retail to chase the false breakout, then sold all their remaining inventory at favorable prices. Their distribution completes; markdown follows.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Spring vs Upthrust comparison"
+    },
+    {
+      "type": "table",
+      "headers": ["Element", "Spring (bullish)", "Upthrust (bearish)"],
+      "rows": [
+        ["Phase context", "End of accumulation", "End of distribution"],
+        ["Direction of wick", "Below range support", "Above range resistance"],
+        ["What gets triggered", "Long stops (sell orders fire)", "Short stops (buy orders fire) + FOMO breakout buyers"],
+        ["Volume signature", "Spike on the wick — capitulation", "Spike on the wick — FOMO chase"],
+        ["Confirmation", "Close back above range support", "Close back below range resistance"],
+        ["What follows", "Markup phase (bullish trend)", "Markdown phase (bearish trend)"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Trading the Spring/Upthrust"
+    },
+    {
+      "type": "text",
+      "content": "<p>The R:R on these setups is exceptional because the SL is just beyond the wick (tight) and the target is the entire next phase (often 20-100%+ moves).</p><p><strong>Trading a Spring</strong>:</p><ol><li>Wait for the spring candle to close back above range support.</li><li>Enter LONG on the close, or wait for a small retest (price often dips briefly to the wick level before continuing up).</li><li><strong>SL</strong>: just below the spring wick's low (the lowest point of the wick + small buffer).</li><li><strong>TP1</strong>: the top of the accumulation range.</li><li><strong>TP2</strong>: 1× the range height projected above (e.g., $48K-$55K range = $7K → TP2 at $62K).</li><li><strong>TP3</strong>: hold for the full markup if structure continues.</li></ol><p><strong>Trading an Upthrust</strong>:</p><ol><li>Wait for the upthrust candle to close back below range resistance.</li><li>Enter SHORT on the close, or wait for a small retest of the wick.</li><li><strong>SL</strong>: just above the upthrust wick's high.</li><li><strong>TP1</strong>: the bottom of the distribution range.</li><li><strong>TP2</strong>: 1× range height projected below.</li><li><strong>TP3</strong>: hold for the full markdown.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Wait for the close, not just the wick",
+      "content": "<p>The biggest mistake with springs/upthrusts: jumping in during the wick itself. The wick is happening WHILE the stop hunt is firing — price is unstable and could continue lower (in the case of a spring that turns into a real breakdown).</p><p>Wait for the candle to CLOSE back above (spring) or below (upthrust) the range boundary. The close confirms it was a hunt, not a real breakout/breakdown. Missing the very lowest entry is fine — the trade has plenty of room to work with the close-based entry.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When the spring/upthrust fails"
+    },
+    {
+      "type": "text",
+      "content": "<p>Not every spring is real. Sometimes what looks like a spring is actually the start of a true breakdown. Signs of failure:</p><ul><li>The candle that closed back above support doesn't hold — next candle closes below the range again.</li><li>Volume on the supposed spring was below average — not enough stops triggered for a real flush.</li><li>The 'spring' wasn't actually at established support — was at a marginal level.</li><li>No follow-through in the next 2-3 candles — price stays weak.</li></ul><p>If your SL is tight (just below the spring wick), failures cost you ~1-2% on a single trade and are part of normal cost. The wins (when the spring is real) are 5-10×+ in R:R. The math works out even with a 40-50% win rate.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — Spring"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC has been ranging $48K-$55K for 5 weeks. Multiple touches of $48K support — established range. Volume has been gradually shifting toward up-days (accumulation profile).</p><p>Today: a 4H candle wicks down to $46,500 — below the range support. Volume on this candle is 3.5× the recent average (clear stop cascade firing). The candle closes at $48,800 — BACK ABOVE the range support.</p><p>This is a classic spring. Setup:</p><ul><li><strong>Entry</strong>: Limit BUY at $48,800 (the spring candle's close)</li><li><strong>SL</strong>: $46,200 (below the spring wick + small buffer)</li><li><strong>TP1</strong>: $55,000 (top of accumulation range)</li><li><strong>TP2</strong>: $62,000 (1× range projection above)</li><li><strong>TP3</strong>: $70K+ if markup continues</li></ul><p>R:R ≈ 1:2.4 to TP1, 1:5+ to TP2. The 1% risk SL is comfortable given the wide TP range. This is an A+ setup with exceptional risk:reward.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Spring = end of accumulation; Upthrust = end of distribution.</strong> Phase-transition patterns.</li><li><strong>Wait for the close back inside the range.</strong> Wick alone could be a real breakout/breakdown.</li><li><strong>Tight SL beyond the wick + wide TP = exceptional R:R.</strong> These are among the highest-R:R setups in trading.</li></ol><p>Next lesson: Order Blocks, Fair Value Gaps, and Liquidity Pools — the structural concepts that define the entry zones smart money uses.</p>"
+    }
+  ]
+}

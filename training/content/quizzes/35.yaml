@@ -1,0 +1,123 @@
+id: "35"
+lesson_id: 35
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "A Bullish Order Block is defined as:"
+    type: mcq
+    choices:
+      - "The first green candle of any day."
+      - "The LAST RED candle BEFORE a strong impulsive UP move that breaks structure. Represents the institutional buying zone where price often returns for support."
+      - "Any oversold candle."
+      - "The biggest body of the week."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "Bullish OB = the last bearish candle right before an impulsive bullish move that breaks structure. The idea: large institutional orders accumulated at that candle. Price often returns to retest the zone, providing entry opportunities. The impulsive follow-through is what makes the candle a valid OB."
+
+  - id: q2
+    text: "An OB is considered MITIGATED when:"
+    type: mcq
+    choices:
+      - "Price never returns to it."
+      - "Price has already RETURNED to the OB zone and broken through it. The OB loses its predictive power once mitigated — stop watching it as a setup."
+      - "It's been on the chart for 2 hours."
+      - "Volume drops."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "OBs work because institutional orders remain at the zone after the initial fill. When price returns and BREAKS through the OB, those remaining orders are consumed. The zone no longer holds — it's mitigated. Mitigated OBs aren't tradeable as support/resistance anymore."
+
+  - id: q3
+    text: "A Buy-side Liquidity Pool is located:"
+    type: mcq
+    choices:
+      - "Just below current price."
+      - "Just ABOVE a recent swing HIGH — where short stops cluster. Smart money targets these pools because they provide buy orders at favorable prices when the stops fire."
+      - "At the all-time low."
+      - "Random."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "Buy-side liquidity = where buy orders cluster = where short stops sit. Just above swing highs. When price wicks above the swing high, the short stops fire (become market BUYS), providing the liquidity smart money wants. Then often price reverses back down."
+
+  - id: q4
+    text: "The classic 3-step institutional play pattern is:"
+    type: mcq
+    choices:
+      - "Just slowly trend in one direction."
+      - "OB builds in one direction → price runs to OPPOSITE direction liquidity pool (stop hunt) → price returns to OB / FVG zone → actual move plays out in original direction."
+      - "Random walk."
+      - "Always crash."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "The 3-step play: build OB → hunt opposite liquidity to grab orders → return to OB to fill remaining orders → make the actual move. Recognizing this pattern in real-time gives you both: warning to avoid the hunt, and the high-probability entry at the OB return."
+
+  - id: q5
+    text: "How do you trade a Bullish OB?"
+    type: mcq
+    choices:
+      - "Short it immediately."
+      - "Wait for price to PULL BACK to the OB zone after the impulsive move. Look for confirmation (reversal candle + volume) at the OB. Enter LONG with SL below the OB low, TP at next resistance."
+      - "Enter at the OB price exactly."
+      - "Use 100× leverage."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "OBs are RETEST setups. The impulsive move already happened (you missed it). The setup is the pullback to the OB zone for the next leg up. Confirmation candle + SL below the OB = clean trade structure. The OB acts as the institutional 'we'll buy more here' zone."
+
+  - id: q6
+    text: "Higher-TF OBs vs lower-TF OBs — which carries more weight?"
+    type: mcq
+    choices:
+      - "Lower TF — faster signals."
+      - "HIGHER TF — represents more institutional volume and time. 4H/1D OBs are much stronger than 5m OBs. Use HTF for bias, LTF for entry timing."
+      - "Same weight."
+      - "Random."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "Higher TFs aggregate more participation. A 1D OB represents a day of institutional positioning; a 5m OB represents 5 minutes. The 1D OB is far more meaningful as a return zone. Mark HTF OBs for major bias; use LTF OBs for precise entry timing within HTF zones."
+
+  - id: q7
+    text: "An OB at $60K-$61K + an FVG between $61.5K-$62K + hammer candle at $61.6K + above-average volume. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — too many signals."
+      - "Strong long setup. FVG + OB confluence (overlapping structural zones) + reversal candle + volume = multi-factor confirmation. Entry inside FVG, SL below OB, TP at next resistance."
+      - "Short the rejection."
+      - "Random."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "Confluence of OB + FVG + candle pattern + volume = high-quality setup. The two structural zones (OB + FVG) define the entry zone clearly. The reversal candle + volume provide the entry trigger. Clean SL below the OB. This is the type of setup the lesson is designed to recognize."
+
+  - id: q8
+    text: "Common OB mistake:"
+    type: mcq
+    choices:
+      - "Marking only HTF OBs."
+      - "Marking EVERY red candle before an up-move as an OB. Only the IMPULSIVE moves with clean directional follow-through and structure breaks qualify. Most candles in chop don't."
+      - "Waiting for confirmation."
+      - "Using SL."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "Like any tool, over-application destroys signal. Not every red-then-green sequence is an OB. The follow-through must be IMPULSIVE (strong, clean, no overlap) and break previous structure (BoS). In chop, many small impulsive-looking moves don't actually create valid OBs. Be selective."
+
+  - id: q9
+    text: "Fair Value Gaps and Order Blocks often appear:"
+    type: mcq
+    choices:
+      - "In different parts of the chart."
+      - "TOGETHER — the OB candle creates the demand zone, the impulsive move after creates an FVG between candles. Both zones become high-probability retest entries."
+      - "Only on Mondays."
+      - "Mutually exclusive."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "OBs and FVGs are structurally related. The OB candle sets the entry, the impulsive follow-through creates the FVG. Together they define a wider, more reliable entry zone than either alone. The combination is one of the strongest SMC-based setups."
+
+  - id: q10
+    text: "Why do OBs work as retest zones?"
+    type: mcq
+    choices:
+      - "Magic."
+      - "Institutional traders often have remaining orders they couldn't fully fill the first time. When price returns to the same zone, they fill those remaining orders happily — creating the support/resistance that makes the OB hold on retest."
+      - "Random."
+      - "Exchange rules."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "OBs work because of incomplete institutional positioning. Large players rarely fill 100% of their target at one price — they leave orders waiting. When price returns to the OB zone, these waiting orders provide the actual liquidity that creates the bounce. The mechanism is concrete, not theoretical."

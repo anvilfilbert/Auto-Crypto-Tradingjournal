@@ -1,0 +1,123 @@
+id: "36"
+lesson_id: 36
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Smart Money Concepts (SMC) is BEST described as:"
+    type: mcq
+    choices:
+      - "A complete trading system that replaces all other analysis."
+      - "A framework with ~5 empirically-valuable concepts (OB, FVG, Liquidity Pools, BoS/CHoCH, Breaker Blocks) plus more elaborate concepts of varying merit and a heavy marketing industry. Use the useful subset, integrate with classical TA."
+      - "Pure marketing with no value."
+      - "Only works on Mondays."
+    correct: 1
+    topic_tag: smc
+    explanation: "The honest answer. SMC has real value in specific concepts but isn't a replacement for classical TA. The 5 useful concepts cover 80% of practical SMC application. The other 20% includes elaborate jargon and marketing that adds little. Integrate the useful parts with chart structure (Tier 2), indicators (Tier 3), and other tools."
+
+  - id: q2
+    text: "Which of these SMC concepts has the STRONGEST empirical merit?"
+    type: mcq
+    choices:
+      - "Specific 'algos always do X' theories."
+      - "Order Blocks — institutional retest zones that have observable success rates as support/resistance levels in real market data."
+      - "Random claims by influencers."
+      - "Course-only proprietary concepts."
+    correct: 1
+    topic_tag: smc
+    explanation: "OBs have demonstrable behavior in market data — they DO often hold as retest zones, especially on HTFs. FVGs are similarly empirically supported (measurable fill rates in trending markets). Liquidity hunts are observable. These 5 concepts (OB, FVG, Liquidity, BoS/CHoCH, Breaker) are the substantive core. The marketing layer around SMC is the unreliable part."
+
+  - id: q3
+    text: "'Premium/Discount zones' in SMC is essentially:"
+    type: mcq
+    choices:
+      - "A revolutionary new concept."
+      - "Fibonacci 0.5 with new branding — same midpoint of a swing concept, just renamed. The Fib version (lesson 28) is more transparent."
+      - "Unrelated to Fibonacci."
+      - "A proprietary indicator."
+    correct: 1
+    topic_tag: smc
+    explanation: "Premium = above the 0.5 midpoint of a swing; Discount = below. Mathematically identical to Fibonacci 0.5. The SMC version uses different terminology but the underlying concept is the same. Use whichever vocabulary you prefer — just know that paying for 'Premium/Discount' courses adds nothing over basic Fib understanding."
+
+  - id: q4
+    text: "Why be SKEPTICAL of the SMC influencer ecosystem?"
+    type: mcq
+    choices:
+      - "All influencers are scammers."
+      - "Many influencers earn more from selling courses than from trading. This incentivizes elaborate jargon-heavy content to differentiate paid products. The actually-useful 80% is often available free."
+      - "SMC has no value."
+      - "Influencers can't trade."
+    correct: 1
+    topic_tag: smc
+    explanation: "Realistic perspective. Some influencers are profitable traders sharing real insights. Many earn substantially more from course sales than from trading itself, which creates incentive to package basic concepts as proprietary and elaborate. The free content + your existing toolkit usually covers what's actually useful. Pay for courses only if there's clear specific value-add."
+
+  - id: q5
+    text: "The 'cleanest SMC trade setup' described in the lesson is:"
+    type: mcq
+    choices:
+      - "Trade every OB on the chart."
+      - "HTF bias + LTF pullback + liquidity hunt + return to OB / FVG zone + entry on confirmation candle + volume. SL beyond hunt wick, target at next HTF resistance."
+      - "Random direction."
+      - "Use only the smallest TFs."
+    correct: 1
+    topic_tag: smc
+    explanation: "This is the high-probability SMC pattern. Each step adds confirmation: HTF gives direction, LTF gives entry timing, liquidity hunt provides the perfect entry zone via stops getting flushed, OB/FVG gives the structural level. The pattern combines what you've learned across multiple lessons into a coherent trade structure."
+
+  - id: q6
+    text: "Should you become a 'pure SMC trader' and ignore other tools?"
+    type: mcq
+    choices:
+      - "Yes — SMC is complete."
+      - "No — SMC alone misses macro context, fundamentals, volume context, sentiment, momentum. Integrate SMC with chart structure (Tier 2), indicators (Tier 3), and order flow for 360-degree market reading."
+      - "Yes — fewer tools is better."
+      - "Doesn't matter."
+    correct: 1
+    topic_tag: smc
+    explanation: "Pure SMC traders have tunnel vision. They see beautiful setups in their framework but miss what other tools would reveal — macro headwinds, momentum exhaustion, volume disagreement, etc. The most effective approach: SMC adds entry-zone identification to a broader toolkit. Don't reject the rest of your trained capabilities to become 'pure SMC'."
+
+  - id: q7
+    text: "What SMC concept is essentially the same as POLARITY FLIP from lesson 17?"
+    type: mcq
+    choices:
+      - "Inducement."
+      - "Breaker Block — a failed OB that flips to provide opposite-direction support/resistance. The mechanism is the same as classical broken-support-becomes-resistance (lesson 17), just renamed."
+      - "Premium zone."
+      - "Order block."
+    correct: 1
+    topic_tag: smc
+    explanation: "Breaker Block = OB that got broken through, then acts as opposite-direction S/R on retest. The mechanism is identical to classical polarity flip. The SMC vocabulary adds nothing new functionally. Some find the OB-framed version more concrete to identify; others find classical S/R simpler. Both work the same way."
+
+  - id: q8
+    text: "Common SMC mistake (besides falling for marketing):"
+    type: mcq
+    choices:
+      - "Using too few SMC concepts."
+      - "Over-application — marking every candle as an OB, using 8 concepts simultaneously, ignoring HTF context. Signal-to-noise collapses. Pick 2-3 SMC concepts max and apply selectively."
+      - "Combining with indicators."
+      - "Trading with HTF trend."
+    correct: 1
+    topic_tag: smc
+    explanation: "Over-application destroys SMC signal the same way it destroys S/R signal. Too many OBs, too many FVGs, too many liquidity zones = the chart becomes meaningless. Quality > quantity. The 1-2 best OBs on the chart matter more than 20 marginal ones."
+
+  - id: q9
+    text: "Worked example integrated setup: 1D uptrend, 4H pullback, liquidity hunt wicks to $60.7K, hammer at OB zone $61K-$61.4K + volume + RSI bullish divergence. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — too many indicators."
+      - "A+ LONG setup. 6 factors aligned: HTF trend + LTF pullback + liquidity hunt + OB zone + hammer + volume + RSI confirmation. Entry within OB, SL below hunt wick, target HTF resistance. Consider sizing up to 2-3%."
+      - "Short the engulfing."
+      - "Random."
+    correct: 1
+    topic_tag: smc
+    explanation: "This is what integrated trading looks like — multiple independent confirmation layers from different framework lenses (chart structure, SMC zones, indicators). Six confluences is rare and valuable. The trade has defined risk (below hunt wick), clear invalidation, and meaningful target. This is the type of setup that pays for many losing trades and represents A+ quality."
+
+  - id: q10
+    text: "The SMC concepts you should DEFINITELY learn (vs the ones you can skip):"
+    type: mcq
+    choices:
+      - "Learn everything SMC offers — more is better."
+      - "Learn the 5 empirically-valuable concepts (OB, FVG, Liquidity Pools, BoS/CHoCH, Breaker Blocks). Skip the proprietary jargon and 'specific algo theories' that come with elaborate paid courses."
+      - "Skip all SMC entirely."
+      - "Only learn what one specific influencer teaches."
+    correct: 1
+    topic_tag: smc
+    explanation: "Focus on the demonstrable subset. Each of the 5 useful concepts has real market mechanics behind it and observable behavior. The marketing layer (proprietary names, narrative-heavy 'algo behavior' claims, paid signal services) is where SMC loses value. Free content + the lessons in this course cover the 80% that matters."

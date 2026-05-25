@@ -1,0 +1,147 @@
+id: "39"
+lesson_id: 39
+pass_threshold: 10
+questions:
+  - id: q1
+    text: "CVD (Cumulative Volume Delta) measures:"
+    type: mcq
+    choices:
+      - "Total volume."
+      - "Running sum of (aggressive buy volume − aggressive sell volume) over time. Shows whether buyers or sellers have been PRESSING the market on net."
+      - "Random."
+      - "Price changes."
+    correct: 1
+    topic_tag: order_flow
+    explanation: "CVD measures aggressive flow direction. Rising CVD = aggressive buyers pressing. Falling = sellers pressing. CVD divergence with price = strong reversal warning because it directly measures participation rather than derived momentum."
+
+  - id: q2
+    text: "Where do retail stops cluster predictably?"
+    type: mcq
+    choices:
+      - "Random prices."
+      - "Just below round numbers, right below swing lows, inside ranges (just below range support), below polarity-flip levels. Predictable clusters = huntable."
+      - "Above current price."
+      - "Never anywhere specific."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Retail uses logical SL locations — round numbers, swing lows, range floors. When everyone uses the same logic, the stops cluster. Smart money exploits this by briefly wicking past clusters to trigger them, absorbing the orders at favorable prices. Position buffer below obvious levels to avoid being the prey."
+
+  - id: q3
+    text: "ACCUMULATION typically appears as:"
+    type: mcq
+    choices:
+      - "Strong rally."
+      - "Sideways RANGE after a downtrend. Volume gradually shifting toward up-days; down-day wicks getting longer. Often ends with a SPRING."
+      - "Vertical drop."
+      - "Random chop."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Accumulation = smart money buying quietly at lows after a decline. Visible signs: range forming, volume shift (up-days > down-days), longer wicks on down candles. Often weeks-months long. Spring marks the completion (final stop hunt below range)."
+
+  - id: q4
+    text: "A Wyckoff SPRING is:"
+    type: mcq
+    choices:
+      - "Random pattern."
+      - "Final stop hunt at the end of accumulation — price wicks BELOW range support (triggers retail stops), then CLOSES BACK ABOVE the support. Volume spikes during the wick. Markup typically follows."
+      - "Strong bullish breakout."
+      - "Distribution start."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Spring = the accumulation finale. Smart money flushes remaining weak hands with one final wick below range support. Stops fire, sellers exit, smart money absorbs. Post-wick, no sellers remain — price launches into markup. Tight SL beyond the wick + wide TP = exceptional R:R setup."
+
+  - id: q5
+    text: "An Order Block is best defined as:"
+    type: mcq
+    choices:
+      - "Any random candle."
+      - "The LAST opposite-direction candle BEFORE an impulsive move that BREAKS structure. Bullish OB = last red before strong up-move; Bearish OB = last green before strong down-move. Represents institutional entry zone."
+      - "First candle of the day."
+      - "Volume spike."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "OB requires: (1) the impulsive move after must be STRONG and clean, (2) break previous structure (BoS), (3) not yet mitigated (price hasn't returned and broken through). Higher TF OBs (4H+) carry more weight than smaller TFs. Trade as retest zones when price returns."
+
+  - id: q6
+    text: "Which of these SMC concepts has the STRONGEST empirical merit?"
+    type: mcq
+    choices:
+      - "Specific 'algos always do X' theories."
+      - "The CORE 5: Order Blocks, Fair Value Gaps, Liquidity Pools, BoS/CHoCH, Breaker Blocks. These have observable market mechanisms and measurable success rates."
+      - "Random influencer claims."
+      - "Course-only proprietary concepts."
+    correct: 1
+    topic_tag: smc
+    explanation: "The 5 useful SMC concepts are empirically valuable. Skip the marketing fluff (specific algo claims, proprietary jargon, paid course exclusives). The core 5 cover 80% of SMC's practical edge. Integrate with classical TA — SMC isn't a complete framework on its own."
+
+  - id: q7
+    text: "SMT divergence is:"
+    type: mcq
+    choices:
+      - "Two indicators on the same chart disagreeing."
+      - "Two highly-correlated assets (e.g., BTC on Binance vs Coinbase, or BTC vs ETH) making NON-MATCHING extremes. The venue/asset that didn't follow signals weakness in the direction of the move."
+      - "Random."
+      - "Volume drop."
+    correct: 1
+    topic_tag: smt
+    explanation: "SMT = cross-venue/cross-asset divergence. Crypto's fragmented market structure (many exchanges, geographic participant differences) makes SMT particularly useful. When one venue makes new HH and another doesn't, the move lacks broad confirmation — often reverses."
+
+  - id: q8
+    text: "Extreme POSITIVE funding rate (+0.10%+ per 8h) signals what?"
+    type: mcq
+    choices:
+      - "Healthy uptrend."
+      - "Heavily bullish positioning — longs paying high premium to hold. Contrarian warning of overcrowded long side. CASCADE risk DOWN. Reduce leverage; watch for technical reversal setups."
+      - "Reversal already happened."
+      - "Random."
+    correct: 1
+    topic_tag: funding
+    explanation: "Extreme positive funding = late-cycle euphoria. The crowded long side becomes cascade fuel. A small catalyst can trigger clustered long stops in chain reaction. Doesn't mean immediately short — wait for technical confirmation (resistance + reversal pattern + volume). Funding adds weight to bearish setups; doesn't stand alone."
+
+  - id: q9
+    text: "The Wyckoff phase that typically catches retail bag-holders:"
+    type: mcq
+    choices:
+      - "Accumulation."
+      - "DISTRIBUTION — retail FOMOs in after seeing recent strong markup, thinking the range is 'consolidation before next leg up'. Reality: smart money is exiting. The retail buyers hold through markdown."
+      - "Markup."
+      - "Markdown."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Distribution is the most expensive phase misread. Looks bullish to recent entrants (markup happened) but volume shift + bearish divergence + upthrust patterns signal exit by smart money. Recognizing distribution (subtle clues) before markdown begins is one of the highest-value Tier 4 skills."
+
+  - id: q10
+    text: "The classic 'institutional play' pattern:"
+    type: mcq
+    choices:
+      - "Just trend slowly in one direction."
+      - "OB builds → price runs to OPPOSITE direction liquidity pool (stop hunt) → returns to OB / FVG → actual move plays out in original direction. 3-step setup recognizable in real time."
+      - "Random walk."
+      - "Always crash to zero."
+    correct: 1
+    topic_tag: order_blocks
+    explanation: "The 3-step play: build entry zone (OB) → hunt opposite liquidity to grab needed orders → return to OB to fill remaining orders → make the actual move. Catching this pattern early gives high-probability entries. The stop hunt looks scary but is actually the setup completing."
+
+  - id: q11
+    text: "Combined high-quality SMC + funding setup looks like:"
+    type: mcq
+    choices:
+      - "Random combination."
+      - "HTF bias + LTF liquidity hunt + OB/FVG entry zone + reversal candle + volume + EXTREME funding in trade direction (contrarian) + matching RSI divergence. Multi-factor confluence dramatically increases win rate."
+      - "Just OB alone."
+      - "Just funding alone."
+    correct: 1
+    topic_tag: smc
+    explanation: "A+ setups combine structural (chart + SMC), tactical (candle + volume), and positioning (funding) dimensions. 5-7 confluences from independent lenses = exceptional quality. This is the depth of analysis that separates sophisticated retail from basic retail. Tier 4 trained you to identify these multi-factor setups."
+
+  - id: q12
+    text: "Best single TAKEAWAY from Tier 4?"
+    type: mcq
+    choices:
+      - "Use only SMC."
+      - "Institutional perspective + positioning awareness (funding, OI) + structural patterns (Wyckoff, OB/FVG) all INTEGRATE with classical TA from earlier tiers. The best trades combine signals from multiple lenses. Avoid framework tunnel vision."
+      - "Trade as often as possible."
+      - "Use all SMC concepts simultaneously."
+    correct: 1
+    topic_tag: smc
+    explanation: "Tier 4's central theme: each new tool adds a lens (order flow, Wyckoff phase, SMC zones, SMT cross-venue, funding context). The integrated trader combines lenses for confluence-rich setups. The one-framework trader (pure SMC, pure indicators) misses what other lenses would reveal. Breadth + integration > depth in one framework."

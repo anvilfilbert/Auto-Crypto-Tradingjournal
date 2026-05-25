@@ -1,0 +1,123 @@
+id: "33"
+lesson_id: 33
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "The four Wyckoff phases in order are:"
+    type: mcq
+    choices:
+      - "Markup → Markdown → Accumulation → Distribution."
+      - "Accumulation → MARKUP → Distribution → MARKDOWN. The cycle: smart money buys low, marks price up, sells high to retail, then price marks down."
+      - "Random order."
+      - "Distribution → Accumulation only."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "The cycle is sequential: smart money accumulates at lows (accumulation), pushes price up (markup), distributes to retail at highs (distribution), then price falls (markdown). Repeats. Understanding which phase you're currently in tells you which strategy type to deploy."
+
+  - id: q2
+    text: "ACCUMULATION typically looks like:"
+    type: mcq
+    choices:
+      - "Strong rally."
+      - "Sideways RANGE after a downtrend. Volume gradually rising on up-days, drying up on down-days. Down-day wicks getting longer (selling rejected)."
+      - "Strong decline."
+      - "Random chop."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Accumulation = smart money quietly buying at lows. Visible signs: range forming after decline, volume shift (up > down), longer wicks on down candles showing buyers absorbing. Can last weeks-months. Often ends with a 'spring' — wick below the range that reverses (covered in lesson 34)."
+
+  - id: q3
+    text: "DISTRIBUTION typically looks like:"
+    type: mcq
+    choices:
+      - "Range with bullish volume increasing."
+      - "Sideways RANGE after an uptrend. Volume now rising on DOWN-days, drying up on up-days. Up-day wicks getting longer (buying rejected). Opposite of accumulation."
+      - "Strong rally up."
+      - "Crash to zero."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Distribution = smart money quietly selling to retail at highs. Mirror of accumulation. The volume pattern is the giveaway — down-days now have higher volume than up-days. To retail eyes the price still 'looks bullish' (recent strong uptrend) but the volume shift signals exit by smart money. Don't FOMO during distribution."
+
+  - id: q4
+    text: "During MARKUP, what's the smart trade approach?"
+    type: mcq
+    choices:
+      - "Wait sideways and skip everything."
+      - "Trend trades — buy pullbacks at support, ride the trend. Markup phases often produce 50-200%+ moves before exhausting."
+      - "Short the trend."
+      - "Mean reversion at extremes."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Markup = trend phase. HH/HL structure. Buy pullbacks at dynamic support (MAs, broken accumulation range, key Fibs). Ride the trend until distribution signs appear. The largest profits in trading often come from being in markup early and holding through the full move."
+
+  - id: q5
+    text: "Which phase causes the most RETAIL bag-holders?"
+    type: mcq
+    choices:
+      - "Accumulation."
+      - "DISTRIBUTION — retail FOMOs in after seeing recent strong markup, thinking the range is 'consolidation before next leg up'. Actually it's smart money distributing. The buyers end up holding through markdown."
+      - "Markup."
+      - "Markdown."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Distribution is the most expensive misread. Recent markup makes retail expect continuation. They buy during the ranging at the top. Then markdown begins and they're underwater for months. Recognizing distribution (subtle volume shift + RSI divergence + upthrust) is one of the highest-value skills you can develop."
+
+  - id: q6
+    text: "During MARKDOWN, what's the smart trade approach?"
+    type: mcq
+    choices:
+      - "Buy every dip — 'never go broke taking profits'."
+      - "Short bounces at resistance, ride the trend down. Don't 'catch the falling knife' until clear accumulation signs form."
+      - "Long aggressively."
+      - "Hold long positions through markdown."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Markdown = downtrend. Mirror of markup but typically faster (panic selling from underwater longs). Short bounces at broken support (now resistance). Don't catch the falling knife — wait for accumulation phase signs (range forming, volume shift, possibly a spring) before considering longs."
+
+  - id: q7
+    text: "What's the SUBTLE indicator that smart money is accumulating in a sideways range?"
+    type: mcq
+    choices:
+      - "Loud media coverage."
+      - "Volume on UP-DAYS gradually rising while volume on DOWN-DAYS drying up. Down-day wicks getting longer (selling rejected). The volume shift precedes price breakout."
+      - "Random news."
+      - "Price doing nothing at all."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Accumulation is quiet by design — smart money doesn't announce. The volume shift is the tell. Up-volume increasing + down-volume drying up + longer down-wicks = absorption happening. Retail sees 'just a range' and ignores; pros see accumulation building."
+
+  - id: q8
+    text: "Most DANGEROUS phase transition?"
+    type: mcq
+    choices:
+      - "Markup to distribution (selling early during continuation of markup)."
+      - "All transitions carry risk; both selling-early-in-markup AND buying-during-distribution lose money for different reasons. Both transitions require careful phase recognition before acting."
+      - "There are no risks."
+      - "Only the first transition matters."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "All transitions are tricky. Buy too early in accumulation = catching falling knife. Sell too early in markup = exiting before the big move. Buy in distribution = bag-holder. Short in remaining markup = stop-out. Trade transitions with smaller size until phase is confirmed. Don't bet big on phase changes you're uncertain about."
+
+  - id: q9
+    text: "Why does the Wyckoff framework still work after 100+ years?"
+    type: mcq
+    choices:
+      - "Magic."
+      - "Human psychology hasn't changed — greed at tops, fear at bottoms. Smart money exploits the predictable retail behavior. The mechanism is timeless because the actors (humans) behave similarly."
+      - "Computers calculate it."
+      - "It actually doesn't work anymore."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Markets are made by humans (and human-designed algorithms). Greed/fear cycles are persistent because the underlying biology hasn't changed. Smart money has always exploited the predictability of retail responses at extremes. Wyckoff documented this 100 years ago and the dynamic still works because the psychology underneath doesn't change with technology."
+
+  - id: q10
+    text: "Worked example: BTC daily chart over 6 months: declined $70K→$50K (months 1-2), ranged $48K-$55K with volume shifting toward up-days (months 3-4), broke up to $75K (month 5), now ranging $72K-$78K with wicks getting longer on up-days and bearish RSI divergence (month 6). What phase is month 6?"
+    type: mcq
+    choices:
+      - "Accumulation."
+      - "DISTRIBUTION — after sustained markup, range at high level, longer wicks on up-days, bearish divergence. Smart money selling to retail. Bias short; watch for breakdown."
+      - "Markup continuing."
+      - "Markdown completed."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Classic distribution profile: range at high levels following sustained markup + volume shift (down > up) + longer up-wicks (buyers being rejected) + bearish RSI divergence. Retail thinks 'consolidation before next leg up'; reality is smart money exiting. Bias short, watch for the breakdown candle + retest as resistance for short entries."

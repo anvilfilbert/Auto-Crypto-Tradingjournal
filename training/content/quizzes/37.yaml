@@ -1,0 +1,123 @@
+id: "37"
+lesson_id: 37
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "SMT divergence occurs when:"
+    type: mcq
+    choices:
+      - "One indicator disagrees with another on the same chart."
+      - "Two highly-correlated assets (e.g., BTC on Binance vs BTC on Coinbase, or BTC vs ETH) make NON-MATCHING extremes — one makes new HH/LL while the other doesn't."
+      - "Volume drops."
+      - "Random pattern."
+    correct: 1
+    topic_tag: smt
+    explanation: "SMT = cross-venue/cross-asset divergence. Unlike within-chart divergences (RSI vs price), SMT compares two highly-correlated charts. When they DISAGREE at extremes (one makes new high, the other doesn't), that's the signal — the venue/asset that didn't follow is showing weakness in the direction of the move."
+
+  - id: q2
+    text: "Why is SMT particularly useful in crypto specifically?"
+    type: mcq
+    choices:
+      - "Crypto has only one exchange."
+      - "Crypto markets are FRAGMENTED across many exchanges with different participant geographies (Asian retail, US institutional, EU). When one venue moves but others don't, you're seeing geographic/participant-specific flow that won't translate broadly."
+      - "Crypto has no SMT signals."
+      - "Random."
+    correct: 1
+    topic_tag: smt
+    explanation: "Equities trade primarily on one exchange per stock = SMT not very useful. Crypto trades on dozens of venues with different participant pools. Asian pump on Binance not confirmed by US flow on Coinbase = real information about whether the move has broad support or is isolated. SMT exploits this structural fragmentation."
+
+  - id: q3
+    text: "BTC on Binance makes a new HH at $66,300. BTC on Coinbase only reaches $66,100 (LOWER high vs prior $66,200). What kind of SMT signal?"
+    type: mcq
+    choices:
+      - "Bullish continuation guaranteed."
+      - "BEARISH SMT divergence — the Binance pump isn't confirmed by Coinbase. Likely isolated Asian-hours flow that lacks broader market support. Reversal warning."
+      - "No signal."
+      - "Random."
+    correct: 1
+    topic_tag: smt
+    explanation: "Binance making new HH while Coinbase makes LH = the pump is venue-specific. Likely a stealth weakness — the move has insufficient broad participation. The disagreement is the warning. Combined with other signals (resistance + reversal candle + volume), this becomes a high-quality short setup."
+
+  - id: q4
+    text: "Which pairs are GOOD candidates for SMT analysis?"
+    type: mcq
+    choices:
+      - "Any random crypto pair."
+      - "HIGHLY CORRELATED assets: BTC across major exchanges (Binance vs Coinbase), or correlated pairs (BTC vs ETH, SOL vs ETH). Low-correlation pairs produce noise instead of signal."
+      - "Different blockchains' native tokens."
+      - "Whatever's trending."
+    correct: 1
+    topic_tag: smt
+    explanation: "SMT only works on assets that move together normally. When highly-correlated assets DISAGREE at extremes, the disagreement is meaningful. BTC on different exchanges = same asset = perfect SMT comparison. BTC vs SOL/ETH = correlated but with some independent dynamics = useful but interpret with care. Random pair = produces fake divergences from natural decorrelation."
+
+  - id: q5
+    text: "Is SMT divergence a STANDALONE entry signal?"
+    type: mcq
+    choices:
+      - "Yes — always trade SMT immediately."
+      - "No — same rule as other divergences. Warning, not entry trigger. Combine with chart structure (key level), reversal candle, volume, ideally matching RSI/MACD divergence for tradeable setup."
+      - "Yes — guaranteed signal."
+      - "Only on Tuesdays."
+    correct: 1
+    topic_tag: smt
+    explanation: "Standalone SMT divergence has moderate edge — too many false signals when traded alone. Combined with chart context (key level), reversal candle, volume, and matching indicator divergences, it adds a powerful confirmation layer. Use SMT as part of a multi-factor approach, not as the only signal."
+
+  - id: q6
+    text: "What does it mean when BTC makes a new HH but ETH makes a LH (correlated-pair SMT)?"
+    type: mcq
+    choices:
+      - "ETH is crashing soon."
+      - "Bearish for BTC short-term — the broader crypto market isn't confirming BTC's strength. The rally may be BTC-specific and unsustainable without sector support. Caution warranted."
+      - "Bullish continuation."
+      - "ETH is dying."
+    correct: 1
+    topic_tag: smt
+    explanation: "BTC moving without sector confirmation is a yellow flag. Healthy crypto rallies usually have ETH (and other majors) participating. When BTC pumps alone, the move often lacks the breadth to sustain. Doesn't predict timing but suggests caution — perhaps tighten stops on BTC longs, or watch for reversal signals."
+
+  - id: q7
+    text: "How does VOLUME affect SMT signal strength?"
+    type: mcq
+    choices:
+      - "Volume doesn't matter."
+      - "The venue with HIGHER volume during the divergence carries more weight. A low-volume divergence on a small venue means little; a high-volume divergence between major exchanges is meaningful."
+      - "Lower volume is better."
+      - "Random."
+    correct: 1
+    topic_tag: smt
+    explanation: "Volume is the participation dimension here too. SMT divergence between two major high-volume venues = real broad-market disagreement. Divergence involving a tiny low-volume venue = could just be reflecting that venue's lack of liquidity, not a market-wide signal. Compare like-with-like in terms of volume relevance."
+
+  - id: q8
+    text: "Common SMT mistake:"
+    type: mcq
+    choices:
+      - "Comparing only correlated pairs."
+      - "Using SMT on TINY timeframes (1-minute charts) — produces mostly noise. SMT works best on 1H/4H/1D timeframes where divergences have time to develop meaningfully and reflect real participant flows."
+      - "Combining with other signals."
+      - "Looking at major exchanges."
+    correct: 1
+    topic_tag: smt
+    explanation: "Lower TFs amplify noise. 1-minute SMT divergences happen constantly without meaning — natural latency, microstructure differences. On 1H/4H/1D timeframes, divergences represent sustained directional disagreement reflecting real participant flows. Use higher TFs for tradeable SMT signals."
+
+  - id: q9
+    text: "Worked example: BTC Binance wicks $66,300 (new HH), BTC Coinbase only reaches $66,100 (LH from $66,200). Plus bearish engulfing at $66K resistance + 2.5× volume + RSI bearish divergence. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — random."
+      - "A+ SHORT setup. 5 signals: SMT divergence + RSI divergence + key resistance + engulfing + volume. The SMT adds cross-venue confirmation that the Binance breakout lacked broad market support. Consider sizing up to 2-3% if rules allow."
+      - "Long the breakout."
+      - "Random."
+    correct: 1
+    topic_tag: smt
+    explanation: "Multiple confluences across different lenses. SMT provides the structural disagreement (Binance only, not Coinbase). RSI provides the momentum divergence (price up, momentum down). The pattern + level + volume provide the entry trigger. Each signal independently weak; combined they're high-quality. SL above the Binance wick (highest extreme of either venue)."
+
+  - id: q10
+    text: "What's the structural edge SMT gives crypto traders over single-venue analysis?"
+    type: mcq
+    choices:
+      - "None."
+      - "Visibility into venue-specific vs broad-market flow. A pump on one venue without confirmation elsewhere often lacks sustainability. SMT catches this BEFORE it shows in any single chart. Cross-venue confirmation is a structural advantage unique to crypto's fragmented market."
+      - "Magical predictions."
+      - "Insider information."
+    correct: 1
+    topic_tag: smt
+    explanation: "Traditional TA tools work on single charts. SMT adds a structural layer: 'is this move actually confirmed by the broader market?' Crypto's many-venue structure makes this question both answerable and meaningful. Single-venue analysis misses these dynamics; SMT-aware analysis catches them. The structural fragmentation is the source of the edge."

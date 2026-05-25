@@ -1,0 +1,40 @@
+{
+  "slug": "39-t4-final",
+  "subtitle": "Tier 4 Final — 12 cumulative questions covering lessons 31-38. Pass with 10/12 to unlock Tier 5 (Macro & Context).",
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "info",
+      "title": "About this final",
+      "content": "<p>Tier 4 was the advanced layer — order flow, Wyckoff, SMC concepts, multi-exchange divergence, funding sentiment. These build on top of everything from Tiers 1-3 and give you the institutional-perspective tools that separate sophisticated from basic retail trading.</p><p>Pass threshold: <strong>10/12 required</strong>.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What Tier 4 covered"
+    },
+    {
+      "type": "table",
+      "headers": ["#", "Lesson", "Core idea"],
+      "rows": [
+        ["31", "Order flow / CVD", "Aggressive flow truth-teller. CVD divergence with price = strong reversal warning."],
+        ["32", "Liquidation maps", "Retail stops cluster predictably. Don't be the prey; position FOR the hunt."],
+        ["33", "Wyckoff phases", "Accumulation → markup → distribution → markdown. Phase determines trade type."],
+        ["34", "Spring & Upthrust", "Phase transition patterns. Exceptional R:R because SL is tight beyond wick."],
+        ["35", "OB / FVG / Liquidity Pools", "Institutional zones. 3-step play: build OB → hunt liquidity → return to OB."],
+        ["36", "SMC overview", "5 empirically-valuable concepts. Skip marketing fluff. Integrate with classical TA."],
+        ["37", "SMT divergence", "Cross-venue disagreement reveals isolated flow. Unique crypto edge."],
+        ["38", "Funding sentiment", "Extreme funding = overcrowded positioning. Contrarian signal + cascade risk."]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>If you pass at 10/12, Tier 5 (Macro & Context) unlocks — DXY/VIX/S&P, BTC dominance, F&G, news events, correlation regimes.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Before you start",
+      "content": "<p>Tier 4 themes that show up across questions: institutional perspective (not retail), confluence-stacking with chart structure, positioning/sentiment as context, the difference between empirically-valuable concepts and marketing.</p>"
+    }
+  ]
+}

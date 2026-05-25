@@ -1,0 +1,94 @@
+{
+  "slug": "37-smt-divergence",
+  "subtitle": "When BTC makes a new high on Binance but not on Coinbase, that's SMT (Smart Money Tool) divergence — a structural disagreement between major venues. It catches manipulation and stealth weakness before they show in price. Crypto-specific edge that traditional TA misses.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've seen divergences within ONE chart (price vs RSI/MACD/CVD/volume). SMT divergence operates a layer up: divergences between DIFFERENT VENUES trading the same (or very similar) asset.</p><p>The idea: when BTC on Binance makes a new high but BTC on Coinbase doesn't, something asymmetric is happening. Either someone is selectively buying on one venue (manipulation signal), one venue is stealth-leading the move, or stealth weakness is hiding in one of the prices. Either way, the cross-venue disagreement provides information that single-venue charts can't.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What SMT divergence is"
+    },
+    {
+      "type": "text",
+      "content": "<p>SMT (Smart Money Tool) divergence occurs when two highly-correlated assets — typically the same crypto on different exchanges, or closely correlated pairs (BTC vs ETH, SOL vs ETH, BNB vs BTC) — make NON-MATCHING extremes:</p><ul><li>One venue makes a higher high, the other makes a LOWER high. (Bearish SMT divergence)</li><li>One venue makes a lower low, the other makes a HIGHER low. (Bullish SMT divergence)</li></ul><p>The venue that didn't follow is signaling weakness in the direction of the move. The other venue might be experiencing isolated flow that won't be confirmed by the broader market.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Why SMT divergence matters in crypto"
+    },
+    {
+      "type": "table",
+      "headers": ["Scenario", "What's likely happening", "Trade implication"],
+      "rows": [
+        ["BTC Binance HH, BTC Coinbase LH", "Asian-hours pump on Binance not confirmed by US-hours demand on Coinbase", "Bearish — the move lacks broad confirmation"],
+        ["BTC Binance LL, BTC Coinbase HL", "Asian-hours dump not confirmed by US-hours selling", "Bullish — the decline is venue-specific"],
+        ["ETH HH but SOL LH (correlated pair)", "Rotation within crypto — one asset moving without sector confirmation", "Caution — the move may not sustain"],
+        ["BTC HH but BTC.D LL", "Alts outperforming despite BTC strength", "Sector-level alt-season signal"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Why crypto specifically benefits from SMT analysis",
+      "content": "<p>Crypto markets are fragmented across many exchanges. Each has slightly different participants (Asian retail, US institutions, EU traders). When one venue moves but others don't, you're seeing geographic/participant-specific flow that won't necessarily translate to the broader market.</p><p>In traditional equities (one main exchange per stock), SMT analysis is less applicable. In crypto's fragmented market structure, it's a real edge that single-venue charts miss.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common SMT scenarios"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Cross-exchange BTC SMT</strong>: most common. Watch BTC on Binance vs Coinbase. When they disagree at swing extremes (one makes new high/low, other doesn't), that's a divergence signal.</p><p><strong>BTC vs ETH SMT</strong>: when BTC makes new HH but ETH makes LH, the rally may not be sustainable — the broader crypto market isn't confirming.</p><p><strong>Major alts SMT</strong>: SOL/ETH, BNB/BTC, XRP/BTC — when these correlated pairs diverge at extremes, the move is suspect.</p><p><strong>BTC.D vs BTC SMT</strong>: BTC dominance index vs BTC price — when they make non-matching moves, sector-level dynamics are at play.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to spot SMT in practice"
+    },
+    {
+      "type": "ol",
+      "content": ""
+    },
+    {
+      "type": "text",
+      "content": "<ol><li>Set up TWO charts side-by-side at the same timeframe (e.g., 1H BTC Binance + 1H BTC Coinbase).</li><li>Identify the most recent significant high/low on each chart.</li><li>Compare: do BOTH charts make the same new HH/LL? Or does one make a new extreme while the other doesn't?</li><li>If they DISAGREE at the extreme, you have an SMT divergence. The venue that didn't make the new extreme is signaling weakness.</li><li>Combine with other signals (key level, candle pattern, volume) for tradeable setup.</li></ol><p>The trading journal's scanner specifically tracks SMT divergences as a confluence signal in its multi-exchange data pipeline.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trading SMT divergence"
+    },
+    {
+      "type": "text",
+      "content": "<p>SMT divergence is a WARNING signal, not a standalone entry. Like other divergences, it tells you 'something is off' — you wait for confirmation from price action before entering.</p><p>Best use pattern:</p><ol><li>Spot the SMT divergence at a key level (resistance for bearish SMT, support for bullish SMT).</li><li>Wait for confirmation: reversal candle + volume + ideally other divergence indicators (RSI, MACD).</li><li>Enter in the direction signaled by the divergence (short on bearish SMT at resistance, long on bullish SMT at support).</li><li>SL beyond the venue extreme (whichever made the new HH/LL).</li><li>TP at the next major level.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "SMT divergence alone has low edge",
+      "content": "<p>Same rule as all divergences: standalone signal = warning, not entry trigger. SMT divergence WITHOUT chart context (key level, reversal candle, volume) often leads to losses because the disagreement can persist or resolve in either direction.</p><p>SMT divergence + key level + reversal candle + matching RSI divergence + volume = high-quality setup. SMT alone = wait.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common SMT mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<ol><li><strong>Comparing the wrong pairs.</strong> SMT works on HIGHLY CORRELATED assets. BTC on Binance vs BTC on Coinbase = good comparison. BTC vs a random altcoin = not useful (low correlation).</li><li><strong>Trading SMT in chop.</strong> SMT divergence in clean trends with key levels = signal. Same divergence in chop = noise.</li><li><strong>Ignoring volume on both venues.</strong> The venue with HIGHER volume during the divergence carries more weight. Low-volume divergence on a small venue means little.</li><li><strong>Treating SMT as standalone.</strong> Always combine with chart structure + indicators + candle patterns.</li><li><strong>Using SMT on TINY timeframes.</strong> SMT on 1-minute charts is mostly noise. 1H/4H/1D timeframes produce meaningful divergences.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart: rally from $60K to $66K over a week. Today, BTC on BINANCE wicks to a new HH at $66,300 then closes at $65,800. BTC on COINBASE during the same hour only reached $66,100 (a LOWER HIGH compared to its prior $66,200).</p><p>Additional context:</p><ul><li>$66K is a major HTF resistance.</li><li>RSI on BTC shows bearish divergence (lower high while price made HH).</li><li>4H candle just printed as bearish engulfing on volume.</li><li>SMT divergence between Binance and Coinbase confirms the asymmetry.</li></ul><p>Trade setup:</p><ul><li><strong>Entry</strong>: SHORT at $65,700 (below engulfing close)</li><li><strong>SL</strong>: $66,400 (above the Binance wick high — the highest extreme of either venue)</li><li><strong>TP1</strong>: $64,000 (recent support)</li><li><strong>TP2</strong>: $62,000 (next major support)</li></ul><p>Five signals: SMT divergence + RSI divergence + key resistance + engulfing pattern + volume. A+ setup. The SMT divergence adds the cross-venue confirmation that the Binance breakout lacked broader market support.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>SMT divergence between major venues</strong> reveals isolated flow that won't sustain. Cross-venue confirmation matters in crypto's fragmented market.</li><li><strong>Compare highly-correlated pairs only</strong> — BTC on Binance vs Coinbase, BTC vs ETH, etc. Low-correlation pairs produce noise.</li><li><strong>SMT alone is a warning</strong> — combine with chart structure + indicators + candle patterns for tradeable setups.</li></ol><p>Next lesson: funding rate as a sentiment indicator — when crowd positioning becomes a contrarian signal.</p>"
+    }
+  ]
+}

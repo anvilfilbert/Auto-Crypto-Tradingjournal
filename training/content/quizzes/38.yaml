@@ -1,0 +1,123 @@
+id: "38"
+lesson_id: 38
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "What does EXTREME POSITIVE funding rate (e.g., +0.10% per 8h) signal?"
+    type: mcq
+    choices:
+      - "Healthy uptrend."
+      - "Heavily bullish positioning — longs paying premium to hold. Contrarian warning of overcrowded long side and DOWNSIDE cascade risk."
+      - "Bearish reversal already happened."
+      - "Random."
+    correct: 1
+    topic_tag: funding
+    explanation: "Extreme positive funding = longs heavily leveraged paying high cost to hold. The overcrowded long side creates structural cascade risk down. The contrarian principle: when everyone's on one side, the opposite move resolves the imbalance. Combine with technical setup for actually-tradeable signal."
+
+  - id: q2
+    text: "What does EXTREME NEGATIVE funding rate (e.g., -0.08% per 8h) signal?"
+    type: mcq
+    choices:
+      - "Healthy downtrend."
+      - "Heavily bearish positioning — shorts paying premium. Contrarian warning of overcrowded short side and SHORT SQUEEZE risk up."
+      - "Continuation down guaranteed."
+      - "Random."
+    correct: 1
+    topic_tag: funding
+    explanation: "Mirror of extreme positive. Extreme negative = shorts piling in, paying to hold. The crowded short side becomes squeeze fuel — any catalyst forces them to cover (market buys), pushing price up rapidly. Often occurs at major lows when fear is highest."
+
+  - id: q3
+    text: "Should you blindly SHORT extreme positive funding?"
+    type: mcq
+    choices:
+      - "Yes — always profitable."
+      - "No — funding can stay extreme for days/weeks during strong trends. The exact timing is unpredictable. Use extreme funding as CONTEXT for bearish technical setups, not as a standalone short trigger."
+      - "Only on weekends."
+      - "Always with 100× leverage."
+    correct: 1
+    topic_tag: funding
+    explanation: "Common mistake — 'funding extreme, time to short'. Funding can persist extreme for days; timing the reversal alone fails. Use it as confirmation that ADDS weight to bearish technical setups (resistance + reversal pattern + volume). Without the technical confirmation, you're just calling tops without a defined entry."
+
+  - id: q4
+    text: "What's the mechanism for extreme positive funding leading to CASCADE risk?"
+    type: mcq
+    choices:
+      - "Random chance."
+      - "Longs are heavily leveraged with similar entries and SLs. A small catalyst triggers some long stops → market sells push price down → more long stops fire → chain reaction. Can cover 5-15% in minutes."
+      - "Exchange manipulation."
+      - "Magic."
+    correct: 1
+    topic_tag: funding
+    explanation: "Concrete mechanism. Extreme positioning = clustered stops. Clustered stops + small catalyst = cascade. The math is mechanical. Funding tells you positioning is extreme; cascade is the structural consequence when the wrong direction occurs. Defending against this = reducing leverage during extreme funding."
+
+  - id: q5
+    text: "What's the strongest funding-related trade signal combination?"
+    type: mcq
+    choices:
+      - "Funding alone."
+      - "EXTREME funding (positive or negative) + matching TECHNICAL setup (resistance/support + reversal pattern + volume + ideally RSI divergence). Confluence of overcrowded positioning + technical exhaustion."
+      - "Funding at 0%."
+      - "Funding with random TA."
+    correct: 1
+    topic_tag: funding
+    explanation: "The A+ setup combines two independent dimensions: positioning (funding tells you crowd is overcrowded) + technical (reversal signals show exhaustion). Each alone is weaker; together they identify high-probability reversal points. This combination is what makes funding analysis powerful."
+
+  - id: q6
+    text: "Rising Open Interest (OI) + Extreme Positive Funding together suggests:"
+    type: mcq
+    choices:
+      - "Bullish continuation."
+      - "BULL TRAP territory — extended longs are piling in LATE, paying premium to enter. The combination signals late-cycle euphoria with maximum cascade vulnerability."
+      - "OI doesn't matter."
+      - "Random pattern."
+    correct: 1
+    topic_tag: funding
+    explanation: "Rising OI = more capital flowing into long positions. Extreme positive funding = they're paying premium to do so. Combined = late buyers chasing strength after the move already happened. Maximum cascade vulnerability because all these late longs have tight risk tolerance and similar SLs."
+
+  - id: q7
+    text: "When funding is NEUTRAL (0% to +0.01%), what's the right interpretation?"
+    type: mcq
+    choices:
+      - "Always short."
+      - "Balanced positioning — no funding-driven contrarian signal. Trade your technical setup with NORMAL sizing. Funding isn't always providing a signal; sometimes it's just background."
+      - "Always long."
+      - "Skip all trades."
+    correct: 1
+    topic_tag: funding
+    explanation: "Neutral funding = no positioning extreme. Most of the time, funding is in the neutral zone. Don't force contrarian signals when they don't exist. Trade your technical setups normally; funding tells you when to ADJUST (reduce size, watch for setups) at extremes, not what to do every day."
+
+  - id: q8
+    text: "How does funding affect your SIZING decisions?"
+    type: mcq
+    choices:
+      - "Funding doesn't affect sizing."
+      - "Extreme funding in YOUR trade direction = REDUCE leverage (you're entering an overcrowded trade with cascade risk). Extreme funding AGAINST your direction = strong tailwind, can keep normal sizing."
+      - "Increase leverage with extreme funding."
+      - "Always 100×."
+    correct: 1
+    topic_tag: funding
+    explanation: "Funding-aware sizing is critical for survival. Entering longs during extreme positive funding = you're joining the overcrowded side, exposing yourself to the cascade risk. Reduce leverage even if confident in direction. Conversely, going short during extreme positive funding = you're with the contrarian wave, can size normally."
+
+  - id: q9
+    text: "Worked example: BTC rallied $58K→$66K over 5 days. Funding sustained at +0.09%. OI tripled in 48h. Major resistance at $66K + bearish RSI divergence + bearish engulfing on 3× volume. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — too many signals."
+      - "A+ SHORT setup. 6 factors: extreme funding (overcrowded longs) + rising OI (piling in late) + resistance + RSI divergence + engulfing + volume. The funding context multiplies the technical setup's quality. Consider sizing up to 2-3%."
+      - "Long the breakout."
+      - "Random."
+    correct: 1
+    topic_tag: funding
+    explanation: "Textbook funding-aware A+ short. Each layer of confirmation adds value: technical (resistance + pattern + volume + RSI divergence) defines the entry; positioning (extreme funding + rising OI) tells you why this technical setup has cascade potential. The combination is much higher quality than either dimension alone."
+
+  - id: q10
+    text: "Best WORKFLOW for using funding rate in everyday trading:"
+    type: mcq
+    choices:
+      - "Ignore it."
+      - "Check funding every time you analyze a chart (5 seconds via Coinglass or exchange page). Note level (neutral/moderate/extreme). Adjust sizing accordingly (reduce in over-positioned direction). Watch for extreme + technical setup confluences."
+      - "Only check on weekends."
+      - "Only check after losing trades."
+    correct: 1
+    topic_tag: funding
+    explanation: "Funding-aware trading is a quick, valuable habit. 5 seconds to check funding for the asset you're analyzing. Note where it is, adjust sizing if extreme, watch for setup confluences. This single habit reduces cascade risk + identifies high-quality contrarian setups. The cost is trivial; the benefit is substantial."

@@ -1,0 +1,102 @@
+{
+  "slug": "31-order-flow-cvd",
+  "subtitle": "Beneath every candle is a battle of aggressive buyers vs aggressive sellers. CVD (Cumulative Volume Delta) shows you who's winning that battle in real time. Order flow is the truth that price patterns try to summarize.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Tier 4 starts with the deepest level of market reading: order flow. Where Tier 2 was 'what price did' and Tier 3 was 'what indicators say about price', this tier is 'WHO is doing it and WHY'.</p><p>CVD (Cumulative Volume Delta) is the workhorse of order flow analysis. It measures aggressive buying vs aggressive selling, accumulated over time. When CVD diverges from price, you're looking at the difference between PERCEIVED direction (price) and ACTUAL direction (flow). Often the flow wins.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Aggressive vs passive — what 'taker' really means"
+    },
+    {
+      "type": "text",
+      "content": "<p>Every trade has two sides — a buyer and a seller. But ONE of them initiated the trade. The other was waiting passively on the book. The initiator is the AGGRESSIVE side; the passive one is the maker.</p><ul><li><strong>Aggressive buy</strong>: someone hit the ask (market buy or limit order priced through the spread). They wanted in NOW, accepting the offer side's price.</li><li><strong>Aggressive sell</strong>: someone hit the bid. They wanted OUT now, accepting the bid side's price.</li></ul><p>The flow of aggression — who's pressing the market — is the actual driver of price. CVD measures this directly.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What CVD measures"
+    },
+    {
+      "type": "table",
+      "headers": ["Concept", "Definition", "What it shows"],
+      "rows": [
+        ["<strong>Volume Delta</strong>", "Aggressive buy volume MINUS aggressive sell volume in a given period", "Net aggression direction for that bar"],
+        ["<strong>Cumulative Volume Delta (CVD)</strong>", "Running sum of all volume deltas over time, plotted as a line", "Cumulative net aggression direction"],
+        ["Rising CVD", "More aggressive buying than selling", "Buyers in control"],
+        ["Falling CVD", "More aggressive selling than buying", "Sellers in control"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "CVD divergence — the most powerful order flow signal"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "When price and CVD disagree, flow wins",
+      "content": "<p>Same logic as RSI/MACD divergence, but order flow is one layer deeper:</p><ul><li><strong>Bullish CVD divergence</strong>: price makes LOWER LOW but CVD makes HIGHER LOW. Sellers are getting weaker even though price is dropping. Buyers absorbing aggressively. Reversal likely.</li><li><strong>Bearish CVD divergence</strong>: price makes HIGHER HIGH but CVD makes LOWER HIGH. Buyers getting weaker even though price is rising. Sellers absorbing. Reversal likely.</li></ul><p>CVD divergences are often more reliable than RSI/MACD divergences because they directly measure flow rather than derived momentum. When all three (RSI + MACD + CVD) diverge simultaneously, the signal is very strong.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Absorption — when price doesn't move despite heavy flow"
+    },
+    {
+      "type": "text",
+      "content": "<p>One of the most useful order-flow concepts. ABSORPTION happens when:</p><ol><li>Heavy aggressive buying (CVD spiking up) but price barely rises — sellers are absorbing the buying.</li><li>Heavy aggressive selling (CVD dropping) but price barely falls — buyers are absorbing the selling.</li></ol><p>Absorption shows that PASSIVE liquidity is overwhelming aggressive flow. The aggressive side is exhausting itself against a wall of resting orders. This often precedes a reversal because the aggressive side gives up and the passive side eventually wins.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "CVD in trend identification"
+    },
+    {
+      "type": "table",
+      "headers": ["Price action", "CVD behavior", "Interpretation"],
+      "rows": [
+        ["Strong uptrend", "CVD trending up steadily", "Real trend backed by aggressive buyers"],
+        ["Strong uptrend", "CVD FLAT or declining", "Hollow trend — sellers absorbing buyers; reversal warning"],
+        ["Strong downtrend", "CVD trending down steadily", "Real trend backed by aggressive sellers"],
+        ["Strong downtrend", "CVD FLAT or rising", "Hollow trend — buyers absorbing sellers; bounce coming"],
+        ["Sideways chop", "CVD oscillating around zero", "Balanced flow; range conditions"],
+        ["Sideways chop", "CVD trending in one direction", "Hidden accumulation/distribution — breakout in CVD direction likely"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Using CVD with charts"
+    },
+    {
+      "type": "text",
+      "content": "<p>CVD is typically plotted as a line below the chart, similar to RSI or MACD. Most professional charting platforms support it. The trading journal computes CVD as part of its scanner pipeline.</p><p>Practical workflow:</p><ol><li>Identify the trend on price (HH/HL or LH/LL).</li><li>Check whether CVD agrees or diverges.</li><li>If CVD agrees and is trending in the same direction as price = trend is healthy. Trade with trend.</li><li>If CVD diverges from price = warning. Wait for additional confirmation (key level + reversal candle + volume) before considering a reversal trade.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "CVD limitations"
+    },
+    {
+      "type": "text",
+      "content": "<p>CVD isn't perfect. Things to know:</p><ul><li><strong>Exchange-specific</strong>: each exchange has its own CVD. A divergence on one exchange might not exist on another. Use aggregated CVD across major exchanges for stronger signals.</li><li><strong>Misses spoofing</strong>: large orders that get cancelled before fill don't show in CVD because they didn't transact. Spoofers manipulate this.</li><li><strong>Different on perps vs spot</strong>: perp CVD reflects derivatives traders; spot CVD reflects actual coin buyers/sellers. Both useful, sometimes diverge.</li><li><strong>Funding-affected on perps</strong>: high positive funding can show in CVD as aggressive selling (longs exiting to avoid funding) without being a real trend change.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't trade CVD alone",
+      "content": "<p>Same rule as every other tool: standalone CVD signals have moderate reliability. Combine with chart structure (S/R, candle patterns, multi-TF). CVD divergence at a major level with reversal candle + volume = very high quality. CVD divergence in chop = often nothing.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart. Price has rallied from $60K to $66K over a week. Looking at CVD:</p><ul><li>From $60K to $63K, CVD rose steadily — real aggressive buying drove the move ✓</li><li>From $63K to $65K, CVD continued up but at a slower rate — buyers still in control but weaker</li><li>From $65K to $66K (the final push), CVD actually FELL — price made HH but CVD made LH = BEARISH CVD DIVERGENCE</li></ul><p>Concurrently: $66K is a major previous resistance, RSI showing bearish divergence (matching CVD), bearish engulfing 4H candle just printed with 2.5× average volume.</p><p>Signal stack: CVD divergence + RSI divergence + key level + reversal candle + volume = 5 confluences. Very high-quality short setup.</p><ul><li><strong>Entry:</strong> Limit SHORT at $65,700 (below engulfing close)</li><li><strong>SL:</strong> $66,400 (above engulfing high)</li><li><strong>TP1:</strong> $64K (back to recent support)</li><li><strong>TP2:</strong> $62K (next major support)</li></ul><p>The CVD divergence isn't the trigger by itself — the candle + volume + level is. But the CVD divergence is what made the SETUP credible in the first place. Without CVD, the same bearish engulfing might have been just one signal at a level. With CVD divergence showing buyers exhausting, the conviction is much higher.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>CVD shows aggression flow.</strong> Rising CVD = aggressive buyers winning. Falling = sellers winning.</li><li><strong>CVD divergence with price = strong reversal warning.</strong> Often more reliable than indicator divergences.</li><li><strong>Combine with structure.</strong> CVD divergence at major level + reversal candle + volume = A+ setup.</li></ol><p>Next lesson: liquidation maps — where stops cluster and why they get hunted.</p>"
+    }
+  ]
+}

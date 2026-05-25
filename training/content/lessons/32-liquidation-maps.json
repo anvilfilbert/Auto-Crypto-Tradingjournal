@@ -1,0 +1,103 @@
+{
+  "slug": "32-liquidation-maps",
+  "subtitle": "Retail stops cluster predictably — below round numbers, just past obvious S/R, in tight ranges below entries. Smart money knows. Stop hunts are real, frequent, and structurally exploitable. Learn where YOUR stops should NOT be, and where to position to catch the hunt.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You learned in earlier lessons not to put your SL at round numbers or right at obvious S/R. Now you'll learn WHY — and how to use the same understanding to your advantage. Stop hunts aren't conspiracy theories; they're observable market behavior driven by predictable retail positioning.</p><p>Understanding liquidation dynamics is the difference between being the prey and being the trader who positions BEFORE the hunt.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Where retail stops cluster"
+    },
+    {
+      "type": "table",
+      "headers": ["Stop cluster zone", "Why retail puts stops here", "Why it gets hunted"],
+      "rows": [
+        ["Just below round numbers ($60K, $65K)", "Round numbers feel like 'support'", "Easy target; large stop pools attract liquidity hunters"],
+        ["Right below the most recent swing low", "Obvious invalidation level", "Predictable; everyone uses the same level"],
+        ["Inside tight ranges (just below range support)", "Range traders defend the range", "Large concentrated cluster; hunters break range to trigger"],
+        ["Below recent breakout/breakdown levels", "Polarity flip stops", "Liquidity hunters know stops are exactly there"],
+        ["Below local Fibonacci levels (0.5, 0.618)", "Fib-trader stops", "Smaller pools but still targeted on illiquid coins"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Why stop hunts happen — the mechanics"
+    },
+    {
+      "type": "text",
+      "content": "<p>Large players (whales, market makers, sophisticated funds) can see (or estimate) where stops are clustered. Pushing price briefly past a cluster triggers a cascade of stop-loss market orders, which the large player then absorbs at favorable prices. The hunt then reverses.</p><p>The cascade matters: triggered stops are market orders, which means slippage. The large player who set up to absorb gets very favorable fills compared to normal market conditions. After absorbing, they often push price back in the original direction — the 'hunt' completes.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The classic hunt pattern",
+      "content": "<p>Watch for this on charts at key levels:</p><ol><li>Price approaches a key level (round number, swing low, range support).</li><li>Price BRIEFLY wicks past the level — long wick beyond, then closes BACK above the level.</li><li>Volume spikes during the wick — that's the stop cascade firing.</li><li>Price reverses sharply in the opposite direction of the wick.</li></ol><p>The wick is the hunt. The reversal is the trade. Pattern: wick-reject of obvious stop cluster + above-average volume on the wick + close back above the level = high-probability long setup.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Liquidation maps — visualizing the hunt zones"
+    },
+    {
+      "type": "text",
+      "content": "<p>Some platforms (Coinglass, Hyblock, etc.) provide \"liquidation heatmaps\" that visualize where leveraged positions would be liquidated at different price levels. Bright zones = lots of leverage at that level = potential hunt magnets.</p><p>Even without these tools, you can ESTIMATE liquidation zones:</p><ul><li>Long positions at price X with 10× leverage liquidate around X × 0.90.</li><li>If you see price has rallied from $55K to $65K with high leverage building, longs at $60K (mid-rally average) liquidate around $54K.</li><li>$54K becomes a liquidation magnet — a level price may visit to trigger those longs before reversing.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Where to place YOUR stops to avoid being hunted"
+    },
+    {
+      "type": "table",
+      "headers": ["Bad SL location", "Better SL location", "Why"],
+      "rows": [
+        ["Right at $60,000 round number", "$59,800 (below the cluster)", "Round-number cluster gets hunted first"],
+        ["Right below the swing low (e.g., $58,500 if swing low is $58,510)", "$58,300 (with buffer for hunt wick)", "Hunts often wick 0.3-1% past obvious levels"],
+        ["Inside an obvious range floor", "Below the range with 1-2× ATR buffer", "Range breaks often hunt before reversing"],
+        ["Tight stops at 0.5× ATR or less", "0.75-1.5× ATR minimum", "Normal noise + hunts both eat tight stops"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Buffer below the obvious — but not TOO far",
+      "content": "<p>The trade-off: SL too tight = hunted. SL too wide = wastes risk on each loss. The sweet spot is typically 1.5× ATR or 0.5-1% below the structural level, depending on the asset and timeframe.</p><p>Specifically NOT recommended: setting SL at huge distances like 5%+ \"to avoid hunts\". This destroys your risk:reward and forces tiny position sizes. Better to skip the trade than trade with such wide stops.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trading the hunt — positioning before the reversal"
+    },
+    {
+      "type": "text",
+      "content": "<p>Once you recognize the pattern, you can position to BENEFIT from hunts:</p><ol><li>Identify a clear stop cluster zone (round number, obvious swing low, range bottom).</li><li>Place a LIMIT BUY just below the obvious level — where the hunt wick is likely to reach but not below.</li><li>SL goes WAY below the cluster — out of normal hunt range.</li><li>If price wicks down to your limit, fills you, then reverses up — you caught the hunt. Take profit at the next resistance.</li><li>If price breaks through your level with conviction (close below + volume) — your SL is positioned for the genuine breakdown.</li></ol><p>This is a higher-skill setup than basic S/R bounce. The win rate is lower than ideal because some 'hunts' continue as real breakdowns. But when it works, the R:R is exceptional because your entry is at the bottom of the wick.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Liquidation cascades — the bigger version"
+    },
+    {
+      "type": "text",
+      "content": "<p>When market conditions are right (one-sided leverage extreme + lower liquidity hours + a small catalyst), a stop hunt can turn into a full LIQUIDATION CASCADE:</p><ol><li>Initial stop cluster gets hunted.</li><li>The triggered stops push price further down (market sells).</li><li>That further drop triggers the NEXT cluster of stops (slightly below).</li><li>Those stops push price even further.</li><li>Chain reaction — sometimes 5-10% drops in 15-30 minutes.</li></ol><p>Cascades are most common during low-liquidity hours (Asian session weekends) and after long periods of one-sided positioning (everyone long, everyone leveraged similarly).</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "danger",
+      "title": "Liquidation cascades are not your friend",
+      "content": "<p>If you're caught long in a cascade, your stops get awful fills (or don't fill at all due to liquidation engine queues). If you're short, you might profit — but the volatility makes execution dangerous.</p><p>The defense: don't be over-leveraged during periods of widespread one-sided positioning. Check funding rates (extreme positive = longs over-positioned + cascade risk down; extreme negative = shorts over-positioned + cascade risk up). When funding goes extreme, REDUCE leverage even if you're sure of direction.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC has been in a tight uptrend channel for 3 days. Current price $62,000, recent swing low at $61,800, channel support at $61,500. Round number $60K below.</p><p>Where do retail stops cluster? Roughly $61,400-$61,700 — just below the swing low + channel bottom. That's the hunt zone.</p><p>You want to be long but recognize the hunt setup. Two approaches:</p><p><strong>Conservative</strong>: limit BUY at $61,600 with SL at $60,800 (below the entire hunt zone). If hunt fires and reverses, you catch the reversal at a great entry. If price breaks through, your SL is safe below the hunt range.</p><p><strong>Aggressive</strong>: wait for the hunt to actually happen. See price wick to $61,400 with volume spike, then close back above $61,800. NOW enter long at $61,900 with SL at $61,300 (just below the hunt wick). You're entering AFTER confirmation that it was a hunt, not a real breakdown.</p><p>Aggressive has higher win rate but worse entry. Conservative has wider average entry but catches the full reversal. Both are valid; matches your style preference.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Never put SL at obvious clusters.</strong> Add 0.5-1% buffer below round numbers and swing lows.</li><li><strong>Wick beyond an obvious level + immediate reversal = hunt confirmation.</strong> High-quality entry setup.</li><li><strong>Reduce leverage when positioning is one-sided (extreme funding).</strong> Cascade risk is asymmetric in the over-leveraged direction.</li></ol><p>Next lesson: Wyckoff phases — the framework that explains WHY markets cycle through accumulation, markup, distribution, markdown.</p>"
+    }
+  ]
+}

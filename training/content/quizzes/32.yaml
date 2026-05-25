@@ -1,0 +1,123 @@
+id: "32"
+lesson_id: 32
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Where do retail stop losses CLUSTER predictably?"
+    type: mcq
+    choices:
+      - "At random prices."
+      - "Just below round numbers, right below the most recent swing low, inside tight ranges, just below previous breakout levels. Predictable = huntable."
+      - "Above current price always."
+      - "Only on weekends."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Retail puts stops at obvious 'invalidation' levels. Round numbers feel like support. Swing lows are the 'logical' SL. Range floors get defended. The problem: when everyone uses the same logic, the stops cluster — and clusters are profitable to hunt for those who can move price briefly."
+
+  - id: q2
+    text: "The classic 'stop hunt' pattern looks like:"
+    type: mcq
+    choices:
+      - "Slow grind in one direction."
+      - "Price BRIEFLY wicks past a key level (clearly below swing low or round number), volume spikes during the wick (stops firing), then price reverses sharply back through the level."
+      - "Random noise."
+      - "Volume drops to zero."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "The wick down + volume spike = the stop cascade firing. The reversal = the hunter completing the trade. The candle closes BACK above the key level — confirming it wasn't a real breakdown. The wick is the hunt; the close is the confirmation. Volume spike during the wick is the smoking gun."
+
+  - id: q3
+    text: "If swing low is $58,510, where should you NOT put your stop loss?"
+    type: mcq
+    choices:
+      - "$58,300 with buffer for hunt wick."
+      - "$58,500 — right at the obvious level where retail stops cluster. Hunters target exactly this zone. Buffer needed."
+      - "$57,000 (far away)."
+      - "Below the previous swing high."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Stops right at the obvious level get triggered first in any hunt. Add 0.5-1% buffer below — gives you some protection from hunt wicks while still maintaining a structurally meaningful SL. Tight (right at the level) = guaranteed to get hunted occasionally. Buffered = better odds of surviving the hunt."
+
+  - id: q4
+    text: "What's a 'liquidation cascade'?"
+    type: mcq
+    choices:
+      - "Slow grind downward."
+      - "Chain reaction: stops fire → triggered market sells push price down → next cluster of stops fires → more market sells → repeat. Can produce 5-10% drops in 15-30 minutes during low-liquidity periods."
+      - "Random noise."
+      - "Volume drop."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Cascades are the bigger version of stop hunts. Most common during low-liquidity hours (Asian weekends) and after extended one-sided positioning. The chain reaction compounds — each trigger creates the conditions for the next. Caught long in a cascade = nightmare execution. Caught short = profit but stressful."
+
+  - id: q5
+    text: "Extreme positive funding rate (longs heavily positioned) creates what cascade risk?"
+    type: mcq
+    choices:
+      - "Bullish cascade up."
+      - "DOWNSIDE cascade risk — longs are over-positioned with similar leverage, similar SLs. A small catalyst can trigger the cluster. Reduce leverage during extreme funding even if confident in direction."
+      - "No risk."
+      - "Always upside."
+    correct: 1
+    topic_tag: funding
+    explanation: "Asymmetric risk: when positioning is extreme in one direction, the cascade danger is concentrated in the opposite direction. Extreme positive funding = longs heavy = downside cascade danger. Funding is a structural indicator of positioning imbalance. Adjust leverage accordingly."
+
+  - id: q6
+    text: "How can you trade the HUNT instead of being a victim of it?"
+    type: mcq
+    choices:
+      - "Increase position size."
+      - "Place LIMIT orders just BELOW the obvious cluster (not above it). When the hunt wick reaches your limit, you fill at a great entry. SL goes WAY below the cluster — out of normal hunt range."
+      - "Use 100× leverage."
+      - "Only trade on weekends."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Position FOR the hunt: limit buy below the stop cluster. The hunt wick is your entry. SL placed safely below the entire hunt range. If the hunt fires and reverses, you catch the bottom of the wick — excellent entry. If price truly breaks down, your SL is positioned for the real breakdown. Higher skill setup with great R:R when it works."
+
+  - id: q7
+    text: "What's the MORE CONSERVATIVE alternative to limit-buying below stop clusters?"
+    type: mcq
+    choices:
+      - "Don't trade hunts at all."
+      - "Wait for the hunt to actually CONFIRM — see the wick + reversal, then enter AFTER the close back above the level. Worse entry price but higher win rate (you know it was a hunt, not a real breakdown)."
+      - "Short the breakdown."
+      - "Random direction."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Aggressive (limit below cluster) has better entry but lower win rate (some 'hunts' continue as real breakdowns). Conservative (wait for confirmation candle that closes back above) has worse entry but higher win rate. Both are valid; matches your risk preference. Beginners should default to the conservative approach."
+
+  - id: q8
+    text: "Should your stop loss be placed 5% away to 'avoid hunts entirely'?"
+    type: mcq
+    choices:
+      - "Yes — wider always safer."
+      - "No — 5% stops force tiny position sizes (terrible R:R per trade). Better to skip trades that need very wide stops, or use 1.5× ATR + 0.5-1% buffer below obvious level. Don't overcompensate."
+      - "Yes — wider always better."
+      - "Stops don't matter."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Too-wide stops destroy your position sizing math. With 1% risk and a 5% stop, your notional is tiny — gains are tiny too. Sweet spot: structural SL with reasonable buffer (ATR-aware), or skip the trade entirely if the right stop would be impractically wide. Don't trade with bad R:R just to avoid hunts."
+
+  - id: q9
+    text: "When are liquidation cascades most likely?"
+    type: mcq
+    choices:
+      - "Mid-day US session."
+      - "Low-liquidity hours (Asian weekends, holidays) after extended periods of one-sided positioning (everyone long or everyone short with similar leverage). Thinner books amplify the cascade."
+      - "Only on Mondays."
+      - "Never predictable."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Cascades need two conditions: clustered positioning (everyone leveraged similarly in the same direction) + thin liquidity (low books make moves easier). Asian weekend hours combine both. The defense: REDUCE leverage during these conditions even if you have a directional view. Save aggressive sizing for high-liquidity periods."
+
+  - id: q10
+    text: "Recognizing stop hunts gives you what STRUCTURAL advantage as a trader?"
+    type: mcq
+    choices:
+      - "None."
+      - "You avoid being the prey (better SL placement) AND can position to profit from the hunt-and-reverse pattern (limit orders below obvious clusters, or confirmed-hunt entries). Most retail loses to this dynamic; understanding it puts you on the right side."
+      - "You can predict every move."
+      - "Random outcomes."
+    correct: 1
+    topic_tag: liquidations
+    explanation: "Hunts are one of the most reliable patterns in crypto because they happen so often. Understanding them gives a double edge: defensive (your stops don't get hunted) + offensive (you trade with the hunters at the reversals). Most retail loses money to this dynamic without ever recognizing it. Recognition is the structural advantage."
