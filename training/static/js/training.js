@@ -4,11 +4,15 @@
   const form = document.getElementById('training-quiz-form');
   if (!form) return;
 
-  const cfg = window.TRAINING_QUIZ;
   const resultEl = document.getElementById('training-quiz-result');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const submitUrl = form.dataset.submitUrl;
+    if (!submitUrl) {
+      alert('Submit URL not configured (data-submit-url missing on form).');
+      return;
+    }
     const answers = {};
     let unanswered = 0;
     form.querySelectorAll('.training-question').forEach(q => {
@@ -27,7 +31,7 @@
     submitBtn.textContent = 'Grading…';
 
     try {
-      const res = await fetch(cfg.submit_url, {
+      const res = await fetch(submitUrl, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({answers})

@@ -11,7 +11,7 @@
     <p class="training-quiz-meta">{{ safe_questions|length }} questions · pass at 8/10</p>
   </header>
 
-  <form id="training-quiz-form" data-slug="{{ lesson.slug }}">
+  <form id="training-quiz-form" data-slug="{{ lesson.slug }}" data-submit-url="{{ url_for('training.quiz_submit', slug=lesson.slug) }}">
     {% for q in safe_questions %}
     <div class="training-question" data-qid="{{ q.id }}">
       <div class="training-question-num">Q{{ loop.index }}</div>
@@ -37,11 +37,4 @@
 </div>
 
 {% endblock %}
-{% block scripts %}
-<script>
-  window.TRAINING_QUIZ = {
-    slug: "{{ lesson.slug }}",
-    submit_url: "{{ url_for('training.quiz_submit', slug=lesson.slug) }}"
-  };
-</script>
-{% endblock %}
+{% block scripts %}{% endblock %}
