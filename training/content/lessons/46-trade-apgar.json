@@ -1,0 +1,75 @@
+{
+  "slug": "46-trade-apgar",
+  "subtitle": "Borrowed from medicine — the Apgar score evaluates a newborn's health on 5 dimensions in 60 seconds. The Trade Apgar evaluates a trade setup on 5 dimensions in 60 seconds. Pass score ≥7 with no zeros. This single discipline kills 80% of impulse trades.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Tier 6 is about EXECUTION — the discipline that turns good analysis into good trades. The biggest gap most traders face isn't knowing what to do; it's actually doing it consistently when emotions, fatigue, and FOMO are pulling in different directions.</p><p>The Trade Apgar is a structured pre-trade scorecard. Before clicking Buy/Sell, you score the trade on 5 dimensions, 0-2 points each. Pass: total ≥7 AND no individual zero. Fail: skip the trade. This single discipline filters out the impulse trades that destroy accounts.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 5 dimensions"
+    },
+    {
+      "type": "table",
+      "headers": ["Dimension", "Question", "Scoring"],
+      "rows": [
+        ["<strong>1. Setup quality</strong>", "Does this setup match my pre-defined criteria? Did I plan it or is it impulse?", "2 = pre-planned A-setup. 1 = pre-planned B-setup. 0 = impulse trade not on plan."],
+        ["<strong>2. R:R</strong>", "Is the risk:reward at least 1:2? Ideally 1:3+?", "2 = R:R ≥ 1:3. 1 = R:R 1:2 to 1:3. 0 = R:R < 1:2."],
+        ["<strong>3. Confluences</strong>", "How many independent signals support this trade? (S/R + candle + volume + indicator + multi-TF alignment + macro etc.)", "2 = 4+ confluences. 1 = 2-3 confluences. 0 = 0-1 confluences."],
+        ["<strong>4. Macro/regime alignment</strong>", "Is this trade aligned with macro and HTF bias?", "2 = fully aligned (macro + HTF + setup all same direction). 1 = neutral. 0 = counter-trend / against macro."],
+        ["<strong>5. Personal state</strong>", "Am I calm, rested, focused? Within my daily loss limit? Not on tilt?", "2 = great state. 1 = okay. 0 = tired/emotional/in drawdown/after recent loss."]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Scoring rules",
+      "content": "<p>Maximum score: 10 (2 × 5 dimensions).</p><ul><li><strong>Total ≥ 7 AND no zeros</strong>: TRADE</li><li><strong>Total ≥ 7 but has at least one zero</strong>: SKIP (a zero in any dimension is a deal-breaker)</li><li><strong>Total &lt; 7</strong>: SKIP</li></ul><p>The 'no zeros' rule is critical. A trade that scores 9 but has a 0 in 'Personal state' (you're on tilt) is a high-quality setup taken at a bad time. Skip it. Wait for both the setup AND the state to align.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Why this works — the discipline mechanism"
+    },
+    {
+      "type": "text",
+      "content": "<p>Impulse trades fail because they're made without explicit reasoning. The trader feels confident, clicks Buy, and rationalizes after. The Apgar inverts this: you MUST score each dimension explicitly BEFORE clicking. This:</p><ul><li><strong>Forces articulation</strong>. If you can't articulate setup quality, you don't have a real setup.</li><li><strong>Slows down impulse</strong>. 60 seconds of scoring is enough to let FOMO/revenge urges fade.</li><li><strong>Catches state issues</strong>. The 'personal state' dimension forces honesty about your current condition.</li><li><strong>Filters borderline trades</strong>. The ≥7 threshold + no-zero rule eliminates the 'maybe' trades that consume risk capital with mediocre EV.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked examples"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Example 1 — A+ trade that PASSES</strong></p><ul><li>Setup quality: 2 (pre-planned A-setup from this morning's analysis)</li><li>R:R: 2 (1:4 — entry $60K, SL $58.5K, TP $66K)</li><li>Confluences: 2 (4 signals: HTF support + reversal candle + RSI bullish divergence + volume)</li><li>Macro alignment: 2 (1D uptrend + macro risk-on)</li><li>Personal state: 2 (rested, calm, fresh from morning routine)</li><li><strong>Total: 10. No zeros. TRADE.</strong></li></ul><p><strong>Example 2 — Setup quality but BAD STATE → SKIP</strong></p><ul><li>Setup quality: 2 (excellent)</li><li>R:R: 2 (1:3)</li><li>Confluences: 1 (some)</li><li>Macro alignment: 2 (aligned)</li><li>Personal state: 0 (just had a 2% loss; feeling rushed)</li><li><strong>Total: 7. BUT has a zero in personal state. SKIP.</strong></li></ul><p>The second example: even though the technical setup looked great and the total score reached the threshold, the personal-state zero is a deal-breaker. Trade made on tilt has high failure rate regardless of setup quality.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't game the score",
+      "content": "<p>The temptation: you really want to take a trade. You give it generous scores to push the total to ≥7. This defeats the entire purpose.</p><p>Honest scoring is the discipline. If you find yourself rationalizing scores upward, that's the signal to step away — not click Buy. The Apgar's value comes from rigorous honesty; gaming it makes it useless.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to use the Apgar in practice"
+    },
+    {
+      "type": "text",
+      "content": "<ol><li><strong>Write the scores down.</strong> Don't do it mentally. The journal has an Apgar form on the Futures-AI page — use it. Or keep a paper notebook. Writing forces clarity.</li><li><strong>Score BEFORE entering the trade.</strong> Not after rationalizing the entry.</li><li><strong>Track scores over time.</strong> Are your 9-10 trades winning more than your 7-8 trades? If yes, raise your threshold to 8. If no, your scoring may need adjustment.</li><li><strong>Review skipped trades.</strong> Did the trades you skipped (low Apgar) actually go on to work? If so, examine why you scored them low — maybe your criteria need refinement.</li><li><strong>Use it for EVERY trade.</strong> 60 seconds × every trade adds up to 0 hours of meaningful overhead but filters out a significant percentage of losing trades.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Customizing the Apgar to your style"
+    },
+    {
+      "type": "text",
+      "content": "<p>The 5-dimension framework is the standard but you can customize for your trading style:</p><ul><li><strong>Add a 6th dimension if specific to your strategy</strong> (e.g., 'time of day' if you trade specific sessions, 'specific indicator condition' if your edge depends on one indicator).</li><li><strong>Adjust the pass threshold</strong> based on your historical data. Some traders need ≥8 to filter their patterns effectively.</li><li><strong>Adjust the 'no zero' rule to specific dimensions</strong>. Maybe a 0 in 'macro alignment' is acceptable for specific counter-trend setups you've validated; but 0 in 'personal state' is never acceptable.</li></ul><p>The point is consistency. Whatever your custom scoring becomes, apply it RIGOROUSLY to every trade.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Score every trade on 5 dimensions BEFORE entering.</strong> 60 seconds, written down.</li><li><strong>Pass: total ≥ 7 AND no zeros.</strong> Otherwise skip.</li><li><strong>Don't game the score.</strong> Honest rigorous scoring is the discipline. Rationalizing scores upward defeats the purpose.</li></ol><p>Next lesson: pre-session readiness — the broader check on whether you should be trading TODAY at all.</p>"
+    }
+  ]
+}

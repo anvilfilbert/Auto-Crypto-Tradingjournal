@@ -1,0 +1,98 @@
+{
+  "slug": "50-build-your-system",
+  "subtitle": "After 50+ lessons of frameworks and rules, you face the final task: turn this knowledge into YOUR system. A written rulebook covering setup criteria, sizing, execution, and review — refined by YOUR data. This is what separates traders who actually do it from those who just keep reading.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've now learned position sizing, risk management, chart reading, indicators, advanced concepts, macro context, and execution discipline. That's a lot of knowledge. But knowledge alone doesn't make traders profitable — APPLIED knowledge does.</p><p>This penultimate lesson is about CONSTRUCTION: assembling everything into your own personalized trading system. A written rulebook that codifies what you'll trade, how you'll size it, what state you'll trade in, and how you'll improve over time.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Why you NEED a written system"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Unwritten rules are no rules",
+      "content": "<p>Most retail traders have 'rules' that exist only in their head. The problem: when emotion is high (during drawdowns, FOMO moments, tilt), the mental rules become very negotiable. 'I usually risk 1%, but this trade is special, so I'll go 5%.' The unwritten rule fails exactly when it's needed.</p><p>A WRITTEN system makes rules concrete. They become public commitments to yourself. Breaking written rules is visible and uncomfortable in a way that breaking mental rules isn't. The friction of going against your written system is itself the discipline mechanism.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 6 sections of your system"
+    },
+    {
+      "type": "table",
+      "headers": ["Section", "What it covers"],
+      "rows": [
+        ["<strong>1. Setup criteria</strong>", "Specific patterns you trade + required confluences"],
+        ["<strong>2. Position sizing rules</strong>", "Risk % per trade, leverage rules, sizing math"],
+        ["<strong>3. Execution rules</strong>", "Order types, SL placement, TP strategy, OCO usage"],
+        ["<strong>4. Psychological rules</strong>", "Pre-session readiness, Trade Apgar, hard daily stop"],
+        ["<strong>5. Review process</strong>", "Daily/weekly/monthly review cadence + structure"],
+        ["<strong>6. Continuous improvement</strong>", "How you'll update the system based on data"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Section 1 — Setup criteria"
+    },
+    {
+      "type": "text",
+      "content": "<p>Define SPECIFIC setups you'll trade. Not 'I'll trade when it looks good'. Specific like:</p><ul><li><strong>Setup A — Wyckoff Spring Long</strong>: at confirmed accumulation range support, wick below + close back above + 2× average volume on wick.</li><li><strong>Setup B — HTF Pullback Long</strong>: 1D uptrend, 4H pullback to 50 EMA + horizontal support, bullish engulfing + above-avg volume + RSI bullish divergence.</li><li><strong>Setup C — Bearish Engulfing Short</strong>: at major resistance after sustained uptrend, bearish engulfing + 2× volume + RSI bearish divergence.</li></ul><p>3-5 specific setups is enough. Anything that doesn't match one of your defined setups = not a trade. This is the single biggest filter to your edge.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Section 2 — Position sizing rules"
+    },
+    {
+      "type": "text",
+      "content": "<p>From lessons 6 and 7:</p><ul><li><strong>Risk per trade</strong>: 1% standard, 2% on rare A+ setups (Apgar 9-10).</li><li><strong>Sizing formula</strong>: notional = ($risk) / (SL distance %).</li><li><strong>Leverage</strong>: isolated margin always (unless specific hedging exception). Maximum leverage 10×. Match leverage to SL distance, not feeling.</li><li><strong>Daily drawdown stop</strong>: at -3% from session open, stop all trading. At -5% from peak equity, drop to small-size or paper for re-validation.</li><li><strong>Total exposure cap</strong>: maximum X open positions simultaneously (e.g., 3-5) to avoid concentration risk.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Section 3 — Execution rules"
+    },
+    {
+      "type": "text",
+      "content": "<p>From lessons 3 and 5:</p><ul><li><strong>Default order type</strong>: limit. Market only for forced exits or known-thin breakouts.</li><li><strong>SL placement</strong>: structural (below swing low/OB/FVG zone) + ATR buffer (~1.5× ATR minimum). Always use reduce-only flag on stop losses.</li><li><strong>TP strategy</strong>: OCO pair immediately after entry. TP1 at first major resistance (partial close 50%); TP2 at next major level (partial); runner with trailing stop.</li><li><strong>Funding awareness</strong>: don't long during extreme positive funding (+0.08%+ per 8h) without specific contrarian setup. Check funding before sizing.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Section 4 — Psychological rules"
+    },
+    {
+      "type": "text",
+      "content": "<p>From lessons 9, 46, 47:</p><ul><li><strong>Pre-session readiness check</strong>: 4 dimensions (sleep/mood/P&L/preparation). Any RED = no trading.</li><li><strong>Trade Apgar score</strong>: ≥7 total AND no zeros required to take any trade.</li><li><strong>No trades for 30 min after any loss</strong>; 24h after any 2× normal loss.</li><li><strong>Hard daily stop at -3%</strong>: close platform, walk away.</li><li><strong>Pre-planned setups only</strong>: trade ideas defined BEFORE the session, not during it.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Section 5 — Review process"
+    },
+    {
+      "type": "text",
+      "content": "<p>From lessons 48, 49:</p><ul><li><strong>Daily (5 min)</strong>: review today's trades, note deviations from plan, one action item for tomorrow.</li><li><strong>Weekly (30 min)</strong>: aggregate stats, identify ONE strength + ONE weakness, action for next week.</li><li><strong>Monthly (1-2h)</strong>: setup-type performance, behavioral patterns, ONE specific improvement project for next month.</li><li><strong>Quarterly (half-day)</strong>: strategy-level review, market regime check, scale up/down/maintain decision.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Section 6 — Continuous improvement"
+    },
+    {
+      "type": "text",
+      "content": "<p>Your system isn't static. As you gather data:</p><ul><li><strong>Add proven setups</strong>: if a specific setup shows positive R-multiple over 30+ trades, codify it.</li><li><strong>Remove failing setups</strong>: if a specific setup shows negative R-multiple over 30+ trades, stop trading it.</li><li><strong>Adjust thresholds</strong>: if your 7-Apgar trades are losing but 8+ are winning, raise the threshold.</li><li><strong>Refine criteria</strong>: discover specific conditions where a setup works vs fails, add those filters.</li><li><strong>Periodically prune</strong>: complexity creep is real. Every 3-6 months, ask 'what rules am I no longer using? Why?' Remove dead weight.</li></ul><p>The system evolves with you and the market. The discipline is updating it BASED ON DATA, not on feelings or recent results.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Example mini-system (one page)"
+    },
+    {
+      "type": "text",
+      "content": "<p>Your written system can be 1-3 pages total. Example outline:</p><pre><strong>MY TRADING SYSTEM v1.0</strong>\n\n1. SETUPS I TRADE:\n   - Wyckoff Spring Long (at accumulation range)\n   - HTF Pullback Long (1D up + 4H 50EMA pullback + engulfing + vol + RSI div)\n   - Bearish Engulfing Short (at HTF resistance + vol + RSI bearish div)\n   - SMC Liquidity Sweep (LTF hunt + OB return + reversal candle)\n\n2. SIZING: 1% risk per trade (2% on Apgar 9-10 only). Isolated margin. Max 10x leverage.\n\n3. EXECUTION: Limit orders default. SL = structural + 1.5x ATR. OCO with TP1/TP2 immediately. Funding check before sizing.\n\n4. STATE: Pre-session 4-dim check. Apgar &gt;=7 no zeros. No trades 30min after loss. -3% daily stop.\n\n5. REVIEW: Daily 5min, Weekly 30min, Monthly 1-2h, Quarterly half-day.\n\n6. EVOLUTION: Track per-setup R-multiple over 30+ trades. Add/remove setups based on data. Re-evaluate quarterly.</pre>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Write your system down.</strong> Unwritten rules fail when emotion is high.</li><li><strong>Keep it simple.</strong> 1-3 pages, 6 sections. Don't over-engineer.</li><li><strong>Evolve based on data, not feelings.</strong> Every 3-6 months, update what works/fails based on actual R-multiple data.</li></ol><p>Next lesson: capstone — full multi-TF walkthrough of one winning and one losing trade + personalized 25-question final exam pulled from your weakest topics.</p>"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "slug": "49-trade-review",
+  "subtitle": "Reviewing trades is how you turn data into improvement. The 'what would I do differently' frame > the 'what did I do wrong' frame. Weekly post-mortems compound into mastery; reviews that become self-flagellation cause burnout. Here's how to review productively.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You're keeping a journal. Good. But the journal is only valuable if you REVIEW IT systematically. Most retail traders either don't review at all, or review in ways that produce self-flagellation rather than improvement.</p><p>This lesson covers HOW to review trades — the frames, the cadence, the specific questions that turn past performance into future improvement.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The two review frames"
+    },
+    {
+      "type": "table",
+      "headers": ["Frame", "Mindset", "Result"],
+      "rows": [
+        ["<strong>'What did I do WRONG?'</strong>", "Self-criticism, blame-focus", "Burnout, anxiety, defensive trading"],
+        ["<strong>'What would I do DIFFERENTLY next time?'</strong>", "Forward-focused, action-oriented", "Specific improvements, sustainable improvement"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Frame matters more than content",
+      "content": "<p>The same trade reviewed with 'what did I do wrong?' produces self-blame ('I'm bad at this'). Reviewed with 'what would I do differently?' produces specific improvements ('Next time wait for the close, not the wick').</p><p>The information extracted is similar. The emotional consequence is completely different. Forward-focused review is sustainable; backward-focused review burns out traders within months.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The daily review (5 minutes)"
+    },
+    {
+      "type": "text",
+      "content": "<p>At end of each trading day:</p><ol><li><strong>List today's trades</strong>: symbol, direction, outcome (R-multiple).</li><li><strong>For each trade, one sentence</strong>: did it follow my plan? If yes, good. If no, what was the deviation?</li><li><strong>Overall day grade</strong>: A (followed all rules, took good setups), B (mostly followed, minor lapses), C (some discipline issues), D (multiple rule breaks), F (chaos).</li><li><strong>One specific action item for tomorrow</strong>: based on today, what's the one thing to do differently tomorrow?</li></ol><p>Total time: 5-10 minutes. The point is reflection, not exhaustive analysis. Daily reviews accumulate into weekly patterns.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The weekly review (30 minutes)"
+    },
+    {
+      "type": "text",
+      "content": "<p>End of each trading week:</p><ol><li><strong>Aggregate stats</strong>: total trades, win rate, average R, total R for the week.</li><li><strong>Categorize by setup type</strong>: which setups worked this week? Which didn't?</li><li><strong>Categorize by time of day</strong>: any patterns in when you traded well vs poorly?</li><li><strong>Identify ONE strength</strong>: what did you do better this week than usual? Keep doing it.</li><li><strong>Identify ONE weakness</strong>: what's the recurring issue? One specific change to address it next week.</li><li><strong>Review skipped trades</strong>: did the trades you SKIPPED (per your discipline rules) actually go on to work? If consistently yes, your filter may be too strict. If consistently no, your filter is right.</li></ol><p>Weekly review is where the journal's value compounds. Patterns invisible day-to-day become obvious week-over-week.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The monthly review (1-2 hours)"
+    },
+    {
+      "type": "text",
+      "content": "<p>End of each month:</p><ol><li><strong>Performance metrics</strong>: total R, win rate, max drawdown, Sharpe (if tracked), best/worst week.</li><li><strong>Setup-type performance</strong>: which setups are your bread and butter? Which should you trade more? Which should you skip?</li><li><strong>Behavioral patterns</strong>: what discipline issues keep appearing? Time-of-day patterns? Tilt triggers?</li><li><strong>Account-level decisions</strong>: are you on track for your goals? Need to adjust size? Strategy?</li><li><strong>One specific improvement project</strong> for the coming month: focus on ONE thing to change/improve. Not 10 things at once.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't try to fix everything at once",
+      "content": "<p>Common review mistake: identifying 5+ things to improve and trying to fix them all simultaneously. This rarely works — focus dilutes, none of them improve significantly.</p><p>Better: ONE improvement project per month. Master it. Make it habitual. THEN move to the next one. After 12 months you've systematically improved 12 different aspects of your trading. After 24 months you've built a comprehensive set of disciplined behaviors.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The quarterly strategy review (half-day)"
+    },
+    {
+      "type": "text",
+      "content": "<p>Every 3 months, step back further:</p><ol><li><strong>Are you on the strategy track you intended?</strong> Or has it drifted?</li><li><strong>Has the market regime changed?</strong> Strategies that worked in last quarter's regime may not in this one.</li><li><strong>What's your overall edge?</strong> If you've been profitable: what specifically is the edge? If not: is the strategy actually working or are you just below average?</li><li><strong>Should you scale up, scale down, or maintain?</strong> Based on consistent execution + edge confirmation.</li><li><strong>Any major skill gaps?</strong> Topics from this course you haven't fully internalized? Plan to address them.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Specific questions that produce insight"
+    },
+    {
+      "type": "text",
+      "content": "<p>When stuck on what to ask yourself in review, these prompts often help:</p><ul><li>'What's my best setup type and why does it work for me?'</li><li>'What's my worst recurring mistake?'</li><li>'When did I last break a rule? Why?'</li><li>'Did my emotional state affect any trade outcomes this week?'</li><li>'Are my SLs being hit too often (too tight) or rarely hit (too wide)?'</li><li>'Am I taking too many trades, too few, or about right?'</li><li>'Has my edge improved over the past 3 months, or am I just lucky?'</li><li>'If I had to teach my approach to a beginner, could I articulate it?'</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "When the review shows ongoing losses"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "If you're consistently losing money",
+      "content": "<p>If 3+ months of reviews show consistent losses:</p><ol><li><strong>Stop trading live</strong>. Drop back to small-size or paper (lesson 10).</li><li><strong>Question the strategy itself</strong>. Is your edge actually positive? Or are you assuming an edge that doesn't exist?</li><li><strong>Question execution</strong>. Maybe the strategy works but your execution is off (discipline issues, sizing errors, emotional trades).</li><li><strong>Consider professional help</strong> — a paid mentor, a trading coach, a quantitative analysis of your trades. Sometimes you need outside eyes.</li><li><strong>Accept the possibility</strong> that this specific market or strategy isn't right for you. Better to admit it after 6 months than to lose 12 months of capital insisting it 'has to work'.</li></ol><p>Consistent losses are real data. Don't ignore them. Don't double down. Step back and reassess honestly.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Use the 'what would I do differently' frame</strong>, not 'what did I do wrong'. Forward-focused, sustainable.</li><li><strong>Review on multiple cadences</strong>: daily (5 min), weekly (30 min), monthly (1-2h), quarterly (half-day). Each reveals different patterns.</li><li><strong>One improvement project per month max.</strong> Don't try to fix everything at once. Systematic incremental improvement.</li></ol><p>Next lesson: building your own system — turning lessons from this course into a personalized rulebook.</p>"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "slug": "48-trade-journaling",
+  "subtitle": "Most trading journals are useless because they record the wrong things. The journal that improves your trading captures SETUP + REASONING + OUTCOME + LESSON. The journal that does NOT is one that just lists entries, exits, and PnL.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've been trading. You've taken winners and losers. The trades that lost — do you remember WHY they lost, beyond 'it didn't work'? The trades that won — do you remember which factor made them work? If not, you're operating with incomplete data on your own performance.</p><p>A trade journal is the system that builds this self-knowledge over time. But most retail journals are useless because they record the wrong things. The journal that improves you captures SETUP + REASONING + OUTCOME + LESSON. Each trade becomes a data point that compounds your knowledge.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What to RECORD"
+    },
+    {
+      "type": "table",
+      "headers": ["Field", "Why it matters"],
+      "rows": [
+        ["<strong>Symbol + Direction</strong>", "Basic — what was the trade"],
+        ["<strong>Entry price + SL + TP</strong>", "Risk-reward parameters"],
+        ["<strong>Date + time of entry/exit</strong>", "Sessions, time-of-day patterns"],
+        ["<strong>Position size + risk %</strong>", "Discipline verification — was sizing within rules?"],
+        ["<strong>Setup type</strong>", "Categorization for pattern analysis (e.g., 'breakout retest', 'reversal at support', 'Wyckoff spring')"],
+        ["<strong>Why you took it (1-2 sentences)</strong>", "The pre-trade reasoning — articulated explicitly"],
+        ["<strong>Confluences present</strong>", "Which signals aligned (HTF support + RSI divergence + volume + ...)"],
+        ["<strong>Apgar score</strong>", "Trade quality at entry"],
+        ["<strong>Pre-session readiness</strong>", "Your state during the trade"],
+        ["<strong>Outcome (win/loss/breakeven, R-multiple)</strong>", "Result, expressed in R (multiples of risk) not just dollar amount"],
+        ["<strong>Why it worked / didn't work</strong>", "Post-trade analysis — what played out vs your thesis"],
+        ["<strong>Lesson learned</strong>", "One specific takeaway from this trade"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "What to NOT record"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Useless fields to skip",
+      "content": "<p>Don't pollute your journal with these:</p><ul><li><strong>Emotional rants</strong>: 'I feel like the market is rigged' — adds zero information, just vents.</li><li><strong>Predictions about future market direction</strong>: 'I think BTC will go to $80K' — irrelevant to executed trades.</li><li><strong>Detailed price tick-by-tick descriptions</strong>: 'Price moved from $60,123 to $60,145 then back to $60,128...' — noise, not signal.</li><li><strong>Justifications for breaking rules</strong>: 'I sized up because I was sure' — recording this teaches you nothing useful.</li><li><strong>Random unrelated thoughts</strong>: keep them in a personal journal, not the trading one.</li></ul><p>The trading journal is for data that helps you trade better. Anything else clutters it and makes review harder.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 'why' is the most important field"
+    },
+    {
+      "type": "text",
+      "content": "<p>Most trade journals record what happened. The valuable ones record WHY YOU TOOK THE TRADE.</p><p>Examples:</p><ul><li><strong>Bad</strong>: 'Bought BTC at $60K, sold at $62K, +3%'</li><li><strong>Good</strong>: 'Long BTC at $60K — 4H pullback to 50 EMA support + bullish engulfing + 2× volume + macro risk-on. SL $58.5K, TP1 $62K. Exited at $62K +3% as planned.'</li></ul><p>The good entry lets you:</p><ul><li>Recognize the same setup again next time.</li><li>Diagnose what worked when reviewing later.</li><li>Distinguish setup types and track their performance separately.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "R-multiples > dollar amounts"
+    },
+    {
+      "type": "text",
+      "content": "<p>Track outcomes in R-multiples (multiples of risk), not just dollar amounts. Why:</p><ul><li>R-multiples are comparable across trades regardless of size (a +2R trade on $10K notional is the same achievement as +2R on $100K).</li><li>R-multiples are comparable across accounts (your performance can be measured even as account grows).</li><li>R-multiples directly inform expectancy math: average R per trade × number of trades = total return.</li></ul><p>Example: SL was 2% from entry, exited at 4% above entry = +2R (made 2× your risk). This metric is much more meaningful than '+$200 profit' which depends on size.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The lesson field — one specific takeaway"
+    },
+    {
+      "type": "text",
+      "content": "<p>For each trade, write ONE specific lesson. Not 'I should trade better' (useless). Specific lessons look like:</p><ul><li>'Bullish engulfing at HTF support + volume = reliable; this is now a confirmed pattern for me'</li><li>'I exited at TP1 instead of running TP2 — I'm too aggressive on profit-taking; need to use OCO for partial exits'</li><li>'I held past my SL because I 'felt' it would bounce. Lost 3R. Always exit at SL — no exceptions'</li><li>'Position sized too small because I was uncertain. Trade worked. Next time: if Apgar score 8+, use full normal size'</li></ul><p>Specific lessons compound. After 100 trades you have 100 lessons. After 500 trades you have a personalized rulebook built from your own data.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Review frequency"
+    },
+    {
+      "type": "table",
+      "headers": ["Cadence", "What to do"],
+      "rows": [
+        ["<strong>End of each trading day</strong>", "Brief review of all today's trades. Update journal entries. Note overall day performance."],
+        ["<strong>End of each week</strong>", "Patterns across the week. Which setups worked, which didn't. Average R-multiple."],
+        ["<strong>End of each month</strong>", "Bigger trends. Are certain setup types consistently winning? Losing? Adjust criteria."],
+        ["<strong>Quarterly</strong>", "Strategy-level review. Is your overall approach evolving as it should? What's working long-term?"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "What the review reveals"
+    },
+    {
+      "type": "text",
+      "content": "<p>Over time, journal reviews reveal patterns you couldn't see while trading:</p><ul><li><strong>Your best setup types</strong>: maybe Wyckoff springs work for you but order block trades don't. Useful information for focus.</li><li><strong>Your worst times of day</strong>: maybe you lose money in the first hour after waking up. Useful for scheduling.</li><li><strong>Your behavioral patterns</strong>: maybe you over-trade after losses. Useful for self-discipline rules.</li><li><strong>Your symbol preferences</strong>: maybe BTC works for you but alts don't. Useful for asset selection.</li></ul><p>Without the journal, these patterns stay invisible. With it, they become actionable. The journal is how you become objective about your own trading.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Record SETUP + WHY + OUTCOME + LESSON for every trade.</strong> Not just numbers.</li><li><strong>Use R-multiples</strong>, not just dollar amounts.</li><li><strong>Review on a schedule</strong>: daily, weekly, monthly. Patterns reveal themselves over time.</li></ol><p>This trading journal app has structured fields for most of this. Use them. Future-you reading the journal in 6 months will thank present-you for being thorough now.</p>"
+    }
+  ]
+}

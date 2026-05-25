@@ -1,0 +1,303 @@
+id: "51"
+lesson_id: 51
+pass_threshold: 20
+questions:
+  - id: q1
+    text: "Most important single rule for trader survival?"
+    type: mcq
+    choices:
+      - "100× leverage."
+      - "Never risk more than 1-2% on any single trade. The 1-2% rule survives losing streaks; bigger sizing eventually doesn't."
+      - "Trade often."
+      - "Random."
+    correct: 1
+    topic_tag: risk
+    explanation: "Tier 1 takeaway. Position sizing is the single most important variable. 1-2% per trade survives 10-loss streaks; 10%+ sizing turns the same streak into account-killing drawdown."
+
+  - id: q2
+    text: "On perpetual futures, max loss per position is:"
+    type: mcq
+    choices:
+      - "Unlimited."
+      - "Capped at posted margin (liquidation triggers before unbounded loss). Symmetric for longs and shorts."
+      - "Always 100%."
+      - "Random."
+    correct: 1
+    topic_tag: leverage
+    explanation: "Perp liquidation caps loss at margin. Long/short symmetric. Different from spot shorting (unlimited theoretical loss) — perps protect via liquidation engine."
+
+  - id: q3
+    text: "RSI at 75 in a strong UPTREND signals:"
+    type: mcq
+    choices:
+      - "Sell — overbought."
+      - "Normal trend strength in bullish regime. Don't fade trend strength with RSI alone."
+      - "Buy more."
+      - "Random."
+    correct: 1
+    topic_tag: rsi
+    explanation: "Regime awareness — bullish regime has RSI averaging 40-80. RSI 75 is normal, not reversal signal. Classify regime first; use regime-aware levels."
+
+  - id: q4
+    text: "How many TOUCHES does a trendline need before it's tradeable?"
+    type: mcq
+    choices:
+      - "1."
+      - "3 — two points is hypothesis only; third touch with reaction confirms."
+      - "10."
+      - "Random."
+    correct: 1
+    topic_tag: trendlines
+    explanation: "Two points connect any pair = geometry. Third touch with reaction = trendline confirmed. Tier 2 fundamental."
+
+  - id: q5
+    text: "Wyckoff SPRING is:"
+    type: mcq
+    choices:
+      - "Random."
+      - "Final stop hunt at end of accumulation — wick below range support + close back above + volume cascade. Markup typically follows."
+      - "Distribution start."
+      - "Bull market top."
+    correct: 1
+    topic_tag: wyckoff
+    explanation: "Spring = accumulation finale. Smart money flushes weak hands, then markup begins. Exceptional R:R because SL tight beyond wick + wide TP across phase."
+
+  - id: q6
+    text: "Default order type for entries with time to plan?"
+    type: mcq
+    choices:
+      - "Market."
+      - "LIMIT — saves on fees and slippage. Market for forced exits only."
+      - "Stop-loss for entries."
+      - "Random."
+    correct: 1
+    topic_tag: orders
+    explanation: "Limit default. Maker fee + zero slippage. Trade-off: some fills missed. Worth it across hundreds of trades."
+
+  - id: q7
+    text: "Best margin mode for most retail trading?"
+    type: mcq
+    choices:
+      - "Cross."
+      - "ISOLATED — each position has dedicated margin. One bad trade can't cascade to liquidate others."
+      - "Random."
+      - "Whichever exchange defaults to."
+    correct: 1
+    topic_tag: leverage
+    explanation: "Isolated by default. Cross-margin cascade kills accounts when one bad trade depletes shared margin pool. Most exchanges default to cross — change it."
+
+  - id: q8
+    text: "FVG (Fair Value Gap) fill rate in trending markets:"
+    type: mcq
+    choices:
+      - "100% always."
+      - "70-80% — high probability but not guaranteed. Use as entry zone with SL below FVG."
+      - "10%."
+      - "Random."
+    correct: 1
+    topic_tag: fvg
+    explanation: "FVGs fill at high rate (~70-80%) in trends. Use as pullback entry zones. SL below FVG = clean invalidation if it doesn't hold."
+
+  - id: q9
+    text: "How does FUNDING rate affect crypto sentiment?"
+    type: mcq
+    choices:
+      - "It doesn't."
+      - "Extreme positive funding (+0.08%+ per 8h) = longs heavily positioned = CASCADE RISK DOWN (contrarian). Extreme negative = shorts heavy = SQUEEZE risk up."
+      - "Always bullish."
+      - "Random."
+    correct: 1
+    topic_tag: funding
+    explanation: "Funding shows positioning. Extremes are contrarian signals — overcrowded direction often faces cascade. Combine with technical setups for tradeable signals."
+
+  - id: q10
+    text: "Cross-venue SMT divergence between BTC Binance and BTC Coinbase signals:"
+    type: mcq
+    choices:
+      - "Random noise."
+      - "Cross-venue disagreement reveals isolated flow that lacks broad market confirmation. Venue making new extreme alone often reverses."
+      - "Always continuation."
+      - "Bullish."
+    correct: 1
+    topic_tag: smt
+    explanation: "SMT exploits crypto's fragmented market. Binance pump not confirmed by Coinbase = isolated flow. Cross-venue confirmation = real broad move; disagreement = often reversal incoming."
+
+  - id: q11
+    text: "DXY rising rapidly typically affects crypto how?"
+    type: mcq
+    choices:
+      - "Bullish for crypto."
+      - "BEARISH for crypto (inverse correlation). Strong USD + flight-to-safety dynamics both pressure risk assets."
+      - "Neutral."
+      - "Random."
+    correct: 1
+    topic_tag: dxy
+    explanation: "USD strength = crypto headwind. Crypto priced in USD (mechanical effect) + USD strength reflects flight-to-safety dynamics (risk-off effect). Both work together."
+
+  - id: q12
+    text: "VIX above 30 signals:"
+    type: mcq
+    choices:
+      - "Bullish — buying opportunity."
+      - "Severe risk-off; crypto often crashes 10-20%. Survival mode: reduce leverage, sit out aggressive setups."
+      - "Random."
+      - "Neutral."
+    correct: 1
+    topic_tag: vix
+    explanation: "VIX > 30 = major fear spike. Correlations spike to 1, technical setups stop working, liquidity dries up. Survive, don't maximize. Wait for normalization."
+
+  - id: q13
+    text: "Fear & Greed index at 16 (Extreme Fear):"
+    type: mcq
+    choices:
+      - "Short aggressively."
+      - "Bias LONG — contrarian signal. But wait for technical confirmation (HTF support + reversal candle + volume). F&G alone is hint, not trigger."
+      - "Ignore."
+      - "Random direction."
+    correct: 1
+    topic_tag: sentiment
+    explanation: "Extreme Fear = contrarian long bias. But F&G can stay low for weeks. Need technical confirmation for entry. Combination (extreme F&G + bottoming pattern) = best buy zones."
+
+  - id: q14
+    text: "Approach to FOMC days?"
+    type: mcq
+    choices:
+      - "Hold positions with full leverage."
+      - "FLATTEN positions before event. Sit out volatility. Re-enter post-event ONLY if technical setup forms with confirmed direction. Don't predict — let market reveal."
+      - "Open new positions before event."
+      - "Use 100× leverage."
+    correct: 1
+    topic_tag: news_events
+    explanation: "Flatten + wait is highest EV. Pre-event prediction has no edge. Post-event trading with confirmed direction + technical setups is much higher quality."
+
+  - id: q15
+    text: "Trade Apgar passes when:"
+    type: mcq
+    choices:
+      - "Total ≥7."
+      - "Total ≥7 AND no zeros in any dimension. A zero in any dimension (especially personal state) is a deal-breaker."
+      - "Total ≥5."
+      - "Always."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Both conditions required. Total ≥7 ensures overall quality. No-zeros rule ensures no critical weakness. A 9-score trade with personal-state 0 (tilt) still fails."
+
+  - id: q16
+    text: "Pre-session readiness: ANY red dimension means:"
+    type: mcq
+    choices:
+      - "Trade with caution."
+      - "NO TRADING. One compromised dimension doubles odds of expensive mistakes. The 'any red = no trade' rule is non-negotiable."
+      - "Trade smaller."
+      - "Random."
+    correct: 1
+    topic_tag: readiness
+    explanation: "Single compromised dimension = compromised decision-making. Even with other greens, one red is a structural risk factor. Skip the day; tomorrow is another."
+
+  - id: q17
+    text: "What separates a useless from a useful trade journal?"
+    type: mcq
+    choices:
+      - "Length."
+      - "Recording WHY you took the trade (setup + confluences + reasoning + lesson learned), not just what happened (entry/exit/PnL). The why is what compounds into self-knowledge."
+      - "Random."
+      - "Color."
+    correct: 1
+    topic_tag: journaling
+    explanation: "Useful journals capture reasoning. Why you took the trade lets you recognize the same setup again. Outcome alone is just history. Setup + why + outcome + lesson = data that improves you."
+
+  - id: q18
+    text: "Track outcomes in:"
+    type: mcq
+    choices:
+      - "Dollars only."
+      - "R-MULTIPLES (multiples of risk). Comparable across trade sizes and account sizes. Directly informs expectancy math."
+      - "Random units."
+      - "No tracking."
+    correct: 1
+    topic_tag: journaling
+    explanation: "R-multiples normalize for size. +2R is +2R whether on $10K or $100K notional. Lets you measure edge consistently as account grows. Better metric than dollar amount."
+
+  - id: q19
+    text: "Trade review FRAME that produces sustainable improvement:"
+    type: mcq
+    choices:
+      - "'What did I do WRONG?'"
+      - "'What would I do DIFFERENTLY next time?' — forward-focused, action-oriented, sustainable. Doesn't cause burnout."
+      - "Random."
+      - "Self-criticism."
+    correct: 1
+    topic_tag: review
+    explanation: "Same information, different emotional outcome. Forward focus produces specific improvements; backward focus produces self-blame and burnout. Sustainable practice > intense practice."
+
+  - id: q20
+    text: "Improvement projects per month should be:"
+    type: mcq
+    choices:
+      - "10+."
+      - "ONE specific project. Master it, make it habitual, then move to next. 12 systematic improvements per year > 50 attempted improvements that don't stick."
+      - "Zero."
+      - "Random."
+    correct: 1
+    topic_tag: review
+    explanation: "Focus dilutes when trying to fix everything. ONE thing at a time builds durable habits. Systematic incremental improvement compounds over years."
+
+  - id: q21
+    text: "How should your written trading system EVOLVE?"
+    type: mcq
+    choices:
+      - "Never change."
+      - "Based on DATA (R-multiple per setup over 30+ trades). Add proven setups, remove failing ones, adjust thresholds. Periodically prune complexity."
+      - "Daily based on feelings."
+      - "Random."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Evolution must come from data, not emotion. 30+ trades on a setup gives meaningful evidence. Update based on actual performance, not single trades or hunches."
+
+  - id: q22
+    text: "First thing to check before any crypto trade?"
+    type: mcq
+    choices:
+      - "Random factor."
+      - "MACRO context (DXY, VIX, ES) + your personal state (readiness check). 30 seconds. Determines whether you should be trading + adjusts your conviction on the trade."
+      - "Today's date only."
+      - "Exchange name."
+    correct: 1
+    topic_tag: macro
+    explanation: "Pre-trade routine: macro + readiness. Each takes 30 seconds. The combination tells you whether the broader environment supports trading AND whether YOU should be trading. Skip either and you're trading blind."
+
+  - id: q23
+    text: "Why is a WRITTEN trading system more powerful than mental rules?"
+    type: mcq
+    choices:
+      - "It isn't."
+      - "Mental rules become negotiable under emotional pressure. Written rules create friction — going against them is visible and uncomfortable in a way mental breaches aren't. The friction IS the discipline."
+      - "Random."
+      - "Writing is fashionable."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Discipline mechanism comes from friction. Written commitments are public to yourself; mental rules are easily rationalized away. The friction of breaking a written rule provides the external discipline assist that mental rules lack."
+
+  - id: q24
+    text: "From the worked example, the LOSING trade's primary failure was:"
+    type: mcq
+    choices:
+      - "Bad luck."
+      - "DISCIPLINE failure — impulse entry, no Apgar check, no macro check, no proper SL, oversizing. The knowledge was there; the application wasn't. Apgar 2/10 should have triggered SKIP."
+      - "Random."
+      - "Market manipulation."
+    correct: 1
+    topic_tag: psychology
+    explanation: "The losing trade had all the same knowledge available as the winning trade. The difference was application of discipline. Apgar 2/10 = skip rule. Macro check = skipped. Proper sizing = ignored. Knowledge without discipline produces losses; knowledge WITH discipline produces winning trades like the Wyckoff Spring example."
+
+  - id: q25
+    text: "The MOST IMPORTANT takeaway from this entire course is:"
+    type: mcq
+    choices:
+      - "Specific indicator settings."
+      - "Knowledge is necessary but NOT sufficient. Discipline (applying what you know consistently) is what separates traders who actually profit from traders who keep learning. The boring rules — sizing, Apgar, readiness, journaling, review — ARE the edge."
+      - "Trade more often."
+      - "Use higher leverage."
+    correct: 1
+    topic_tag: psychology
+    explanation: "The course gave you knowledge (chart reading, indicators, advanced concepts, macro, execution). Most retail has access to similar knowledge. What separates profitable from unprofitable traders isn't knowing more — it's applying what you know consistently. The boring discipline of sizing, Apgar, readiness checks, journaling, review IS the durable edge. Go apply it."

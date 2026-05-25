@@ -1,0 +1,123 @@
+id: "47"
+lesson_id: 47
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Pre-session readiness checks YOU on how many dimensions?"
+    type: mcq
+    choices:
+      - "1."
+      - "FOUR: sleep, mood, recent P&L, preparation. Each scored green/yellow/red. Takes 30 seconds before each session."
+      - "10."
+      - "Random."
+    correct: 1
+    topic_tag: readiness
+    explanation: "Four dimensions: physical state (sleep), emotional state (mood), financial state (recent P&L), and mental state (preparation). All four matter for decision quality. 30 seconds before any trading session catches state issues before they become losses."
+
+  - id: q2
+    text: "Sleep at 4 hours (insomnia, exhaustion). What's the readiness verdict?"
+    type: mcq
+    choices:
+      - "Trade with caution."
+      - "RED. Don't trade — sleep under 5 hours produces decision quality similar to legal intoxication. Existing positions can be monitored but no new trades."
+      - "Continue normally."
+      - "Use 100× leverage."
+    correct: 1
+    topic_tag: readiness
+    explanation: "Sleep deprivation impairs decision-making more than most realize. <5 hours = trading drunk. Open positions can be monitored carefully (or partially closed to reduce exposure) but opening NEW positions in this state has predictably bad outcomes."
+
+  - id: q3
+    text: "You're down 5% on the day. The 'any RED = no trade' rule applies. What's the smart action?"
+    type: mcq
+    choices:
+      - "Trade more aggressively to recover."
+      - "STOP TRADING for the day. Close the platform. Tomorrow is another day. The 5%+ drawdown is the hard daily limit — discipline matters most when you most want to trade."
+      - "Increase leverage."
+      - "Open new positions."
+    correct: 1
+    topic_tag: readiness
+    explanation: "5%+ daily drawdown = RED = stop. The discipline to stop is HARDEST exactly when it matters most (you want to recover). Most account-killing days started as 'just one more trade'. Hard limits enforced when emotion is high prevent the cascade."
+
+  - id: q4
+    text: "Why is the 'ANY RED = no trade' rule non-negotiable?"
+    type: mcq
+    choices:
+      - "It's negotiable."
+      - "One compromised dimension (red) doubles your odds of expensive mistakes that day. Even if other dimensions are green, the one red is a structural risk factor. Better to skip a day than have a 25% account-killing session."
+      - "Random rule."
+      - "It's optional."
+    correct: 1
+    topic_tag: readiness
+    explanation: "Decisions are made by the integrated system (you). If one major input is compromised (exhausted, tilted, in drawdown), the output decisions are compromised even if other inputs are fine. The 'any red' rule acknowledges this. Trading through a single red dimension is the fastest path to disastrous sessions."
+
+  - id: q5
+    text: "How long should pre-session prep take?"
+    type: mcq
+    choices:
+      - "2 minutes is enough."
+      - "5-10 minutes — HTF context, macro check (DXY/VIX/ES), 2-4 specific setup ideas with entry/SL/TP defined, risk capacity confirmation, schedule. Trading without prep = trading blind."
+      - "1 minute."
+      - "2 hours."
+    correct: 1
+    topic_tag: readiness
+    explanation: "5-10 minutes makes the difference between trading with a plan and chasing what screams loudest on the chart. Skipping prep is one of the most common mistakes — but the prep time is trivial relative to the trading session and dramatically improves the quality of decisions throughout."
+
+  - id: q6
+    text: "Mood: 'just had a heated argument with partner, still angry'. What's the verdict?"
+    type: mcq
+    choices:
+      - "Trade — it'll distract."
+      - "RED. Wait 1-2 hours minimum for emotion to fade. Anger increases risk-taking and aggression. Trading through it predictably produces oversized positions and impulsive decisions."
+      - "Trade smaller."
+      - "Trade larger."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Acute emotional state = compromised decisions. Anger specifically pushes traders toward bigger size, faster decisions, less SL discipline. The recovery time is hours, not minutes. The trade you'd take angry will look different (and probably worse) than the trade you'd take calm."
+
+  - id: q7
+    text: "Mixed readiness (2 yellows + 2 greens) — what's the trade approach?"
+    type: mcq
+    choices:
+      - "Full normal trading."
+      - "REDUCED MODE — half normal sizing, only A+ setups with multiple confluences. Skip B-grade setups. The yellows are warnings worth honoring with adjusted approach."
+      - "Don't trade at all."
+      - "Maximum leverage."
+    correct: 1
+    topic_tag: readiness
+    explanation: "Yellows = caution warranted. Not 'don't trade' but 'trade more selectively + smaller'. Half size protects you from the slight cognitive impairment. Only A+ setups means you're not forcing the marginal trades that benefit from being on your A-game. Pragmatic middle ground."
+
+  - id: q8
+    text: "Hardest pre-session 'red' to enforce in practice:"
+    type: mcq
+    choices:
+      - "Sleep issues."
+      - "POST-LOSS sessions — you're down 5%, you want to recover, every fiber wants to take another trade. The discipline to STOP is hardest exactly when it matters most. Pre-commit physical aids (close laptop, walk outside)."
+      - "Calm days."
+      - "Pre-event days."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Drawdown discipline is the hardest. The emotional pull to recover the loss conflicts with the math (you're more likely to make additional losses while in this state). Physical friction (close the platform, leave the room) provides external assistance to overcome the internal urge. Make stopping easier than continuing."
+
+  - id: q9
+    text: "Worked example: 7h sleep + calm mood + flat P&L + did full prep. Verdict?"
+    type: mcq
+    choices:
+      - "Don't trade."
+      - "ALL GREEN → full trading mode. Normal sizing. Take A+ setups when they appear. Best possible day for trading; capitalize on it by being selectively active."
+      - "Half size."
+      - "Random."
+    correct: 1
+    topic_tag: readiness
+    explanation: "4 greens = optimal state. Cognitive capacity is full; emotion is regulated; no recent damage; you have a plan. This is the highest-quality state for trading. Recognize and use these days well — they're when your edge has full expression. Don't waste them by sitting out unnecessarily."
+
+  - id: q10
+    text: "Why combine Pre-Session Readiness with Trade Apgar?"
+    type: mcq
+    choices:
+      - "Redundant."
+      - "Different layers. Readiness checks WHETHER you should trade today. Apgar checks WHETHER you should take THIS SPECIFIC trade. Both required for full execution discipline. Skipping either creates a gap where bad trades sneak through."
+      - "Just use one."
+      - "Random."
+    correct: 1
+    topic_tag: execution
+    explanation: "Two-layer defense. Readiness filters bad SESSIONS (you shouldn't be trading at all today). Apgar filters bad TRADES within otherwise-tradeable sessions. Both are needed: a green session can still produce bad individual setups (Apgar catches); even strong setups taken in red sessions usually fail (Readiness catches)."

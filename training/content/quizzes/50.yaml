@@ -1,0 +1,123 @@
+id: "50"
+lesson_id: 50
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Why does your trading system need to be WRITTEN, not just mental?"
+    type: mcq
+    choices:
+      - "It doesn't matter."
+      - "Unwritten rules fail under emotional pressure (drawdowns, FOMO, tilt). Written rules become public commitments to yourself — visible breaches create friction that mental breaches don't."
+      - "Random preference."
+      - "Writing wastes time."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Mental rules are negotiable in real-time when emotion is high. 'I usually risk 1% but this is special, so 5%' — mental rules accommodate this rationalization easily. Written rules create friction. Going against them is uncomfortable in a way going against mental rules isn't. The friction IS the discipline."
+
+  - id: q2
+    text: "How many SETUPS should your system define?"
+    type: mcq
+    choices:
+      - "50+ to cover everything."
+      - "3-5 specific setups. Anything that doesn't match one of your defined setups = not a trade. This is the single biggest filter to your edge."
+      - "1 only."
+      - "Random."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Quality > quantity. 3-5 specific setups gives you enough variety for different market conditions while keeping discipline simple. 50+ setups = no real discipline because nearly everything qualifies. The point of setup definitions is FILTERING — fewer, well-defined setups filter better than many vague ones."
+
+  - id: q3
+    text: "Your system's six sections include:"
+    type: mcq
+    choices:
+      - "Just setup criteria."
+      - "Setup criteria + position sizing + execution + psychological/state rules + review process + continuous improvement (how the system evolves based on data)."
+      - "Only sizing."
+      - "Random sections."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Six sections cover the complete trading life: WHAT you trade (setups), HOW MUCH (sizing), HOW (execution), STATE (psychology), how you LEARN (review), and how you EVOLVE (continuous improvement). All six matter — gaps in any section create vulnerability to different failure modes."
+
+  - id: q4
+    text: "How should your written system EVOLVE over time?"
+    type: mcq
+    choices:
+      - "Never change it."
+      - "Based on DATA (R-multiple per setup over 30+ trades). Add setups that prove positive expectancy; remove setups that consistently fail; adjust thresholds (Apgar, risk %) based on what your actual performance shows. Periodically prune complexity."
+      - "Change daily based on feelings."
+      - "Random changes."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Systems should evolve from DATA, not from feelings or recent results. Track per-setup performance. After 30+ trades on a setup, you have meaningful data. Setups proving positive expectancy stay; those proving negative get cut. Don't make changes based on single trades or hunches — let the data accumulate, then act decisively."
+
+  - id: q5
+    text: "Total LENGTH of your written system should be:"
+    type: mcq
+    choices:
+      - "100 pages of detail."
+      - "1-3 pages total, 6 sections. Concise enough to actually re-read and follow. Long documents become unread documents."
+      - "1 sentence."
+      - "Random length."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Length is enemy of adherence. 1-3 pages is enough to cover all 6 sections meaningfully without becoming overwhelming. You should be able to re-read your entire system in 5 minutes. Anything longer becomes a reference document you don't actually use — defeating its purpose."
+
+  - id: q6
+    text: "Setup criteria example: 'I'll trade when it looks good' — is this acceptable?"
+    type: mcq
+    choices:
+      - "Yes — flexibility is good."
+      - "NO — way too vague. Specific criteria like 'Wyckoff Spring Long: at confirmed accumulation range, wick below support + close back above + 2× volume on wick' is operational. 'Looks good' is just impulse."
+      - "Acceptable for advanced traders."
+      - "Random."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Vague criteria = unenforceable. 'Looks good' is whatever feels right in the moment — basically no filter. Specific operational criteria can actually be matched against current market conditions. The discipline mechanism only works when criteria are concrete enough to verify against."
+
+  - id: q7
+    text: "Section 'CONTINUOUS IMPROVEMENT' addresses what?"
+    type: mcq
+    choices:
+      - "Daily journal."
+      - "HOW your system evolves: add proven setups, remove failing ones, adjust thresholds based on data, periodically prune complexity. The system isn't static — it grows with you."
+      - "Adding more rules."
+      - "Random."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Systems that don't evolve become outdated. Markets change. Your skills change. Periodically updating the system based on actual performance data keeps it relevant. The discipline: updates come from data (30+ trades of evidence), not from emotion or single-trade outcomes."
+
+  - id: q8
+    text: "Example sizing rule for the system:"
+    type: mcq
+    choices:
+      - "'Whatever feels right'."
+      - "'1% risk per trade standard; 2% on rare A+ setups (Apgar 9-10 only). Isolated margin always (except hedging). Max 10× leverage. Match leverage to SL distance, not feeling.'"
+      - "'Use 100× always'."
+      - "'No SL needed'."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Sizing rule should be: specific (1% standard), have controlled exceptions (2% on rare A+ setups), specify margin mode (isolated), have leverage cap (10×), and tie leverage to SL distance (not emotion). The example covers all of these. Vague 'whatever feels right' is no rule."
+
+  - id: q9
+    text: "Example REVIEW PROCESS section:"
+    type: mcq
+    choices:
+      - "'Review when I feel like it'."
+      - "'Daily 5min, Weekly 30min, Monthly 1-2h, Quarterly half-day.' Specific cadences for different depth of analysis. Each catches different patterns."
+      - "'Never review'."
+      - "'Once a year'."
+    correct: 1
+    topic_tag: system_building
+    explanation: "Specific cadences create accountability. Daily catches recent mistakes fresh. Weekly reveals patterns. Monthly shows trends. Quarterly enables strategic shifts. Mixed cadence > single cadence because different depths reveal different things. 'Review when I feel like it' = sporadic, ineffective."
+
+  - id: q10
+    text: "Why is having a written system the MOST IMPORTANT discipline tool of all?"
+    type: mcq
+    choices:
+      - "It's not important."
+      - "Because all individual disciplines (Apgar, Readiness, sizing rules, daily stops) ARE the system. Without writing them down as a coherent unit, they're individual habits that drift apart over time. The written system keeps them integrated and accountable. Knowledge → applied = system."
+      - "Random."
+      - "Writing is fashionable."
+    correct: 1
+    topic_tag: system_building
+    explanation: "The system is the integration of everything you've learned. Without it, knowledge stays theoretical. With it, knowledge becomes applied. The trader with a written system + discipline to follow it outperforms the trader with more knowledge but no system. Knowledge multiplied by application = results; knowledge alone = potential."

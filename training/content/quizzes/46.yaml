@@ -1,0 +1,123 @@
+id: "46"
+lesson_id: 46
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "The Trade Apgar score evaluates a trade setup on how many dimensions?"
+    type: mcq
+    choices:
+      - "1."
+      - "5 dimensions, 0-2 points each. Total max score = 10. Pass: total ≥7 AND no zeros."
+      - "20."
+      - "Random."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Five dimensions: setup quality, R:R, confluences, macro/regime alignment, personal state. Each scored 0-2. Total ≥7 + no zero in any dimension = trade. Less = skip. Simple structure that takes 60 seconds and filters out 80% of impulse trades."
+
+  - id: q2
+    text: "Trade scores Setup=2, R:R=2, Confluences=2, Macro=2, but PERSONAL STATE=0 (you just had a loss and are emotional). Score total = 8. Trade or skip?"
+    type: mcq
+    choices:
+      - "Trade — total 8 is above 7."
+      - "SKIP — the 'no zeros' rule. A zero in any dimension (especially personal state) is a deal-breaker. Trade on tilt has high failure rate regardless of setup quality."
+      - "Use higher leverage."
+      - "Always trade."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "The 'no zeros' rule is critical. Personal state = 0 means you're in a condition where decisions are compromised (tilt, exhaustion, post-loss emotion). High-quality setups taken in bad states often fail because of execution errors. The setup will be there tomorrow when you're calm; the loss from forcing the trade now persists."
+
+  - id: q3
+    text: "Why is the Apgar required BEFORE entering the trade rather than after?"
+    type: mcq
+    choices:
+      - "After is fine."
+      - "Forces explicit articulation BEFORE the impulse decision. Slows down FOMO/revenge urges (60 seconds is enough to let emotion fade). If you can't articulate quality, you don't have a real setup. After-the-fact scoring becomes rationalization."
+      - "Random preference."
+      - "Apgar doesn't work."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "The 60-second pause is half the value. It's enough time for emotional impulses to weaken and clarity to return. After-entry scoring is rationalization, not discipline. The whole point is to gate the impulse → enter pathway with an explicit checkpoint."
+
+  - id: q4
+    text: "Common temptation that DEFEATS the Apgar's purpose:"
+    type: mcq
+    choices:
+      - "Following the scores honestly."
+      - "GAMING THE SCORE — giving generous scores to push the total to ≥7 because you really want to trade. Rationalizing upward defeats the entire discipline."
+      - "Scoring rigorously."
+      - "Writing scores down."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Honest scoring is the discipline. If you find yourself stretching to give higher scores, that's the signal to step away — not to click Buy. The Apgar only works if applied rigorously and honestly. Cheating it makes it useless."
+
+  - id: q5
+    text: "Should you WRITE DOWN the Apgar scores or just do it mentally?"
+    type: mcq
+    choices:
+      - "Mental is fine."
+      - "WRITE THEM DOWN. Writing forces clarity and creates a record. The journal has an Apgar form for this. Mental scoring lets you blur the numbers; written scoring is rigorous."
+      - "Random preference."
+      - "Apgar is mental only."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Writing things down changes how clearly you think about them. Mental scoring is easy to fudge; written scoring is committed. Plus written records let you review later — 'were my 9 trades winning more than my 7 trades?' is only answerable if you have the data."
+
+  - id: q6
+    text: "Best USE of Apgar score data over time?"
+    type: mcq
+    choices:
+      - "Throw it away."
+      - "Track win rate by Apgar score. Are your 9-10 trades winning more than 7-8 trades? Should you raise threshold to 8? Are skipped trades (low Apgar) the ones that would have won? Use the data to refine your scoring criteria."
+      - "Never look back."
+      - "Random."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Apgar generates valuable data. Score → outcome mapping reveals whether your criteria are calibrated correctly. If 8-score trades have 30% win rate while 10-score trades have 70% — raise threshold to 9. The Apgar isn't static; refine it based on what your actual data shows about your edge."
+
+  - id: q7
+    text: "Worked example A+ trade: pre-planned A-setup + R:R 1:4 + 4 confluences + HTF/macro aligned + rested and calm. Score?"
+    type: mcq
+    choices:
+      - "Skip — too good to be true."
+      - "Score 2+2+2+2+2 = 10. No zeros. TRADE with normal sizing (or consider sizing up if your rules allow for A+ setups)."
+      - "Score 6."
+      - "Random."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Perfect 10. All dimensions max. No zeros. Trade with confidence — this is what high-quality setups look like. Rare and valuable. Some traders allow slightly larger sizing (2-3% instead of 1%) on rare 9-10 Apgar trades. Maintain the discipline regardless of size."
+
+  - id: q8
+    text: "Can you CUSTOMIZE the Apgar for your specific style?"
+    type: mcq
+    choices:
+      - "No — must be exactly as taught."
+      - "YES — add 6th dimension if relevant (time of day, specific indicator), adjust pass threshold based on data (some traders need ≥8), adjust 'no zero' rule for specific dimensions. The point is RIGOROUS CONSISTENT application of YOUR custom scoring."
+      - "Customization is forbidden."
+      - "Random."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "The 5-dimension framework is the standard but your style may benefit from customization. Add what's relevant; remove what isn't. Adjust thresholds based on your actual win-rate data. The fundamental discipline (explicit scoring before entry, written down, honest) is what matters — not the exact dimensions used."
+
+  - id: q9
+    text: "Trading impulse is high because of recent news. You haven't planned this trade. Apgar score includes Setup Quality = 0. What happens?"
+    type: mcq
+    choices:
+      - "Skip if total <7."
+      - "SKIP regardless of total. Setup Quality = 0 (impulse trade, not pre-planned) is a deal-breaker zero. The 'no zeros' rule applies to every dimension. Impulse trades have negative expectancy almost universally."
+      - "Trade anyway."
+      - "Use leverage."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Impulse trades trigger the Setup Quality zero. Even if R:R, confluences, etc. look high (which they often falsely seem during the impulse), the lack of pre-planning is itself the disqualifier. Pre-planned trades have edge; impulse trades have noise. The Apgar's design protects you from this distinction."
+
+  - id: q10
+    text: "Total expected impact of using Apgar discipline across many trades?"
+    type: mcq
+    choices:
+      - "No effect."
+      - "Filters out roughly 80% of impulse/marginal trades that would have been net negative. Even modest improvement in trade selection (taking only 5/5 setups instead of every 3/5 setup) dramatically improves overall account performance."
+      - "Makes you trade more."
+      - "Random."
+    correct: 1
+    topic_tag: trade_apgar
+    explanation: "Apgar's main effect is filtering. Most retail's losing trades come from low-quality setups: impulse trades, bad state, poor R:R, low confluence. The Apgar catches these BEFORE entry. The fewer-but-higher-quality trades that remain perform much better. Selection > selection in trading isn't a cliché — it's the math."

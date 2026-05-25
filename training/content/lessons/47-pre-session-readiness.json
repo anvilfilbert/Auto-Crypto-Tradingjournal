@@ -1,0 +1,86 @@
+{
+  "slug": "47-pre-session-readiness",
+  "subtitle": "The Apgar checks individual trades. Pre-session readiness checks YOU. Tired, drunk, stressed, in drawdown? Don't trade. Red/yellow/green system that takes 30 seconds and prevents account-killing sessions.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Some of the biggest losses traders take are not from bad analysis — they're from being in a STATE where good analysis can't be executed properly. Trading tired, drunk, after a fight with your partner, in the middle of a major personal stressor: predictable disaster.</p><p>Pre-session readiness is a 30-second check on YOUR CURRENT STATE before you start trading. If you're not green, you don't trade. This single check prevents weeks of recoverable losses turning into account-killing disasters.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The four dimensions"
+    },
+    {
+      "type": "table",
+      "headers": ["Dimension", "Green = ", "Yellow = ", "Red = "],
+      "rows": [
+        ["<strong>Sleep</strong>", "7+ hours, woke up rested", "5-7 hours, somewhat tired", "Under 5 hours, exhausted or hung over"],
+        ["<strong>Mood</strong>", "Calm, focused, neutral", "Stressed but functional", "Angry, anxious, depressed, emotionally charged"],
+        ["<strong>Recent P&L</strong>", "Within normal range; not in drawdown", "Slight drawdown but manageable", "Down 5%+ from peak; on tilt risk"],
+        ["<strong>Preparation</strong>", "Reviewed setups + macro context; have a plan", "Some prep but rushed", "Zero prep, jumping in cold"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The traffic light system"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Overall assessment",
+      "content": "<ul><li><strong>All four GREEN</strong>: Full trading mode. Normal sizing. Take A+ setups when they appear.</li><li><strong>Mixed (greens + yellows)</strong>: Reduced trading mode. Half normal sizing. Only A+ setups with multiple confluences. Skip B-grade setups.</li><li><strong>Any RED</strong>: NO trading today. Stay flat or close existing positions to safer state. Tomorrow is another day.</li></ul><p>The 'any red = no trade' rule is non-negotiable. A red dimension is a warning that decision-making is compromised. Even one red doubles your odds of making expensive mistakes that day.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Sleep — the most underestimated factor"
+    },
+    {
+      "type": "text",
+      "content": "<p>Sleep deprivation impairs decision-making more than most people realize. Less than 5 hours of sleep produces decision quality similar to legal alcohol intoxication. Trading on insufficient sleep is essentially trading drunk.</p><ul><li><strong>7+ hours</strong>: full cognitive capacity. Best for active trading.</li><li><strong>5-7 hours</strong>: somewhat impaired but functional for monitoring positions. Avoid taking new trades.</li><li><strong>Under 5 hours</strong>: RED. Don't open new positions. Existing positions can be monitored but consider taking partial profits to reduce exposure.</li></ul><p>This applies whether the cause is genuine insomnia, late-night entertainment, or a baby crying. The cause doesn't matter — the cognitive state does.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Mood — recognizing emotional states"
+    },
+    {
+      "type": "text",
+      "content": "<p>Mood affects every decision you make at the screen. Hard rules:</p><ul><li><strong>Angry</strong>: don't trade. Anger increases risk-taking and aggression. Wait for it to fade (often hours).</li><li><strong>Anxious</strong>: don't trade. Anxiety makes you exit winners early and hold losers hoping for recovery. Both destroy edge.</li><li><strong>Depressed</strong>: don't trade. Low motivation often pairs with poor risk-reward decisions.</li><li><strong>Just had a heated argument</strong>: wait 1-2 hours minimum before any trading decisions.</li><li><strong>Excited about a recent unrelated event</strong>: euphoria can also impair judgment. Wait until baseline returns.</li></ul><p>The baseline check: 'Am I calm enough to follow my plan if a setup forms in the wrong direction from what I'd prefer?' If the answer is no, stay flat.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Recent P&L — the drawdown danger zone"
+    },
+    {
+      "type": "text",
+      "content": "<p>Drawdowns trigger predictable psychological responses that compound losses if you keep trading through them. The hard rules:</p><ul><li><strong>Within 0-3% drawdown from peak</strong>: GREEN. Continue normally.</li><li><strong>3-5% drawdown</strong>: YELLOW. Reduce size; take only A+ setups; consider a half-day break.</li><li><strong>5%+ drawdown</strong>: RED. Stop trading for the day. Re-evaluate strategy. Consider stepping back to small-size or paper for re-validation (lesson 10).</li><li><strong>2x normal loss in single trade</strong>: RED. Hard daily stop activated.</li></ul><p>The discipline of stopping at 3-5% drawdown prevents the 5% from becoming a 25% loss. Most account-killing days started as 'just one more trade to recover'.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "The hardest 'red' to enforce: post-loss session",
+      "content": "<p>You're down 5% on the day. Every fiber wants to find another setup to recover. The discipline to STOP is exactly when it's hardest.</p><p>Practical aid: have a hard rule pre-committed BEFORE the session starts. 'If I'm down 3%, I close the platform until tomorrow.' Make it physical — close the laptop, walk outside. The friction of re-opening the platform is enough discipline assistance to actually stop.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Preparation — knowing what you're looking for"
+    },
+    {
+      "type": "text",
+      "content": "<p>Trading without prep = trading blind. Pre-session prep should include:</p><ul><li><strong>HTF context check</strong>: where is BTC structurally? What's the 1D/4H trend? Major S/R levels?</li><li><strong>Macro check</strong>: DXY, VIX, ES status. Any major events today?</li><li><strong>Setup ideas</strong>: identify 2-4 specific setups you'd take today. Define entry, SL, TP for each.</li><li><strong>Risk capacity</strong>: how much risk can I deploy today given current drawdown?</li><li><strong>Schedule</strong>: when are you trading? When stopping? Any external commitments?</li></ul><p>5-10 minutes of prep makes the difference between trading with a plan and chasing whatever screams loudest on the chart.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Day A — Trading green light</strong></p><ul><li>Sleep: 7.5 hours, rested → GREEN</li><li>Mood: calm, just had coffee, focused → GREEN</li><li>Recent P&L: +1% on the week, +0.5% today → GREEN</li><li>Preparation: did 10-min review, identified 3 setups, know my macro context → GREEN</li><li><strong>4 greens → full trading mode</strong></li></ul><p><strong>Day B — Mixed</strong></p><ul><li>Sleep: 6 hours (woke up early for meeting) → YELLOW</li><li>Mood: stressed about deadline but functional → YELLOW</li><li>P&L: flat → GREEN</li><li>Preparation: quick review, 2 setups identified → GREEN</li><li><strong>2 yellows + 2 greens → reduced sizing mode, only A+ setups</strong></li></ul><p><strong>Day C — Don't trade</strong></p><ul><li>Sleep: 4 hours (insomnia) → RED</li><li>Mood: anxious about sleep loss → YELLOW</li><li>P&L: down 4% from peak → YELLOW</li><li>Preparation: none, just opened the screen → RED</li><li><strong>Any red → NO TRADING TODAY</strong></li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Check 4 dimensions before each session: sleep, mood, recent P&L, preparation.</strong> 30 seconds.</li><li><strong>Traffic light: All green = full trade mode. Mixed = reduced. Any red = NO TRADING.</strong></li><li><strong>The 'any red' rule is non-negotiable.</strong> One compromised dimension doubles your odds of expensive mistakes that day.</li></ol><p>Next lesson: trade journaling — what to record, what NOT to, and why most journals are useless.</p>"
+    }
+  ]
+}

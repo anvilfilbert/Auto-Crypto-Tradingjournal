@@ -1,0 +1,123 @@
+id: "49"
+lesson_id: 49
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Which trade-review FRAME is more productive long-term?"
+    type: mcq
+    choices:
+      - "'What did I do WRONG?' — self-criticism focus."
+      - "'What would I do DIFFERENTLY next time?' — forward-focused, action-oriented. Produces specific improvements; sustainable; doesn't cause burnout."
+      - "Both equally good."
+      - "Don't review at all."
+    correct: 1
+    topic_tag: review
+    explanation: "Same information, completely different emotional outcome. 'What did I do wrong' produces self-blame, burnout, defensive trading. 'What would I do differently' produces specific actionable improvements without psychological cost. The frame matters more than the content."
+
+  - id: q2
+    text: "Daily review duration should be:"
+    type: mcq
+    choices:
+      - "2 hours."
+      - "5-10 minutes. List trades, one-sentence note per trade (followed plan? deviation?), overall grade A-F, one specific action item for tomorrow. Not exhaustive analysis."
+      - "1 minute."
+      - "Never."
+    correct: 1
+    topic_tag: review
+    explanation: "Daily review is for reflection, not exhaustive analysis. Brief and consistent > thorough and abandoned. The point is daily check-in to keep mistakes from compounding. Weekly/monthly reviews handle the deeper pattern analysis."
+
+  - id: q3
+    text: "Weekly review (30 min) should include:"
+    type: mcq
+    choices:
+      - "Detailed price descriptions."
+      - "Aggregate stats (R/win rate), categorize by setup type and time of day, identify ONE strength to keep + ONE weakness to address, review skipped trades to validate your filter."
+      - "Random observations."
+      - "Predictions about next week."
+    correct: 1
+    topic_tag: review
+    explanation: "Weekly review surfaces patterns invisible day-to-day. Stats reveal performance trends. Categorization reveals which setup types work for you. Strength/weakness identification gives ONE specific action for next week. Skipped-trade review validates whether your filter is calibrated correctly."
+
+  - id: q4
+    text: "How many improvement projects should you tackle per MONTH?"
+    type: mcq
+    choices:
+      - "10+ — fix everything at once."
+      - "ONE specific improvement project per month. Master it. Make it habitual. THEN move to next. After 12 months you've systematically improved 12 different aspects."
+      - "Zero."
+      - "Random."
+    correct: 1
+    topic_tag: review
+    explanation: "Focus dilutes when you try to fix everything simultaneously. ONE thing at a time, made habitual, then move to the next. This compounds: 12 specific improvements per year > 50 attempted improvements that don't stick. The systematic incremental approach builds durable behavior change."
+
+  - id: q5
+    text: "Quarterly strategy review should ask:"
+    type: mcq
+    choices:
+      - "What was my favorite trade?"
+      - "Are you on your intended strategy track? Has market regime changed? Is your edge real or coincidental? Should you scale up/down/maintain? Major skill gaps?"
+      - "Lots of small details."
+      - "Predictions about next quarter."
+    correct: 1
+    topic_tag: review
+    explanation: "Quarterly review is strategic, not tactical. Step back from individual trades to evaluate the entire approach. Has the market changed in ways that require strategy adjustment? Is your edge real? Should you scale or step back? These are big-picture questions that need quarterly cadence — too frequent loses signal, too infrequent misses regime changes."
+
+  - id: q6
+    text: "If 3+ months of reviews show CONSISTENT LOSSES, what should you do?"
+    type: mcq
+    choices:
+      - "Trade harder to recover."
+      - "STOP trading live. Drop back to small-size or paper. Question whether your edge is real. Question execution. Consider professional help. Accept the possibility that the strategy isn't right for you. Don't double down on a losing approach."
+      - "Increase leverage."
+      - "Ignore the data."
+    correct: 1
+    topic_tag: progression
+    explanation: "Consistent losses over months = real data, not bad luck. Most retail doubles down here, hoping to recover. The math doesn't support this — you're losing capital on a strategy that isn't working. Step back, re-evaluate, possibly seek outside help. Accept the possibility that this market/strategy isn't right for you. Better to admit it at 6 months than at 24."
+
+  - id: q7
+    text: "Reviewing SKIPPED TRADES is important because:"
+    type: mcq
+    choices:
+      - "Skipped trades don't matter."
+      - "Validates whether your filter is calibrated correctly. If skipped trades CONSISTENTLY would have won, your filter may be too strict. If they would have lost, your filter is right. Adjust accordingly."
+      - "Random."
+      - "Skipped trades cost money."
+    correct: 1
+    topic_tag: review
+    explanation: "Your discipline rules cause you to skip certain trades. Tracking what happened to those skipped trades calibrates whether your filter is correct. Too many skipped trades that would have worked = filter too strict (raise rate at cost of missed setups). Too few = filter might not be catching enough bad trades. The data tells you."
+
+  - id: q8
+    text: "Specific REVIEW PROMPTS that often produce insight:"
+    type: mcq
+    choices:
+      - "'What's the meaning of life?'"
+      - "'What's my best setup type and why does it work for me?' 'What's my worst recurring mistake?' 'When did I last break a rule, why?' 'Are SLs being hit too often (too tight) or rarely (too wide)?'"
+      - "'What will markets do tomorrow?'"
+      - "Random questions."
+    correct: 1
+    topic_tag: review
+    explanation: "Specific, targeted prompts reveal patterns. Asking 'how am I trading?' generally produces no insight. Asking 'when did I last break a rule, why?' forces you to confront specific behaviors that need addressing. Prepared prompt lists make reviews more productive than free-form rumination."
+
+  - id: q9
+    text: "Why does the 'forward-focused' review framing matter so much?"
+    type: mcq
+    choices:
+      - "Doesn't matter."
+      - "Self-blame ('what did I do wrong') burns out traders within months. Forward focus ('what would I do differently') is sustainable — you can do it every day for years without burnout. Sustainable practices compound; unsustainable ones get abandoned."
+      - "Random preference."
+      - "Backward is better."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Sustainability matters more than intensity. A review practice you do daily for 5 years compounds dramatically. A review practice that burns you out in 3 months produces almost no benefit. Forward-focused framing protects the sustainability — you stay engaged with reviews rather than dreading them."
+
+  - id: q10
+    text: "The OVERALL purpose of trade review is:"
+    type: mcq
+    choices:
+      - "Self-flagellation."
+      - "Turning past performance into FUTURE IMPROVEMENT. Patterns invisible day-to-day become actionable in aggregate. Systematic improvement compounds over years."
+      - "Predicting markets."
+      - "Random reflection."
+    correct: 1
+    topic_tag: review
+    explanation: "Review is the bridge between past data (what happened) and future action (what to change). Without review, the journal sits unused. With it, every trade becomes a data point that compounds your skill. After 100 trades reviewed properly, you have 100 specific lessons. After 500, you have your own personalized trading system built from your own data."
