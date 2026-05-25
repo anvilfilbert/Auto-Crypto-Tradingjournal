@@ -1,0 +1,113 @@
+{
+  "slug": "06-risk-per-trade",
+  "subtitle": "The most important number in trading isn't your entry. It isn't your TP. It's the percentage of your account you risk on each trade. Get this number right and survival is automatic. Get it wrong and no win rate will save you.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Almost every blown-up trading account in history was killed by position-sizing errors, not bad trades. Bad trades happen — every trader, every strategy, every year has them. What separates survivors from blow-ups is what each loss costs.</p><p>This lesson is about the single number that decides everything: <strong>what % of your account do you risk on each trade?</strong> Most retail traders never explicitly choose this number — they just \"feel it out\" and end up risking 5-20% per trade. Then math destroys them.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The drawdown asymmetry"
+    },
+    {
+      "type": "text",
+      "content": "<p>Losses and gains aren't symmetric. To recover from a loss, you need a LARGER gain. This asymmetry compounds brutally as losses grow.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Loss from peak", "Gain required to break even", "Why it matters"],
+      "rows": [
+        ["−5%", "+5.3%", "Trivial recovery"],
+        ["−10%", "+11.1%", "Easy"],
+        ["−20%", "+25%", "Annoying but doable"],
+        ["−30%", "+42.9%", "Hard"],
+        ["−40%", "+66.7%", "Painful — requires a full bull run"],
+        ["−50%", "+100%", "You need to DOUBLE the account"],
+        ["−70%", "+233%", "Most never recover"],
+        ["−90%", "+900%", "Functionally dead"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>This is why small losses are survivable and big losses are existential. Losing 5% on a trade and recovering is normal. Losing 50% on a trade means your account needs to DOUBLE just to get back to where you started — that's often years of compounding even for skilled traders.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 1-2% rule"
+    },
+    {
+      "type": "text",
+      "content": "<p>The classic rule from professional risk management: <strong>risk no more than 1-2% of your account on any single trade</strong>. This isn't conservative — it's mathematical survival.</p><p>Why these numbers? They survive even a long losing streak. Consider what happens with 5 losses in a row at different per-trade risk levels:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Risk per trade", "After 5 losses", "After 10 losses", "Drawdown"],
+      "rows": [
+        ["1%", "95.1%", "90.4%", "Comfortable"],
+        ["2%", "90.4%", "81.7%", "Manageable"],
+        ["5%", "77.4%", "59.9%", "Painful (40% DD)"],
+        ["10%", "59.0%", "34.9%", "Account-killing (65% DD)"],
+        ["20%", "32.8%", "10.7%", "Nearly destroyed"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Losing streaks are normal",
+      "content": "<p>Even a 60% win-rate strategy will hit a 5-loss losing streak roughly once every 200 trades — and a 10-loss streak roughly once every 10,000 trades. Both will happen to you over a career. The question isn't whether you'll have losing streaks; it's whether your position sizing lets you survive them.</p><p>At 1% risk per trade, a 10-loss streak costs you 10% of account. Annoying. At 10% risk per trade, the same 10-loss streak costs you 65% of account. Existential. Same trading edge, different sizing.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Risk in dollars — making the abstract concrete"
+    },
+    {
+      "type": "text",
+      "content": "<p>1% of $300 = $3. Per trade, that's how much you can lose to maintain the 1% rule. Not very much. This is the right number when you're starting out — small risk, learn the game.</p><p>1% of $10,000 = $100. Per trade.</p><p>1% of $100,000 = $1,000. Per trade.</p><p>The percentage scales as the account grows. The dollar amount scales too. But the MENTAL discipline is the same — \"how much am I willing to lose on this single trade if it's wrong?\". If the answer is \"more than 2% of my account\", the position size is too big regardless of how confident you feel.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Why traders blow up — the position-size death spiral"
+    },
+    {
+      "type": "text",
+      "content": "<p>Common pattern that destroys accounts:</p><ol><li>Trader starts with $1,000 risking 5% per trade ($50 risk per trade).</li><li>Has a good run. Account grows to $1,500.</li><li>Increases risk to 10% per trade because they're \"hot\".</li><li>Hits a 4-loss losing streak. Account: $1,500 → $984.</li><li>Tries to \"win it back\" with a 20%-risk YOLO trade. Loses. Account: $787.</li><li>Tilts and takes another oversized trade to recover. Loses. Account: $630.</li><li>One more revenge trade. Loses. Account: $441.</li><li>Account is now down 55% from peak. Recovery requires +120% gain. Mathematically possible, emotionally exhausting. Most quit here.</li></ol><p>The killer wasn't the losing streak — at 1-2% sizing, that streak would have been a -8% drawdown, easily recoverable. The killer was the response: increasing size to chase the loss.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Variations — fixed % vs fixed $"
+    },
+    {
+      "type": "text",
+      "content": "<p>Two ways to define risk:</p><ul><li><strong>Fixed percentage</strong>: 1% of current account. As account grows, dollar risk grows. As account shrinks (drawdown), dollar risk shrinks — automatic preservation. This is the standard professional approach.</li><li><strong>Fixed dollar</strong>: \"$50 per trade, no matter what.\" Easier mentally. But fails to scale as account grows AND fails to protect during drawdowns. Only appropriate at very small starting accounts where 1% would round down to almost nothing.</li></ul><p>For accounts $1,000+, use fixed percentage. For smaller accounts, fixed dollar is acceptable as a stepping stone.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The Kelly Criterion footnote",
+      "content": "<p>You may have heard of the Kelly Criterion — a mathematical formula for optimal position sizing given your win rate and average win/loss. Full Kelly typically suggests larger sizes than 1-2%. The catch: it assumes you know your true edge with certainty. You don't. \"Half-Kelly\" (50% of what the formula suggests) is closer to safe practice. For most retail traders, the 1-2% rule is essentially half-Kelly applied conservatively. Don't get fancy with Kelly until you have 200+ trades of real data validating your edge.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Risk per trade IS your overall strategy ceiling"
+    },
+    {
+      "type": "text",
+      "content": "<p>Here's the truth most beginners don't see: your per-trade risk caps your strategy's RETURNS, not just its DRAWDOWNS. Examples:</p><ul><li>At 1% risk per trade, with a 60% win rate and 1:1 R:R, expectancy is +0.2% per trade. Trading 5 times a week = ~52% annual return (compounded). Very respectable.</li><li>At 0.5% risk, same setup = ~26% annual return. Still very good.</li><li>At 5% risk, same setup = the per-trade math is +1% per trade, but drawdowns crush real-world results because emotional decisions creep in during the inevitable losing streaks. Many traders at this risk level end up net negative despite the on-paper edge.</li></ul><p>Lower risk per trade = lower drawdowns = better emotional discipline = better actual execution = better realized returns. The math agrees with the psychology.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When to risk MORE (rarely)"
+    },
+    {
+      "type": "text",
+      "content": "<p>Exceptions to the 1-2% rule, used sparingly by experienced traders:</p><ul><li><strong>Highest-confidence A+ setups</strong> — risk up to 3-4% on the absolute best setups, the ones you'd trade 10× a year. Never on every trade.</li><li><strong>Account scaling early on</strong> — some traders use 0.25-0.5% risk for their first 100 trades to learn the game with minimal damage, then scale up.</li><li><strong>Mean-reversion plays at strong levels</strong> — tight SL = same dollar risk at higher leverage. Risk % unchanged.</li></ul><p>Never increase risk because of:</p><ul><li>Recent losses (\"need to win it back\") — this is the death spiral.</li><li>Recent wins (\"I'm hot\") — luck and skill look identical in the short term.</li><li>Overconfidence in a setup (\"this one is different\") — they're never different enough to justify breaking sizing rules.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>If you take only ONE rule from this entire course, take this: <strong>never risk more than 2% on any single trade</strong>. Pick 1% if you're starting out or in a drawdown. Pick 2% only if you have a track record of disciplined execution.</p><p>The 1% rule survives every losing streak. The 5% rule eventually doesn't. Math, not opinion.</p><p>The next lesson translates this rule into actual contract counts and notional sizes — the arithmetic of \"$3 of risk on a position that's $20 from SL\".</p>"
+    }
+  ]
+}

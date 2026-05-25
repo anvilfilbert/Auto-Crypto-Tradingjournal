@@ -156,10 +156,12 @@ def mark_lesson_unlocked(db_path, lesson_id: int) -> None:
         """, (lesson_id,))
 
 
-def record_quiz_attempts(db_path, lesson_id: int, answers: list) -> dict:
+def record_quiz_attempts(db_path, lesson_id: int, answers: list,
+                         pass_threshold: int = 8) -> dict:
     """Insert per-question rows + roll up lesson_progress.
 
     answers: [{question_id, topic_tag, correct (bool), user_answer}, ...]
+    pass_threshold: minimum score to pass (default 8; tier finals use 10)
     Returns: {score, total, passed, attempts}
     """
     score = sum(1 for a in answers if a["correct"])
@@ -176,7 +178,7 @@ def record_quiz_attempts(db_path, lesson_id: int, answers: list) -> dict:
         prev_attempts = (row["attempts"] if row else 0) or 0
         prev_best = (row["best_score"] if row else None)
         new_best = max(prev_best or 0, score)
-        passed = score >= 8  # pass threshold
+        passed = score >= pass_threshold
         new_status = "passed" if passed else ("in_progress" if row else "in_progress")
         c.execute("""
             INSERT INTO lesson_progress (lesson_id, status, attempts, best_score, passed_at)

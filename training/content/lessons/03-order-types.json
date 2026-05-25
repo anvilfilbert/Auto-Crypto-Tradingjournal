@@ -1,0 +1,101 @@
+{
+  "slug": "03-order-types",
+  "subtitle": "Most retail traders use exactly one order type: market buy / market sell. That's leaving precision and money on the table. Five order types, each with a specific job — knowing when to use each is foundational.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Order types are the steering wheel of trading. A skilled trader knows which type to use in which situation: when speed matters, when price matters, when both matter. A beginner just market-buys everything and pays slippage on every trade.</p><p>This lesson covers five order types you'll use constantly, plus two flags that modify them. By the end you'll know exactly which one to pick for any setup you'd want to enter.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The five order types"
+    },
+    {
+      "type": "table",
+      "headers": ["Type", "What it does", "Fill priority", "Slippage risk", "Use when"],
+      "rows": [
+        ["<strong>Market</strong>", "Buys/sells immediately at the best available price", "Highest — instant fill", "Yes — large orders eat the book", "You MUST be in/out NOW"],
+        ["<strong>Limit</strong>", "Buys/sells only at your specified price or better", "Lower — may never fill", "None (price is locked)", "You can wait. Default order type."],
+        ["<strong>Stop (stop-market)</strong>", "Becomes a market order when price hits trigger", "Triggered, then high", "Yes — especially in gaps", "Setting a stop loss / breakout entry"],
+        ["<strong>Stop-Limit</strong>", "Becomes a LIMIT order when price hits trigger", "Triggered, then maybe", "None on fill, but might NOT fill", "When you can't accept worse than limit price"],
+        ["<strong>OCO</strong>", "Two paired orders — one cancels the other when one fills", "N/A — combo", "Depends on legs", "Setting TP + SL together on an open position"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Market orders — fast but expensive"
+    },
+    {
+      "type": "text",
+      "content": "<p>A market order says: \"I don't care what price, just give me a fill right now\". The exchange immediately matches you against the order book starting at the best available price and walking deeper until your full size is filled.</p><p>This is the most expensive way to enter or exit. You pay the spread (the gap between bid and ask), the taker fee, and any slippage from your order moving the price. On a liquid major pair these costs are small. On a thin alt with a wide book they can be brutal.</p>"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>When market orders are correct:</strong></p><ul><li>You're closing a LOSING position and the price is moving against you fast. Slippage on the close costs less than waiting for a limit to fill while the loss grows.</li><li>You're taking profit at a level the price is rushing past and you'd miss the chance otherwise.</li><li>You're hitting a clear breakout where every second of delay = worse entry.</li><li>The order size is small relative to book depth (slippage will be negligible).</li></ul><p><strong>When market orders are wrong:</strong></p><ul><li>Entering a position with time to plan — use a limit at your target price.</li><li>Trading a thinly-traded alt where you'll move the price 1-3% just on your order.</li><li>Big size on any pair during low-liquidity hours (Sunday afternoon UTC for example).</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Limit orders — patience pays"
+    },
+    {
+      "type": "text",
+      "content": "<p>A limit order says: \"I want to buy at $60,000 or better. If I can't get that price, I'd rather not trade at all\". The order sits on the book waiting for someone to hit it. No slippage. Maker fee (cheaper than taker).</p><p>The trade-off: you might not fill. If the price runs away from you, your limit order stays on the book forever (or until you cancel). Some traders use limit orders for entries and accept that 30-50% of their setup-ideas never trigger — that's fine if the ones that do are higher quality.</p><p><strong>Pro pattern:</strong> place a limit order at the edge of an expected pullback. Let the market come to you. If it doesn't, no harm done — you saved the trade for one that DID set up well.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The default order type should be LIMIT",
+      "content": "<p>For every trade you're not in a hurry on, default to limit. Pick a target price slightly better than current market and wait. You'll fill on maybe 40-60% of attempts, but those fills will be at better prices with lower fees. The trades you miss are the ones where the market wasn't going to give you a good entry anyway.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Stop orders — the SL and the breakout entry"
+    },
+    {
+      "type": "text",
+      "content": "<p>A stop order is dormant until the price reaches a TRIGGER level, at which point it activates and becomes either a market order (stop-market) or a limit order (stop-limit).</p><p>Two completely different uses:</p><ul><li><strong>As a stop loss:</strong> you're long at $60,000. You set a stop-sell at $58,500. If price drops to $58,500, the order triggers and sells your position. This caps your loss at -2.5%.</li><li><strong>As a breakout entry:</strong> you want to BUY only if price breaks above $62,000 resistance. You set a stop-buy at $62,001. The order doesn't trigger until breakout confirms — saving you from entering on a fake-out.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Stop-market vs stop-limit — the gap problem",
+      "content": "<p>A <strong>stop-market</strong> always fills (worst case at the next available price). Safer for stop losses because your worst-case is \"out\" at SOME price. Risk: in a flash crash with a price gap, you might fill 5-10% past your stop level.</p><p>A <strong>stop-limit</strong> protects against gap-fills — the order becomes a limit order at your specified limit price, so you'll never sell below that. Risk: if the price gaps THROUGH your limit and keeps falling, your order doesn't fill and you're STILL holding the losing position at a worse price.</p><p>For stop losses, prefer stop-market. The whole point of an SL is to exit losing positions — accepting some slippage to guarantee an exit is the right trade-off.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "OCO — pairing TP and SL"
+    },
+    {
+      "type": "text",
+      "content": "<p>OCO (\"One-Cancels-Other\") is two orders paired together — typically a take-profit limit + a stop loss. When one fills or cancels, the other automatically cancels. You set them up together once after entering a position.</p><p>Example: you're long BTC at $60,000. You want to take profit at $62,000 or exit at $59,000 SL. You place an OCO:</p><ul><li>Sell limit at $62,000 (your TP)</li><li>Sell stop at $59,000 (your SL)</li></ul><p>If price hits $62,000, the TP fills, the SL cancels automatically. If price hits $59,000, the SL fills, the TP cancels. Either way, you exit the position cleanly with no manual intervention needed.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Order flags — Post-Only and Reduce-Only"
+    },
+    {
+      "type": "text",
+      "content": "<p>Two flags modify how orders behave:</p><ul><li><strong>Post-Only:</strong> the order will ONLY be accepted if it can sit on the book as a maker. If your limit price would cross the spread (becoming a taker), the order is REJECTED instead of converting to a taker. Use when you're a serious fee-conscious trader and want to guarantee maker rebates.</li><li><strong>Reduce-Only:</strong> the order can only REDUCE an open position, never increase it or flip it. Critical for stop losses — prevents a scenario where your SL accidentally opens a position in the opposite direction (e.g., you typed wrong direction or quantity).</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Always use reduce-only on stop losses",
+      "content": "<p>Without reduce-only, a stop loss can accidentally open a NEW position. Example: you're long 0.5 BTC. You set an SL to \"sell 1.0 BTC\" by typo. Stop triggers, fills the 1.0 BTC, you're now SHORT 0.5 BTC instead of flat. Reduce-only would have refused — \"this order would exceed your current position, rejected\".</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<p>Patterns that cost traders money repeatedly:</p><ol><li><strong>Market-buying everything.</strong> Default to limit. Save the fees, save the slippage. Reserve market for emergencies.</li><li><strong>No reduce-only on stop losses.</strong> Eventually you'll typo a number. Reduce-only protects you.</li><li><strong>Stop-limit on SL with too-tight limit gap.</strong> Price gaps past the limit, SL doesn't fill, you're still holding. Use stop-market or stop-limit with WIDE limit gap (1-2% below the trigger).</li><li><strong>No OCO on open positions.</strong> Manually managing TP and SL = forgetting one. Pair them with OCO at entry.</li><li><strong>Setting SL right at a round number.</strong> $60,000 is a magnet — stops there get hunted. Place SL just BELOW round numbers ($59,950) so retail hunts don't take you out.</li><li><strong>Limit order at exactly current price.</strong> If you want to ADD to a long with a limit, set it slightly BELOW current. If you want to OPEN with a limit, set it where you'd actually want the price to be — not where it already is.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Master four patterns:</p><ol><li><strong>Limit-in</strong>: limit order at your planned entry price. Wait.</li><li><strong>OCO-out</strong>: pair TP + SL with OCO immediately after entry. Walk away.</li><li><strong>Stop-market-emergency-exit</strong>: SL as stop-market, reduce-only flag. Cap your downside.</li><li><strong>Market only when forced</strong>: closing a loser fast, or hitting a breakout that won't wait.</li></ol><p>If you can execute these four cleanly, you've covered 95% of order-type decisions you'll ever need to make.</p>"
+    }
+  ]
+}

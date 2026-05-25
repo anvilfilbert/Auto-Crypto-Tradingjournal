@@ -1,0 +1,123 @@
+id: "07"
+lesson_id: 7
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Your account is $5,000. You want to risk 1%. Entry is $60,000 with SL at $58,200 (3% distance). What's your correct notional position size?"
+    type: mcq
+    choices:
+      - "$50 notional"
+      - "$500 notional"
+      - "$1,667 notional"
+      - "$5,000 notional"
+    correct: 2
+    topic_tag: position_sizing
+    explanation: "Risk = 1% × $5,000 = $50. SL distance = 3%. Notional = $50 / 0.03 = $1,667. If SL hits, you lose 3% on a $1,667 position = $50 = 1% of account. Math checks out."
+
+  - id: q2
+    text: "Same $5,000 account, same $50 risk. Two setups: Setup A has a 1% SL distance, Setup B has a 5% SL distance. Which has the LARGER notional position?"
+    type: mcq
+    choices:
+      - "Setup A — tighter SL = bigger position"
+      - "Setup B — wider SL = bigger position"
+      - "Same — risk is the same"
+      - "Setup A only if leverage is high"
+    correct: 0
+    topic_tag: position_sizing
+    explanation: "Setup A: notional = $50 / 0.01 = $5,000. Setup B: notional = $50 / 0.05 = $1,000. The tighter SL lets you size 5× bigger while keeping the same dollar risk. This is why traders prize tight, well-defined invalidation levels — they let you size up without increasing risk."
+
+  - id: q3
+    text: "You computed that your correct notional is $500. Your exchange minimum order is $100. Your margin available is $1,000. What leverage should you use?"
+    type: mcq
+    choices:
+      - "Whatever — leverage doesn't matter."
+      - "It depends — leverage is whatever ratio gets you to $500 notional given your chosen margin. e.g., 1× would use $500 margin; 10× would use $50 margin. Same risk either way."
+      - "Always 100× to minimize margin used."
+      - "Always 1× to be safe."
+    correct: 1
+    topic_tag: leverage
+    explanation: "Leverage is downstream of the notional decision, not the other way around. Once you know notional = $500, leverage is just 'how much margin do I want this to occupy?'. 1× uses $500 margin (most), 10× uses $50 margin (frees up capital for other trades). Same risk; same SL; same trade math. Leverage only affects margin efficiency."
+
+  - id: q4
+    text: "A trader's account is $300. The minimum order on the exchange is $100 notional. Their 1% risk = $3. A setup has 5% SL distance, which would require only $60 notional. What's the right action?"
+    type: mcq
+    choices:
+      - "Take the trade at $100 notional — close enough."
+      - "Skip the trade. The setup doesn't fit your account size at proper sizing — find one that does (tighter SL or different setup type)."
+      - "Use 100× leverage to reduce margin used."
+      - "Borrow more capital."
+    correct: 1
+    topic_tag: position_sizing
+    explanation: "Sizing up to meet the minimum breaks the risk rule — $100 instead of $60 is a 67% sizing increase. Your 1% becomes 1.67%. Over many trades this compounds. The right answer: the market is telling you this setup needs a bigger account. Skip it. Find ones with tighter SLs that fit your sizing."
+
+  - id: q5
+    text: "Your account grew from $1,000 to $5,000. You've been risking $10 per trade (was 1% at $1,000). What should you do?"
+    type: mcq
+    choices:
+      - "Continue risking $10 — discipline is consistency."
+      - "Update to risking $50 per trade — 1% of current equity, not starting equity. The dollar risk scales with the account."
+      - "Risk 5% to make up for the small original size."
+      - "Quit trading."
+    correct: 1
+    topic_tag: position_sizing
+    explanation: "The 1% rule is on CURRENT equity. As account grows, dollar risk grows. Staying at $10 risk on a $5K account = 0.2% per trade, leaving meaningful growth on the table. Conversely, if account shrinks, dollar risk shrinks — built-in capital preservation."
+
+  - id: q6
+    text: "Entry $1,000, SL at $980, account $10,000, risking 1%. What's the maximum BTC quantity (or coin equivalent)?"
+    type: mcq
+    choices:
+      - "0.05 BTC"
+      - "0.5 BTC"
+      - "5 BTC"
+      - "0.005 BTC"
+    correct: 2
+    topic_tag: position_sizing
+    explanation: "Risk = $100 (1% of $10K). SL distance = ($1000-$980)/$1000 = 2%. Notional = $100 / 0.02 = $5,000. Quantity in coin = $5,000 / $1,000 = 5 BTC. If SL hits, loss = 5 × $20 = $100 = 1%. Math checks."
+
+  - id: q7
+    text: "Why is it dangerous to pick leverage by emotion (e.g., '10x feels confident enough') instead of computing notional first?"
+    type: mcq
+    choices:
+      - "Higher leverage costs more in fees."
+      - "Emotion-driven leverage skips the SL-distance math, often resulting in actual risk being 3-10× your intended risk per trade."
+      - "It's not dangerous — emotion is fine."
+      - "Exchanges penalize emotional leverage."
+    correct: 1
+    topic_tag: leverage
+    explanation: "Leverage feels like it controls risk, but it doesn't — SL controls risk. Picking '10x' without computing position size from SL distance means you might end up with a position 3-10× larger than the 1% rule allows. Your actual loss on SL becomes 3-10% of account instead of 1%. The discipline order is: SL distance → required notional → leverage falls out as 'whatever ratio gets you there'."
+
+  - id: q8
+    text: "How long should the position-size calculation take before every trade?"
+    type: mcq
+    choices:
+      - "Skip it — slow you down too much."
+      - "15-30 seconds. Quick mental math or use the position-size widget. Catches 90% of sizing errors."
+      - "20+ minutes to be safe."
+      - "Only on Mondays."
+    correct: 1
+    topic_tag: position_sizing
+    explanation: "The math is one division. 15-30 seconds. The widget makes it instant. The 'too slow' rationalization is what gets people into oversized trades. The 15 seconds you spend here saves you from the 5% risk trade that wipes you out three losses later."
+
+  - id: q9
+    text: "You decide to 'just take' a trade that requires $1,200 notional but you only computed $800. What's likely happening psychologically?"
+    type: mcq
+    choices:
+      - "You're being efficient."
+      - "FOMO is overriding discipline. The 50% sizing increase will cause downstream sizing-rule erosion."
+      - "You're following the rules."
+      - "Position-size math is optional anyway."
+    correct: 1
+    topic_tag: psychology
+    explanation: "When you rationalize breaking your sizing rule for a specific trade ('this one is different'), you're emotionally locked in. The next time it's easier to break the rule again. Within 20-50 trades you're effectively no longer following any sizing discipline. The single rule violation is a small problem; the precedent it sets is the big problem."
+
+  - id: q10
+    text: "What does the position-size widget in your trading journal do?"
+    type: mcq
+    choices:
+      - "Predicts which direction the market will go."
+      - "Computes the correct notional size from equity, risk %, entry, and SL — turning the formula into a one-click result."
+      - "Automatically places trades."
+      - "Tracks your overall P&L."
+    correct: 1
+    topic_tag: position_sizing
+    explanation: "Use the widget. Punch in equity, SL price, entry price, risk%, get back the contract count or USDT notional. Removes mental math during entries (which is exactly when you're most likely to make errors). Build it into your pre-trade routine — never trade without running through it."

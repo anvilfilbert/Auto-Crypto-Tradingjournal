@@ -8,7 +8,7 @@
       <a href="{{ url_for('training.lesson_view', slug=lesson.slug) }}">← Lesson</a>
     </div>
     <h1>Quiz — {{ lesson.title }}</h1>
-    <p class="training-quiz-meta">{{ safe_questions|length }} questions · pass at 8/10</p>
+    <p class="training-quiz-meta">{{ safe_questions|length }} questions · pass at {{ quiz.pass_threshold or 8 }}/{{ safe_questions|length }}</p>
   </header>
 
   <form id="training-quiz-form" data-slug="{{ lesson.slug }}" data-submit-url="{{ url_for('training.quiz_submit', slug=lesson.slug) }}">

@@ -1,0 +1,112 @@
+{
+  "slug": "08-leverage-iso-vs-cross",
+  "subtitle": "Leverage doesn't add risk — your stop loss does. But isolated vs cross margin can be the difference between losing one trade and losing your entire account. Pick the wrong margin mode and one bad trade liquidates ALL your other positions.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've now seen the math: leverage is downstream of notional size. But you still have one critical choice on every perp trade — isolated margin vs cross margin. This is the choice that separates \"one bad trade ruined my day\" from \"one bad trade ruined my account\".</p><p>Most retail trade in cross margin without realizing what they signed up for. By the end of this lesson, you'll know exactly when each margin mode is right and when it'll destroy you.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Quick recap — what leverage really is"
+    },
+    {
+      "type": "text",
+      "content": "<p>From earlier lessons: leverage doesn't change your potential loss in absolute terms — your SL distance does that. What leverage changes is the MARGIN you post.</p><p>$5,000 notional position can be opened with:</p><ul><li>$5,000 margin at 1× leverage</li><li>$500 margin at 10× leverage</li><li>$100 margin at 50× leverage</li><li>$50 margin at 100× leverage</li></ul><p>Same position, same SL, same outcome on price moves. Different margin posted. Higher leverage = more capital free to use elsewhere. That's it.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Restated for the third time because it matters",
+      "content": "<p>Leverage doesn't add risk. Your stop loss adds risk. A 100× leveraged position with a 0.3% SL risks 30% of margin. A 5× leveraged position with NO SL risks 100% of margin (full liquidation). The leverage number is a margin-efficiency choice, not a risk choice.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Isolated margin — risk capped per position"
+    },
+    {
+      "type": "text",
+      "content": "<p>Isolated margin means each position has its own dedicated margin pool. If the position loses everything, ONLY that margin is gone. Other positions untouched. Account balance untouched.</p><p>Example: $10,000 account. You open a $5,000 notional perp long with 10× leverage in isolated mode. The exchange takes $500 from your $10,000 and locks it to that position. The position is liquidated if the $500 runs out.</p><p>If the trade gets liquidated, you lose $500. Your remaining $9,500 is safe. You can keep trading other positions.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Cross margin — shared pool, shared risk"
+    },
+    {
+      "type": "text",
+      "content": "<p>Cross margin means ALL your positions share ONE margin pool — your entire available balance. When a position loses, the loss is debited against the pool. The exchange uses the full pool to keep the position open as long as possible.</p><p>Example: $10,000 account. You open a $5,000 notional perp long with 10× leverage in cross mode. The exchange shows $500 as 'used margin' but BEHIND the scenes, your full $10,000 is backstopping the position. If the trade loses $500, the exchange continues using your other margin to keep the position open. The position can lose $2,000, $5,000, even $9,000 before the margin pool is depleted enough to trigger liquidation.</p><p>If you have NO other positions, that's just longer survival time. The danger comes when you have OTHER positions in the same pool.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "danger",
+      "title": "The cross-margin liquidation cascade",
+      "content": "<p>You have $10,000 in cross. Five positions open, each at 10× leverage, each with $1,000 of 'used margin' = $5,000 used + $5,000 free as backstop.</p><p>One trade goes badly. Loses $5,000. Available margin depletes. To keep positions open, the exchange uses MORE of your balance — but there isn't more. So it starts auto-deleveraging — closing your OTHER positions to free up margin. Often at terrible prices because the close orders hit during the same market move that caused the original loss.</p><p>You can wake up to find ALL FIVE positions liquidated, even though four of them were profitable, because one bad trade depleted the shared margin pool.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — same setup, different margin modes"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Setup:</strong> $10,000 account. Five open longs, each $5,000 notional, $500 margin each at 10× leverage = $2,500 total margin used, $7,500 free.</p><p>A market crash hits. BTC drops 8% in 15 minutes. All five positions are 8% in the red = $400 unrealized loss each = $2,000 total unrealized loss.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Margin mode", "What happens", "Account aftermath"],
+      "rows": [
+        ["<strong>Isolated (each pos has own $500)</strong>", "Each position is at -$400 of its $500 isolated margin. None liquidated yet (still have $100 buffer each). Loss is contained per position.", "Account down $2,000 unrealized, no liquidations triggered, you can manage normally."],
+        ["<strong>Cross (shared pool)</strong>", "$2,000 unrealized loss eats free margin. Free goes from $7,500 → $5,500. Still safe, positions stay open. BUT: if drop continues to 12-15%, free margin depletes, exchange starts auto-deleveraging your positions at the worst moment.", "Risk of cascading liquidation across ALL positions even though they're correlated and the move was temporary."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "When to use isolated"
+    },
+    {
+      "type": "text",
+      "content": "<p>Default to isolated for almost all retail trading. Specifically:</p><ul><li>You're holding multiple uncorrelated or correlated positions simultaneously.</li><li>You want to know your exact worst-case loss per trade before opening.</li><li>You're testing new strategies and want to limit blast radius if you're wrong.</li><li>You're newer to trading and the discipline of \"this position max-loses $X\" is easier to enforce in isolated mode.</li><li>You have an auto-trader running positions in parallel.</li></ul><p>The trade-off: in isolated mode, each position's margin is committed. If you open 5 positions you're using more total margin than the same 5 positions in cross. For small accounts this can be a real constraint.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When cross margin is OK"
+    },
+    {
+      "type": "text",
+      "content": "<p>Cross is sometimes legitimately the right choice:</p><ul><li><strong>Hedging operations.</strong> You're holding a spot BTC position and perp-shorting BTC simultaneously to hedge. Cross lets the long unrealized gains support the short's margin requirement.</li><li><strong>Single open position only.</strong> If you're only ever going to have ONE open trade at a time, cross effectively becomes isolated (no other positions to cross-liquidate).</li><li><strong>Highly experienced traders running carefully balanced books.</strong> Pro traders sometimes use cross to maximize capital efficiency, but they're sizing precisely and watching everything continuously.</li><li><strong>Specific arbitrage strategies.</strong> Cross-pair arbitrage where two correlated positions naturally offset each other's risk.</li></ul><p>For everyone else: isolated is the right default. The capital efficiency gain from cross is small. The catastrophic risk from a cascade is huge. Bad trade-off.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Most exchanges default to cross",
+      "content": "<p>Exchanges default new accounts to cross margin because it generates more trading volume (positions stay open longer, more funding paid, more fees). It's optimal for the exchange's revenue, not your survival.</p><p>Check your settings RIGHT NOW. Most exchanges have a per-symbol margin mode setting. Set it to isolated unless you have a specific reason for cross.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Liquidation prices — quick reference"
+    },
+    {
+      "type": "text",
+      "content": "<p>Approximate liquidation distance at various leverage levels (assuming ~0.5% maintenance margin requirement):</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Leverage", "Distance to liquidation", "What \"down 5%\" means", "Practical use"],
+      "rows": [
+        ["1×", "~99% (essentially can't liquidate before zero)", "-5%", "Spot-equivalent. Newbie-safe."],
+        ["2×", "~50%", "-10%", "Very conservative."],
+        ["3×", "~33%", "-15%", "Newcomer-friendly perp leverage."],
+        ["5×", "~20%", "-25%", "Common retail choice. Reasonable."],
+        ["10×", "~10%", "<strong>-50%</strong>", "Common but risky if SL > 5% away."],
+        ["20×", "~5%", "<strong>Likely liquidated</strong>", "Need very tight SLs. Skill required."],
+        ["50×", "~2%", "<strong>Always liquidated</strong>", "Scalp/breakout only. Most retail blow up here."],
+        ["100×", "~1%", "<strong>Always liquidated</strong>", "Effectively gambling at this level."]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Two rules:</p><ol><li><strong>Use isolated margin by default.</strong> Set it now on every exchange you use. Switch to cross only when you have a specific, articulated reason.</li><li><strong>Pick leverage based on SL distance, not feeling.</strong> Wide SL → low leverage. Tight SL → higher leverage allowed. The position-size formula from lesson 7 tells you exactly what fits.</li></ol><p>Most retail blow-ups are not from picking the wrong direction. They're from cross-margin cascades or oversized positions. Both are 100% preventable with isolated margin and sizing discipline.</p>"
+    }
+  ]
+}

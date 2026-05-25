@@ -1,0 +1,123 @@
+id: "06"
+lesson_id: 6
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Your account drops 50% from its peak. What % gain do you need to break even?"
+    type: mcq
+    choices:
+      - "50% — same as the loss"
+      - "75%"
+      - "100% — you need to DOUBLE the account"
+      - "150%"
+    correct: 2
+    topic_tag: risk
+    explanation: "After a 50% loss, your account is at half its previous value. To recover, you need to double from there: 100% gain. This is the asymmetry that makes large losses existential — small losses compound benignly, big losses compound viciously."
+
+  - id: q2
+    text: "You're at 5 losses in a row. At 1% risk per trade, your account is down approximately:"
+    type: mcq
+    choices:
+      - "5% (5 × 1%)"
+      - "4.9% (compounded, slightly less than additive)"
+      - "10%"
+      - "25%"
+    correct: 1
+    topic_tag: risk
+    explanation: "1% losses compound multiplicatively: 0.99^5 = 0.951, so ~95.1% remaining = 4.9% drawdown. The compounded number is slightly less than the simple additive 5% because each subsequent loss is on a smaller base."
+
+  - id: q3
+    text: "Why is 1-2% per trade considered the 'survival' sizing rule?"
+    type: mcq
+    choices:
+      - "It's the maximum size allowed by most exchanges."
+      - "Even 10 losses in a row only drops the account 10-18%, which is recoverable both mathematically and emotionally."
+      - "It minimizes fees."
+      - "It's required by tax law."
+    correct: 1
+    topic_tag: risk
+    explanation: "Losing streaks WILL happen. At 1% risk, 10 losses = 9.6% drawdown. At 10% risk, 10 losses = 65% drawdown. Same strategy, dramatically different survival. The 1-2% rule keeps drawdowns in a range where you can think clearly and continue trading without panic or revenge."
+
+  - id: q4
+    text: "Your account is $300. Following the 1% rule, what's the maximum dollar risk per trade?"
+    type: mcq
+    choices:
+      - "$3.00"
+      - "$30.00"
+      - "$15.00"
+      - "$0.30"
+    correct: 0
+    topic_tag: position_sizing
+    explanation: "1% of $300 = $3. That's the maximum you can afford to lose on a single trade. At small accounts this feels tiny — and it should. The point is to LEARN the game with minimal damage. As account grows, dollar risk grows with it."
+
+  - id: q5
+    text: "After a 4-loss streak, a trader increases per-trade risk from 2% to 10% to 'win it back'. What's the most likely outcome over the next 5 trades, even if the strategy edge is still positive?"
+    type: mcq
+    choices:
+      - "Quick recovery — increased size accelerates wins."
+      - "Catastrophic drawdown — 1-2 more losses at 10% size deepens the hole and triggers panic decisions."
+      - "Same outcome as before — sizing doesn't matter."
+      - "Always wins back losses faster."
+    correct: 1
+    topic_tag: psychology
+    explanation: "This is the classic position-size death spiral. Increasing size after losses doesn't fix the math — it amplifies it. A few more losses at 10% can take you from -8% drawdown to -40%, at which point emotional decision-making fully dominates. Survivable losing streaks become account-killing ones purely from oversizing."
+
+  - id: q6
+    text: "Which is the MOST appropriate position sizing approach for a small starting account ($1,000+)?"
+    type: mcq
+    choices:
+      - "Fixed dollar amount (e.g., $50 per trade always) — easy to track."
+      - "Fixed percentage (e.g., 1% of current account) — automatically scales up with growth and down with drawdowns."
+      - "All-in on every trade — speed up the learning."
+      - "Random size based on conviction."
+    correct: 1
+    topic_tag: position_sizing
+    explanation: "Fixed % is the standard professional approach. It automatically protects you during drawdowns (smaller dollar risk as account shrinks) and lets you grow during winning periods. Fixed dollar can be acceptable for very small accounts ($300 or less) where 1% rounds to almost nothing, as a temporary stepping stone."
+
+  - id: q7
+    text: "The Kelly Criterion suggests a position size larger than 2%. Should you use it?"
+    type: mcq
+    choices:
+      - "Yes — always. Kelly is mathematically optimal."
+      - "Half-Kelly at most, and ONLY after you have 200+ trades of real data proving your edge. Full Kelly assumes perfect knowledge of edge — which you don't have."
+      - "Never — Kelly is just academic theory."
+      - "Only when you're already up for the year."
+    correct: 1
+    topic_tag: risk
+    explanation: "Kelly is optimal IF you know your true win rate and reward ratio with certainty. You don't. Overestimating edge leads to over-sizing and ruin. Half-Kelly (or even quarter-Kelly) is the safe practical version. The 1-2% rule is essentially safe-Kelly applied conservatively without needing the math."
+
+  - id: q8
+    text: "At 1% risk per trade, 60% win rate, 1:1 R:R, trading 5 times a week — what's the rough annual return?"
+    type: mcq
+    choices:
+      - "5% per year"
+      - "~50% per year (compounded)"
+      - "200% per year"
+      - "Always negative"
+    correct: 1
+    topic_tag: risk
+    explanation: "Expectancy per trade: 0.6×1% - 0.4×1% = +0.2%. Trading 5x/week ≈ 250 trades/year. Compounded: (1.002)^250 ≈ +50% per year. Very respectable. Reasonable risk + reasonable win-rate + reasonable R:R + consistent execution = sustainable growth. No giant sizes needed."
+
+  - id: q9
+    text: "When is it OK to risk MORE than 2% on a trade?"
+    type: mcq
+    choices:
+      - "Whenever you feel confident."
+      - "After a loss, to win it back."
+      - "On rare A+ highest-confidence setups (3-4% max, used sparingly), never as a normal practice."
+      - "Always — bigger size = bigger profits."
+    correct: 2
+    topic_tag: risk
+    explanation: "Experienced traders occasionally risk up to 3-4% on their absolute best setups — the 10-trades-a-year level of conviction. But this is a discipline practice, not a rule. Never up-size from emotion (confidence, recent losses, recent wins). Up-sizing for the wrong reasons is the most common path to ruin."
+
+  - id: q10
+    text: "If you took only ONE rule from all of trading, what should it be?"
+    type: mcq
+    choices:
+      - "Always use 100× leverage to maximize returns."
+      - "Never risk more than 2% on any single trade."
+      - "Buy the dip every time."
+      - "Trade as often as possible."
+    correct: 1
+    topic_tag: risk
+    explanation: "Position sizing is the single most important variable you control. It's the difference between accounts that survive bad streaks and accounts that die. Setup quality, entry timing, indicators — all secondary to 'how much am I risking?'. Pick 1% if you're starting; 2% only with track record. Never above unless rarely on A+ setups."

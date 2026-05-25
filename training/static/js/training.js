@@ -92,10 +92,11 @@
 
     const msg = document.createElement('div');
     msg.className = 'training-quiz-result-msg';
+    const threshold = data.pass_threshold || 8;
     if (data.passed) {
-      msg.textContent = '✓ Passed (≥8 required). The next lesson is now unlocked.';
+      msg.textContent = `✓ Passed (${threshold}/${data.total} required). The next lesson is now unlocked.`;
     } else {
-      msg.textContent = '✗ Not passed. Review the explanations above, then try again.';
+      msg.textContent = `✗ Not passed — needed ${threshold}/${data.total}. Review the explanations above, then try again.`;
     }
     resultEl.appendChild(msg);
 

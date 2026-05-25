@@ -1,0 +1,42 @@
+{
+  "slug": "11-t1-final",
+  "subtitle": "Tier 1 Final — 12 cumulative questions covering lessons 1-10. Pass with 10/12 (instead of 8/10) to unlock Tier 2.",
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "info",
+      "title": "About this final",
+      "content": "<p>This is a TIER FINAL — a cumulative check that you've absorbed the foundation of Tier 1. It's the gate to Tier 2 (Chart Reading).</p><p>The questions cover material from all 10 Tier 1 lessons. If you struggle on questions about a specific topic, that's a signal to review that lesson before retrying.</p><p>Higher pass threshold than regular lessons: <strong>10/12 required</strong>. The 10 lessons in Tier 1 are the survival foundation — getting these wrong in real trading is expensive. Better to redo the final than to advance with gaps.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What Tier 1 covered"
+    },
+    {
+      "type": "table",
+      "headers": ["#", "Lesson", "Core idea"],
+      "rows": [
+        ["1", "Spot vs Futures vs Perpetuals", "Three completely different battlefields — know which one you're on"],
+        ["2", "Picking a broker", "The broker shapes every trade you ever take; pick on fundamentals, not marketing"],
+        ["3", "Order types", "Default to limit; OCO for exits; reduce-only on stops"],
+        ["4", "Long vs Short", "Shorting doubles your opportunity set; on perps the math is symmetric"],
+        ["5", "Fees, funding, slippage", "Real cost of execution; 15-20% of gross profit can disappear silently"],
+        ["6", "Risk per trade", "1-2% rule is mathematical survival, not conservatism"],
+        ["7", "Position sizing math", "notional = (equity × risk%) / SL distance %"],
+        ["8", "Leverage iso vs cross", "Isolated by default; cross only with explicit reason"],
+        ["9", "Psychology basics", "FOMO/revenge/tilt destroy more accounts than bad strategies"],
+        ["10", "Paper → small → full progression", "Skip phases and pay tuition with real money"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>If you pass the quiz at 10/12 or better, Tier 2 (Chart Reading) unlocks — candle anatomy, support/resistance, trendlines, structure, multi-timeframe.</p><p>If you don't pass, the explanations will show you which Tier 1 areas need more time. Re-take after reviewing. There's no shame in taking the final 2-3 times — these concepts are load-bearing for everything that follows.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Before you start the final",
+      "content": "<p>Take 5 minutes to quickly scan the headlines of lessons 1-10 in the path view. Refresh the structure in your head. The quiz isn't tricky but it does assume you can connect concepts across lessons. Then click \"Take the quiz\" below.</p>"
+    }
+  ]
+}

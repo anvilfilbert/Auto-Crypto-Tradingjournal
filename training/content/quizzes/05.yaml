@@ -1,0 +1,123 @@
+id: "05"
+lesson_id: 5
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "A market buy of $5,000 BTC with 0.05% taker fee and ~$5 of slippage costs you approximately:"
+    type: mcq
+    choices:
+      - "$2.50 total"
+      - "$7.50 total ($2.50 fee + $5 slippage)"
+      - "$25 total"
+      - "Free — market orders have no fee"
+    correct: 1
+    topic_tag: costs
+    explanation: "$5,000 × 0.05% = $2.50 fee. Plus $5 of slippage from the order consuming liquidity. Total ~$7.50. For the same trade as a maker limit order, the cost would be ~$1 (just the maker fee, no slippage)."
+
+  - id: q2
+    text: "You hold a perp long position for 3 days through 9 funding payments at +0.05% per 8h. Notional position is $10,000. Total funding cost?"
+    type: mcq
+    choices:
+      - "$0 (funding doesn't compound)"
+      - "$5 ($10,000 × 0.05%)"
+      - "$45 ($10,000 × 0.05% × 9 payments)"
+      - "$450 (some other formula)"
+    correct: 2
+    topic_tag: funding
+    explanation: "Funding is paid on NOTIONAL position size at each 8h payment. 9 payments × $10,000 × 0.05% = $45. Across 7 days at the same rate it's $105. Funding is a real cost that compounds with hold duration."
+
+  - id: q3
+    text: "On a $100 gross profit trade, you paid $16 in fees + funding + slippage. What's your cost ratio?"
+    type: mcq
+    choices:
+      - "1.6%"
+      - "16% (you gave up 16% of gross to costs)"
+      - "84% (your net is 84% of gross)"
+      - "1600%"
+    correct: 1
+    topic_tag: costs
+    explanation: "Cost ratio = costs / gross profit = $16 / $100 = 16%. Anything above 10-15% means execution is leaking edge. Optimizing (limit orders, lower-fee venue, favorable funding side) can drop this to 1-3% on the same setup."
+
+  - id: q4
+    text: "Same trade, same setup, two execution choices: market taker order vs limit maker order. What's the typical difference in cost ratio?"
+    type: mcq
+    choices:
+      - "Negligible — both are about the same."
+      - "Limit/maker can be 5-15x cheaper than market/taker on the same trade (no slippage + lower fee + sometimes earn funding)."
+      - "Market orders are always cheaper because they fill faster."
+      - "There's no difference."
+    correct: 1
+    topic_tag: costs
+    explanation: "Maker fee (~0.02%) vs taker (~0.05%) = 2.5× lower fees. Plus market orders have slippage; limits don't. The cost delta on a typical $5K trade can be $5-15 → 5-15× cheaper. Compounded across hundreds of trades, this is significant."
+
+  - id: q5
+    text: "You short BTC during a period of sustained +0.08% funding (longs heavy). How does funding affect your short position?"
+    type: mcq
+    choices:
+      - "You pay 0.08% in funding every 8h while short."
+      - "You EARN 0.08% in funding every 8h while short — longs are paying shorts."
+      - "Shorts don't have funding."
+      - "Funding only applies to spot positions."
+    correct: 1
+    topic_tag: funding
+    explanation: "Positive funding flows FROM longs TO shorts. So when you're short and funding is positive, you earn. This can be a meaningful tailwind: +0.08% × 3 payments/day × 7 days = +1.68% earned per week on notional, just for holding."
+
+  - id: q6
+    text: "You want to market-buy $50,000 of a mid-cap alt coin (top 50 by market cap). The order book shows the top 3 levels covering only $15,000 of liquidity. What should you do?"
+    type: mcq
+    choices:
+      - "Place the market order — slippage doesn't matter."
+      - "Break the order into smaller chunks (e.g., 5× $10K limits over 30 min), OR use a limit order at a level the book can absorb, OR find a more liquid venue."
+      - "Wait for the price to move first, then market-buy."
+      - "Use 100× leverage to reduce the notional."
+    correct: 1
+    topic_tag: costs
+    explanation: "A market order through a thin book will execute at progressively worse prices — potentially 1-3% slippage. The right move is to size to liquidity: break into chunks (each absorbed by the book), or use a limit order at a deeper level, or trade where liquidity exists. This single habit saves 1-3% on most alt entries."
+
+  - id: q7
+    text: "Which of these is a HIDDEN cost (doesn't appear on the fee schedule)?"
+    type: mcq
+    choices:
+      - "Spot trading fee"
+      - "Withdrawal fee"
+      - "Stablecoin depeg risk — your USDT could become worth less than $1, even briefly"
+      - "Funding rate"
+    correct: 2
+    topic_tag: costs
+    explanation: "All others are explicit line items. Stablecoin depeg is a risk you carry by holding USDT/USDC vs actual dollars. While rare, it has happened (USDC dropped to $0.88 briefly in March 2023). Diversifying stablecoins reduces the exposure. Not on any fee schedule — just real."
+
+  - id: q8
+    text: "When does slippage WORST hurt traders?"
+    type: mcq
+    choices:
+      - "On large orders in major pairs during normal trading hours."
+      - "On flash crashes / cascades — stop-market orders can fill 3-5% past the trigger price during volatility."
+      - "When using limit orders."
+      - "On weekends when markets are closed."
+    correct: 1
+    topic_tag: costs
+    explanation: "During flash crashes, liquidity providers pull quotes and the order book gets sparse. A stop-market triggered into that environment can fill at terrible prices — sometimes 3-5%+ past the trigger. This is the worst-case for slippage and why some traders use mental stops + manual close instead of automated SLs in volatile environments."
+
+  - id: q9
+    text: "How can you find out your real cost-to-PnL ratio?"
+    type: mcq
+    choices:
+      - "Trust the exchange's monthly summary."
+      - "Take last 50 closed trades. Sum gross PnL. Sum total fees + funding paid. Cost ratio = costs / gross."
+      - "Estimate it based on what feels right."
+      - "Only big institutional traders need to track this."
+    correct: 1
+    topic_tag: costs
+    explanation: "The exchange's summary often only shows fees, not slippage or funding effects. The right way: pull your trade history, calculate gross PnL trade-by-trade (entry vs exit), sum all costs (fee + slippage estimate + funding), compute ratio. Most retail traders are shocked the first time they do this — usually 15-30% leaking."
+
+  - id: q10
+    text: "Best single execution habit to adopt that costs nothing but saves the most fees?"
+    type: mcq
+    choices:
+      - "Trade more often to reach higher fee tiers."
+      - "Default to limit orders instead of market orders for entries. Market only when you genuinely need an instant fill."
+      - "Only trade once a month to minimize fee count."
+      - "Use the highest leverage available so fees become a smaller percentage."
+    correct: 1
+    topic_tag: costs
+    explanation: "Limit orders save on BOTH fee rate (maker vs taker) AND slippage (zero vs whatever the book gives). The cost is patience — some limits won't fill. But the ones that do are at better prices with lower costs. Across hundreds of trades this is the single biggest cost optimization most retail can make for free."

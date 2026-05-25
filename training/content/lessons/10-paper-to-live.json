@@ -1,0 +1,109 @@
+{
+  "slug": "10-paper-to-live",
+  "subtitle": "Backtest passes don't mean paper trade passes. Paper passes don't mean live trade passes. Each step exposes different failure modes. Skip the progression and you pay tuition with real money. The 50/50/200 rule.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Many new traders read a few books, watch some YouTube, then deposit $1,000 and start trading immediately. Most lose that $1,000 inside 3-6 months. They might assume their strategy was bad, but usually the strategy was fine — they just skipped the apprenticeship phase that catches execution errors before they cost real money.</p><p>The professional progression has three phases, each with a specific purpose. Skip any of them and you'll discover its lessons by paying for them.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The three phases"
+    },
+    {
+      "type": "table",
+      "headers": ["Phase", "What it tests", "What it can't test", "Duration"],
+      "rows": [
+        ["<strong>Backtest</strong>", "Whether the strategy logic has positive expectancy on historical data", "Real-time emotion, execution slippage, your discipline under pressure", "Days (data is fast)"],
+        ["<strong>Paper trade</strong>", "Whether you can execute the strategy in real-time without errors; UI/timing/discipline practice", "Real money emotion, real fills, real slippage, account-protection psychology", "50+ trades minimum"],
+        ["<strong>Small-size live</strong>", "Whether the strategy works with real fills + your emotional response to real money", "Performance at scale (different psychology with bigger positions)", "50+ trades minimum"],
+        ["<strong>Full-size live</strong>", "Whether your discipline survives larger position sizes; whether your strategy scales", "—", "Ongoing"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Backtest — necessary but very insufficient"
+    },
+    {
+      "type": "text",
+      "content": "<p>Backtesting is running your strategy on historical data to see how it would have performed. Output: win rate, average R:R, max drawdown, etc.</p><p>Useful for:</p><ul><li>Filtering bad ideas before wasting real money on them. A strategy that has negative expectancy on history won't suddenly have positive expectancy in live.</li><li>Setting expectations: \"this strategy averages 60% win rate with 1:1.5 R:R\" gives you a baseline.</li><li>Identifying robustness: does the strategy work across multiple symbols and time periods, or only on cherry-picked data?</li></ul><p>Useless for:</p><ul><li>Predicting your real-time PnL. Markets change. Your strategy's historical edge might have come from a regime that no longer exists.</li><li>Testing emotional execution. You weren't there. You didn't feel the drawdown.</li><li>Capturing real slippage and fees. Most backtests assume perfect execution — real fills are worse.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Backtest danger — overfitting",
+      "content": "<p>It's easy to tune a strategy until it looks great on historical data. \"Oh, if I add this filter and that filter, it would have made +200% last year.\" This is over-fitting — you've adapted the strategy to the noise of past data, not the signal. Run the same strategy on a DIFFERENT period or DIFFERENT symbol and it falls apart.</p><p>The cure: walk-forward analysis. Train on one period, test on a different held-out period. If performance only works in the training window, the strategy is over-fitted. The journal has walk-forward tooling on the Analysis page — use it.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Paper trade — execution practice without money risk"
+    },
+    {
+      "type": "text",
+      "content": "<p>Paper trading is executing your strategy on a simulated account with fake money but REAL-TIME market data. Most exchanges offer this. The journal has one built in.</p><p>What paper trading actually tests:</p><ul><li><strong>Execution discipline.</strong> Are you taking the trades your strategy says, when it says? Or are you skipping, second-guessing, or adding ones not in the plan?</li><li><strong>UI/timing.</strong> Can you place orders fast enough? Are your SL/TP setups working correctly? Are you using the right order types?</li><li><strong>Real-time pattern recognition.</strong> A backtest gave you 1000 historical setups. Paper trading is one setup at a time, in real time, with no benefit of hindsight.</li><li><strong>Daily routine.</strong> When do you check the market? When do you stop? Are you tracking trades in the journal?</li></ul>"
+    },
+    {
+      "type": "text",
+      "content": "<p>What paper trading CAN'T test:</p><ul><li><strong>Real fills.</strong> Paper trading usually assumes you got the price you wanted. Live trading you might not.</li><li><strong>Money emotion.</strong> Watching a paper account drop 10% feels different from watching real $1,000 drop 10%. The emotional response is muted in paper.</li><li><strong>Psychological scale.</strong> Paper trading 1 BTC and live trading 1 BTC are different psychological tasks. Real money triggers loss-aversion in ways paper doesn't.</li></ul><p>Paper trading is necessary BUT NOT SUFFICIENT. Don't skip it (you'll make execution errors with real money). But don't trust it to predict your live performance either.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Small-size live — where reality begins"
+    },
+    {
+      "type": "text",
+      "content": "<p>This is the most important phase, and it's the one most beginners skip. Small-size live means: real money, real fills, real fees, real emotion — but at a size where mistakes don't damage you materially.</p><p>What \"small-size\" means depends on your situation, but generally:</p><ul><li>1% of the capital you'd eventually want to deploy.</li><li>Or: small enough that losing 25% of it would be an annoyance, not a setback.</li><li>For most retail starting out: $100-500 of real risk capital.</li></ul>"
+    },
+    {
+      "type": "text",
+      "content": "<p>What small-size live tests:</p><ul><li>Are your paper-trading habits sustainable when there's real money at stake?</li><li>Do your fills match your expectations? (Slippage, fees, funding.)</li><li>Do you become emotional after small losses? If yes, you'll be wildly emotional at larger sizes.</li><li>Does your strategy actually work with the real frictions that backtest didn't capture?</li></ul><p>Expected outcome: many traders are profitable in backtest, profitable in paper, then BREAK-EVEN OR LOSING in small-size live. That's diagnostic. It means there's something in real execution that you weren't capturing. Common causes: emotional early exits, position-sizing creep, fee/funding underestimation.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Full-size live — only after small-size shows consistency"
+    },
+    {
+      "type": "text",
+      "content": "<p>Scale up only after 50+ trades at small size show consistent execution (not necessarily profit — execution quality matters more than result at this stage). Sizing should grow gradually, not all at once. A common progression:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Phase", "Approximate duration / # trades", "What you're learning"],
+      "rows": [
+        ["Backtest", "1-2 weeks", "Does the strategy work historically?"],
+        ["Paper trade", "50+ trades", "Can I execute it cleanly in real-time?"],
+        ["Small-size live ($100-500)", "50+ trades", "Does it work with real fills + my emotional response?"],
+        ["Half-size live", "100+ trades", "Can I maintain discipline at larger sizes?"],
+        ["Full-size live", "Ongoing", "Production trading"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The 50/50/200 rule",
+      "content": "<p>A safe progression: <strong>50 paper trades, 50 small-size live trades, then 200+ trades at scaled sizing before considering full deployment.</strong> That's roughly 6-12 months of disciplined activity for someone trading a few times per week.</p><p>If that feels slow, ask yourself: is your edge so urgent that 6 months of preparation will cost you a fortune? The opposite is true — 6 months of preparation might save you the $5,000-50,000 of tuition that rushing usually costs.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When to step BACK in the progression"
+    },
+    {
+      "type": "text",
+      "content": "<p>The progression isn't one-way. You should step back when:</p><ul><li><strong>You've had 5+ consecutive losing days in live.</strong> Drop back to small-size or paper for 50+ trades. Re-confirm your edge in a low-stakes environment before scaling back up.</li><li><strong>You changed something in your strategy.</strong> New filter, new indicator, new market — re-test in paper first. The 50/50/200 progression applies to each material change.</li><li><strong>Your account dropped 25% from peak.</strong> Something's broken. Drop to small-size, rebuild discipline, re-verify your edge before re-scaling.</li><li><strong>You're trading a new asset class.</strong> Crypto vs forex vs equities have different rhythms. The strategy might not transfer cleanly.</li></ul><p>Stepping back isn't shame. It's how survival traders maintain their edge over years. The traders who blow up are often the ones who refuse to step back when warning signs appear.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The hardest part — emotional patience"
+    },
+    {
+      "type": "text",
+      "content": "<p>If you've made it this far in Tier 1, you understand the rules: risk 1-2%, use isolated margin, follow the position size formula, manage emotions with process. The system is laid out.</p><p>The hardest part isn't learning these rules. It's EXECUTING them when other people on social media are bragging about 200% gains and you're sitting on small-size discipline learning the craft. The temptation to skip ahead is constant.</p><p>The hard truth: people bragging about 200% gains in a week are usually one bad trade away from -90%. The trader who finishes year 1 with a +15% return, having followed every rule, is on a path that can compound to wealth. The trader who's up 200% having broken every rule is on a path to a viral blow-up story.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Backtest → Paper → Small → Half → Full. 50 trades minimum per stage. 6-12 months end-to-end for a normal trading frequency. Step back when warning signs appear.</p><p>You'll be tempted to skip phases. Don't. The cost of \"skipped phases\" is paid in real money, and it's usually higher than your starting account.</p><p>Slow is smooth. Smooth is consistent. Consistent is profitable. The path is boring on purpose — boring survives.</p>"
+    }
+  ]
+}

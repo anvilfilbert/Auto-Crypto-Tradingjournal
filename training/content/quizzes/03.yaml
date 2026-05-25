@@ -1,0 +1,123 @@
+id: "03"
+lesson_id: 3
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Your stop loss is set as a STOP-LIMIT at trigger $58,500, limit $58,400. BTC crashes 5% in 30 seconds, blowing past both levels to $56,000. What happens?"
+    type: mcq
+    choices:
+      - "Your position closes at $58,400 — limit guarantees that price."
+      - "Your position closes at $56,000 — limit doesn't matter in a fast move."
+      - "Your stop triggers but the limit order doesn't fill (price gapped past it). You're still holding the losing position at $56,000."
+      - "Your position auto-closes at the trigger price ($58,500)."
+    correct: 2
+    topic_tag: orders
+    explanation: "Stop-limit is the protect-the-price option. When price gaps THROUGH the limit, the limit order sits unfilled. You're still long, now at a much worse price. This is exactly why stop-MARKET is usually preferred for SL — accept some slippage to guarantee you're out."
+
+  - id: q2
+    text: "You want to enter long BTC only if price breaks above $62,000 resistance. Which order type fits best?"
+    type: mcq
+    choices:
+      - "Limit buy at $62,000"
+      - "Stop-buy at $62,001 (trigger above resistance)"
+      - "Market buy now"
+      - "OCO with TP and SL at entry"
+    correct: 1
+    topic_tag: orders
+    explanation: "A stop-buy above resistance only triggers if the breakout actually happens. A limit-buy at $62,000 would fill IMMEDIATELY (since current price is below $62,000) — defeating the breakout filter. Market buy enters now, not on breakout. OCO is for exits."
+
+  - id: q3
+    text: "You're long BTC at $60,000. You want TP at $62,000 and SL at $59,000, and you don't want to manually watch the position. What's the cleanest setup?"
+    type: mcq
+    choices:
+      - "Place two separate orders — TP limit at $62,000 and SL stop at $59,000."
+      - "Use an OCO (One-Cancels-Other) pairing the TP limit and SL stop."
+      - "Manually watch the chart and exit by hand when either level hits."
+      - "Place a market order now to avoid the question."
+    correct: 1
+    topic_tag: orders
+    explanation: "OCO is purpose-built for this: when one leg fills, the other auto-cancels. Two separate orders also works but you risk both filling in a flash spike (TP fills, then SL also fills before you cancel it = double exit). OCO removes that risk."
+
+  - id: q4
+    text: "Which order flag prevents your stop loss from accidentally OPENING a new position in the opposite direction?"
+    type: mcq
+    choices:
+      - "Post-only"
+      - "Reduce-only"
+      - "GTC (Good-Till-Cancel)"
+      - "IOC (Immediate-Or-Cancel)"
+    correct: 1
+    topic_tag: orders
+    explanation: "Reduce-only flags ensure the order can only DECREASE an existing position, never flip it or add to it. Essential safety net for stop losses where a typo on quantity could otherwise open a position in the wrong direction."
+
+  - id: q5
+    text: "You place a limit buy order at $60,000 when the current ask is $60,050. The order fills. What fee category applies?"
+    type: mcq
+    choices:
+      - "Taker — you bought immediately."
+      - "Maker — your limit added liquidity to the book and someone else hit it (a seller crossed the spread)."
+      - "No fee — first trade is free."
+      - "Both maker and taker."
+    correct: 1
+    topic_tag: costs
+    explanation: "Your limit at $60,000 is below the current ask, so it sat on the bid side of the book waiting. When a seller's order crossed the spread to hit your bid, they were the taker. You were the maker."
+
+  - id: q6
+    text: "Why is placing a stop loss at exactly $60,000 (a round number) risky?"
+    type: mcq
+    choices:
+      - "Exchanges charge extra fees on round-number orders."
+      - "Round-number levels attract clusters of retail stops, making them prime hunting grounds for whales/MM who push price just past them."
+      - "Round numbers are illegal as stop loss prices."
+      - "Stops at round numbers fill more slowly."
+    correct: 1
+    topic_tag: orders
+    explanation: "Round numbers ($60,000, $50,000, $1.00) are psychological magnets. Many retail traders set stops there. Smart money knows this and sometimes pushes price just past these levels to trigger the stops, then reverses. Placing your SL slightly below ($59,950) avoids being in the herd."
+
+  - id: q7
+    text: "Which scenario is the MOST appropriate use of a market order?"
+    type: mcq
+    choices:
+      - "Opening a new long position when you have 10 minutes to decide."
+      - "Closing a losing position that's bleeding fast and you need to be out NOW."
+      - "Adding to a long over the next hour."
+      - "Setting a take-profit ahead of price."
+    correct: 1
+    topic_tag: orders
+    explanation: "Market orders cost more (slippage + taker fee) but guarantee instant fills. The right use case is when the cost of waiting > the cost of slippage. Closing a bleeding loser is exactly that scenario — every minute you wait, the loss grows. The other scenarios all benefit from limit orders."
+
+  - id: q8
+    text: "What's the difference between a stop-MARKET and a stop-LIMIT order, and why is stop-MARKET typically preferred for stop losses?"
+    type: mcq
+    choices:
+      - "Stop-market is cheaper. Stop-limit costs more in fees."
+      - "Stop-market becomes a market order on trigger (slippage possible but ALWAYS fills); stop-limit becomes a limit order (no slippage but may NOT fill if price gaps through). For SL you want guaranteed exit, accepting slippage."
+      - "Stop-market only works in trending markets; stop-limit only in range markets."
+      - "There's no meaningful difference."
+    correct: 1
+    topic_tag: orders
+    explanation: "The whole purpose of an SL is to GUARANTEE you exit a losing position. Stop-market does that — worst case you exit with some slippage during a fast move. Stop-limit risks NOT filling at all if price gaps past the limit, leaving you holding an even bigger loss. Pay the slippage; guarantee the exit."
+
+  - id: q9
+    text: "The 'post-only' flag does what?"
+    type: mcq
+    choices:
+      - "Posts the order publicly on social media."
+      - "Forces the order to be cancelled if it would execute immediately as a taker."
+      - "Posts the trade results to your trading journal."
+      - "Allows the order to only fill after market close."
+    correct: 1
+    topic_tag: orders
+    explanation: "Post-only guarantees you'll be a MAKER (paying lower fees or earning rebates). If your limit price would cross the current spread and become a taker, the order is rejected entirely instead of converting. Used by fee-sensitive market makers and high-frequency traders."
+
+  - id: q10
+    text: "If your trading platform supports OCO orders, what's the smartest moment to set one up?"
+    type: mcq
+    choices:
+      - "After your first take-profit fills — manage the rest manually."
+      - "Immediately after entering a position, before walking away."
+      - "Only if the trade goes against you in the first hour."
+      - "Never — OCO orders are unreliable."
+    correct: 1
+    topic_tag: orders
+    explanation: "The moment after entering is when you're most disciplined about the trade plan (TP + SL both clearly defined in your head). Set the OCO RIGHT THEN, while the plan is fresh. Then walk away. Otherwise you'll find excuses to move SL or take profit early — emotion creeps in over hours of watching."

@@ -1,0 +1,123 @@
+id: "09"
+lesson_id: 9
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "You wanted to long BTC at $60K but didn't. Now it's at $63K and moving up fast. You feel desperate to get in. What's the smartest action?"
+    type: mcq
+    choices:
+      - "Market-buy immediately at $63K — don't miss the move."
+      - "Step away from the screen for 15 minutes. The urge to chase is FOMO. If a valid setup forms later, take it then. If not, skip the move."
+      - "Use higher leverage to make up for the worse entry."
+      - "Short instead — surely it'll reverse."
+    correct: 1
+    topic_tag: psychology
+    explanation: "FOMO entries are at worse prices, with worse risk:reward, with higher stop-out rates. Stepping away lets the urge fade. Often you'll come back and realize the chase wasn't worth it. If you missed the entry, you missed it — there will be other setups."
+
+  - id: q2
+    text: "You take a clean setup. SL hits, account down 1%. You feel an urge to immediately enter another trade to win it back. What does the 'no trades after loss' rule say?"
+    type: mcq
+    choices:
+      - "Take another trade — quick recovery."
+      - "Walk away for at least 30 minutes (24h if the loss was 2× normal). Let the emotional response fade before the next decision."
+      - "Trade more aggressively to make it back."
+      - "Switch to a different strategy."
+    correct: 1
+    topic_tag: psychology
+    explanation: "The 30-min cooling-off rule prevents the revenge-trade cascade. The next trade you take in that 30-min window will almost certainly be lower-quality than your A-setups — driven by emotion, not analysis. Walk away. Trade your normal setups when calm returns."
+
+  - id: q3
+    text: "Which of these is a sign you're on TILT?"
+    type: mcq
+    choices:
+      - "Sizing larger than usual without explicit reason; checking prices every 30 seconds; entering setups that don't meet your normal criteria."
+      - "Taking your standard setups at standard sizing."
+      - "Skipping trades that don't fit your plan."
+      - "Sticking to your daily loss limit."
+    correct: 0
+    topic_tag: psychology
+    explanation: "Tilt looks like deviation from your normal process — bigger sizes, weaker setups, hyperactive monitoring, emotional investment in being right. The others are signs of DISCIPLINE, which is the opposite. Recognizing tilt from inside is hard; recognizing the symptoms is the path."
+
+  - id: q4
+    text: "A trader has 4 losses in a row, then enters a 10%-risk YOLO trade to 'make it back'. What's almost certainly happening psychologically?"
+    type: mcq
+    choices:
+      - "Smart risk management — bigger position for higher reward."
+      - "Classic revenge-trading death spiral. The 10% risk violates sizing rules; the emotional motivation guarantees worse trade selection. The cascade typically continues until the account is in serious damage."
+      - "Following a sophisticated Kelly-criterion approach."
+      - "Standard pro practice."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Up-sizing after losses is the textbook death spiral. The 10% trade has no relationship to the strategy's normal expectancy. It's pure emotion: 'recover the loss in one trade'. Mathematically the math is worse (bigger SL = bigger loss). Emotionally it's worse (more stress, more next-trade tilt). The only thing it accomplishes faster: account destruction."
+
+  - id: q5
+    text: "What's the 'journal test' for detecting potential tilt before placing a trade?"
+    type: mcq
+    choices:
+      - "Read your journal from last year."
+      - "Write down WHY you're taking this trade BEFORE entering. If you can't articulate a setup-based reason in one sentence, you're probably on tilt — don't trade."
+      - "Journal only after the trade."
+      - "Track only the wins."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Forced articulation cuts through emotional fog. If you can write 'breakout above 60K resistance with retest confirmation, SL below the retest low' — that's a real setup. If you write 'I think it'll go up' or 'I need to make money' — that's emotion. The act of writing it down catches the impulse before the click."
+
+  - id: q6
+    text: "A trader is down 3% on the day after their daily stop limit. They feel certain the next setup is 'the one that comes back'. What should they do?"
+    type: mcq
+    choices:
+      - "Take the trade — they have a strong feeling."
+      - "STOP. Hard daily limits exist because emotion is highest after consecutive losses. Tomorrow they can decide if the system is broken or it was a bad day. Trading more now usually deepens the hole."
+      - "Increase position size since they're certain."
+      - "Move the daily limit higher and continue."
+    correct: 1
+    topic_tag: psychology
+    explanation: "The whole point of a hard daily limit is to STOP you from making decisions when emotion is highest. 'I feel certain' after 3% drawdown is exactly the emotional state where decisions go bad. Step away. Use the night to reflect. The market is open every day; one missed setup tomorrow is cheaper than continuing into a worse drawdown today."
+
+  - id: q7
+    text: "Why do FOMO entries typically have WORSE risk:reward than the original missed entry?"
+    type: mcq
+    choices:
+      - "FOMO doesn't affect math."
+      - "FOMO entries are usually at worse prices (price already moved), with sloppier SL placement (rushed), in the middle of a move where pullbacks are normal — resulting in higher stop-out rates on smaller potential reward."
+      - "FOMO entries are at the same prices as planned entries."
+      - "FOMO actually helps."
+    correct: 1
+    topic_tag: psychology
+    explanation: "FOMO entries are MID-MOVE. The good entry was at the level. By the time FOMO drives you to enter, the price has moved 2-5% past the level, your SL is now further from a logical structure, and any normal pullback can take you out. Same direction, worse math, lower expectancy. The math doesn't care about your feelings."
+
+  - id: q8
+    text: "The 'pre-planned setups' practice means:"
+    type: mcq
+    choices:
+      - "Before each trading session, identify 3-5 specific setups you'd take (with SL, TP, entry zone written). Anything not on the list = not a trade."
+      - "Plan to take many random trades."
+      - "Only trade once per week."
+      - "Copy trades from social media."
+    correct: 0
+    topic_tag: psychology
+    explanation: "Pre-planning is the most effective defense against tilted trading. When the setup criteria are written in advance (when your brain is calm), the only decision during the session is 'does this trade match the criteria?'. This filters out emotional setups before they happen. Anything outside the pre-planned list is automatically rejected."
+
+  - id: q9
+    text: "Are 'gut feelings' useful in trading?"
+    type: mcq
+    choices:
+      - "Always — gut feelings are pattern recognition."
+      - "Mostly noise (95% of the time). One exception: persistent unease about a setup that meets your written criteria might be pattern recognition firing below conscious awareness — worth noting in your journal but still risky."
+      - "Never — emotions have no place."
+      - "Only on Fridays."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Most 'gut feelings' are over-fitted narratives — your brain rationalizing what you already wanted to do. The one exception is when your written system says GO but you feel persistent, articulable unease. Sometimes that's experience speaking. But this should be RARE — default to the system. If you're skipping 'system go' signals based on gut weekly, you have a discipline problem, not pattern recognition."
+
+  - id: q10
+    text: "Will FOMO, revenge, and tilt disappear once you become an experienced trader?"
+    type: mcq
+    choices:
+      - "Yes — they're beginner-only problems."
+      - "No — even experienced pros have them. The difference is they have PROCESS (pre-planned setups, cooling-off rules, hard limits, journaling) that prevents emotional impulses from becoming trades."
+      - "Yes — emotions naturally fade over time."
+      - "Only revenge trading goes away."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Trading emotions are wired in — your brain didn't evolve to handle this kind of decision-making in this kind of environment. Experience doesn't remove the impulses; it teaches you to NOTICE them and have rules that prevent them from causing damage. The best traders aren't emotion-free; they're process-disciplined. That's what makes them durable."

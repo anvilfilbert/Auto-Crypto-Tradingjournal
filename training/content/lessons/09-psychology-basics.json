@@ -1,0 +1,92 @@
+{
+  "slug": "09-psychology-basics",
+  "subtitle": "Most traders who fail don't fail because of bad systems. They fail because they couldn't execute their own system under pressure. FOMO, revenge trading, and tilt are the three errors that destroy more accounts than any chart pattern. Recognizing them is the entire game.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You can have the best entry signals in the world and still blow up your account. Because between the signal and the trade is a brain — and the brain is wired to do things that hurt your performance in trading.</p><p>This lesson is about the three most common emotional errors. Each one looks slightly different but they share a structure: you DEVIATE from your system because of an emotion, and the deviation costs you more than the original setup would have.</p><p>Knowing these errors by name is half the cure. The other half is having a process that prevents them from triggering decisions.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Error #1 — FOMO (Fear Of Missing Out)"
+    },
+    {
+      "type": "text",
+      "content": "<p>FOMO is the urge to enter a trade because the price is already moving in the direction you thought it would — and you're afraid of missing more of the move.</p><p><strong>How it looks:</strong></p><ul><li>BTC starts a strong rally. You wanted to long earlier at $60K but didn't pull the trigger. Now it's $63K. You feel desperate to get in before it goes higher.</li><li>You market-buy at $63K. SL placement is sloppy because you're rushing.</li><li>Price pulls back to $61K (normal retracement). You're stopped out for a 3% loss.</li><li>Price then resumes the rally to $68K — the move you originally identified. You got the direction right and still lost money.</li></ul><p><strong>Why it hurts:</strong> FOMO entries are typically at WORSE prices, with WORSE risk:reward, and have HIGHER stop-out rates because the entry is mid-move where pullbacks happen. You're essentially paying a premium for missing the original entry — paying with worse trade math.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "FOMO triggers",
+      "content": "<p>FOMO is loudest when:</p><ul><li>You missed a setup you predicted correctly — \"I knew this was going up\"</li><li>You're seeing others on social media bragging about the move</li><li>Price is making new highs/lows that look like the move is just starting</li><li>You haven't traded in a while and feel \"behind\"</li></ul><p>None of these are reasons to take a trade. They're reasons to STEP AWAY for 15 minutes until the urge fades.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Error #2 — Revenge trading"
+    },
+    {
+      "type": "text",
+      "content": "<p>Revenge trading is the urge to immediately re-enter the market after a loss, to \"win the money back\".</p><p><strong>How it looks:</strong></p><ul><li>You take a clean setup. SL hits. You're down 1%. Annoyed but no real damage.</li><li>You feel an urge to find another trade RIGHT NOW. The market \"owes you\" something.</li><li>You enter a marginal setup at oversized risk (3% instead of 1%) because you want to \"make it back fast\".</li><li>SL hits again. Now you're down 4% in an hour.</li><li>The pattern continues. Two hours later, you're down 12%.</li></ul><p><strong>Why it hurts:</strong> The market doesn't owe you anything. Your previous loss has zero predictive value for the next trade. By re-engaging immediately, you skip the cooling-off period that would let you trade your normal A-setups instead of B and C setups. And oversizing to \"win it back\" violates your sizing rules — the death spiral kicks in.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "danger",
+      "title": "The \"no trades after loss\" rule",
+      "content": "<p>Hard rule used by many disciplined traders: <strong>no trades for at least 30 minutes after any loss</strong>. Walk away from the screen. Make coffee. Don't look at charts. The point isn't superstition — it's giving the emotional response time to fade so the next trade is made with your rational system, not your wounded ego.</p><p>For losses bigger than 2× your usual: no trades for 24 hours. The risk of a tilt-driven cascade is too high.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Error #3 — Tilt"
+    },
+    {
+      "type": "text",
+      "content": "<p>Tilt is a poker term for emotional dysregulation that affects decision-making over an extended period. In trading: after enough losses (or sometimes after BIG wins), your judgment degrades and you start making decisions you'd never make when calm.</p><p><strong>Signs you're on tilt:</strong></p><ul><li>You're sizing larger than usual without explicit reason.</li><li>You're entering trades that don't meet your normal criteria.</li><li>You're holding losers longer than your SL allows, hoping they come back.</li><li>You're closing winners early because you're afraid they'll reverse.</li><li>You're checking the price every 30 seconds.</li><li>You feel emotionally invested in the market \"being wrong\".</li><li>You're trading symbols you don't normally trade.</li></ul>"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>How tilt builds:</strong> usually after 3-5 losses in a row, or after one large loss. The brain starts treating the market as an opponent. Decisions become reactive instead of planned. You make trades you'll regret 2 hours later.</p><p><strong>Why it hurts:</strong> tilted trades have negative expectancy. You're trading worse than random because you're forcing trades that don't exist. The damage from a tilted session can wipe out weeks of gains.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Recognizing tilt in yourself",
+      "content": "<p>Tilt is hard to recognize from inside — you feel like you're trading normally. Two external checks:</p><ol><li><strong>The 24-hour test:</strong> would I take this trade if I were calm? If unsure, the answer is probably no.</li><li><strong>The journal test:</strong> write down WHY you're taking the next trade BEFORE entering. If you can't articulate a setup-based reason in one sentence, you're probably on tilt.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "The remedy — process over emotion"
+    },
+    {
+      "type": "text",
+      "content": "<p>None of these errors disappear with experience. Even pros have them. What separates good traders is HAVING A PROCESS that prevents emotional decisions from becoming trades.</p><p>The core practices:</p><ol><li><strong>Pre-planned setups.</strong> Before each trading session, identify 3-5 specific setups you'd trade. SL, TP, entry zone written down. Anything not on the list = not a trade.</li><li><strong>Cooling-off rule.</strong> No trade for 30 min after any loss. No trade for 24h after any 2× normal loss.</li><li><strong>Sizing discipline.</strong> Position size formula every trade. No exceptions because of emotion.</li><li><strong>Hard daily stop.</strong> If you're down 3% on the day, stop trading. Period. Tomorrow you can decide whether your system is broken or you had a bad day.</li><li><strong>Journal afterwards.</strong> Write down WHY you took each trade and whether it followed your plan. Patterns become visible only when you write them down.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — the tilted-session story"
+    },
+    {
+      "type": "text",
+      "content": "<p>Common pattern, repeated weekly in retail trader populations:</p><p><strong>10:00 AM:</strong> Trader takes a clean breakout long. SL at 2%, TP at 4%. Reasonable. Loss hits at SL. Account down 1%.</p><p><strong>10:30 AM:</strong> Trader feels annoyed. Enters another long off a weak signal. Risks 2%. SL hits. Account down 3%.</p><p><strong>11:00 AM:</strong> \"OK, I need to make this back\". Enters a SHORT on the same chart (now \"obvious\" reversal). Risks 3%. SL hits because the original uptrend resumes. Account down 6%.</p><p><strong>11:30 AM:</strong> Now trading in revenge mode. Risks 5% on a YOLO long. SL hits in a pullback. Account down 11%.</p><p><strong>12:00 PM:</strong> \"Doubles down\" — risks 10% on a final all-in trade. SL hits. Account down 21%.</p><p><strong>End of day:</strong> Down 25% in one session. The original setup was fine. Every subsequent trade was emotional. The system didn't fail — execution did.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "danger",
+      "title": "What would have saved this trader",
+      "content": "<p>The 30-min no-trade-after-loss rule. At 10:30, that single rule prevents the entire cascade. By 11:00 when the rule expired, the emotional surge would have faded, and the trader would either find a real setup or skip the day. Either way: account intact.</p><p>This is why \"having a process\" matters more than \"having a strategy\". The strategy was fine. The process prevented its execution from going off the rails.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When emotions are useful (very rarely)"
+    },
+    {
+      "type": "text",
+      "content": "<p>Some traders argue that emotion can be a signal — if you feel STRONGLY one way, it might indicate something. This is a trap most of the time. Emotional certainty usually means you've over-fit a narrative to a setup that's not actually there.</p><p>The one exception: gut-level discomfort with a setup that meets your written criteria. If your system says \"take it\" but you feel deeply uneasy, sometimes that's pattern recognition firing below conscious awareness. Worth noting in your journal. Skip the trade IF the discomfort is persistent and articulable, not just generic anxiety.</p><p>But this is rare. 95% of \"gut feelings\" are noise. Default to the system.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>FOMO, revenge, and tilt are the three errors that kill accounts. They won't disappear with experience. They have to be MANAGED with process.</p><p>Adopt the four rules:</p><ol><li>Pre-planned setups only. Anything not on the list = not a trade.</li><li>30 minutes no trades after any loss. 24 hours after any 2× normal loss.</li><li>Sizing discipline always. Never up-size from emotion.</li><li>Hard daily stop at -3%.</li></ol><p>The traders who survive year after year aren't the smartest or the luckiest. They're the ones who follow these rules even when it feels wrong.</p>"
+    }
+  ]
+}

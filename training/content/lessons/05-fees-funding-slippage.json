@@ -1,0 +1,133 @@
+{
+  "slug": "05-fees-funding-slippage",
+  "subtitle": "Lessons 2 and 3 introduced fees and funding. This lesson puts them together — the full cost stack of a single trade, and the difference between a trader who tracks costs and one who doesn't.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've already met all the cost categories in earlier lessons. Now we'll do the full math on a typical trade so you can SEE how much of your profit gets eaten. The number surprises most newcomers.</p><p>The thesis: small fees compound across many trades. A trader who ignores cost optimization can give up 30-50% of their realized profits to fees, funding, and slippage without ever noticing it on a single trade. That's the difference between profitable and not.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The full cost stack of one trade"
+    },
+    {
+      "type": "table",
+      "headers": ["Cost", "What it is", "Typical magnitude"],
+      "rows": [
+        ["<strong>Entry fee</strong>", "Taker/maker fee charged when opening the position", "0.02-0.10% of notional"],
+        ["<strong>Entry slippage</strong>", "Price drift while your market order consumes liquidity", "0-0.5% depending on size and venue"],
+        ["<strong>Spread cost (limit fills)</strong>", "Even limit orders that fill have absorbed half the spread", "0.01-0.10% of notional"],
+        ["<strong>Funding</strong>", "Perp-only, 8-hourly. Can be either earned or paid", "−0.10% to +0.10% per 8h on notional"],
+        ["<strong>Exit fee</strong>", "Same as entry fee, on the way out", "0.02-0.10% of notional"],
+        ["<strong>Exit slippage</strong>", "Same as entry slippage", "0-0.5% depending"],
+        ["<strong>Withdrawal fees</strong>", "If you move profits off-exchange", "Flat $1-30 per withdrawal depending on asset/chain"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — a real-world trade with full cost accounting"
+    },
+    {
+      "type": "text",
+      "content": "<p>Setup: you long BTCUSDT perp with $1,000 margin at 5× leverage. Notional position = $5,000. Entry at $60,000. Exit at $61,200 (a +2% price move). Held for 16 hours. Taker fees both sides.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Item", "Calculation", "Cost / Profit"],
+      "rows": [
+        ["Gross price move", "($61,200 − $60,000) × ($5,000 / $60,000) BTC", "+$100.00 profit"],
+        ["Entry fee", "$5,000 × 0.05%", "−$2.50"],
+        ["Entry slippage (market buy)", "Estimated $5 on a $5K BTC order", "−$5.00"],
+        ["Funding (2 payments × 0.01% × $5,000)", "Hot funding period, longs paid shorts", "−$1.00"],
+        ["Exit fee", "$5,000 × 0.05%", "−$2.50"],
+        ["Exit slippage (market sell)", "Estimated $5", "−$5.00"],
+        ["<strong>Net profit</strong>", "$100 − $16", "<strong>+$84.00</strong>"],
+        ["<strong>Cost ratio</strong>", "$16 / $100 gross", "<strong>16% of gross gone to costs</strong>"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>16% to costs on a moderately good trade. Now run the same math with LIMIT orders (no slippage, lower fees) and slightly favorable funding:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Item", "Calculation", "Cost / Profit"],
+      "rows": [
+        ["Gross price move", "Same", "+$100.00 profit"],
+        ["Entry fee", "$5,000 × 0.02% (maker)", "−$1.00"],
+        ["Entry slippage", "Zero — limit at your price", "$0"],
+        ["Funding (favorable side, earned)", "+$1.00 earned over 16h", "+$1.00"],
+        ["Exit fee", "$5,000 × 0.02% (maker)", "−$1.00"],
+        ["Exit slippage", "Zero", "$0"],
+        ["<strong>Net profit</strong>", "$100 − $1 + $1", "<strong>+$100.00</strong>"],
+        ["<strong>Cost ratio</strong>", "$1 / $100", "<strong>1% of gross gone to costs</strong>"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Same trade, $16 cost difference",
+      "content": "<p>Same setup, same price move, same size. Just different execution choices: limit instead of market, maker fees instead of taker, favorable funding side. The cost delta is $16 — 16% of the trade's gross profit. Across 500 trades a year, that's $8,000 left on the table.</p><p>The skill of execution isn't sexy. It doesn't make for good trading videos. But it can be the difference between profitable and not for borderline traders.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Funding deep-dive — when does it actually bite?"
+    },
+    {
+      "type": "text",
+      "content": "<p>Funding compounds in non-obvious ways. A few scenarios:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Holding period", "Position type", "Funding rate (per 8h)", "Total funding cost / earn"],
+      "rows": [
+        ["4 hours (no funding payment in window)", "Long", "+0.02%", "$0 (you exited before payment)"],
+        ["12 hours (1 payment)", "Long, 5× lev, $5K notional", "+0.02%", "−$1.00 paid"],
+        ["3 days (9 payments)", "Long, 5× lev, $5K notional", "+0.02% (normal)", "−$9.00 paid"],
+        ["3 days (9 payments)", "Long, 5× lev, $5K notional", "+0.10% (euphoric)", "−$45.00 paid"],
+        ["7 days (21 payments)", "Long, 10× lev, $10K notional", "+0.05% sustained", "−$105.00 paid"],
+        ["7 days (21 payments)", "Short, 10× lev, $10K notional", "+0.05% sustained (you earn!)", "+$105.00 earned"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>The pattern: funding compounds with HOLD DURATION × LEVERAGE × MAGNITUDE. Short, well-timed trades avoid funding. Long, leveraged trades through euphoric periods pay heavily.</p><p><strong>Practical implication:</strong> if you're holding a long position into a euphoric pump with funding at +0.1% per 8h, you're paying roughly 3% per week just to hold. If the trend slows, your trade can be net negative even at break-even on price.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Slippage — when it matters most"
+    },
+    {
+      "type": "text",
+      "content": "<p>Slippage is mostly invisible on small orders in major pairs (BTC, ETH on a top exchange). It becomes brutal when:</p><ul><li><strong>Order size is large relative to the book.</strong> A $50K BTC order on a major exchange = trivial slippage. A $50K alt-coin order on a mid-tier exchange = often 1-3%.</li><li><strong>Liquidity is thin.</strong> Sunday afternoon UTC, holidays, after big moves when market-makers pull quotes.</li><li><strong>News events.</strong> CPI/FOMC moments. Spreads widen, makers withdraw, slippage spikes for 10-30 seconds.</li><li><strong>Flash crashes / cascades.</strong> Worst slippage of all. Stop-market orders can fill 3-5% past the trigger price.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't market-order through a thin book",
+      "content": "<p>Before market-buying anything except major pairs in normal hours, glance at the order book. If the top 5 levels of liquidity don't cover your order, EITHER size down OR break the order into smaller chunks OR use a limit order at the deeper level you'd be willing to fill at. This single habit saves 0.5-2% on most alt-coin entries.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Hidden costs that aren't on any fee schedule"
+    },
+    {
+      "type": "text",
+      "content": "<p>These don't show up as line items but are real costs:</p><ul><li><strong>Stablecoin depeg risk.</strong> Holding USDT vs USDC vs USD — small chance one depegs 1-5%. Diversifying stablecoins helps.</li><li><strong>Withdrawal queue delays.</strong> Slow withdrawals tie up capital. Capital tied up = opportunity cost.</li><li><strong>Cross-exchange transfer fees + time.</strong> Moving $10K from Exchange A to Exchange B costs a small fee + 10-60 minutes of out-of-market time. If markets move during transit, opportunity cost can dwarf the fee.</li><li><strong>Tax-related costs.</strong> Frequent trading triggers more taxable events. Depending on jurisdiction, this can be material.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "The cost optimization checklist"
+    },
+    {
+      "type": "text",
+      "content": "<p>Apply these and your cost line drops 50%+ on most trades:</p><ol><li><strong>Default to limit orders.</strong> Maker fee + zero slippage. Market only when forced.</li><li><strong>Check funding before entering.</strong> Don't long into +0.10% funding (you'll bleed). Don't short into −0.10% funding.</li><li><strong>Size to liquidity.</strong> Big trade on thin venue = slippage. Either find a better venue or break the order.</li><li><strong>Hold time should match thesis.</strong> Holding a long 3 days for a +1% target while paying +0.05% funding/8h × 9 payments = net negative. Match holding period to setup type.</li><li><strong>Use sub-accounts for different strategies.</strong> Some exchanges give better fee tiers on isolated sub-accounts. Cheaper than maintaining tier on a noisy main account.</li><li><strong>Track your effective cost ratio.</strong> Take last 50 closed trades. Sum gross PnL. Sum total fees + funding paid. Cost ratio = costs / gross. If it's >10%, you have room to improve.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Costs aren't visible per-trade. They're visible per-year. A trader who tracks total fees and funding paid will be shocked the first time they add it up. The good news: most cost optimization is free — it's just decisions (limit vs market, when to enter relative to funding cycle, what size relative to book depth). No skill required, just attention.</p><p>Do this exercise: take your last 50 closed trades. Sum the fees and funding. Divide by total gross PnL. What's the percentage? Anything above 15% means execution is leaking edge.</p>"
+    }
+  ]
+}

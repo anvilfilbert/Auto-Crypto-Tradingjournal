@@ -1,0 +1,86 @@
+{
+  "slug": "04-long-vs-short",
+  "subtitle": "Going long is intuitive — buy something, sell it for more. Shorting feels weird at first because you're selling something you don't own. Both directions are equally real, equally tradeable, equally profitable. Learning to short well doubles the opportunity set.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Most retail crypto traders are perma-longs. They buy. They wait. They sell. If the market goes up, they make money. If the market goes down, they lose. They have one half of the toolkit.</p><p>The other half — shorting — feels strange because you're selling something you don't have. But it's exactly as legitimate, and it doubles your opportunity set. Markets fall ~half the time. A trader who only goes long is sidelined for half the year (or worse: holding losers through downtrends, hoping).</p><p>This lesson covers: what shorting actually is, why crypto perps make it easy, and the mental shift required to short well.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Going long — what \"buying\" actually means"
+    },
+    {
+      "type": "text",
+      "content": "<p>You're long when you own (or have a contract that profits from) an asset rising in price. Buying spot BTC = long. Opening a perp long = long. The math is intuitive: enter at price A, exit at price B, profit = (B - A) × size.</p><p>BTC at $60,000, you buy 1 BTC. Price rises to $66,000. Profit = $6,000. Price rises to $120,000. Profit = $60,000. Price crashes to $0. Maximum loss = $60,000 (your full purchase). Asymmetric upside in your favor — unlimited gain, capped loss.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Going short — borrowing then selling"
+    },
+    {
+      "type": "text",
+      "content": "<p>You're short when you profit from an asset FALLING in price. Mechanically (in classic spot shorting): you BORROW the asset from someone else, sell it at the current price, then later buy it back at a (hopefully) lower price and return it to the lender. Your profit = price you sold at − price you bought back at.</p><p>Example, classic spot short: BTC at $60,000. You borrow 1 BTC from the exchange, sell it for $60,000. Price drops to $54,000. You buy 1 BTC for $54,000 and return it to the lender. Profit = $6,000.</p><p>The borrowing carries a cost — the lender doesn't lend for free. This is the \"short borrow rate\". On crypto exchanges spot shorting is rare; instead, retail uses perps which fold the borrow cost into the funding rate.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "On perps, shorting is symmetric to longing",
+      "content": "<p>You don't have to think about borrowing/lending on perps. To open a short, you just \"sell\" the perp without owning it first. The exchange handles the abstraction. Your PnL math is identical to a long, just reversed:</p><p><strong>Long:</strong> profit when price goes UP. Lose when price goes DOWN. Liquidated when price goes too far DOWN.</p><p><strong>Short:</strong> profit when price goes DOWN. Lose when price goes UP. Liquidated when price goes too far UP.</p><p>Same leverage, same margin requirements, same fees. Just direction.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Classic spot vs perp — the asymmetry difference"
+    },
+    {
+      "type": "text",
+      "content": "<p>In classic spot trading, longs and shorts have asymmetric loss potential:</p><ul><li>A long can only lose 100% (price can go to zero, but not below).</li><li>A short can lose INFINITY (price has no upper limit — if BTC went to $1M, your short pays for the whole journey).</li></ul><p>This is why spot shorting carries reputation as \"dangerous\" — uncapped loss potential.</p><p>On perps, this asymmetry mostly disappears because of leverage and liquidation. Both longs and shorts are liquidated at a price ~equidistant from entry (proportional to leverage). The liquidation caps the loss at \"margin posted\". So perp longs and perp shorts have symmetric maximum loss = your margin.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Scenario", "Max profit", "Max loss"],
+      "rows": [
+        ["Spot long (no leverage)", "Unlimited (price → ∞)", "Your investment (price → 0)"],
+        ["Spot short (no leverage)", "Your sold value (price → 0)", "Unlimited (price → ∞)"],
+        ["Perp long (10× leverage)", "Unlimited (price → ∞)", "Your margin (liquidated below entry)"],
+        ["Perp short (10× leverage)", "Limited (price → 0 is +10× of entry)", "Your margin (liquidated above entry)"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The mental shift — markets fall faster than they rise"
+    },
+    {
+      "type": "text",
+      "content": "<p>Long-only traders develop one rhythm: slow accumulation, panic distribution. Up-moves take weeks. Down-moves take days. To short well, you need to internalize that:</p><ul><li><strong>Downtrends move faster.</strong> A bull run might take 3 months for +50%. The subsequent reversal can do -30% in 5 days. Shorts profit on speed.</li><li><strong>Tops are sharp; bottoms are slow.</strong> The end of an up-move is often a single climactic candle. The end of a down-move is often a long, ugly base. Shorts catch the sharp top better than longs catch the slow bottom.</li><li><strong>Liquidation cascades favor shorts.</strong> When over-leveraged longs get liquidated, the exchange's matching engine has to SELL their positions — pushing price further down — triggering more long liquidations. This compounds. \"Long squeeze\" cascades can be 10%+ in minutes.</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't fall in love with either direction",
+      "content": "<p>The mistake some traders make: after learning to short successfully, they become \"perma-bears\" the same way they used to be perma-bulls. Both are wrong. The market is direction-agnostic. Each setup deserves to be evaluated on its merits regardless of whether it's a long or short.</p><p>Your bias should be: whichever direction the structure of the chart supports right now. Read the trend, then trade with it. Switch when it switches.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — same setup, both directions"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC has been in an uptrend for 3 weeks. Today price approaches a key resistance level at $66,000. Two scenarios you'd trade:</p><p><strong>Scenario A — bullish continuation:</strong> Price punches through $66,000 with strong volume and closes above. You long the breakout: entry $66,200, SL $65,500, TP $69,000. Risk:reward = 1:4. If the trend continues, this works.</p><p><strong>Scenario B — bearish rejection:</strong> Price rejects at $66,000 with a bearish engulfing candle. Volume spikes. You short the rejection: entry $65,800, SL $66,500, TP $63,000. Risk:reward = 1:4. If the trend reverses, this works.</p><p>Same level, both directions playable. Which you trade depends on WHICH SCENARIO actually unfolds — not on your bias. The trader who can do both has 2× the opportunity of the trader who can only long.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common shorting mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<p>Patterns that cost short traders money:</p><ol><li><strong>Shorting strength.</strong> Trying to \"call the top\" of an uptrend. The chart is going up. Wait for the actual reversal signal (failed break + close back below). Don't anticipate.</li><li><strong>Not respecting funding cost.</strong> If you short during euphoric positive funding, you EARN funding (longs pay shorts). If you short during fear (negative funding), YOU pay funding. Check before shorting.</li><li><strong>Holding shorts overnight in pumps.</strong> Crypto's biggest pumps often happen between 02:00-08:00 UTC during low-liquidity Asian hours. Shorts caught overnight in a 15% pump are gone.</li><li><strong>Confusing \"bearish bias\" with \"short setup\".</strong> Bearish bias = you think price might fall. Short setup = you have a specific entry, SL, TP, and trigger reason. Don't short because you're bearish; short because the setup is there.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Shorts double your opportunity set but require the same discipline as longs — entry plan, SL, TP, position sizing. The mental shift: downtrends are faster, sharper, and more rewarding when you catch them right.</p><p>For your first 5-10 shorts after this lesson, do them at small size (1× or 2× leverage max). Pay attention to how the SAME volatility feels from the other side. Markets that feel \"sideways\" when you're long often feel \"trending bear\" when you're short. The bias shift takes practice.</p>"
+    }
+  ]
+}

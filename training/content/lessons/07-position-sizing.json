@@ -1,0 +1,122 @@
+{
+  "slug": "07-position-sizing",
+  "subtitle": "You've decided to risk 1% per trade. Now you need to translate that into actual contract counts on the exchange. This is the math that separates traders who say \"I follow the 1% rule\" from those who actually do.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Lesson 6 covered why 1-2% risk is the survival rule. This lesson covers the arithmetic that turns that rule into actual contract counts. Without doing this math correctly, you're just guessing — and your \"1% risk\" trades end up being 3% or 5% in reality.</p><p>The good news: the formula is one line. The bad news: most traders never apply it.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The formula"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Position size formula",
+      "content": "<p><strong>Position size (notional) = (equity × risk%) / (SL distance %)</strong></p><p>Or in dollar terms:</p><p><strong>Position size (notional) = $risk per trade / (SL distance %)</strong></p><p>Where:</p><ul><li><strong>$risk per trade</strong> = the dollar amount you're willing to lose if SL hits (e.g., 1% of $1,000 account = $10)</li><li><strong>SL distance %</strong> = the price distance from entry to SL, as a percentage of entry price (e.g., entry $60,000, SL $58,800 = 2.0% SL distance)</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example 1 — basic"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Setup:</strong></p><ul><li>Account equity: $1,000</li><li>Risk rule: 1% per trade → $10 risk</li><li>Entry: $60,000 (long BTC)</li><li>Stop loss: $58,800</li><li>SL distance: ($60,000 − $58,800) / $60,000 = 2.0%</li></ul><p><strong>Calculation:</strong></p><ul><li>Position size = $10 / 2.0% = $500 notional</li><li>BTC quantity = $500 / $60,000 = 0.00833 BTC</li></ul><p><strong>Verification:</strong> If SL hits at $58,800, loss = 0.00833 BTC × ($60,000 − $58,800) = 0.00833 × $1,200 = $10. ✓ Exactly 1% of the $1,000 account.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example 2 — tight SL = bigger notional"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Setup:</strong></p><ul><li>Same $1,000 account, $10 risk</li><li>Entry: $60,000 (long BTC)</li><li>Tight SL at $59,400 (just below a key level)</li><li>SL distance: 1.0%</li></ul><p><strong>Calculation:</strong></p><ul><li>Position size = $10 / 1.0% = $1,000 notional</li><li>BTC quantity = $1,000 / $60,000 = 0.01667 BTC</li></ul><p><strong>Same dollar risk, but bigger position</strong> because the SL is tighter. This is the magic: tight stops let you size bigger without increasing risk. Why traders love good levels — close SL means same risk in dollars, bigger notional, bigger upside if it works.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example 3 — wide SL = smaller notional"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Setup:</strong></p><ul><li>Same account, same risk</li><li>Entry: $60,000</li><li>Wide SL at $57,000 (giving the trade more room)</li><li>SL distance: 5.0%</li></ul><p><strong>Calculation:</strong></p><ul><li>Position size = $10 / 5.0% = $200 notional</li><li>BTC quantity = $200 / $60,000 = 0.00333 BTC</li></ul><p>Wider SL = smaller position to keep dollar risk constant. The trade-off: smaller upside if it works. But the math demands it.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Common mistake: thinking 'leverage = risk'",
+      "content": "<p>Many traders pick leverage based on emotion (\"10x feels right\") instead of math. The right approach: compute the NOTIONAL position size needed for your risk + SL math, THEN figure out what leverage gets you there given your margin.</p><p>In Worked Example 1, notional = $500 on a $1,000 account = effective 0.5× leverage. Margin requirement is tiny. You could put it on at 1× and use $500 margin, or 10× and use $50 margin. Same notional, same dollar risk, same SL — the leverage number is just margin efficiency.</p><p>What matters: the notional and the SL distance. Leverage is downstream.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The contract-count quirk on perpetuals"
+    },
+    {
+      "type": "text",
+      "content": "<p>On perpetuals, your position is denominated in contracts (or in coin quantity, depending on the exchange). The arithmetic is the same but the units differ.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Exchange convention", "How to size", "Example"],
+      "rows": [
+        ["Notional in USDT (Binance, Bybit USDT-M)", "Compute notional in USDT, place that quantity", "$500 notional → enter 500 USDT worth"],
+        ["Quantity in coin (some COIN-M perps)", "Compute notional → divide by current price → that's quantity in coin", "$500 / $60K = 0.00833 BTC"],
+        ["Contracts (BitMEX-style)", "Each contract = $1 or fixed coin amount", "$500 / $1 contract = 500 contracts"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>Read your exchange's docs ONCE to know which convention. After that, the math is the same. Most modern crypto exchanges use USDT-notional, which is the easiest.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Real-time check — \"am I sizing right?\""
+    },
+    {
+      "type": "text",
+      "content": "<p>Before clicking Buy, run this mental check:</p><ol><li><strong>Where's my SL?</strong> Already decided, not negotiable.</li><li><strong>What's the % distance to SL from entry?</strong> Calculate it.</li><li><strong>What's 1% of my account in dollars?</strong> Cap on risk.</li><li><strong>Is my notional ≤ (dollars at risk / SL%)?</strong> If yes, size is fine. If no, REDUCE size until it is.</li></ol><p>This check takes 15 seconds. It catches 90% of sizing errors. Most traders skip it because they're chasing the entry. That's exactly when you make the most expensive errors.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When you can't size to 1% — what to do"
+    },
+    {
+      "type": "text",
+      "content": "<p>Two failure modes:</p><p><strong>SL too far to size meaningfully:</strong> Your account is $300, 1% risk = $3, the setup has a 5% SL distance, so notional = $60. The minimum order size on the exchange might be $100. You can't take this trade at proper sizing. Options:</p><ul><li>Skip the trade. The SL is too wide for your account size.</li><li>Wait for a tighter entry that lets a smaller SL distance fit your sizing.</li><li>Use a venue with smaller minimum order sizes.</li></ul><p><strong>Minimum size too large:</strong> Same scenario as above. The market is telling you your account is too small for THIS setup. Don't break sizing rules — find different setups (with tighter SL) or grow the account first.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Never size up because 'the min is bigger than my risk'",
+      "content": "<p>Common rationalization: \"the minimum order is $100 but my 1% risk only sizes to $60. Whatever, I'll just take the $100 trade.\" That's a 67% sizing increase. Your 1% risk becomes 1.67% on that trade. Across a year of this, your effective risk crosses into 3-5% territory and the math stops working.</p><p>The right answer: this setup isn't appropriate for your current account size. Skip it. Find ones that fit.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Scaling — when account grows, sizes grow"
+    },
+    {
+      "type": "text",
+      "content": "<p>The 1% rule is on CURRENT equity, not starting equity. Update your dollar risk every time you trade.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Account", "1% dollar risk", "Typical notional at 2% SL"],
+      "rows": [
+        ["$1,000", "$10", "$500"],
+        ["$2,500", "$25", "$1,250"],
+        ["$10,000", "$100", "$5,000"],
+        ["$50,000", "$500", "$25,000"],
+        ["$200,000", "$2,000", "$100,000"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>Dollar risk scales with equity. Don't keep risking $10 when your account is $50,000 — that's now 0.02% risk, missing the growth opportunity. Don't keep risking $500 when your account drops to $10,000 — that's now 5%, breaking the survival rule.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>The formula: <strong>notional = (equity × risk%) / SL distance %</strong></p><p>Memorize it. Apply it before every trade. The 15 seconds you spend doing this math is the difference between a trader who has a system and one who's just gambling with discipline-sounding language.</p><p>The journal you're using has a position-size widget on the Live Trade page — punch in equity, SL price, entry, and risk%, and it tells you the contract count. Use it. Don't trust your in-head math during a hot entry.</p>"
+    }
+  ]
+}

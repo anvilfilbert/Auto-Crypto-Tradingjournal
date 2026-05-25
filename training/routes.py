@@ -129,8 +129,10 @@ def quiz_submit(slug):
             "user_idx": user_idx,
             "explanation": q.get("explanation", ""),
         })
-    result = record_quiz_attempts(_db_path(), meta["id"], graded)
+    pass_threshold = int(quiz.get("pass_threshold", 8))
+    result = record_quiz_attempts(_db_path(), meta["id"], graded, pass_threshold=pass_threshold)
     result["detailed"] = detailed
+    result["pass_threshold"] = pass_threshold
     return jsonify({"ok": True, "data": result})
 
 

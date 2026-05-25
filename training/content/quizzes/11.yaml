@@ -1,0 +1,147 @@
+id: "11"
+lesson_id: 11
+pass_threshold: 10
+questions:
+  - id: q1
+    text: "You see BTC at $60K and click 'buy' with $200. The next day BTC is down 10% and your balance is $0. What MOST LIKELY happened?"
+    type: mcq
+    choices:
+      - "Spot crash with 1× leverage."
+      - "Perpetual futures with high leverage (e.g., 20×, default on some exchanges) where 5% adverse move = full liquidation."
+      - "Exchange stole the money."
+      - "A funding fee took everything."
+    correct: 1
+    topic_tag: market_basics
+    explanation: "Spot can't go to zero from a 10% drop. This is the classic perp-blowup pattern: trader didn't realize they were on leveraged futures, default leverage was high enough that a normal daily move liquidated the position. Always confirm what product and leverage you're on BEFORE entering."
+
+  - id: q2
+    text: "You hold a perp long for 5 days at 5× leverage on $10,000 notional with sustained +0.06% funding per 8h. Approximate total funding cost?"
+    type: mcq
+    choices:
+      - "$6"
+      - "$30"
+      - "$90 (15 payments × $10,000 × 0.06%)"
+      - "$300"
+    correct: 2
+    topic_tag: funding
+    explanation: "5 days × 3 funding payments per day = 15 payments. 15 × $10,000 × 0.06% = $90 paid in funding. On a $10K notional that's nearly 1% of position size, just for holding. Funding compounds with duration × notional × rate."
+
+  - id: q3
+    text: "Default to using which order type for entries when you have time to plan?"
+    type: mcq
+    choices:
+      - "Market — fastest fills"
+      - "Limit — saves on fees AND slippage; trade only fills if you get your planned price"
+      - "Stop-loss — for entries"
+      - "OCO — for entries"
+    correct: 1
+    topic_tag: orders
+    explanation: "Limit orders are the default for planned entries. You pay maker fee (lower) and have zero slippage. The trade-off is that some limit orders never fill — but the ones that do are at YOUR price. Market is for forced/emergency situations only."
+
+  - id: q4
+    text: "Account is $5,000. Risk 1% per trade. Entry $60,000, SL $58,800 (2% distance). Correct notional?"
+    type: mcq
+    choices:
+      - "$250"
+      - "$500"
+      - "$2,500"
+      - "$5,000"
+    correct: 2
+    topic_tag: position_sizing
+    explanation: "$risk = 1% × $5,000 = $50. SL distance = 2% = 0.02. Notional = $50 / 0.02 = $2,500. If SL hits, you lose 2% of $2,500 = $50 = 1% of account. Math confirmed."
+
+  - id: q5
+    text: "You're using cross margin with 5 positions open. One bad trade has a runaway 25% loss. What's the danger?"
+    type: mcq
+    choices:
+      - "Nothing — cross margin protects you."
+      - "ALL 5 positions can be liquidated as the bad trade depletes the shared margin pool; profitable trades get closed too, often at terrible prices during the same volatile move."
+      - "Only the bad trade closes."
+      - "The exchange refunds losses."
+    correct: 1
+    topic_tag: leverage
+    explanation: "Cross-margin cascade: shared pool means one runaway loss drains margin needed by other positions, triggering forced liquidations across the entire book. This is why isolated should be the default — limits damage to one position at a time."
+
+  - id: q6
+    text: "You just had a 1.5% loss on a clean stop-out. You feel an immediate urge to enter another trade. What does the lesson say?"
+    type: mcq
+    choices:
+      - "Trade immediately to recover."
+      - "Walk away for at least 30 minutes (24h if the loss was 2× your normal). The urge is revenge, not analysis."
+      - "Increase position size next trade."
+      - "Switch to a more aggressive strategy."
+    correct: 1
+    topic_tag: psychology
+    explanation: "The 30-minute no-trade-after-loss rule prevents the revenge cascade. The trade you'd take in the next 30 minutes is almost certainly worse than your normal A-setups. Walk away. Trade your normal setups when the emotional response has faded."
+
+  - id: q7
+    text: "Your $300 account, 1% risk = $3 per trade. A setup needs $60 notional but exchange minimum order is $100. What's the right action?"
+    type: mcq
+    choices:
+      - "Take it at $100 — close enough."
+      - "Skip this setup. The market is telling you this setup isn't appropriate for your current account size. Find ones with tighter SLs that fit your sizing, or grow the account first."
+      - "Use 100× leverage."
+      - "Borrow more capital."
+    correct: 1
+    topic_tag: position_sizing
+    explanation: "Sizing up to hit a minimum breaks the risk rule (1% becomes ~1.67% on this trade alone). Across many trades, your effective risk creeps to 3-5% territory and the math stops working. The right answer is to find setups that fit your account or grow it first — never break the rule for one trade."
+
+  - id: q8
+    text: "Perpetual longs and shorts — which has a HIGHER theoretical maximum loss on perps?"
+    type: mcq
+    choices:
+      - "Longs (price can go infinitely high against shorts)"
+      - "Shorts (price has unlimited upside)"
+      - "Same — both are capped at your posted margin due to liquidation, just triggered in opposite directions"
+      - "Neither has any max loss"
+    correct: 2
+    topic_tag: directionality
+    explanation: "On PERPS, both directions cap loss at the margin posted because liquidation happens before unbounded loss. The classic 'shorts have unlimited loss' applies to spot shorting, not perps. On perps, longs and shorts are mathematically symmetric in max loss — only triggered by opposite price moves."
+
+  - id: q9
+    text: "A friend says they made +200% in a month trading 50× leverage. What's the right takeaway?"
+    type: mcq
+    choices:
+      - "Switch to their strategy immediately."
+      - "They're likely one bad trade away from -90%. The 50× leverage means SL distance is tiny — any normal move can wipe them. Survivorship bias: you hear about the wins, not the blow-ups."
+      - "Risk management is overrated."
+      - "All experienced traders use 50× leverage."
+    correct: 1
+    topic_tag: leverage
+    explanation: "200% returns require either: (a) genuine edge with proper sizing (rare and slow), or (b) high leverage gambling (will blow up eventually). Stories of viral gains usually omit the next month's wipeout. The disciplined trader at +15% in year 1 with capital + habits intact will likely outperform the +200%-then-blowup trader over 10 years."
+
+  - id: q10
+    text: "Best single defense against an exchange hack stealing your funds even if your password and 2FA get compromised?"
+    type: mcq
+    choices:
+      - "Quitting trading"
+      - "Withdrawal allowlist — restricts withdrawals to pre-approved addresses only, with 24-48h delay for adding new ones"
+      - "Trading less frequently"
+      - "Hoping for the best"
+    correct: 1
+    topic_tag: security
+    explanation: "Withdrawal allowlist is the most important single defense after 2FA. Even if attacker gets full account access, they can only withdraw to addresses YOU pre-approved. Adding a new address requires a delay — during which you get email alerts and can lock the account. This single feature turns 'lost everything' into 'noticed and recovered'."
+
+  - id: q11
+    text: "You backtested a strategy on 6 months of data. It shows +30% with low drawdown. What's the smartest next step?"
+    type: mcq
+    choices:
+      - "Deploy to full live size immediately."
+      - "Run walk-forward analysis (train on one period, test on a different held-out period). If performance only works in training, it's overfitted and the live results will be very different."
+      - "Use higher leverage to amplify the proven edge."
+      - "Skip paper trading — the backtest proves it works."
+    correct: 1
+    topic_tag: progression
+    explanation: "A backtest looking great on one period of data could be overfitted (matched the noise of that period, not real signal). Walk-forward analysis exposes this: train on period A, test on period B. If results hold on the held-out period, the edge is more likely real. Then proceed through paper → small-size → scale up."
+
+  - id: q12
+    text: "The single most important rule for surviving as a trader is:"
+    type: mcq
+    choices:
+      - "Use 100× leverage to maximize gains."
+      - "Never risk more than 2% on any single trade. This rule survives bad streaks; bigger sizing eventually doesn't."
+      - "Trade as often as possible."
+      - "Always buy the dip."
+    correct: 1
+    topic_tag: risk
+    explanation: "If you take ONLY ONE rule from all of trading, take this. Position sizing is the single most important variable. The 1-2% rule survives 10-loss streaks (drawdowns ~10-18%, recoverable). The 10% sizing rule turns the same losing streak into a 65% drawdown — usually account-killing. Same skill, different size, different outcome. This rule is non-negotiable."

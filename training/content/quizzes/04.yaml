@@ -1,0 +1,123 @@
+id: "04"
+lesson_id: 4
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "In classic spot trading, what is the THEORETICAL maximum loss on a short position (no leverage)?"
+    type: mcq
+    choices:
+      - "100% of your initial investment"
+      - "50% of your initial investment"
+      - "Unlimited — the price can rise indefinitely while you owe back the asset"
+      - "Zero — shorts are always profitable"
+    correct: 2
+    topic_tag: directionality
+    explanation: "A spot short profits when price falls (capped at 100% — price can only fall to zero). But the price can rise infinitely. If BTC went to $1,000,000, you'd owe the difference for every unit you shorted. This is why spot shorting carries 'unlimited loss' warnings."
+
+  - id: q2
+    text: "On perpetual futures, how does maximum loss compare between a long and a short at the same leverage?"
+    type: mcq
+    choices:
+      - "Shorts have unlimited loss; longs are capped at investment."
+      - "Both are capped at your posted margin (the position is liquidated before unbounded loss happens)."
+      - "Longs have higher max loss; shorts have lower."
+      - "Depends on which exchange."
+    correct: 1
+    topic_tag: directionality
+    explanation: "Perps liquidate when margin falls below maintenance level. This caps maximum loss at your posted margin, symmetrically for both directions. So perp longs and perp shorts have the same max loss = your margin, just triggered by price moves in opposite directions."
+
+  - id: q3
+    text: "You enter a perp SHORT at $60,000 with 10× leverage. Approximately at what price are you liquidated?"
+    type: mcq
+    choices:
+      - "Around $54,000 (10% below entry)"
+      - "Around $66,000 (10% above entry)"
+      - "Around $30,000 (50% below entry)"
+      - "Shorts can't be liquidated"
+    correct: 1
+    topic_tag: leverage
+    explanation: "At 10× leverage, your liquidation is roughly 10% AGAINST your direction. For a short, against = price RISING. So liquidation is ~10% above entry, at ~$66,000. (For a long at 10×, liquidation would be ~10% below at ~$54,000.)"
+
+  - id: q4
+    text: "Why is shorting often described as 'catching the elevator down vs the stairs up'?"
+    type: mcq
+    choices:
+      - "Because downtrends typically move faster than uptrends — sharp drops vs slow rises."
+      - "Because shorts are easier to execute than longs."
+      - "Because shorts always profit."
+      - "It's just trader slang with no real meaning."
+    correct: 0
+    topic_tag: directionality
+    explanation: "Markets tend to fall faster than they rise — fear acts faster than greed. A 3-month uptrend can be erased by a 1-week crash. Liquidation cascades on over-leveraged longs amplify this. Shorts that catch the actual reversal often see bigger, faster moves than longs ever do."
+
+  - id: q5
+    text: "You're considering shorting BTC. Current 8h funding rate is +0.08% (very positive). What does this mean for your short position's funding cost?"
+    type: mcq
+    choices:
+      - "You'll PAY 0.08% in funding every 8h while short."
+      - "You'll RECEIVE 0.08% in funding every 8h while short (because longs are paying shorts)."
+      - "Funding doesn't apply to shorts."
+      - "Funding only applies on weekends."
+    correct: 1
+    topic_tag: funding
+    explanation: "Positive funding = longs are paying shorts. So as a short, you EARN the funding payment. +0.08% × 3 payments/day = ~0.24% earned per day, just for holding the short. Often a tailwind for shorting during euphoric positive-funding periods."
+
+  - id: q6
+    text: "Which of these is a GOOD setup to enter a short?"
+    type: mcq
+    choices:
+      - "Price is in a strong uptrend; you feel it's 'gone too far' so you short to call the top."
+      - "Price just rejected a key resistance with a bearish engulfing candle and high volume; structure is breaking down."
+      - "You're bored and haven't traded today."
+      - "BTC dropped 2% earlier so the trend must continue down."
+    correct: 1
+    topic_tag: directionality
+    explanation: "Good shorts trade against confirmed reversal signals — a rejection at resistance + bearish pattern + volume confirms the level. Shorting strength (option A) is calling tops, which usually loses. Shorting from boredom or recent moves alone is just guessing."
+
+  - id: q7
+    text: "What's the difference between 'bearish bias' and 'short setup'?"
+    type: mcq
+    choices:
+      - "They're the same thing."
+      - "Bearish bias is an opinion that price might fall; a short setup is a specific entry/SL/TP plan with a clear trigger. Don't short because of bias — short because of setup."
+      - "Bearish bias is for spot, short setup is for futures."
+      - "Bearish bias is for beginners, short setup is for pros."
+    correct: 1
+    topic_tag: directionality
+    explanation: "Bias is opinion; setup is plan. Many traders short on bias alone ('I just feel like it'll dump') and lose because there's no defined invalidation. A proper short setup has entry, SL, TP, and a trigger condition — same discipline as a long."
+
+  - id: q8
+    text: "BTC pumps 12% overnight during low-liquidity Asian hours. You had a short position open from yesterday's close. What happened?"
+    type: mcq
+    choices:
+      - "Nothing — overnight moves don't affect crypto positions."
+      - "Your position was likely liquidated or significantly damaged — overnight pumps in low liquidity often hit short positions hard."
+      - "Your short auto-converted to a long."
+      - "You earned extra funding for holding overnight."
+    correct: 1
+    topic_tag: directionality
+    explanation: "Crypto's biggest pumps often happen 02:00-08:00 UTC during low-liquidity Asian session. Order books are thinner, manipulation is easier. Shorts that close before this window (or use proper SLs) survive; shorts left open get wrecked. Be especially careful with overnight short positions."
+
+  - id: q9
+    text: "A trader becomes a 'perma-bear' — always shorting, never longing. Is this a smart approach?"
+    type: mcq
+    choices:
+      - "Yes — bears are smarter than bulls."
+      - "Yes — the market always crashes eventually."
+      - "No — markets go both directions. Trade with structure, not against your bias. Perma-anything (bull OR bear) misses half the opportunities."
+      - "Only smart in spot, not in perps."
+    correct: 2
+    topic_tag: psychology
+    explanation: "Bias of either kind = forced trades and missed opportunities. The skill is trading with the chart's current structure regardless of direction. Some weeks the chart says short; some weeks it says long. The trader who can do both has 2× the opportunity set."
+
+  - id: q10
+    text: "A liquidation cascade in BTC just happened — price dropped 8% in 15 minutes due to over-leveraged longs being forcibly closed. What lesson does this reinforce for a short trader?"
+    type: mcq
+    choices:
+      - "Shorts always win during cascades."
+      - "Long-side over-leveraging creates predictable selling pressure when stops cluster — a structural edge for shorts who can identify when long positioning is extreme."
+      - "Cascades only happen on weekends."
+      - "Liquidation cascades only affect spot markets."
+    correct: 1
+    topic_tag: directionality
+    explanation: "Cascades happen when leverage builds asymmetrically. If everyone is long with tight stops near a support level, a small dip triggers a chain reaction. Shorts who spot extreme long positioning (high open interest, high funding rates, price near support with leverage) can position before the cascade. This is one of the structural edges of being able to short."

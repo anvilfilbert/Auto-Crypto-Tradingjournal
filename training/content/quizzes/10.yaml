@@ -1,0 +1,123 @@
+id: "10"
+lesson_id: 10
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Backtesting can tell you most things EXCEPT:"
+    type: mcq
+    choices:
+      - "Whether your strategy has positive expectancy on historical data."
+      - "Whether your strategy is robust across multiple symbols and time periods."
+      - "How you'll EMOTIONALLY respond to real-time drawdowns and real-money positions."
+      - "What the historical max drawdown was."
+    correct: 2
+    topic_tag: progression
+    explanation: "Backtests run instantly on historical data. You weren't there during the drawdowns. You didn't feel the 3-loss streak that takes hours of real time to live through. Real-time emotional execution is a completely separate skill that backtests cannot test for. That's why paper trading AND small-size live are necessary even after a strategy backtests well."
+
+  - id: q2
+    text: "What is 'overfitting' in backtesting?"
+    type: mcq
+    choices:
+      - "When your computer can't run the backtest fast enough."
+      - "Tuning a strategy until it looks great on past data, when really you've adapted it to historical NOISE rather than signal. The strategy then fails on new data."
+      - "When you use too many indicators."
+      - "When the backtest period is too long."
+    correct: 1
+    topic_tag: progression
+    explanation: "Overfitting is the central failure of naive backtesting. You can always tune filters until a strategy looks perfect on history. But you've matched the random noise of that period, not a real edge. Cure: walk-forward analysis (train on one period, test on a held-out different period). If performance only works in training, it's overfitted."
+
+  - id: q3
+    text: "Paper trading is necessary, but what does it FAIL to capture?"
+    type: mcq
+    choices:
+      - "Execution discipline."
+      - "Real fills, real fees, and especially real-money emotion (paper trading's emotional response is muted vs live)."
+      - "Strategy entry signals."
+      - "Order types."
+    correct: 1
+    topic_tag: progression
+    explanation: "Paper trading is great for executing the mechanics in real-time. But it can't fully test how YOU respond when actual money is at stake. Paper-trading 1 BTC and live-trading 1 BTC are different psychological tasks. Real money triggers loss-aversion stronger than paper. Hence: small-size live before scaling up."
+
+  - id: q4
+    text: "Why do many traders who are profitable in PAPER end up BREAK-EVEN or losing in SMALL-SIZE LIVE?"
+    type: mcq
+    choices:
+      - "The market changes overnight."
+      - "Real execution exposes things paper misses: real fills/slippage, fee/funding costs underestimated in paper, and emotional creep (early exits, position-size adjustments) that didn't show up in paper."
+      - "Luck runs out."
+      - "Exchanges sabotage their accounts."
+    correct: 1
+    topic_tag: progression
+    explanation: "Small-size live exposes the gap between paper performance and real performance. Common culprits: paper assumes perfect fills (live has slippage), paper doesn't make you emotional (live does → early exits or rule-breaking), paper underestimates funding/fee impact. Profitable in paper but break-even in live = an execution gap that needs identifying and fixing."
+
+  - id: q5
+    text: "How small should 'small-size live' be?"
+    type: mcq
+    choices:
+      - "Whatever feels comfortable."
+      - "Roughly 1% of capital you'd eventually deploy; small enough that losing 25% would be an annoyance, not a setback. For most retail, $100-500."
+      - "Always exactly $1,000."
+      - "Half your account."
+    correct: 1
+    topic_tag: progression
+    explanation: "The point of small-size is REAL money emotion at LOW total stakes. If losing 25% would devastate you, the size is too big (you'll trade scared). If losing 25% wouldn't move you at all, the size is too small (you won't feel the real emotion). $100-500 hits that range for most retail traders just starting."
+
+  - id: q6
+    text: "The '50/50/200 rule' suggests what minimum trade counts per phase?"
+    type: mcq
+    choices:
+      - "50 backtest trades, 50 paper trades, 200 live trades — all in one week."
+      - "50 paper trades, 50 small-size live trades, then 200+ trades at scaled sizing before full deployment — typically 6-12 months end-to-end."
+      - "50 minutes of paper trading."
+      - "50 trades total across all phases."
+    correct: 1
+    topic_tag: progression
+    explanation: "Roughly: 50 paper to learn execution. 50 small-size live to learn real-money emotion. 200+ at scaled size to confirm discipline holds. For a trader doing a few trades a week, that's 6-12 months. Slow on purpose. Boring survives."
+
+  - id: q7
+    text: "You just had 5 consecutive losing days at full-size live trading. What should you do?"
+    type: mcq
+    choices:
+      - "Increase size to win it back faster."
+      - "Step BACK in the progression — drop to small-size or paper for 50+ trades. Re-verify your edge in a low-stakes environment before re-scaling."
+      - "Quit trading forever."
+      - "Switch strategies immediately."
+    correct: 1
+    topic_tag: progression
+    explanation: "5 losing days = warning signal. Either your strategy has stopped working (market change), or your execution has degraded (discipline drift). You can't easily tell at full size. Drop back to small-size, run 50+ clean trades, observe whether it's the strategy or the execution. Step-back is a survival skill, not an admission of failure."
+
+  - id: q8
+    text: "Your account drops 25% from peak. Which is the smartest response?"
+    type: mcq
+    choices:
+      - "Trade more aggressively to recover faster."
+      - "Drop back to small-size, rebuild discipline, re-verify your edge before re-scaling."
+      - "Withdraw everything and quit."
+      - "Increase leverage to maximize recovery."
+    correct: 1
+    topic_tag: progression
+    explanation: "A 25% drawdown means something is broken — either strategy or execution. Continuing at the same size when broken just deepens the hole. Stepping back rebuilds the foundation. After 50+ small-size trades show consistent execution, you can re-scale. This is how survivors handle drawdowns. Doubling-down handles drawdowns the same way drinking handles dehydration."
+
+  - id: q9
+    text: "Why is the temptation to skip phases so strong?"
+    type: mcq
+    choices:
+      - "Skipping always works."
+      - "Social media shows people bragging about quick gains, creating constant pressure to skip ahead. The disciplined slow path looks boring by comparison — but boring survives, while bragging quick-gain accounts usually blow up."
+      - "Phases are illegal in most jurisdictions."
+      - "Skipping phases is faster and equally safe."
+    correct: 1
+    topic_tag: psychology
+    explanation: "FOMO doesn't just affect entries — it affects your entire progression. Watching others 'make it big' creates pressure to skip the apprenticeship. The hard truth: those big winners usually blow up within months. The trader who finishes year 1 with disciplined +15% is on a wealth-building path. The trader who's +200% in 3 months having skipped every step is on a viral blow-up path."
+
+  - id: q10
+    text: "Year 1 of trading: which outcome would a survival-focused trader actually prefer?"
+    type: mcq
+    choices:
+      - "+200% return having skipped paper trading and risked 10% per trade."
+      - "+15% return having followed the 50/50/200 progression and 1-2% per trade. The capital + discipline are now positioned to compound for years."
+      - "+1000% return through luck and high leverage."
+      - "Any return — risk doesn't matter."
+    correct: 1
+    topic_tag: progression
+    explanation: "The +200% trader is one bad day from blowing up. The +15% disciplined trader has built sustainable habits, has capital intact, has emotional discipline calibrated, and can compound for years. After 10 years, the disciplined trader is far ahead of the gambler who's likely had 2-3 blow-ups along the way. Slow is smooth. Smooth is consistent. Consistent compounds."
