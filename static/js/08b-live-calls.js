@@ -66,10 +66,19 @@ function renderCallTargetsPanel(call, pos) {
   const dir    = pos.direction === 'Long' ? 1 : -1;
   const tp1p   = parseFloat(call.tp1_price || 0);
   const beP    = parseFloat(pos.break_even_price || 0);
-  const tp1Crossed = tp1p > 0 && mark > 0 && (
+  const entryF = parseFloat(pos.entry_price || 0);
+  // TP1 must be on the FAR side of entry to be a valid "next target".
+  // If the position entered ABOVE TP1 (Long) or BELOW it (Short), TP1
+  // was already passed before entry and "TP1 reached" is meaningless.
+  const tp1OnFarSide = tp1p > 0 && entryF > 0 && (
+    (pos.direction === 'Long'  && tp1p > entryF) ||
+    (pos.direction === 'Short' && tp1p < entryF)
+  );
+  const tp1Crossed = tp1OnFarSide && mark > 0 && (
     (pos.direction === 'Long'  && mark >= tp1p) ||
     (pos.direction === 'Short' && mark <= tp1p)
   );
+  const tp1Stale = tp1p > 0 && entryF > 0 && !tp1OnFarSide;
   const callKey = call.symbol + '_' + call.direction;
 
   // Sanity check: the linked call's price scale must match the position's.
@@ -141,6 +150,12 @@ function renderCallTargetsPanel(call, pos) {
       ${tp1Crossed ? `
         <div class="be-prompt">
           ✅ <strong>TP1 reached</strong> — consider moving Stop Loss to break-even (${beP > 0 ? beP.toPrecision(5) : 'entry price'}) to protect profits
+        </div>` : ''}
+      ${tp1Stale ? `
+        <div style="font-size:.78rem;padding:8px 12px;margin-top:8px;
+                    background:rgba(255,179,0,.10);border:1px solid rgba(255,179,0,.35);
+                    border-radius:6px;color:var(--yellow);line-height:1.5">
+          ⚠ <strong>Linked call's TPs are stale</strong> — position entered at ${entryF.toPrecision(5)} but TP1 sits at ${tp1p.toPrecision(5)} (${pos.direction === 'Long' ? 'below' : 'above'} entry). The call's targets were valid for its avg entry, not for where you actually got in. Manage this trade against your own TP/SL on the position, not the call's.
         </div>` : ''}
       ${call.has_candle_close_sl ? `
         <div class="candle-sl-chip">⚠ Candle-close SL at ${call.sl_price} — monitor manually, close on 4H close below</div>` : ''}
