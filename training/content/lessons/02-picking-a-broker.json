@@ -1,0 +1,172 @@
+{
+  "slug": "02-picking-a-broker",
+  "subtitle": "Your broker shapes every trade you'll ever take. The fees, the liquidity, the order types, the rules. Most retail traders pick whichever name they heard first and never reconsider — that's a mistake worth a few percent of equity per year.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Picking a broker isn't a one-time decision you make and forget. It's a constraint that compounds across every trade you'll ever place. A 0.02% fee disadvantage on one trade is invisible. Across 500 trades a year at 5× leverage with 0.5% average move per trade, it eats 5% of your annual return. A liquidity disadvantage means worse fills on every entry and exit. A regulatory risk means one bad day for the exchange becomes one bad day for your entire account.</p><p>Most retail traders pick their broker by accident — whichever ad they saw, whichever platform a friend mentioned, whichever app the influencer they follow uses. Then they never reconsider. That's leaving money on the table, year after year.</p><p>This lesson is about the dimensions that actually matter and how to evaluate them. You won't get a single \"best broker\" recommendation because that depends on where you live, what you trade, and how much you trade. You'll get a framework for picking the right one for YOUR situation.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The dimensions that actually matter"
+    },
+    {
+      "type": "table",
+      "headers": ["Dimension", "Why it matters", "How to measure it"],
+      "rows": [
+        ["<strong>Fees</strong>", "Compounds across every trade. A 0.04% fee difference at 500 trades/yr = significant edge erosion.", "Compare maker AND taker fees. Most retail are takers. Watch for withdrawal fees too."],
+        ["<strong>Liquidity</strong>", "Wide spreads = slippage on every fill. Worse on smaller alt coins.", "Check the order book at the size YOU trade. 5 BTC order on a thin book = bad fill."],
+        ["<strong>Regulation / jurisdiction</strong>", "Determines KYC requirements, withdrawal rules, what happens if the exchange has legal trouble.", "Is the exchange licensed where it operates? US-regulated? Offshore? Where are your funds legally?"],
+        ["<strong>Security</strong>", "Determines what happens when (not if) something goes wrong — phishing attempt, exchange hack, lost device.", "2FA type supported? Withdrawal allowlist? Insurance fund? Withdrawal delay options?"],
+        ["<strong>Reliability / uptime</strong>", "Volatile events are when you most need access. Outages during flash crashes = locked out of liquidating losers.", "Check status pages. Read incident histories. The big crashes are when the exchange's reputation is set."],
+        ["<strong>Asset coverage</strong>", "Spot, perps, options, the alt coins you trade. Mismatch means routing trades elsewhere = friction.", "Does it list the symbols you want to trade? Both spot AND perp?"],
+        ["<strong>Order types</strong>", "Stop-limit, OCO, trailing — needed for proper risk management.", "Walk through opening an order: are the order types you need available?"],
+        ["<strong>Withdrawal speed</strong>", "Slow withdrawals tie up capital and make it harder to move funds OFF the exchange.", "Test small withdrawals before committing real size. Some exchanges batch hourly, some daily."],
+        ["<strong>UI / API quality</strong>", "Bad UI causes fat-finger errors. Bad API breaks automation.", "Spend 30 min in the demo / paper trading view before funding."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Fees — the silent edge eroder"
+    },
+    {
+      "type": "text",
+      "content": "<p>Crypto exchanges charge in three buckets:</p><ul><li><strong>Maker fee</strong> — charged when your order ADDS liquidity to the book (a limit order that doesn't immediately fill, waiting for someone else to hit it). Typically 0.02-0.05% on crypto exchanges. Some exchanges PAY makers a rebate (negative fee).</li><li><strong>Taker fee</strong> — charged when your order REMOVES liquidity (a market order, or a limit order priced through the spread). Typically 0.05-0.10%, more than makers because takers are the easier customers to serve.</li><li><strong>Funding fee</strong> — only on perpetuals, paid every 8h between longs and shorts (covered in lesson 1).</li></ul><p>Plus less-obvious costs: withdrawal fees, deposit fees on some methods, and \"slippage\" — the cost of your order moving the price as it fills.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Maker vs taker — a worked example"
+    },
+    {
+      "type": "table",
+      "headers": ["Scenario", "Notional / trade", "Fee rate", "Fee / trade", "500 trades / year"],
+      "rows": [
+        ["Maker (limit, patient)", "$10,000", "0.02%", "$2.00", "$1,000"],
+        ["Taker (market, fast)", "$10,000", "0.05%", "$5.00", "$2,500"],
+        ["Taker on high-fee exchange", "$10,000", "0.10%", "$10.00", "$5,000"],
+        ["Maker rebate (some exchanges)", "$10,000", "-0.01%", "-$1.00 (you get paid)", "-$500 (you receive $500)"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>On $300 starting equity, a $1,000-$5,000 annual fee delta is the difference between profitable and not. On a $30,000 account, it's $30,000 vs $0 over 5 years.</p><p>The pattern: be a maker whenever possible. Use limit orders. Sit on the book. Let the market come to you. Only use market orders when you NEED instant fills (closing a losing trade, taking profit at a level the price is rushing past).</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Fee tier dynamics",
+      "content": "<p>Most exchanges have volume-based fee tiers — trade more, pay less. A trader doing $1M monthly volume might pay 0.04% taker while a $10K/month trader pays 0.08%. This creates pressure to over-trade just to chase fee tiers, which usually costs more in losing trades than it saves in fees. Don't trade more to lower your fees. Trade better.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Liquidity — what \"slippage\" actually means"
+    },
+    {
+      "type": "text",
+      "content": "<p>The order book on a major exchange might show \"BTC bid 60,000 / ask 60,005\" — looks tight. But that's the BEST bid/ask, only valid for the first few BTC available. As you go deeper into the book, prices get worse.</p><p>If you market-buy 5 BTC and the order book has 0.2 BTC at $60,005, 0.5 BTC at $60,010, 1 BTC at $60,025, and so on, your average fill price might be $60,040 — $35 worse than the best ask. That's slippage. It's a hidden cost that gets worse with bigger orders and on less-liquid markets.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Market", "Spread (BTC)", "Liquidity (depth $1M from mid)", "Slippage on $10K market buy"],
+      "rows": [
+        ["Top exchange BTC/USDT", "$1-3", "Very deep", "~$1-2"],
+        ["Mid-tier exchange BTC/USDT", "$5-15", "Decent", "~$5-15"],
+        ["Top exchange alt coin (top 50)", "$0.001-0.01", "Reasonable", "~0.05% of order"],
+        ["Mid exchange small alt", "$0.01-1", "Thin", "~0.3-1% of order"],
+        ["Any new listing on day 1", "Wide and erratic", "Wild swings", "Potentially 5%+"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>The lesson: <strong>match your trade size to the venue's liquidity</strong>. If you want to trade $50K of an alt coin, do it where the order book can absorb that without you moving the price 2%. If you can't find adequate liquidity, either trade a smaller size, switch venues, or use multiple limit orders over time instead of one market order.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Regulation — where are your funds, really?"
+    },
+    {
+      "type": "text",
+      "content": "<p>Crypto exchanges fall into three rough buckets:</p><ul><li><strong>Fully regulated (e.g., US-licensed, EU MiCA-compliant)</strong>. Full KYC required. Withdrawal limits. Often spot-only or limited derivatives. Your funds have some legal protection. Slower onboarding. Geographic restrictions strict.</li><li><strong>Offshore but operating internationally (most large derivatives exchanges)</strong>. KYC required to varying degrees. Wide product coverage including high-leverage perps. Legal protection limited to whatever the offshore jurisdiction provides. Geographic restrictions exist on paper but often unenforced via VPN.</li><li><strong>Fully offshore / unregulated</strong>. Minimal or no KYC. Unlimited withdrawals. Anything goes. Zero legal recourse if anything goes wrong. Higher risk.</li></ul>"
+    },
+    {
+      "type": "text",
+      "content": "<p>The trade-off: regulation = safety + restrictions. Offshore = flexibility + risk. There's no universally right answer — it depends on what you're trading, how much, and your jurisdiction's stance on crypto.</p><p><strong>Practical rule of thumb:</strong> the larger your account relative to your net worth, the more weight you should put on regulation and the less on \"highest leverage available\".</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "danger",
+      "title": "The custody question",
+      "content": "<p>When your funds sit on an exchange, you don't own crypto — you own a CLAIM against the exchange for crypto. The exchange has the actual private keys. If the exchange goes bankrupt, gets hacked, has its CEO arrested, or freezes withdrawals, your claim becomes a line in a queue of creditors.</p><p>This isn't theoretical. Multiple major exchanges have collapsed in crypto history (some fraud-related, some just bad risk management). Customers in each case waited months to years to recover partial funds — some never did.</p><p><strong>The rule that protects you:</strong> only keep on the exchange what you're actively trading. Move profits to a self-custody wallet (hardware wallet ideal) weekly or monthly. The smaller your exchange balance, the smaller your exchange risk.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Security — the boring stuff that saves accounts"
+    },
+    {
+      "type": "text",
+      "content": "<p>Account-takeover via phishing, SIM-swap, or credential stuffing is more common than exchange hacks. Most account losses are user-side, not exchange-side. The good news: defending yourself is mostly free and takes 30 minutes.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Defense", "Strength", "How"],
+      "rows": [
+        ["<strong>2FA via hardware key</strong> (YubiKey, etc.)", "Strongest. Physical possession required.", "Generally needs a premium plan or specific exchange support."],
+        ["<strong>2FA via TOTP app</strong> (Authy, Google Authenticator)", "Strong. Codes don't leave your device.", "Available on every major exchange. Use this minimum."],
+        ["<strong>2FA via SMS</strong>", "WEAK. SIM-swap attacks defeat this.", "Avoid if possible. If forced, also enable an authenticator."],
+        ["<strong>Withdrawal allowlist</strong>", "Critical. Even if account is breached, funds can only go to pre-approved addresses.", "Enable on every exchange that supports it. Add your hardware wallet only."],
+        ["<strong>Withdrawal time-delay</strong>", "Critical. 24-48h delay on first withdrawal to new address = time to detect breach.", "Some exchanges offer this. Enable if available."],
+        ["<strong>Unique strong password</strong>", "Baseline. Stops credential-stuffing.", "Use a password manager. Different password per exchange."],
+        ["<strong>Email account also locked down</strong>", "Critical. Email = the recovery channel for the exchange.", "Same 2FA + strong password rules. Treat email like another exchange account."]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The withdrawal allowlist is the most important defense",
+      "content": "<p>If an attacker gets your password AND your 2FA code (somehow), they can still log in — but they can't withdraw anywhere except YOUR pre-approved addresses. They'd have to wait the allowlist-change delay (usually 24-48h) and during that window you'd get an email alert giving you time to lock the account. Of all the security features, this is the one that turns \"my account got hacked\" from \"I lost everything\" into \"I noticed and got it back\".</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Operational reliability"
+    },
+    {
+      "type": "text",
+      "content": "<p>The flash crash is when you find out which exchanges actually work. When BTC drops 10% in 15 minutes, the order book gets overwhelmed, the matching engine slows down, the API returns errors, and the website goes down. This is the EXACT moment you need to either: cut a losing trade, place a hedge, or buy a dip.</p><p>Reliable exchanges stay up through these moments. Unreliable ones lock you out at the worst possible time. Both are common. The way to tell: check the exchange's incident history page (if they publish one) and search forums for \"[exchange name] outage [date of last major flash crash]\". Patterns become visible quickly.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Mobile vs desktop matters",
+      "content": "<p>Most exchange mobile apps are stripped-down versions of the web UI. Order types are limited, charts are basic, and during high-load events the apps lag more than the web. For active trading, use desktop. Reserve mobile for monitoring and emergency close-outs.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Decision framework — which broker for which use case"
+    },
+    {
+      "type": "table",
+      "headers": ["Your goal", "Look for", "Compromise on"],
+      "rows": [
+        ["Long-term spot holding", "Strong regulation + custody options + insurance + ability to withdraw to self-custody", "Higher fees, slower withdrawals, fewer products"],
+        ["Active day trading futures", "Deep liquidity + low taker fees + reliable API + extensive order types", "Some regulation flexibility (most retail perps trade offshore)"],
+        ["Trading small alts", "Wide asset coverage + spot pairs + acceptable liquidity on alts", "May need 2-3 exchanges to cover everything"],
+        ["Running an auto-trader bot", "Stable API + good documentation + sub-account support + low API rate limits", "UI quality (you'll see it less)"],
+        ["Just learning, not real money yet", "Whichever has the best paper-trading mode + clearest UI", "Fees, liquidity (paper money — doesn't matter)"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The minimum checklist before funding any exchange"
+    },
+    {
+      "type": "text",
+      "content": "<p>Whatever broker you pick, run this checklist BEFORE you transfer significant funds:</p><ol><li><strong>Enable TOTP 2FA</strong> (Authy or Google Authenticator). Disable SMS 2FA if it's also on.</li><li><strong>Set a unique strong password</strong> via password manager. Save the recovery codes for the 2FA in a secure spot (paper safe, encrypted password manager).</li><li><strong>Lock down your email account</strong> with the same 2FA standards. Email = recovery channel for the exchange.</li><li><strong>Set up withdrawal allowlist</strong>: add only your self-custody wallet addresses. Anything else = denied even if account breached.</li><li><strong>Enable withdrawal-change time-delay</strong> if the exchange supports it. 24-48h delay buys you time to detect a breach.</li><li><strong>Do a small test deposit + withdrawal cycle</strong> ($20-50). Confirm the withdrawal actually works in your timeframe before relying on it.</li><li><strong>Test the order types you'll use</strong>: place a tiny stop-limit, place a tiny OCO, verify they behave as expected.</li><li><strong>Check the incident history</strong>: search for the exchange's name + \"outage\" + \"flash crash\". Look at how they handled the last 2-3 volatile events.</li><li><strong>Read the fee schedule</strong> for YOUR volume tier. Note both maker and taker rates. Note withdrawal fees per asset.</li><li><strong>Confirm your jurisdiction</strong> is supported. Some exchanges restrict certain countries — better to know before you have funds parked there.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The hard takeaway",
+      "content": "<p>You probably won't pick the perfect broker on the first try. That's fine — almost no one does. What matters: <strong>don't keep more on any single exchange than you can lose</strong>. Treat exchanges like rented warehouses for the inventory you're actively moving, not like banks for long-term storage. Profits move to self-custody on a schedule. Trading capital stays. That single rule survives most exchange failures most of the time.</p>"
+    }
+  ]
+}

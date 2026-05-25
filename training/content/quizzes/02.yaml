@@ -1,0 +1,123 @@
+id: "02"
+lesson_id: 2
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "You place a limit order to buy BTC at $59,500 when the current ask is $60,000. The order sits on the book for 20 minutes before someone hits it. Which fee category applies?"
+    type: mcq
+    choices:
+      - "Taker fee — you initiated the trade."
+      - "Maker fee — you ADDED liquidity to the book and waited."
+      - "No fee — limit orders are always free."
+      - "A funding fee — only happens on spot."
+    correct: 1
+    topic_tag: costs
+    explanation: "Limit orders that don't immediately fill ADD liquidity to the order book. You're the 'maker' of that liquidity. Maker fees are generally lower than taker fees because exchanges value patient orders that fill out the book. Some exchanges even pay maker rebates."
+
+  - id: q2
+    text: "On a $10,000 notional trade with a 0.05% taker fee, what does the fee cost? And what's the annual cost at 500 trades?"
+    type: mcq
+    choices:
+      - "$0.50 per trade · $250 per year"
+      - "$5 per trade · $2,500 per year"
+      - "$50 per trade · $25,000 per year"
+      - "$500 per trade · negligible annual"
+    correct: 1
+    topic_tag: costs
+    explanation: "0.05% of $10,000 = $5 per trade. Across 500 trades = $2,500. This is why being a maker (limit orders) instead of taker (market orders) compounds significantly — it can easily be the difference between profitable and not."
+
+  - id: q3
+    text: "You market-buy 5 BTC. The order book shows the first 0.2 BTC at $60,000, the next 0.5 BTC at $60,010, etc. Your average fill price comes in at $60,040. What is the $200 difference from the best ask called?"
+    type: mcq
+    choices:
+      - "Funding fee"
+      - "Slippage"
+      - "Spread"
+      - "Maker rebate"
+    correct: 1
+    topic_tag: costs
+    explanation: "Slippage is the cost of your order MOVING the price as it consumes liquidity at successively worse levels. It's a hidden cost that gets worse with larger orders and on thinner books. Match your trade size to the venue's liquidity, or break large orders into multiple smaller ones."
+
+  - id: q4
+    text: "Which of these 2FA methods is the WEAKEST for protecting an exchange account?"
+    type: mcq
+    choices:
+      - "Hardware key (e.g., YubiKey)"
+      - "TOTP app (e.g., Authy, Google Authenticator)"
+      - "SMS-based code sent to your phone number"
+      - "Biometric (fingerprint) on the exchange app"
+    correct: 2
+    topic_tag: security
+    explanation: "SMS 2FA is defeated by SIM-swap attacks — an attacker convinces your phone carrier to transfer your number to their device, then receives the SMS code. This has been used to drain crypto accounts repeatedly. Use TOTP at minimum; hardware keys are even better."
+
+  - id: q5
+    text: "The withdrawal allowlist (or 'whitelist') feature does what?"
+    type: mcq
+    choices:
+      - "Allows you to withdraw faster by paying higher fees."
+      - "Restricts withdrawals to pre-approved addresses only, with a delay for adding new addresses."
+      - "Lets the exchange's compliance team review your withdrawals."
+      - "Automatically converts withdrawals to USDT before sending."
+    correct: 1
+    topic_tag: security
+    explanation: "Withdrawal allowlist is the most important defense after 2FA. Even if your account is fully compromised (password + 2FA stolen), an attacker can only withdraw to addresses you've already approved. Adding a new address typically requires a 24-48h delay, giving you time to detect the breach via email alerts."
+
+  - id: q6
+    text: "Your friend keeps $80,000 of BTC on a major exchange because 'it's easier than self-custody'. The exchange becomes insolvent and freezes withdrawals during bankruptcy proceedings. What does your friend legally own?"
+    type: mcq
+    choices:
+      - "$80,000 of BTC, fully protected by the exchange's insurance."
+      - "An unsecured claim against the exchange's bankruptcy estate, paid out as a fraction over months/years."
+      - "Nothing — assets on exchanges are gone the moment the exchange dies."
+      - "$80,000 in USDT (auto-converted on insolvency)."
+    correct: 1
+    topic_tag: security
+    explanation: "When your funds sit on an exchange, you own a CLAIM against the exchange, not the asset itself. In bankruptcy, you become an unsecured creditor (or sometimes preferred, depending on jurisdiction). Historically these proceedings drag on for years and pay out fractions of original value. The defense: keep on-exchange only what you're actively trading."
+
+  - id: q7
+    text: "Why might it be a bad idea to chase volume-based fee tiers by over-trading?"
+    type: mcq
+    choices:
+      - "Higher volume actually increases your fees on most exchanges."
+      - "Trading more usually generates more losing trades that cost more than the fee savings."
+      - "Exchanges penalize accounts that trade too often."
+      - "Fee tiers are illegal in most jurisdictions."
+    correct: 1
+    topic_tag: costs
+    explanation: "Fee tiers create perverse incentive: trade more to lower fees. But the marginal trades you add aren't your best ones — they're the borderline ones you'd normally skip. The expected loss on those weak trades typically exceeds the fee savings. Trade better, not more."
+
+  - id: q8
+    text: "An exchange's API goes down for 12 minutes during a 10% BTC flash crash. You had a leveraged long position. What was the actual cost of that outage?"
+    type: mcq
+    choices:
+      - "Zero — APIs go down all the time, no big deal."
+      - "Whatever the price moved against you during those 12 minutes, plus the funding payments during that window."
+      - "Just a missed opportunity to buy the dip."
+      - "Only the API access fee for that period."
+    correct: 1
+    topic_tag: security
+    explanation: "Outages during volatile events are the worst. You can't close losing positions, can't set new stop losses, can't act on opportunities. The cost is the price drift against your open positions during the outage window. This is why reliability matters MORE during flash crashes than during normal markets — it's the moment you most need access."
+
+  - id: q9
+    text: "Which of these approaches BEST follows the rule 'only keep on the exchange what you're actively trading'?"
+    type: mcq
+    choices:
+      - "Keep all crypto on the exchange — it's easier to manage in one place."
+      - "Keep enough margin for active trades on the exchange; move profits and idle capital to self-custody on a regular schedule."
+      - "Withdraw to self-custody only when the price is at all-time-highs."
+      - "Spread funds equally across 10 different exchanges."
+    correct: 1
+    topic_tag: security
+    explanation: "The point is to minimize what's at risk if the exchange fails. Active trading capital has to be on the exchange. Profits and long-term holdings shouldn't be. Make it a scheduled habit (weekly/monthly) to move excess off-exchange. This survives most exchange failures most of the time."
+
+  - id: q10
+    text: "You're picking a broker primarily for running an automated trading bot. Which is the MOST important factor?"
+    type: mcq
+    choices:
+      - "The exchange's mobile app quality."
+      - "Stable API + good documentation + acceptable API rate limits + sub-account support."
+      - "The exchange's marketing budget — bigger exchanges are safer."
+      - "Which exchange your favorite influencer uses."
+    correct: 1
+    topic_tag: market_basics
+    explanation: "For automation, the API is your interface — UI quality barely matters because you don't see it. What matters: API uptime, clear documentation, rate limits high enough for your bot's traffic, and sub-account support so you can isolate the bot from your main account. Mobile, marketing, and influencer endorsements are irrelevant."
