@@ -10,7 +10,9 @@
   </div>
   <div class="training-progress-text">
     {{ passed }} of {{ total }} lessons passed
-    <button id="training-reset-btn" class="training-reset-link" onclick="trainingResetProgress()">Reset all progress</button>
+    <button id="training-reset-btn" class="training-reset-link"
+            data-reset-url="{{ url_for('training.api_reset_progress') }}"
+            onclick="trainingResetProgress(this)">Reset all progress</button>
   </div>
   {% if unlock_mode == 'open' %}
   <div class="training-open-banner">
@@ -77,11 +79,13 @@
 {% endblock %}
 {% block scripts %}
 <script>
-async function trainingResetProgress() {
+async function trainingResetProgress(btn) {
+  const url = btn.dataset.resetUrl;
+  if (!url) { alert('Reset URL not configured.'); return; }
   if (!confirm("This will WIPE ALL quiz progress (yours + anyone else who used this app).\n\nLessons content stays. Lock state resets to fresh.\n\nProceed?")) return;
   if (!confirm("Final check — really reset? This cannot be undone.")) return;
   try {
-    const r = await fetch(window.location.pathname.replace(/\/$/, '') + 'api/reset-progress', {
+    const r = await fetch(url, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({confirm: 'RESET'})
