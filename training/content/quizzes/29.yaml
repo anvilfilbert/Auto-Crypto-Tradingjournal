@@ -1,0 +1,123 @@
+id: "29"
+lesson_id: 29
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "ATR measures what?"
+    type: mcq
+    choices:
+      - "Trading volume."
+      - "The AVERAGE RANGE of recent candles (default 14-period), accounting for gaps. Price-denominated number that represents recent volatility."
+      - "Price direction."
+      - "Order book depth."
+    correct: 1
+    topic_tag: atr
+    explanation: "ATR = average true range. It's a measurement of how much the asset has been moving on average. The output is in price units — e.g., '4H ATR = $1,200' means the average 4H candle range has been $1,200 recently. Use this to scale stops appropriately."
+
+  - id: q2
+    text: "Why do FIXED % stop losses (e.g., 'always 2% below entry') fail across different assets?"
+    type: mcq
+    choices:
+      - "They work fine across all assets."
+      - "2% on a calm asset can be 4× daily volatility (wide enough); 2% on a volatile asset can be inside a single candle's range (almost guaranteed stop-out). Different assets need different scaling."
+      - "They're too expensive."
+      - "Exchanges don't allow them."
+    correct: 1
+    topic_tag: atr
+    explanation: "Same numerical % means different things on different assets. 2% on calm BTC vs 2% on a volatile alt = different multiples of normal noise. ATR fixes this by scaling stops to ACTUAL recent volatility — '1.5× ATR' is approximately the same level of conservativeness on every asset."
+
+  - id: q3
+    text: "The standard rule of thumb for ATR-based stop loss is:"
+    type: mcq
+    choices:
+      - "0.25× ATR (very tight)."
+      - "1.5× ATR — gives the trade room for normal volatility without being so wide that R:R math breaks down."
+      - "10× ATR (extremely wide)."
+      - "ATR doesn't apply to stops."
+    correct: 1
+    topic_tag: atr
+    explanation: "1.5× ATR is the practical sweet spot. Tight enough to keep R:R reasonable; wide enough to absorb normal noise. Tighter (0.75-1× ATR) for scalps; wider (2-3× ATR) for swing trades. 1.5× is the default for most active trading."
+
+  - id: q4
+    text: "What's the HYBRID approach combining ATR and structural SL?"
+    type: mcq
+    choices:
+      - "Use only ATR."
+      - "Identify the STRUCTURAL stop (below swing low, below engulfing candle). Check ATR distance. If structural is closer than 0.75× ATR, widen to 0.75-1× ATR. If further than 2× ATR, reconsider the trade. Otherwise use the structural SL."
+      - "Use only swing lows."
+      - "Random stops."
+    correct: 1
+    topic_tag: atr
+    explanation: "Pure ATR can land at structurally meaningless prices. Pure structural can be too tight in volatile periods. Hybrid: structural with ATR-based guardrails — gives you both technical meaning (a specific invalidation level) AND volatility-appropriate buffer."
+
+  - id: q5
+    text: "BTC 4H ATR = $1,200. Entry at $60K. You use a 1.5× ATR SL. Where does SL go?"
+    type: mcq
+    choices:
+      - "$59,400 (1% below)."
+      - "$58,200 (1.5 × $1,200 = $1,800 below entry)."
+      - "$55,000 (10% below)."
+      - "$59,988 (very tight)."
+    correct: 1
+    topic_tag: atr
+    explanation: "1.5× ATR = $1,800. Entry $60,000 minus $1,800 = $58,200. SL distance is 3% from entry. This scales the stop to current volatility — if ATR were $2,000, the SL would automatically be wider (3.3%). Stops adapt instead of needing manual adjustment per asset/regime."
+
+  - id: q6
+    text: "How do ATR-based stops integrate with the position-sizing formula from lesson 7?"
+    type: mcq
+    choices:
+      - "They don't."
+      - "Same formula: notional = $risk / SL distance %. ATR sets the SL distance. Larger ATR → wider SL → smaller notional (to keep dollar risk constant). The math is automatic — bigger volatility, smaller position size."
+      - "ATR overrides position sizing."
+      - "ATR makes position sizing unnecessary."
+    correct: 1
+    topic_tag: position_sizing
+    explanation: "Beautiful integration. ATR-based SL distance feeds straight into the lesson 7 formula. Result: when volatility is high, ATR is high, SL is wider, notional is smaller. When volatility is low, opposite. Dollar risk stays at 1% regardless of regime — automatic adaptation to market conditions."
+
+  - id: q7
+    text: "What does ATR RISING signal?"
+    type: mcq
+    choices:
+      - "Calmer market."
+      - "Volatility EXPANDING — markets are getting more active. Wider stops + bigger TPs needed. Smaller notional to keep dollar risk constant. Also signals you may need to switch strategies (less mean-reversion, more momentum)."
+      - "Lower trade frequency."
+      - "Bullish only."
+    correct: 1
+    topic_tag: volatility
+    explanation: "ATR isn't static — it cycles. Rising ATR = expanding volatility regime. Practical implications: tighten position sizes (same dollar risk needs smaller notional), expand TPs (moves go further in volatile regimes), expect more whipsaws. Falling ATR = contraction, often precedes a Bollinger Squeeze and eventual expansion."
+
+  - id: q8
+    text: "What's the SMALLEST acceptable ATR multiple for SL placement in active trading?"
+    type: mcq
+    choices:
+      - "0.1× ATR (extreme tight)."
+      - "Roughly 0.75× ATR — anything tighter almost always gets stopped on noise. The trade needs at least some volatility room to breathe."
+      - "0.25× ATR."
+      - "There's no minimum."
+    correct: 1
+    topic_tag: atr
+    explanation: "Stops tighter than ~0.75× ATR get hit by random fluctuation way too often — you're stopped out repeatedly on noise even when your trade thesis is correct. 0.75× is the practical minimum for stops to have any breathing room. Scalp-grade tight stops (0.5×) work in some specific contexts but require very precise entries."
+
+  - id: q9
+    text: "Why does the 'wrong timeframe ATR' matter?"
+    type: mcq
+    choices:
+      - "It doesn't matter."
+      - "ATR is timeframe-specific. 1H ATR is much SMALLER than 4H ATR, which is smaller than daily. If you're trading on 4H but using 1H ATR for stops, your stops will be way too tight. Match the ATR period to your trade timeframe."
+      - "Always use 1m ATR."
+      - "Use daily ATR for everything."
+    correct: 1
+    topic_tag: atr
+    explanation: "Each timeframe has its own typical ATR. A 1H candle's average range is naturally smaller than a 4H candle's range. If you're trading on 4H, your stops need to absorb 4H-scale volatility — use 4H ATR. Mixing timeframes for ATR is a subtle but common mistake that leads to inappropriate stops."
+
+  - id: q10
+    text: "Worked example: BTC 4H ATR $1,200, structural SL at $58,500 ($1,500 below $60K entry = 1.25× ATR). Acceptable?"
+    type: mcq
+    choices:
+      - "Too tight — needs widening to 2× ATR minimum."
+      - "Yes — 1.25× ATR is comfortably above the 0.75× minimum and below the 2× threshold. Structural level + appropriate volatility room. Use this SL with position-size formula to calculate notional."
+      - "Too wide — narrow to 0.5× ATR."
+      - "Skip the trade."
+    correct: 1
+    topic_tag: atr
+    explanation: "1.25× ATR is in the sweet spot — wide enough to absorb noise (above 0.75× minimum), tight enough for good R:R (below 2× threshold). Plus the structural meaning (below swing low) gives the SL technical relevance. This is exactly the hybrid approach in action."

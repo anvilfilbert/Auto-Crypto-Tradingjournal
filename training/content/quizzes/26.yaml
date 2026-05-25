@@ -1,0 +1,123 @@
+id: "26"
+lesson_id: 26
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Why does volume matter for evaluating any price move?"
+    type: mcq
+    choices:
+      - "Volume tells you the price."
+      - "Price tells you WHERE the market is. Volume tells you HOW MANY PARTICIPANTS pushed it there. High volume = real conviction; low volume = often a fake move that reverses."
+      - "Volume is the same as fees."
+      - "Volume only matters on weekends."
+    correct: 1
+    topic_tag: volume
+    explanation: "Volume is the participation dimension. A 2% move on huge volume = real demand/supply. The same 2% move on tiny volume = a few traders pushed it, will likely revert. Same chart pattern means different things at different volumes. Always check volume before trusting a signal."
+
+  - id: q2
+    text: "A breakout above resistance happens on LOW volume. What's the smart interpretation?"
+    type: mcq
+    choices:
+      - "Continuation guaranteed."
+      - "Likely a FAKE breakout — the price moved past resistance but without real participation. Often returns below within a few candles. Wait for above-average volume to confirm the breakout is real."
+      - "Same as high-volume breakout."
+      - "Time to enter aggressively."
+    correct: 1
+    topic_tag: volume
+    explanation: "Low-volume breakouts fail much more often than high-volume breakouts. Without participation, there's no real commitment to the new range — sellers above the level can easily push price back. The rule: above-average volume confirms breakouts; below-average volume is a warning that it might not hold."
+
+  - id: q3
+    text: "Bearish volume divergence is:"
+    type: mcq
+    choices:
+      - "Volume going up while price goes up."
+      - "Price makes HIGHER HIGHS but volume DECREASES on each subsequent high. Fewer participants are committing to each new peak — momentum dying. Reversal warning."
+      - "Volume doubling."
+      - "Same as bullish."
+    correct: 1
+    topic_tag: divergence
+    explanation: "Bearish volume divergence = price up but participation down. Each new high is being made by fewer buyers. The trend is losing fuel. Often a more reliable warning than indicator-based divergences because it directly measures participation rather than derived momentum."
+
+  - id: q4
+    text: "What is VWAP?"
+    type: mcq
+    choices:
+      - "A type of moving average."
+      - "Volume-Weighted Average Price — the average price for a period, with each price level weighted by volume. Standard VWAP resets daily. Used by institutional traders as a benchmark for fair fill price."
+      - "A risk management tool."
+      - "Same as RSI."
+    correct: 1
+    topic_tag: vwap
+    explanation: "VWAP weights average price by participation. Each price level contributes to the average in proportion to how much volume traded there. Institutional traders measure their execution against VWAP — 'did I buy below VWAP?' = 'did I get above-average pricing?'. This creates self-fulfilling level behavior."
+
+  - id: q5
+    text: "Price above VWAP and pulling back — VWAP often acts as:"
+    type: mcq
+    choices:
+      - "Resistance."
+      - "Support — institutional flow has been buying above VWAP, will defend it as a 'still buying below average' opportunity. Especially reliable on 1H/5m timeframes for day-trading."
+      - "Random level."
+      - "Always breaks down."
+    correct: 1
+    topic_tag: vwap
+    explanation: "Price holding above VWAP means accumulated buying is at or below current price. Pullbacks to VWAP are attractive entries for institutional flow — buying back at or below average price. This creates dynamic support behavior. Mirror logic for price below VWAP (acts as resistance on bounces)."
+
+  - id: q6
+    text: "Anchored VWAP differs from standard VWAP in that it:"
+    type: mcq
+    choices:
+      - "Updates more frequently."
+      - "Starts the VWAP calculation from a SPECIFIC event (major swing, news date) and accumulates from there — useful for swing trading where daily-reset VWAP isn't long enough."
+      - "Uses a different formula."
+      - "Doesn't include volume."
+    correct: 1
+    topic_tag: vwap
+    explanation: "Standard VWAP resets daily, limiting it to intraday use. Anchored VWAP starts from a meaningful event (major swing low, halving event, etc.) and accumulates. This gives you the average price from that event — often acts as long-term support/resistance over weeks-months. Powerful for swing trading."
+
+  - id: q7
+    text: "Comparing volume across different markets — what's the right approach?"
+    type: mcq
+    choices:
+      - "Use absolute volume numbers; same scale across all assets."
+      - "ALWAYS compare to RECENT volume on the SAME instrument. '10K volume' means completely different things on a small alt vs BTCUSDT. Use volume MA as the baseline."
+      - "Only volume on Coinbase matters."
+      - "Volume comparison is impossible."
+    correct: 1
+    topic_tag: volume
+    explanation: "Volume scales with the market. A '10K' volume bar on a small alt could be 5× average; the same number on BTCUSDT might be 0.01× average. Always compare to the volume baseline of the same instrument's recent activity (e.g., 20-period volume SMA). 'Above-average' is the meaningful relative metric."
+
+  - id: q8
+    text: "A 'volume climax' (huge volume spike, 3-5× average) at a price extreme often signals what?"
+    type: mcq
+    choices:
+      - "Continuation of the trend."
+      - "Short-term EXHAUSTION — everyone who wanted to buy (or sell) just did. Often marks a temporary reversal point. Watch for reversal candle confirmation to act."
+      - "Random noise."
+      - "The market is broken."
+    correct: 1
+    topic_tag: volume
+    explanation: "Volume climaxes often mark capitulation or euphoria peaks. At a top: everyone who wanted in just bought; no more buyers = price has to fall. At a bottom: everyone who wanted out just sold; no more sellers = price can rise. The climax candle itself isn't the entry — wait for the reversal candle that confirms the exhaustion."
+
+  - id: q9
+    text: "Healthy uptrend volume pattern:"
+    type: mcq
+    choices:
+      - "Same volume on every candle."
+      - "Higher volume on UP candles, lower volume on PULLBACK candles. Buyers are pressing harder than sellers; pullbacks lack conviction. Trend is sustainable."
+      - "Volume only on red candles."
+      - "Random pattern."
+    correct: 1
+    topic_tag: volume
+    explanation: "Healthy trends show 'pressure' from one side. Up volumes > pullback volumes in an uptrend = sellers can't push hard, buyers can. The opposite (rising volume on pullbacks, weak up volume) signals trend exhaustion. Volume distribution between up/down candles tells you whether the trend has real backing."
+
+  - id: q10
+    text: "Worked example: BTC bearish engulfing at $66K resistance + 2.8× volume + bearish RSI divergence + VWAP at $63K. Trade analysis?"
+    type: mcq
+    choices:
+      - "Skip — too many signals."
+      - "A+ SHORT — pattern (engulfing) + level (resistance) + volume (2.8× avg = real selling) + RSI divergence + VWAP target ($63K) all aligned. 5 confluences = high-quality setup."
+      - "Long opportunity."
+      - "Random."
+    correct: 1
+    topic_tag: volume
+    explanation: "Multi-factor confluences make trades. Each signal alone is weaker; combined they're strong. The 2.8× volume is the participation confirmation that turns the engulfing from 'maybe a fake' into 'real selling'. The VWAP at $63K gives a natural TP — institutional flow tends to target VWAP. Consider sizing up to 2-3% if rules allow."

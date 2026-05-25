@@ -1,0 +1,124 @@
+{
+  "slug": "27-adx-stochastic",
+  "subtitle": "ADX measures trend STRENGTH — telling you whether to trade trending strategies or range strategies. Stochastic finds extremes WITHIN trends — finding pullback entries when RSI shows nothing useful. Two underrated indicators that together fill important gaps.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Two indicators that don't get the limelight RSI and MACD do but solve specific problems those don't. ADX answers \"is the market actually trending?\" — separating trend-following setups from range setups. Stochastic catches extremes within a trend that RSI misses because it's regime-saturated.</p><p>Both are worth understanding even if you don't use them daily — they fill blind spots in your other indicators.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "ADX — the trend strength meter"
+    },
+    {
+      "type": "text",
+      "content": "<p>ADX (Average Directional Index) is a non-directional momentum indicator. It only measures STRENGTH of the prevailing trend, not direction. Output is 0-100:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["ADX value", "Trend strength", "What to do"],
+      "rows": [
+        ["<strong>Below 20</strong>", "Weak trend / range market", "Don't use trend-following setups; mean-reversion may work"],
+        ["<strong>20-25</strong>", "Trend beginning to form", "Wait for confirmation before trend trades"],
+        ["<strong>25-40</strong>", "Established trend (strong)", "Trend-following setups work well"],
+        ["<strong>40-60</strong>", "Very strong trend", "Stay with the trend; don't fade strength"],
+        ["<strong>Above 60</strong>", "Extreme trend (rare)", "Watch for exhaustion; reversal more likely"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The 25 threshold",
+      "content": "<p>The most useful single number from ADX: <strong>ADX above 25 = trending market</strong>. Use trend-following strategies (BoS, pullback entries, riding the band).</p><p><strong>ADX below 20 = ranging market</strong>. Switch to mean-reversion strategies (buy support, sell resistance, classic RSI 30/70).</p><p>Between 20-25 is transitional — wait for clarity. The trader who matches strategy to ADX regime avoids the most common mistake: trading trend strategies in ranges (lots of fakeouts) or range strategies in trends (constantly stopped out).</p>"
+    },
+    {
+      "type": "heading",
+      "content": "ADX direction — +DI and -DI"
+    },
+    {
+      "type": "text",
+      "content": "<p>ADX comes with two companion lines that DO show direction:</p><ul><li><strong>+DI (positive directional index)</strong>: measures bullish pressure</li><li><strong>-DI (negative directional index)</strong>: measures bearish pressure</li></ul><p>When +DI > -DI = uptrend. When -DI > +DI = downtrend. The wider the gap, the stronger the directional bias.</p><p>Practical: ADX above 25 + +DI well above -DI = strong uptrend. ADX above 25 + -DI well above +DI = strong downtrend. ADX above 25 + DI lines close together = strong trend with mixed signals (rare).</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Using ADX as a regime filter"
+    },
+    {
+      "type": "text",
+      "content": "<p>ADX's best use isn't as an entry signal — it's as a FILTER for which strategy to apply:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["ADX regime", "Strategy to use", "Strategy to avoid"],
+      "rows": [
+        ["High (25+)", "Trend-following: BoS pullbacks, momentum continuation, ride MAs", "Mean-reversion (will keep getting stopped out)"],
+        ["Low (<20)", "Mean-reversion: BB bands, classic RSI 30/70, range S/R", "Trend-following (will get faked out in chop)"],
+        ["Transitional (20-25)", "Wait — let the regime declare itself before committing", "Don't force trades"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Stochastic — extremes within trends"
+    },
+    {
+      "type": "text",
+      "content": "<p>The Stochastic Oscillator measures where current price closed relative to its recent high-low RANGE. Outputs %K (fast line) and %D (signal line, smoothed %K) — both 0-100.</p><ul><li>Stochastic at 100 = price closed at the recent range's high (very strong relative position)</li><li>Stochastic at 0 = price closed at the recent range's low (very weak relative position)</li><li>Stochastic > 80 = \"overbought\" relative to recent range</li><li>Stochastic < 20 = \"oversold\" relative to recent range</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Stochastic finds pullback extremes RSI misses",
+      "content": "<p>In a strong uptrend, RSI camps at 70-80. \"Pullback to 30\" never happens — RSI never drops that far. But STOCHASTIC, which uses a short lookback (default 14 candles), catches each pullback within the trend. Stochastic of 20 within an uptrend marks a buyable pullback that RSI alone wouldn't reveal.</p><p>This is why stochastic and RSI together cover different territory. Use both for trending markets.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Stochastic signals in trending markets"
+    },
+    {
+      "type": "table",
+      "headers": ["Signal", "Description", "Use in uptrend"],
+      "rows": [
+        ["Stochastic <20 (oversold)", "Price has pulled back to the bottom of its recent range", "Pullback entry zone — combine with support level + reversal candle"],
+        ["Stochastic crosses up through 20", "Momentum turning back up after oversold dip", "Entry trigger for pullback long"],
+        ["Stochastic >80 sustained", "Strong momentum continuing — normal trend behavior", "Don't fade — stay in the trend"],
+        ["Stochastic bearish divergence in uptrend", "Higher highs in price + lower highs in stochastic", "Warning of trend exhaustion (combine with other signals)"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Combining ADX + Stochastic + RSI"
+    },
+    {
+      "type": "table",
+      "headers": ["Setup", "ADX", "Stochastic", "RSI", "Action"],
+      "rows": [
+        ["Strong uptrend pullback", "30+", "<20 (oversold pullback)", "40-50 range", "Long the pullback at support"],
+        ["Range mean-reversion long", "<20", "<20 (oversold)", "<30 (oversold)", "Long at support"],
+        ["Strong downtrend bounce zone (for shorts)", "30+", ">80 (overbought bounce)", "50-60", "Short the bounce at resistance"],
+        ["Choppy market (skip)", "<20", "Mixed", "Mixed", "Sit out"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Common ADX/Stochastic mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<p>Patterns that cost money:</p><ol><li><strong>Ignoring ADX entirely.</strong> Trading the same strategy in trending and ranging markets = bleeding in one of them. ADX tells you which.</li><li><strong>Treating Stochastic 80/20 like RSI 70/30 universally.</strong> Stochastic is more sensitive (default 14 lookback). The 80/20 levels are touched more often. In strong trends Stochastic stays at extremes for long periods — same regime-classification rule applies.</li><li><strong>Using +DI/-DI as entry triggers.</strong> They lag like other crossovers. Useful as direction confirmation when ADX is above 25, not as entry signals on their own.</li><li><strong>Ignoring Stochastic in trending markets because \"trends ignore overbought\".</strong> Trends ignore SUSTAINED stochastic 80+, yes. But pullbacks to stochastic 20 within those trends ARE meaningful — the indicator's short lookback resets each pullback.</li><li><strong>Looking at ADX value without checking trend direction.</strong> ADX 40 tells you trend is strong; +DI vs -DI tells you which direction. Need both.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart. Indicators show:</p><ul><li>ADX = 32 (strong trend confirmed)</li><li>+DI = 28, -DI = 14 (well-separated, strong bullish bias)</li><li>Price in clear uptrend, just had a pullback to the 50 EMA</li><li>Stochastic dropped to 18 (oversold for this lookback)</li><li>RSI at 47 (mid-range — no signal alone but consistent with bullish regime pullback)</li><li>Pullback candle = bullish engulfing on above-average volume</li></ul><p>This is a textbook A+ trend continuation setup:</p><ul><li>ADX confirms trending market → trend strategies apply ✓</li><li>+DI confirms uptrend direction ✓</li><li>Stochastic caught the pullback that RSI missed ✓</li><li>50 EMA as dynamic support ✓</li><li>Reversal candle + volume = entry trigger ✓</li></ul><p>Trade:</p><ul><li><strong>Entry:</strong> Limit BUY at engulfing close + small buffer</li><li><strong>SL:</strong> Below the 50 EMA and the engulfing candle's low</li><li><strong>TP1:</strong> Recent swing high</li><li><strong>TP2:</strong> Next major resistance</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Use ADX as a regime filter.</strong> Above 25 = trending (trend strategies). Below 20 = ranging (mean-reversion strategies).</li><li><strong>Stochastic catches pullbacks in trends.</strong> What RSI camps over (70+ in uptrend), Stochastic resets each pullback to under 20.</li><li><strong>Combine indicators.</strong> No single one tells the full story. ADX + Stoch + RSI give you trend strength + pullback timing + momentum context.</li></ol><p>Next lesson: Fibonacci — the proportional retracement framework that overlays nicely with everything you've learned.</p>"
+    }
+  ]
+}

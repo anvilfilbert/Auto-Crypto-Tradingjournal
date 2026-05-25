@@ -1,0 +1,40 @@
+{
+  "slug": "30-t3-final",
+  "subtitle": "Tier 3 Final — 12 cumulative questions covering lessons 22-29. Pass with 10/12 to unlock Tier 4 (Advanced).",
+  "blocks": [
+    {
+      "type": "callout",
+      "kind": "info",
+      "title": "About this final",
+      "content": "<p>Tier 3 covered the 8 most important indicators with the regime-aware framework that makes them useful. The final tests whether you can apply them correctly — most retail uses indicators wrong because they ignore context. This quiz checks the context-aware approach.</p><p>Pass threshold: <strong>10/12 required</strong>.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What Tier 3 covered"
+    },
+    {
+      "type": "table",
+      "headers": ["#", "Lesson", "Core idea"],
+      "rows": [
+        ["22", "Moving averages", "Dynamic S/R + trend filter. 200 SMA = macro regime. EMA/SMA + period selection matters."],
+        ["23", "RSI Mastery", "Regime-aware (not universal 30/70). Failure swings + divergences > single touches."],
+        ["24", "MACD", "Histogram > signal line crosses (lags). Divergences with confirmation = strong signal."],
+        ["25", "Bollinger Bands", "Squeeze = expansion coming. Mean reversion in ranges only; band touches normal in trends."],
+        ["26", "Volume + VWAP", "Volume = participation = truth-teller. VWAP = institutional fair value, dynamic S/R."],
+        ["27", "ADX & Stochastic", "ADX = regime filter (trend vs range). Stoch catches pullback extremes RSI misses in trends."],
+        ["28", "Fibonacci", "0.5 + 0.618 most important. Works through confluence with other S/R, not standalone."],
+        ["29", "ATR", "Volatility-aware SL sizing. 1.5× ATR default. Adapts to assets and regimes automatically."]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>If you pass at 10/12, Tier 4 (Advanced) unlocks — order flow, liquidations, Wyckoff, Smart Money Concepts, multi-exchange divergence, funding-rate sentiment.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Before you start",
+      "content": "<p>Tier 3 themes that show up across questions: regime-awareness, confluence stacking, indicators as confirmation (not standalone signals), HTF context. Scan the lesson headlines one more time and click 'Take the quiz' when ready.</p>"
+    }
+  ]
+}

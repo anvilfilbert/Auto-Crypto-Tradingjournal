@@ -1,0 +1,108 @@
+{
+  "slug": "28-fibonacci",
+  "subtitle": "Fibonacci levels (0.382, 0.5, 0.618, 1.272, 1.618) are derived from a mathematical sequence — but their trading power comes from MILLIONS of traders watching the same levels. Self-fulfilling proportions that work because everyone uses them.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>The Fibonacci sequence (1, 1, 2, 3, 5, 8, 13, 21, 34...) produces ratios that show up everywhere in nature, art, and architecture. In trading, the key ratios derived from this sequence — particularly 0.382, 0.5, 0.618 — get used as RETRACEMENT targets and EXTENSION targets for price moves.</p><p>Whether the underlying math has mystical meaning is debatable. What's not debatable: millions of traders watch these levels, so price genuinely respects them. Self-fulfilling proportion lines.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The key Fibonacci ratios"
+    },
+    {
+      "type": "table",
+      "headers": ["Ratio", "Type", "What it represents"],
+      "rows": [
+        ["<strong>0.236</strong>", "Retracement", "Shallow pullback — barely a correction"],
+        ["<strong>0.382</strong>", "Retracement", "Moderate pullback — first significant level"],
+        ["<strong>0.500</strong>", "Retracement", "Halfway back — not actually a Fibonacci ratio but commonly used"],
+        ["<strong>0.618</strong>", "Retracement", "<strong>The golden ratio</strong> — deepest 'healthy' pullback; below this often signals trend break"],
+        ["<strong>0.786</strong>", "Retracement", "Deep pullback — trend on borrowed time"],
+        ["<strong>1.272</strong>", "Extension", "First profit target beyond the original move"],
+        ["<strong>1.618</strong>", "Extension", "Major extension target — the golden ratio applied to extensions"],
+        ["<strong>2.618</strong>", "Extension", "Strong trend extension"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "0.5 and 0.618 are the most important",
+      "content": "<p>Of all the levels, 0.5 (halfway) and 0.618 (golden ratio) get the most attention. Pullbacks to these levels in trending markets are common entry zones for institutional traders.</p><p>0.382 is the next-most-watched. The shallower 0.236 is mostly noise; the deeper 0.786 is a warning sign that the trend may break.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to draw Fibonacci retracements"
+    },
+    {
+      "type": "text",
+      "content": "<p>The retracement tool requires identifying a SWING — the move you want to retrace. Process:</p><ol><li>Identify a clear directional move (swing low to swing high for uptrend retracement, or swing high to swing low for downtrend retracement).</li><li>Apply the Fibonacci retracement tool from the start to the end of the move.</li><li>The tool draws horizontal lines at 0.236, 0.382, 0.5, 0.618, 0.786 — all within the original move's range.</li><li>These become potential support (in uptrend retracement) or resistance (in downtrend retracement) levels.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Which swing to use matters",
+      "content": "<p>Drawing Fibs on the WRONG swing produces useless levels. Rules:</p><ul><li>Use the most recent SIGNIFICANT swing on the timeframe you're trading.</li><li>The swing should be clear — strong directional move with clear start and end pivots, not muddy chop.</li><li>For HTF analysis, use HTF swings. For day-trading, use 4H or 1H swings.</li></ul><p>Drawing 5 different Fibs from 5 different swings = useless overlapping noise. Pick the right swing for your timeframe.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Fibonacci extensions for profit targets"
+    },
+    {
+      "type": "text",
+      "content": "<p>Extensions project levels BEYOND the original move — useful for setting profit targets when a breakout happens.</p><p>If price retraced to 0.5 of an uptrend swing and bounced, the typical extension targets are:</p><ul><li><strong>1.0</strong>: matching the original swing's length (next swing high projection)</li><li><strong>1.272</strong>: first extension target — first conservative TP</li><li><strong>1.618</strong>: golden extension — major TP</li><li><strong>2.618</strong>: strong-trend extension</li></ul><p>The extension projections are based on the original swing length added to the retracement entry point. They give you mathematically-defined profit targets to aim at.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Fibonacci confluence — when Fibs align with other S/R"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Fibonacci levels are stronger with confluence",
+      "content": "<p>A Fibonacci level alone is moderate strength. But when 0.5 Fib aligns with a horizontal swing low + 200 SMA + round number = MAJOR S/R. Multiple confluences amplify the level's reliability.</p><p>Look specifically for trades where the 0.5 or 0.618 Fib lines up with another structural level. Those are the highest-quality Fib trades.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 'Fibonacci-only' trader trap"
+    },
+    {
+      "type": "text",
+      "content": "<p>Some traders make Fibs their primary or only indicator — they draw 10 different Fibs on every chart and trade every touch of every Fib level. This is a trap.</p><p>Fibs work when they coincide with structural levels (S/R, trendlines, MAs). They DON'T work as standalone signals on every retracement. The math doesn't have predictive power on its own — it's only meaningful when widely watched AND aligned with other structure.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Practical Fib usage workflow"
+    },
+    {
+      "type": "ol",
+      "content": ""
+    },
+    {
+      "type": "text",
+      "content": "<ol><li><strong>Identify the most recent significant swing</strong> on the timeframe you're trading.</li><li><strong>Draw the retracement</strong> from swing low to swing high (for uptrend retrace) or high to low (for downtrend retrace).</li><li><strong>Mark the 0.5 and 0.618 levels</strong> — these are your primary attention zones.</li><li><strong>Check for confluence</strong>: is the 0.5 Fib also a previous S/R level? At a major MA? Near a round number? More confluences = higher quality.</li><li><strong>Trade the bounce/rejection at the Fib level</strong> with confirming signals (candle pattern + volume + RSI).</li><li><strong>Use extensions for TPs.</strong> 1.272 = TP1, 1.618 = TP2.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Common Fibonacci mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<ol><li><strong>Drawing Fibs on every swing</strong>: 10 overlapping Fibs = useless noise. Pick the most relevant swing for your TF.</li><li><strong>Treating Fibs as standalone signals</strong>: a Fib level alone is weak. Power comes from confluence with other structure.</li><li><strong>Ignoring the trend</strong>: Fib retracements in trends work (pullback entries). Fib retracements in ranges are mostly noise — use horizontal S/R instead.</li><li><strong>Forgetting 0.5 is not actually Fibonacci</strong>: technically 0.5 isn't a Fibonacci ratio, just the midpoint. But it's so widely watched it works anyway.</li><li><strong>Drawing Fibs wrong direction</strong>: in an uptrend, draw from low to high (so retracement levels mark expected pullback targets). In a downtrend, high to low. Reversing the direction inverts everything.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart. Recent significant swing: low at $58,000 → high at $66,000. That's an $8,000 swing.</p><p>Fibonacci retracement levels (drawn from $58K low to $66K high):</p><ul><li>0.236: $64,112</li><li>0.382: $62,944</li><li>0.500: $62,000</li><li>0.618: $61,056</li><li>0.786: $59,712</li></ul><p>Current price: $63,500 (between 0.382 and 0.236). Watching for pullback to 0.5 ($62,000) which also coincides with the previous swing high at $61,800-$62,200 zone — a confluence.</p><p>Plan: limit BUY at $62,200 (the 0.5 Fib + previous resistance now support polarity flip). SL below the 0.618 ($60,900). TP1 = recent high ($66K). TP2 = 1.272 extension = $58K + (1.272 × $8K) = $68,176.</p><p>This is a textbook \"Fib retracement to confluence level with extension target\" trade.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>0.5 and 0.618 matter most.</strong> The other levels are secondary.</li><li><strong>Fibonacci works through confluence.</strong> A Fib level alone is weak; a Fib level + horizontal S/R + MA = strong.</li><li><strong>Use extensions for TPs.</strong> 1.272 = TP1, 1.618 = TP2 — mathematically defined profit targets.</li></ol><p>Fibs are not magic — they're a tool that becomes powerful when combined with the structure tools from Tier 2 and the other indicators in Tier 3.</p>"
+    }
+  ]
+}

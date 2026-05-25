@@ -1,0 +1,119 @@
+{
+  "slug": "22-moving-averages",
+  "subtitle": "Moving averages are the most-used indicator in trading — and the most misunderstood. They're not magic crossover signals. They're dynamic S/R levels, trend filters, and slope readers. Used right, they're invaluable. Used wrong, they're just a colored squiggle.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Tier 3 starts here. Everything you learned in Tier 2 (S/R, structure, multi-TF) makes indicators useful instead of cluttering noise. Indicators don't replace chart reading — they augment it.</p><p>Moving averages (MAs) are the starting point because every other indicator in this tier builds on their core idea: smoothing price data to extract a signal from the noise.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What a moving average actually is"
+    },
+    {
+      "type": "text",
+      "content": "<p>A moving average is the AVERAGE PRICE over the last N candles, recalculated each new candle. The 20-period MA on a 1H chart = the average closing price of the last 20 hours.</p><p>The line moves as new data comes in and old data drops off. It smooths volatile price action into a smoother curve that shows the underlying direction.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "SMA vs EMA — the two main flavors"
+    },
+    {
+      "type": "table",
+      "headers": ["Type", "Calculation", "Behavior", "Best use"],
+      "rows": [
+        ["<strong>SMA (Simple)</strong>", "Equal weight to every candle in the period", "Slower to react; smoother curve; lags more", "Long-term trend filter (200 SMA), major levels"],
+        ["<strong>EMA (Exponential)</strong>", "Recent candles weighted more heavily than older ones", "Faster to react; less lag; more responsive to recent moves", "Active trading (9/21/50 EMA), shorter-term signals"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The trade-off",
+      "content": "<p>Faster MAs (EMA, shorter periods) react quickly to changes but produce more false signals in chop. Slower MAs (SMA, longer periods) filter noise better but lag — you'll be late to genuine trend changes.</p><p>The practical solution: use multiple MAs together. A short EMA for recent momentum, a long SMA for the underlying trend. We'll see this combination throughout.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The standard MAs to know"
+    },
+    {
+      "type": "table",
+      "headers": ["MA", "Period", "What it represents"],
+      "rows": [
+        ["9 EMA / 20 EMA", "Very short", "Recent momentum; intraday support/resistance"],
+        ["21 EMA", "Short", "Common day-trader MA; reacts quickly"],
+        ["50 EMA / 50 SMA", "Medium", "Mid-term trend; often acts as dynamic S/R"],
+        ["100 SMA", "Long", "Major trend filter for swing trading"],
+        ["200 SMA", "Very long", "<strong>The most important MA in markets.</strong> Defines bull/bear macro state. Widely watched by institutional traders."]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "200 SMA is sacred",
+      "content": "<p>Of all moving averages, the 200 SMA gets the most attention. Reason: it represents roughly a year's worth of trend (on daily) and is the line institutional risk-management uses to flip 'bullish' or 'bearish'.</p><ul><li>Price above the 200 SMA → macro bull regime. Most assets time trades long.</li><li>Price below the 200 SMA → macro bear regime. Most assets are skeptical of longs.</li><li>Price crossing the 200 SMA → major event. Causes coordinated repositioning across many institutional desks.</li></ul><p>Always have the 200 SMA on your chart. Always know whether price is above or below.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to actually USE moving averages"
+    },
+    {
+      "type": "text",
+      "content": "<p>Four practical uses, ranked by usefulness:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Use", "How it works", "Reliability"],
+      "rows": [
+        ["<strong>1. Dynamic support/resistance</strong>", "Price often bounces off (or rejects at) MAs the same way it does horizontal S/R. 50/100/200 MAs especially act as dynamic levels.", "High — combine with horizontal S/R confluence"],
+        ["<strong>2. Trend filter</strong>", "Only trade long when price > 200 MA. Only trade short when price < 200 MA. Simple but powerful filter.", "High — removes counter-trend trades"],
+        ["<strong>3. Slope read</strong>", "MA pointing up = uptrend. MA pointing down = downtrend. MA flat = range. Simple visual confirmation of structure.", "High — fast read"],
+        ["<strong>4. Crossover signals (e.g., Golden Cross / Death Cross)</strong>", "Short MA crosses above long MA (Golden Cross) = bullish; below (Death Cross) = bearish.", "Medium — lots of false signals; works better as confirmation than as entry trigger"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Golden Cross / Death Cross — the famous (and overrated) signals"
+    },
+    {
+      "type": "text",
+      "content": "<p>The 50/200 MA crossover is the most famous indicator signal in all of trading. The math:</p><ul><li><strong>Golden Cross</strong>: 50 SMA crosses ABOVE the 200 SMA. Considered macro bullish.</li><li><strong>Death Cross</strong>: 50 SMA crosses BELOW the 200 SMA. Considered macro bearish.</li></ul><p>Reality: these crossovers happen AFTER the trend has already changed. They're confirmation signals, not entry triggers. By the time the crossover prints, price has often already moved substantially in the new direction.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't trade THE crossover — trade WITH the crossover regime",
+      "content": "<p>The classic beginner mistake: see a Death Cross headline, immediately short. Often the cross marks roughly the bottom of the decline that already happened — price then rallies for weeks.</p><p>The correct use: once a Golden Cross has occurred (or Death Cross), use that as background bias for the next 3-12 months. Aligned trades during a Golden Cross regime have higher win rates than counter-trend trades. But don't trade the crossover itself as an entry signal — it's lagging.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "MAs as dynamic S/R — the practical setup"
+    },
+    {
+      "type": "text",
+      "content": "<p>The most useful MA application for active trading: as dynamic support/resistance. Pattern:</p><ol><li>Identify an uptrend (HH/HL structure + above 200 SMA).</li><li>Notice the 50 EMA acts as a 'magnet' — price pulls back to it during corrections, then bounces.</li><li>Mark levels where the 50 EMA aligns with horizontal S/R for highest-quality bounces.</li><li>Set limit buys near the 50 EMA on pullbacks, SL below it.</li></ol><p>This works because many active traders watch the 50/100/200 MAs. Limit orders accumulate near these levels. The MA becomes self-fulfilling support.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common MA mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<p>Patterns that lose money:</p><ol><li><strong>Trading every MA crossover as an entry signal.</strong> Crossovers are confirmation, not triggers. Lots of fakeouts in chop.</li><li><strong>Using too many MAs.</strong> 5+ MAs on a chart = noise. Pick 2-3 max (e.g., 21 EMA + 50 EMA + 200 SMA) and master them.</li><li><strong>Ignoring the 200 SMA.</strong> Even if you don't trade off it, ALWAYS know which side of it price is on. Macro context matters.</li><li><strong>Trading MA bounces in ranges.</strong> MAs become useless in sideways markets — they cross constantly without meaning. Use in trends only.</li><li><strong>Forgetting MAs LAG.</strong> Indicators are derived from past prices. Don't use them as predictive — use them as confirming.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart with 21/50/200 EMAs and 200 SMA shown:</p><ul><li>Price at $63,000.</li><li>200 SMA at $58,000 (price WELL above = macro bullish bias).</li><li>50 EMA at $61,500 (recent pullback support).</li><li>21 EMA at $62,800 (very short-term mean).</li><li>Structure: clear HH/HL pattern on 4H.</li><li>Recent pullback brought price to the 50 EMA at $61,500. A bullish engulfing candle just formed there with above-average volume.</li></ul><p>Trade analysis:</p><ul><li>Macro: bullish (price > 200 SMA).</li><li>Trend: bullish (HH/HL).</li><li>Pullback: complete (touched 50 EMA, bounced with reversal candle + volume).</li><li>Multi-TF: 1D and 4H both bullish.</li></ul><p>Trade:</p><ul><li><strong>Entry:</strong> Limit BUY at $62,000 (just above the engulfing candle's close)</li><li><strong>SL:</strong> $60,800 (below the 50 EMA + below the engulfing candle's low)</li><li><strong>TP1:</strong> $64,500 (recent swing high)</li><li><strong>TP2:</strong> $66,500 (next major resistance)</li></ul><p>R:R ≈ 1:2 to TP1. Three confluences (50 EMA + structure + reversal candle + volume + macro alignment) = high quality setup.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Five rules:</p><ol><li><strong>Always show 200 SMA on the chart.</strong> Macro filter.</li><li><strong>21/50 EMA + 200 SMA combo is enough.</strong> Don't over-clutter.</li><li><strong>MAs work in trends.</strong> Useless in chop.</li><li><strong>Crossovers are confirmation, not triggers.</strong> Lagging by design.</li><li><strong>50/200 EMA as dynamic S/R</strong> is the most practical application.</li></ol><p>Next lesson: RSI — the most powerful single indicator, IF read correctly.</p>"
+    }
+  ]
+}

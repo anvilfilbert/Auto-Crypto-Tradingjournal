@@ -1,0 +1,123 @@
+id: "22"
+lesson_id: 22
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "What is the key difference between SMA and EMA?"
+    type: mcq
+    choices:
+      - "SMA uses only opening prices; EMA uses closes."
+      - "SMA gives equal weight to every candle in the period; EMA weighs recent candles more heavily, making it faster to react to recent price changes."
+      - "They're identical."
+      - "EMA is only available on premium platforms."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "SMA averages everything equally — slower, smoother. EMA weighs recent data more — faster, more responsive. Trade-off: EMA reacts quickly (good in trends) but produces more false signals in chop. SMA filters noise (good for major trends) but lags more."
+
+  - id: q2
+    text: "Which moving average is considered the MOST WATCHED indicator in markets?"
+    type: mcq
+    choices:
+      - "9 EMA"
+      - "200 SMA (often on daily) — defines macro bull/bear regime for institutional risk management."
+      - "21 EMA"
+      - "1000 SMA"
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "200 SMA on daily represents ~1 year of trend and is the institutional macro-regime divider. Price above 200 SMA = macro bullish, below = macro bearish. Crossings cause coordinated repositioning across institutional desks. Always show it on your chart."
+
+  - id: q3
+    text: "Best USE of MAs for active trading?"
+    type: mcq
+    choices:
+      - "Trade every MA crossover as an immediate entry signal."
+      - "DYNAMIC support/resistance — price often bounces off 50/100/200 MAs during pullbacks in trending markets. Plus as a trend filter (only long above 200 SMA)."
+      - "Use them to predict the exact future price."
+      - "Use 10+ MAs simultaneously for maximum information."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "MAs work best as dynamic levels (often acting as S/R during pullbacks) and as trend filters. Crossover signals lag and produce many false fakeouts. The 'dynamic S/R + trend filter' approach is much more reliable than chasing crossover signals."
+
+  - id: q4
+    text: "Golden Cross (50 SMA crosses above 200 SMA) — what's the right way to use it?"
+    type: mcq
+    choices:
+      - "Long immediately when it happens — it's a guaranteed buy signal."
+      - "As BACKGROUND BIAS for the next 3-12 months. Aligned long trades during the regime have higher win rates. But don't trade the crossover itself — it lags by months."
+      - "Always short — Golden Crosses are bearish."
+      - "Ignore — moving averages don't matter."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "Crossovers happen AFTER the trend has changed. By the time the cross prints, price has already moved substantially. Don't trade the crossover as an entry. DO use it as macro bias: 'Golden Cross regime → bias long for next several months' is sound positioning."
+
+  - id: q5
+    text: "MAs become essentially useless in what kind of market?"
+    type: mcq
+    choices:
+      - "Strong uptrends."
+      - "RANGING / sideways markets — MAs cross constantly without meaning, producing noise instead of signal. Use MAs in trends only."
+      - "High volatility periods."
+      - "Low-fee markets."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "MAs are trend-following tools. In a range, price oscillates around the MAs, producing constant fake crossovers and false S/R touches. Use MAs only in trending conditions; in ranges, fall back to horizontal S/R."
+
+  - id: q6
+    text: "How many MAs should you show on a chart?"
+    type: mcq
+    choices:
+      - "10+ for maximum information."
+      - "2-3 maximum (e.g., 21 EMA + 50 EMA + 200 SMA). More than that = clutter; you can't reason cleanly about overlapping signals."
+      - "Exactly 1."
+      - "Zero — MAs are useless."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "Each additional MA adds noise faster than information after 3. A clean chart with 21 EMA (short-term), 50 EMA (medium), and 200 SMA (macro) covers the spectrum without overlap chaos. Master the few that matter."
+
+  - id: q7
+    text: "Why are moving averages LAGGING indicators?"
+    type: mcq
+    choices:
+      - "They're calculated wrong."
+      - "They're derived from PAST price data — averaging closes from prior candles. By definition they reflect what already happened, not what's about to happen. Don't use them as predictive."
+      - "They update too slowly."
+      - "They're random."
+    correct: 1
+    topic_tag: indicators
+    explanation: "Every indicator is derived from price (which already happened). Moving averages are an explicit average of past closes. They CONFIRM trends; they don't PREDICT them. Treat them as confirming evidence, not as fortune-tellers. This applies to nearly all indicators."
+
+  - id: q8
+    text: "BTC currently at $63K. 200 SMA at $58K. Price has been pulling back, just touched the 50 EMA at $61.5K, and a bullish engulfing candle formed with volume. What's the trade analysis?"
+    type: mcq
+    choices:
+      - "SHORT — engulfing patterns mean reversal."
+      - "Long opportunity — macro bullish (above 200 SMA), 50 EMA acting as dynamic support, reversal pattern with volume confirms. Limit BUY just above engulfing close, SL below 50 EMA."
+      - "Skip — too many signals."
+      - "Buy with 100× leverage."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "Multiple confluences aligned: macro bias bullish (>200 SMA), structure bullish (recent HL setup), 50 EMA acting as dynamic support, reversal candle + volume confirming the bounce. SL below the 50 EMA gives clean invalidation. This is the canonical 'MA dynamic S/R + reversal' setup."
+
+  - id: q9
+    text: "What's the FIRST thing you should always know about the chart you're analyzing?"
+    type: mcq
+    choices:
+      - "Today's date."
+      - "Is price ABOVE or BELOW the 200 SMA? — That single observation gives you the macro regime context. Above = bull bias; below = bear bias."
+      - "The exchange's name."
+      - "Your account balance."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "Macro regime context affects everything downstream. Bull regime (>200 SMA) = lean toward longs, range-pullback buys, bigger profit targets. Bear regime (<200 SMA) = lean toward shorts, short rallies, smaller targets. The 200 SMA position is the single most important macro context."
+
+  - id: q10
+    text: "Trading every short EMA cross above long EMA as a 'guaranteed buy' typically produces what result?"
+    type: mcq
+    choices:
+      - "Consistent profits."
+      - "Many false signals in chop, plus late entries on real trends. Net result usually negative because of fee + slippage costs on the many fakeouts."
+      - "Always +30% per month."
+      - "Guaranteed wins."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "Crossover-trading is one of the most over-marketed indicator strategies. In ranges, MAs cross constantly = many fakeouts. In trends, by the time the cross prints, price already moved. The math: low signal-to-noise ratio + lag + fees = net loss for most who try it as a standalone strategy."

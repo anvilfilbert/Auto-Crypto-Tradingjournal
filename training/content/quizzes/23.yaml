@@ -1,0 +1,123 @@
+id: "23"
+lesson_id: 23
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "BTC has been in a strong uptrend for 3 weeks. RSI is at 75. According to professional RSI usage, what does this mean?"
+    type: mcq
+    choices:
+      - "Short immediately — RSI is overbought."
+      - "Normal trend strength in a bullish regime. RSI can stay above 70 for weeks during strong uptrends. Don't fade trend strength with RSI alone."
+      - "The market is crashing."
+      - "Random noise."
+    correct: 1
+    topic_tag: rsi
+    explanation: "In a bullish regime, RSI averages 40-80. RSI at 75 is normal trend strength, NOT a reversal signal. Shorting every time RSI hits 70 in an uptrend = the most common RSI mistake. Trade WITH the regime, not against."
+
+  - id: q2
+    text: "How do you classify the RSI 'regime' of a market?"
+    type: mcq
+    choices:
+      - "Read the news."
+      - "Look at where RSI has been averaging over the past several weeks. Above 50 with regular touches of 70-80 = bullish regime. Below 50 with regular touches of 20-30 = bearish. Oscillating 30-70 = ranging."
+      - "Coin flip."
+      - "It's the same in every market."
+    correct: 1
+    topic_tag: rsi
+    explanation: "Regime = where RSI has been TRENDING over weeks. Bullish regime keeps RSI in 40-80. Bearish in 20-60. Ranging oscillates 30-70. The regime determines what RSI values mean — same number is bullish in one regime and bearish in another."
+
+  - id: q3
+    text: "In a BEARISH regime, RSI at 60 typically signals what?"
+    type: mcq
+    choices:
+      - "Strong continuation up — RSI just below 70."
+      - "Approaching the 'overbought' for this regime (bearish RSI rarely exceeds 60). Often a potential short setup — fading the bearish bounce."
+      - "Healthy uptrend."
+      - "Random."
+    correct: 1
+    topic_tag: rsi
+    explanation: "Bearish regime's 'overbought' is roughly 60 (not 70). RSI at 60 in a bearish regime = exhausted bounce, fading rally. Same RSI value (60) means 'healthy trend' in bullish regime and 'short signal' in bearish regime. Context matters."
+
+  - id: q4
+    text: "What is a 'bearish failure swing' on RSI?"
+    type: mcq
+    choices:
+      - "Any RSI value above 70."
+      - "RSI reaches >70, drops below 70, rises again but FAILS to reach the previous high (lower high on RSI). Signals momentum exhaustion at the top."
+      - "RSI hits exactly 70 once."
+      - "Volume drops to zero."
+    correct: 1
+    topic_tag: rsi
+    explanation: "Failure swing = the second attempt to make a new high (on RSI) fails. This confirms buying momentum is exhausted — the move can't be reproduced. More reliable than 'RSI hit 70 → short' because the failure is built-in confirmation of exhaustion."
+
+  - id: q5
+    text: "Regular bearish divergence on RSI is when:"
+    type: mcq
+    choices:
+      - "Price and RSI both make higher highs."
+      - "Price makes a HIGHER HIGH, but RSI makes a LOWER high — the buying momentum couldn't keep up with the price extension. Bearish reversal warning."
+      - "RSI hits 100."
+      - "Volume increases."
+    correct: 1
+    topic_tag: divergence
+    explanation: "Regular bearish divergence = price up but momentum down. RSI's lower high while price made higher high shows the move was achieved with less force. Buying momentum is fading. Warning signal — best traded WITH confirmation (resistance level + reversal candle + volume)."
+
+  - id: q6
+    text: "Is divergence an ENTRY signal by itself?"
+    type: mcq
+    choices:
+      - "Yes — divergence guarantees reversal."
+      - "No — divergence is a WARNING. It can persist for weeks while price continues in the original direction. Wait for confirmation (key level + reversal candle + volume) before entry."
+      - "Yes — divergence times the exact reversal."
+      - "Only on Tuesdays."
+    correct: 1
+    topic_tag: divergence
+    explanation: "Divergences signal 'something is off' but don't predict timing. RSI can show divergence for weeks while price grinds higher. Treat as a heads-up: 'be alert for reversal in this zone' — then trade on confirmation, not the divergence itself. Standalone divergence trades have low win rates."
+
+  - id: q7
+    text: "What's HIDDEN bullish divergence?"
+    type: mcq
+    choices:
+      - "Random pattern."
+      - "Price makes a HIGHER LOW while RSI makes a LOWER low — signal that buying momentum is still strong on the pullback. Bullish CONTINUATION signal (not reversal)."
+      - "Always a top signal."
+      - "Same as regular bullish divergence."
+    correct: 1
+    topic_tag: divergence
+    explanation: "Hidden divergence trades CONTINUATION. In an uptrend pullback, price makes a higher low (the pullback didn't reach prior lows) while RSI dipped lower (momentum showed weakness). The setup: the trend is intact, this is a healthy pullback, RSI is overdoing it. Often higher win rates than regular divergence because you're trading WITH the trend."
+
+  - id: q8
+    text: "Classic RSI 30/70 buy/sell rules work best in:"
+    type: mcq
+    choices:
+      - "Strong trending markets."
+      - "RANGING markets — where RSI oscillates 30-70 with regular touches of both extremes. In trends, these rules fail."
+      - "Only on weekends."
+      - "Never anywhere."
+    correct: 1
+    topic_tag: rsi
+    explanation: "30/70 mean-reversion works in ranges where there's no directional bias and RSI swings back-and-forth. In trends, RSI camps at one end (70+ in uptrends, 30- in downtrends) and the textbook signals constantly fake out. Classify regime first; use 30/70 only in confirmed ranges."
+
+  - id: q9
+    text: "Worked example: price made HH at $63, $65, $66. RSI peaks: 75, 73, 68. Price now stalling at $66K with bearish engulfing on volume. What signal type?"
+    type: mcq
+    choices:
+      - "Bullish continuation."
+      - "Regular BEARISH DIVERGENCE confirmed by candle pattern + resistance + volume. Four-signal stack = high-quality short setup."
+      - "Hidden bullish divergence."
+      - "No signal."
+    correct: 1
+    topic_tag: divergence
+    explanation: "RSI making lower highs while price made higher highs = textbook regular bearish divergence. The divergence was a WARNING; the engulfing + resistance + volume is the CONFIRMATION. Four independent signals aligned = strong short setup. Without the confirmation, you'd just have a divergence warning to watch."
+
+  - id: q10
+    text: "Most common RSI mistake?"
+    type: mcq
+    choices:
+      - "Using too few periods."
+      - "Treating 30/70 as universal buy/sell signals without classifying the regime first. In trends, this fades trend strength and loses repeatedly."
+      - "Adding RSI to the chart."
+      - "Looking at the indicator."
+    correct: 1
+    topic_tag: rsi
+    explanation: "The 30/70 textbook signals only work in ranges. In trends, RSI stays at the bullish/bearish end for extended periods. Trying to short every '70' in an uptrend = bleeding. The fix: classify regime first, use regime-appropriate levels (e.g., 40 = pullback long in bull regime, not 30)."

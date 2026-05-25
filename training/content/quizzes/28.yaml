@@ -1,0 +1,123 @@
+id: "28"
+lesson_id: 28
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Which two Fibonacci retracement levels get the most attention from professional traders?"
+    type: mcq
+    choices:
+      - "0.236 and 0.786."
+      - "0.5 and 0.618 — the halfway and golden ratio. Most pullback entries cluster at these levels. The other ratios are secondary."
+      - "0.1 and 0.9."
+      - "Random numbers."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "0.5 (halfway) and 0.618 (golden ratio) are the most-watched. Pullbacks to these levels in trends are common institutional entry zones. 0.382 is third-most-watched. 0.236 is too shallow (barely a correction); 0.786 too deep (warning sign). Focus on 0.5 and 0.618 first."
+
+  - id: q2
+    text: "Why do Fibonacci levels work in trading?"
+    type: mcq
+    choices:
+      - "Mystical mathematics."
+      - "Self-fulfilling — MILLIONS of traders watch these specific levels. Orders cluster there. Price respects them because everyone is using the same reference points. The math itself isn't predictive; the widespread usage is."
+      - "They're random."
+      - "Government regulation."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Fibonacci's trading power isn't about the math — it's about coordination. When millions of traders place limit orders at the same percentages, those levels become real S/R simply because liquidity accumulates there. Self-fulfilling proportion lines. Works for trading even if you don't believe the mathematical mystique."
+
+  - id: q3
+    text: "What's a Fibonacci EXTENSION used for?"
+    type: mcq
+    choices:
+      - "Drawing more lines."
+      - "PROFIT TARGETS — projecting levels BEYOND the original swing. 1.272 = first TP, 1.618 = major TP, 2.618 = strong trend extension."
+      - "Stop loss placement."
+      - "Volume measurement."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Retracements measure pullback zones (within the original move). Extensions project profit targets beyond it. 1.272 and 1.618 are the most-used extension targets. Mathematically defined profit targets give you structured TPs rather than arbitrary 'feels right' levels."
+
+  - id: q4
+    text: "When are Fibonacci levels MOST useful?"
+    type: mcq
+    choices:
+      - "On every chart, every level."
+      - "When they ALIGN with other structural S/R (horizontal levels, MAs, round numbers). Confluence amplifies their strength. Standalone Fib levels are weak."
+      - "Only on weekends."
+      - "Never."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Fibs alone are moderate strength. Fibs + horizontal S/R + 200 SMA + round number all aligned = major level. Multiple confluences amplify reliability dramatically. The trader who finds Fibs that confluence is doing real work; the one who trades every Fib touch on every chart is generating noise."
+
+  - id: q5
+    text: "What's the right SWING to use when drawing a Fibonacci retracement?"
+    type: mcq
+    choices:
+      - "Any random swing."
+      - "The most recent SIGNIFICANT swing on the timeframe you're trading — clear directional move with well-defined start and end pivots. HTF analysis uses HTF swings; day-trading uses 4H/1H swings."
+      - "Only the largest swing in history."
+      - "Today's high and low."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Drawing Fibs on the wrong swing produces useless levels. The relevant swing matches your trading timeframe. Drawing 5 different Fibs from 5 swings = noise. Pick the most recent significant swing on your operating TF."
+
+  - id: q6
+    text: "In an UPTREND, you draw a Fibonacci retracement from:"
+    type: mcq
+    choices:
+      - "Random points."
+      - "Swing LOW (start) to swing HIGH (end). The retracement levels then mark expected pullback targets (where price might bounce on the way back down before resuming up)."
+      - "Swing high to swing low."
+      - "Today's open to close."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Uptrend retracement = from low to high. The Fib levels then sit between the high and low — marking how far price might pull back before continuing up. Drawing reversed (high to low for an uptrend) gives levels in the wrong place. Direction matters."
+
+  - id: q7
+    text: "A Fib retracement to 0.5 lands at $62K. But the same price is also a previous resistance + the 50 EMA + a round number. What does this combination mean?"
+    type: mcq
+    choices:
+      - "Just one Fib level — weak signal."
+      - "MAJOR confluence — Fib + horizontal S/R + dynamic MA + round number. Multiple independent groups of traders watching this exact level. Very high-quality bounce zone."
+      - "Random noise."
+      - "Time to short."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "This is what makes Fibs powerful. 4-confluence levels are rare and very high-quality. Each separate group of traders (Fib users, S/R users, MA traders, round-number watchers) is watching the same price. Their cumulative orders create real reaction zones. Trade these with confidence + tight SL."
+
+  - id: q8
+    text: "Drawing 10 different Fibonacci retracements from 10 different swings on the same chart leads to what?"
+    type: mcq
+    choices:
+      - "Better analysis."
+      - "USELESS NOISE — overlapping levels everywhere; every price is 'near' some Fib level. Chart becomes meaningless. Pick the most relevant swing for your TF and use only that."
+      - "More profits."
+      - "Industry-standard practice."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Like S/R lines (lesson 17), Fib levels are useful in small quantity. Too many = pattern collapse — every price looks 'near' a Fib. Pick the single most relevant swing for your operating timeframe and use that one. 1-2 Fib retracements max per chart."
+
+  - id: q9
+    text: "Worked example: uptrend swing from $58K to $66K. Current price $63.5K. Plan to long the pullback. Best entry zone?"
+    type: mcq
+    choices:
+      - "Random $60K."
+      - "Around $62K (0.5 Fib + previous resistance at $61.8K-$62.2K acting as polarity-flip support). The confluence makes this the strongest pullback level."
+      - "$70K — chase the breakout."
+      - "Below $50K — wide stop."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "0.5 Fib at $62K aligns with the previous resistance at $61.8K-$62.2K zone (which becomes support after the break). This polarity-flip + Fib confluence is the highest-quality pullback entry. SL below the 0.618 ($60.9K) gives clean invalidation. TP at extension 1.272 = $68K gives mathematically-defined target."
+
+  - id: q10
+    text: "Is 0.5 technically a Fibonacci number?"
+    type: mcq
+    choices:
+      - "Yes — it's the most important one."
+      - "Technically NO — 0.5 isn't from the Fibonacci sequence; it's just the halfway point. But it's so widely watched by traders that it functions as a key level anyway. Pragmatically: treat it as Fibonacci even if mathematically it isn't."
+      - "It's 0.382."
+      - "Doesn't matter."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Pure Fibonacci ratios are 0.236, 0.382, 0.618, 0.786 (derived from the sequence). 0.5 is just the midpoint of the swing — included in 'Fibonacci' tools by convention because of how widely it's watched. The pragmatic answer: it works the same way Fibonacci levels work (because of crowd attention), so use it as one. The trader doesn't care whether the math is 'pure Fibonacci' if the level genuinely produces reactions."

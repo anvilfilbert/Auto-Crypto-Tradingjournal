@@ -1,0 +1,123 @@
+id: "25"
+lesson_id: 25
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "Bollinger Bands consist of:"
+    type: mcq
+    choices:
+      - "A single moving average."
+      - "Middle band (20-SMA by default) + upper band (middle + 2 standard deviations) + lower band (middle - 2 SD). The width represents volatility."
+      - "Three EMAs."
+      - "Just the upper and lower envelopes."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "BBs are an envelope: middle = mean (20-SMA), upper/lower = ±2 standard deviations from the mean. Because the bands are 2 SD wide, statistically ~95% of price action stays within them. The width itself IS the volatility measure."
+
+  - id: q2
+    text: "A 'Bollinger Squeeze' means:"
+    type: mcq
+    choices:
+      - "Price has crashed."
+      - "Bands have CONTRACTED to unusually narrow widths — market is in low-volatility, calm period. Almost always followed by expansion (a directional move)."
+      - "Volume is at all-time highs."
+      - "Indicator broken."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "Volatility cycles between calm and active. A squeeze (very narrow bands) signals the calm phase. Markets rarely stay calm — they cycle into expansion, often with a substantial directional move. The squeeze is one of the most reliable 'something is coming' signals in TA."
+
+  - id: q3
+    text: "After a squeeze, the direction of the breakout is:"
+    type: mcq
+    choices:
+      - "Always up."
+      - "Not predicted by the squeeze itself. The squeeze says 'expansion incoming'; the breakout candle (close beyond a band with volume) tells you direction. Trade WITH the breakout, don't pre-position."
+      - "Always opposite to the prior trend."
+      - "Random and untradeable."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "The squeeze is direction-agnostic — it just tells you a move is coming. Pre-positioning often means being wrong on direction and stopping out. Wait for the breakout to commit (close beyond a band with volume), then trade with the move. Missing the first 0.5% is fine."
+
+  - id: q4
+    text: "Price RIDING the upper band in a strong uptrend means:"
+    type: mcq
+    choices:
+      - "Always short — the band is the top."
+      - "Strong trend; band touches are normal in strong trends. Don't fade trend strength. Use mean-reversion shorts only in clear ranges."
+      - "Always long — band touches are buy signals."
+      - "Indicator is broken."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "In strong trends, price camps near the upper band (uptrend) or lower band (downtrend). Touches are normal trend behavior, not reversal signals. Shorting every upper-band touch in an uptrend = the classic BB mistake. Mean-reversion only works in actual ranges."
+
+  - id: q5
+    text: "Which is the strongest MEAN-REVERSION setup using BBs?"
+    type: mcq
+    choices:
+      - "Price at upper band during strong uptrend."
+      - "Price at LOWER band + RSI oversold + at horizontal support + ranging regime. Multi-factor confirmation makes the mean-reversion long high-probability."
+      - "Price riding the lower band continuously."
+      - "Random touch of the middle band."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "Mean reversion needs CONFIRMATION from multiple angles. Lower band alone is weak. Lower band + RSI oversold + support level + ranging regime = four signals confirming exhaustion. This is what makes BB mean-reversion work when it does. Without these, band touches are just noise."
+
+  - id: q6
+    text: "Bollinger Bandwidth is a separate indicator that:"
+    type: mcq
+    choices:
+      - "Predicts price direction."
+      - "Explicitly measures the GAP between upper and lower bands as a number — making squeeze detection objective. Historical lows of Bandwidth = previous squeezes."
+      - "Same as MACD."
+      - "Only shows volume."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "Bandwidth quantifies what your eye sees on BBs. By tracking Bandwidth over time, you can systematically identify when the current Bandwidth approaches historical squeeze lows — much more rigorous than eyeballing the bands. Many trading journals (including this one) can compute Bandwidth."
+
+  - id: q7
+    text: "Default BB settings are 20-period + 2 standard deviations. Are these sacred?"
+    type: mcq
+    choices:
+      - "Yes — never change them."
+      - "Generally good defaults but not sacred. Some traders use 14+2 for more sensitivity (more signals), or 25+2 for stricter (fewer false signals). Experiment if defaults don't fit your style."
+      - "Wrong — should always be 5/1."
+      - "Settings don't matter at all."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "Defaults work well in most cases but aren't dogma. Shorter periods = more responsive but more false signals. Longer = smoother but lagged. 2 SD captures ~95% of moves statistically. Some adjust to 2.5 SD for stricter filtering. Test what fits your trading style and market."
+
+  - id: q8
+    text: "Squeeze + at key resistance + bearish bias from HTF — what's the smart trade approach?"
+    type: mcq
+    choices:
+      - "Long the squeeze for breakout."
+      - "Bias short — expect the breakout to be DOWN (away from resistance). Pre-positioning is still risky; safer to wait for the actual downside break with volume, then short."
+      - "Skip — too many signals."
+      - "Trade both directions simultaneously."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "Context can BIAS your squeeze interpretation. Resistance + bearish HTF + squeeze = downside expansion likely. You can prepare a short setup but still wait for the actual breakdown candle to confirm. The bias just tells you which side to monitor more closely — doesn't eliminate the need for confirmation."
+
+  - id: q9
+    text: "Wide bands (high volatility) mean what for trading approach?"
+    type: mcq
+    choices:
+      - "Best time for mean reversion."
+      - "Mean reversion is HARDER (price is making big swings); usually better to trade with the existing trend or wait for contraction. Wider stops needed if trading."
+      - "Always profitable."
+      - "Same as squeezed bands."
+    correct: 1
+    topic_tag: volatility
+    explanation: "Wide bands = high volatility = unpredictable swings. Mean-reversion strategies fail in this regime (price overshoots regularly). Trend-following can work if a clear trend exists. Otherwise, sit out and wait for contraction back to manageable volatility. Don't force trades in chaotic markets."
+
+  - id: q10
+    text: "Worked example: BTC 4H bands at 60-day narrowest, range $61.5K-$62.5K (1.6%), low volume. 1D in uptrend. Smart plan?"
+    type: mcq
+    choices:
+      - "Long immediately at the squeeze."
+      - "Wait for breakout direction. If UP through $62.5K with volume → LONG (aligned with HTF). If DOWN through $61.5K → SKIP (against bias). Don't pre-position."
+      - "Short to anticipate."
+      - "Skip the squeeze entirely."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "Squeeze + HTF bias = directional plan WITH confirmation requirement. The bias narrows your interest to the up-breakout. But you still wait for it to commit (close beyond + volume) before entering. If the squeeze breaks down (against bias), skip — counter-trend has lower probability. Aligned breakouts are what you wait for."

@@ -1,0 +1,113 @@
+{
+  "slug": "23-rsi-mastery",
+  "subtitle": "RSI is the most-used indicator in trading and the most-misused. \"Overbought\" doesn't mean \"sell\". \"Oversold\" doesn't mean \"buy\". The real signals are regime classification, failure swings, and divergences — and they take this far beyond the basic 30/70 rules.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>RSI (Relative Strength Index) is on nearly every retail trader's chart. Most use it wrong. They short whenever RSI hits 70 and long whenever RSI hits 30. In a strong trend, that loses money for months.</p><p>This lesson covers RSI the way professional traders use it: as a regime classifier, failure swing detector, and divergence indicator. The 30/70 \"overbought/oversold\" framing is the beginner version. The framework here is the actual usable version.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What RSI actually measures"
+    },
+    {
+      "type": "text",
+      "content": "<p>RSI is a momentum oscillator. It measures the ratio of recent gains vs recent losses over a lookback period (default 14 candles). The output is a number from 0 to 100:</p><ul><li>RSI = 50 → gains and losses balanced</li><li>RSI > 50 → recent gains dominate (momentum bullish)</li><li>RSI < 50 → recent losses dominate (momentum bearish)</li><li>RSI > 70 → strong recent gains (commonly called \"overbought\")</li><li>RSI < 30 → strong recent losses (commonly called \"oversold\")</li></ul><p>The mistake: assuming overbought = sell signal and oversold = buy signal. In a strong uptrend, RSI can stay above 70 for WEEKS. Shorting every time it touches 70 = bleeding to death while the trend runs.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The regime concept",
+      "content": "<p>RSI behaves differently in different market regimes. The first job before using RSI for any signal is to classify the regime:</p><ul><li><strong>Bullish regime:</strong> RSI averaging above 50, often touching 70-80. Bullish range is roughly 40-80. RSI of 40 is the \"oversold\" of this regime, not 30.</li><li><strong>Bearish regime:</strong> RSI averaging below 50, often touching 20-30. Bearish range is roughly 20-60. RSI of 60 is the \"overbought\" of this regime, not 70.</li><li><strong>Ranging regime:</strong> RSI oscillates 30-70 with regular reaches to both ends. Here the classic 30/70 levels work as mean reversion signals.</li></ul><p>Same RSI value means different things in different regimes. Always classify first.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Regime-aware RSI reading"
+    },
+    {
+      "type": "table",
+      "headers": ["RSI value", "In bullish regime", "In bearish regime", "In ranging regime"],
+      "rows": [
+        ["80+", "Strong momentum continuation. Don't short.", "Anomaly — possible regime change.", "Mean-reversion short setup."],
+        ["70", "Normal trend strength. Don't short.", "Strong rally — fade.", "Mean-reversion short setup."],
+        ["60", "Trend healthy.", "Approaching resistance zone — potential short.", "Mid-range; no signal."],
+        ["50", "Bullish pullback OR trend weakening.", "Bearish bounce ending.", "Mid-range; no signal."],
+        ["40", "Bullish PULLBACK ZONE — potential long.", "Trend healthy bearish.", "Mid-range; no signal."],
+        ["30", "Anomaly — possible regime change.", "Strong continuation. Don't long.", "Mean-reversion long setup."],
+        ["20-", "Major dip — reversal signal in bullish regime.", "Strong selling continuation.", "Strong mean-reversion long setup."]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Failure swings — the most reliable RSI reversal signal"
+    },
+    {
+      "type": "text",
+      "content": "<p>A failure swing is when RSI reaches an overbought (70+) or oversold (30-) level, retreats, then FAILS to make a new extreme on the next push. This often signals exhaustion of the move.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Pattern", "Description", "Signal"],
+      "rows": [
+        ["<strong>Bearish failure swing</strong>", "RSI hits >70, drops below 70, rises again but FAILS to reach the previous high (lower high on RSI)", "Reversal signal — momentum exhaustion at the top"],
+        ["<strong>Bullish failure swing</strong>", "RSI hits <30, rises above 30, drops again but FAILS to reach the previous low (higher low on RSI)", "Reversal signal — selling exhausted at the bottom"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Why failure swings work",
+      "content": "<p>A failure swing means the momentum that drove the original extreme can't be reproduced. Sellers in an uptrend (or buyers in a downtrend) are exhausted. The next move often reverses.</p><p>This is more reliable than 'RSI hit 70 so short' because failure swings have BUILT-IN confirmation — the second attempt confirms the exhaustion. Single touches of 70 are noise; failure swings are signal.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Divergences — the second most powerful RSI signal"
+    },
+    {
+      "type": "text",
+      "content": "<p>Divergence is when PRICE and RSI move in opposite directions. The disagreement signals that the price move isn't backed by underlying momentum.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Divergence type", "Price", "RSI", "Signal"],
+      "rows": [
+        ["<strong>Regular bullish divergence</strong>", "Lower low", "Higher low (RSI making higher lows while price makes lower lows)", "Bullish reversal — selling momentum exhausting"],
+        ["<strong>Regular bearish divergence</strong>", "Higher high", "Lower high", "Bearish reversal — buying momentum exhausting"],
+        ["<strong>Hidden bullish divergence</strong>", "Higher low", "Lower low", "Trend continuation up — buying momentum still strong"],
+        ["<strong>Hidden bearish divergence</strong>", "Lower high", "Higher high", "Trend continuation down — selling momentum still strong"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>Most traders focus on regular divergences (reversal). Hidden divergences are often more reliable because they trade WITH the trend (continuation) — they catch healthy pullbacks rather than trying to call tops/bottoms.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Divergence doesn't predict timing",
+      "content": "<p>Divergences signal that something is OFF. They don't tell you when the reversal happens. RSI can show divergence for weeks while price continues in the original direction.</p><p>Treat divergences as WARNINGS that confirm OTHER signals — not standalone entry triggers. \"Divergence + key resistance + bearish reversal candle\" = strong setup. Divergence alone = wait for confirmation.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "RSI in chop vs RSI in trend"
+    },
+    {
+      "type": "text",
+      "content": "<p>The same RSI movement means completely different things based on whether the market is trending or ranging:</p><ul><li><strong>Trending market</strong>: trade pullbacks to RSI ~40-50 (in uptrend) or RSI ~50-60 (in downtrend). Failure swings at extremes warn of trend exhaustion. Divergences are warnings, not entries.</li><li><strong>Ranging market</strong>: trade mean reversion. RSI hits 30 → long. RSI hits 70 → short. Classic textbook usage. Works in ranges, fails in trends.</li></ul><p>Always classify regime BEFORE applying RSI signals. Skipping this step is the most common RSI mistake.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart over 2 weeks. RSI has been averaging 55-75 (bullish regime confirmed). Last 3 swing highs in price: $63K, $65K, $66K (HH). Corresponding RSI peaks: 75, 73, 68 (LOWER HIGHS — divergence!).</p><p>Concurrently, price now stalling at $66K resistance. Bearish engulfing candle just printed on 4H with above-average volume.</p><p>Three signals stacking:</p><ol><li>Regular bearish divergence on RSI (lower highs while price made higher highs)</li><li>Price at confirmed resistance ($66K)</li><li>Bearish engulfing pattern + volume</li></ol><p>Trade analysis: divergence is the warning. The engulfing + resistance is the confirmation. Entry signal is the candle, not the divergence alone.</p><ul><li><strong>Entry:</strong> Limit SHORT at $65,700 (just below engulfing close)</li><li><strong>SL:</strong> $66,500 (above the engulfing high)</li><li><strong>TP1:</strong> $63,500 (recent swing high, now support)</li><li><strong>TP2:</strong> $61,000 (next major support)</li></ul><p>This works because divergence + level + pattern + volume = four independent signals aligned.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Four rules:</p><ol><li><strong>Classify regime FIRST.</strong> Bullish, bearish, ranging — determines which RSI signals matter.</li><li><strong>Failure swings &gt; single touches.</strong> The exhaustion confirmation is what makes the signal.</li><li><strong>Divergences are warnings, not entries.</strong> Need confirmation from price action.</li><li><strong>Trade with the regime.</strong> Bullish regime + RSI 40 = long zone. Bearish regime + RSI 60 = short zone.</li></ol><p>Forget the textbook 30/70 = buy/sell unless you're CERTAIN you're in a ranging market. In trends, use regime-aware levels.</p>"
+    }
+  ]
+}

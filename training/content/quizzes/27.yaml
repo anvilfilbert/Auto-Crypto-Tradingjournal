@@ -1,0 +1,123 @@
+id: "27"
+lesson_id: 27
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "ADX measures what?"
+    type: mcq
+    choices:
+      - "Direction of trend (bullish or bearish)."
+      - "STRENGTH of the prevailing trend (0-100 scale), regardless of direction. Use +DI and -DI for direction."
+      - "Price target."
+      - "Volume."
+    correct: 1
+    topic_tag: adx
+    explanation: "ADX is non-directional — it only tells you how strong the trend is. ADX 35 in an uptrend OR downtrend looks the same. Use +DI > -DI for uptrend, -DI > +DI for downtrend. ADX alone tells you whether to apply trend strategies vs range strategies."
+
+  - id: q2
+    text: "The most useful ADX threshold for regime classification is:"
+    type: mcq
+    choices:
+      - "ADX 50 = bullish."
+      - "ADX above 25 = TRENDING market (trend strategies work). ADX below 20 = RANGING (mean-reversion strategies work). Between 20-25 = transitional, wait for clarity."
+      - "ADX above 90 = always good."
+      - "ADX doesn't matter."
+    correct: 1
+    topic_tag: adx
+    explanation: "The 25/20 thresholds are the most practical. Above 25 = clean trend; below 20 = chop. Matching strategy to regime (trend strategies in trends, mean reversion in ranges) is one of the simplest improvements traders can make. Mismatched strategies = constant stop-outs."
+
+  - id: q3
+    text: "In a strong uptrend, RSI camps at 70-80 and never dips to 30. How does Stochastic help?"
+    type: mcq
+    choices:
+      - "It doesn't — same as RSI."
+      - "Stochastic uses a short lookback (14 candles default) — it RESETS during each pullback. So Stochastic 20 in an uptrend marks a pullback entry that RSI misses entirely."
+      - "Stochastic also stays high."
+      - "Stochastic only works on weekends."
+    correct: 1
+    topic_tag: stoch
+    explanation: "Stochastic's short lookback means it measures position relative to RECENT range, not the overall regime. Each pullback within the trend resets Stochastic to lower values. This catches pullback entries that RSI (longer effective lookback in regime context) misses. RSI + Stoch cover different territory."
+
+  - id: q4
+    text: "+DI > -DI tells you what?"
+    type: mcq
+    choices:
+      - "Trend strength."
+      - "Trend DIRECTION — +DI > -DI = bullish bias. -DI > +DI = bearish. Wider gap = stronger directional bias. Use alongside ADX for full picture."
+      - "Volume."
+      - "Random number."
+    correct: 1
+    topic_tag: adx
+    explanation: "+DI and -DI are the directional components that pair with ADX (strength). ADX 35 with +DI well above -DI = strong uptrend. ADX 35 with -DI well above +DI = strong downtrend. Use both: ADX for whether to trend-trade, +DI/-DI for which direction."
+
+  - id: q5
+    text: "ADX below 20 + Stochastic oscillating widely + price ranging — what strategy fits?"
+    type: mcq
+    choices:
+      - "Trend-following: break-of-structure trades."
+      - "Mean-reversion: buy support, sell resistance, classic RSI 30/70 + Stochastic 80/20 levels. ADX confirms it's a range; range strategies work."
+      - "100× leverage."
+      - "Skip all trading."
+    correct: 1
+    topic_tag: adx
+    explanation: "ADX low confirms ranging conditions. In ranges, mean reversion is the right approach — buy at the bottom of the range, sell at the top, fade the extremes. Trend strategies (waiting for breakouts) get faked out repeatedly in ranges. ADX is your filter to know which strategy to deploy."
+
+  - id: q6
+    text: "Stochastic crosses up through 20 inside a confirmed uptrend (ADX 32, +DI > -DI). What's the signal?"
+    type: mcq
+    choices:
+      - "Short — overbought above 20."
+      - "Long opportunity — the pullback (Stochastic <20) is ending and momentum is turning back up. Combine with support level + reversal candle + volume for high-quality entry."
+      - "Random."
+      - "Skip — Stochastic doesn't matter."
+    correct: 1
+    topic_tag: stoch
+    explanation: "Stochastic dipping into oversold during an uptrend = pullback in progress. Crossing back up through 20 = pullback ending, momentum resuming. Combined with the other context (50 EMA support, reversal candle, volume), this is a textbook pullback long. ADX + +DI confirm we're in the trend regime to take this."
+
+  - id: q7
+    text: "What's a common mistake with the +DI/-DI lines?"
+    type: mcq
+    choices:
+      - "Using them as direction confirmation."
+      - "Using +DI/-DI CROSSOVERS as standalone entry signals. They lag like all crossovers. Best used as direction confirmation when ADX is above 25, not as entry triggers."
+      - "Ignoring them entirely."
+      - "Looking at them once a week."
+    correct: 1
+    topic_tag: adx
+    explanation: "Crossover signals lag — +DI crossing -DI prints AFTER the directional shift has already started. Useful as background context. Trying to trade every +DI/-DI cross = same problem as MA crossovers (fakeouts in chop, late in trends). Use for direction context paired with ADX strength filter."
+
+  - id: q8
+    text: "Stochastic stays sustained above 80 during a strong uptrend. What should you NOT do?"
+    type: mcq
+    choices:
+      - "Hold longs."
+      - "Don't SHORT every '80' touch — same regime-saturation issue as RSI in strong trends. Stochastic sustained at 80+ means strong momentum continuing; don't fade trend strength based on the indicator alone."
+      - "Watch price action."
+      - "Tighten stops on longs."
+    correct: 1
+    topic_tag: stoch
+    explanation: "Same regime rule as RSI. Stochastic 80+ in a strong uptrend = healthy momentum, not a reversal signal. Trying to short every 80 touch = bleeding to death while trend runs. Use Stochastic 20 (pullback) for entries WITH the trend; sustained 80+ confirms trend strength to stay in."
+
+  - id: q9
+    text: "Worked example: ADX 32, +DI > -DI by a wide margin, Stochastic 18, RSI 47, price pulled back to 50 EMA, bullish engulfing on volume. Trade quality?"
+    type: mcq
+    choices:
+      - "Skip — too many indicators."
+      - "A+ TREND CONTINUATION setup. ADX confirms trending regime, +DI confirms direction, Stochastic caught the pullback that RSI missed, 50 EMA acts as support, candle + volume confirms entry. 5 confluences = high-quality long."
+      - "Short — Stochastic too low."
+      - "Random direction."
+    correct: 1
+    topic_tag: stoch
+    explanation: "All indicators agreeing on the same setup is rare and valuable. ADX validates that trend strategies are appropriate. +DI says long bias. Stochastic times the pullback entry. 50 EMA provides the level. Engulfing + volume provide the entry trigger. The combination is much higher quality than any single signal alone."
+
+  - id: q10
+    text: "Why use BOTH RSI and Stochastic in trending markets?"
+    type: mcq
+    choices:
+      - "They give the same signal."
+      - "They cover DIFFERENT territory: RSI shows regime/macro momentum (long lookback effect). Stochastic catches pullback extremes (short lookback). Together they show 'strong trend + tactical pullback entry'."
+      - "Stochastic replaces RSI."
+      - "More indicators = more profit."
+    correct: 1
+    topic_tag: indicators
+    explanation: "RSI gives you the regime view (bullish/bearish averaging). Stochastic gives you tactical pullback views within the regime. In a strong uptrend, RSI at 65 + Stochastic at 18 = bullish regime + pullback complete = high-quality entry setup. Each indicator alone would show only one piece of this picture."

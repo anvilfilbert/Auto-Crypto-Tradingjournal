@@ -1,0 +1,147 @@
+id: "30"
+lesson_id: 30
+pass_threshold: 10
+questions:
+  - id: q1
+    text: "Of all moving averages, which gets the MOST attention from institutional traders?"
+    type: mcq
+    choices:
+      - "9 EMA."
+      - "200 SMA on daily — defines macro bull/bear regime for institutional risk management."
+      - "50 EMA."
+      - "1000 SMA."
+    correct: 1
+    topic_tag: moving_averages
+    explanation: "200 SMA on daily represents ~1 year of trend. Institutional desks use it as the macro divider — price above = macro bullish bias, below = bearish. Cross-throughs cause coordinated repositioning. Always show it on your chart and always know which side of it price is on."
+
+  - id: q2
+    text: "In a STRONG UPTREND, RSI at 75 typically means:"
+    type: mcq
+    choices:
+      - "Sell immediately — overbought."
+      - "Normal trend strength in a bullish regime. RSI can stay 70+ for weeks. Don't fade trend strength with RSI alone."
+      - "Random."
+      - "Range market."
+    correct: 1
+    topic_tag: rsi
+    explanation: "Bullish regime has RSI averaging 40-80. RSI 75 is normal in this regime, not a reversal signal. Classify regime FIRST; the same RSI value means different things in different regimes. Shorting every 70+ touch in an uptrend = the most common RSI mistake."
+
+  - id: q3
+    text: "Which MACD component shows changes EARLIEST?"
+    type: mcq
+    choices:
+      - "Signal line."
+      - "HISTOGRAM — visualizes distance between MACD and signal line. Shows momentum acceleration/deceleration BEFORE the cross prints."
+      - "MACD line."
+      - "Zero line."
+    correct: 1
+    topic_tag: macd
+    explanation: "Histogram is the leading edge. Bars shrinking before the cross = early warning of fading momentum. By the time the cross prints, the move is often 50-70% done. Watch the histogram for early signals; treat crosses as confirmation."
+
+  - id: q4
+    text: "Bollinger SQUEEZE signal — what does it mean?"
+    type: mcq
+    choices:
+      - "Price has crashed."
+      - "Bands have contracted to unusually narrow widths — low volatility. Almost always followed by EXPANSION (directional move). Wait for breakout direction; don't pre-position."
+      - "Volume spike."
+      - "Random pattern."
+    correct: 1
+    topic_tag: bollinger
+    explanation: "Volatility cycles between calm and active. Squeeze = calm phase ending; expansion typically follows. The squeeze itself doesn't predict direction — wait for the breakout candle (close beyond a band + volume) to commit. Trade with the breakout; don't guess."
+
+  - id: q5
+    text: "A breakout above key resistance happens on LOW volume. What's the smart interpretation?"
+    type: mcq
+    choices:
+      - "Strong continuation guaranteed."
+      - "Likely FAKE breakout — no real participation. Often returns below within a few candles. Wait for above-average volume to confirm before trusting."
+      - "Same as high-volume breakout."
+      - "Time to enter aggressively."
+    correct: 1
+    topic_tag: volume
+    explanation: "Low-volume breakouts fail more often than not. Without participation, there's no real commitment to the new range. The rule: above-average volume confirms; below-average warns. This applies to every signal: candle patterns, breakouts, reversals all need volume confirmation."
+
+  - id: q6
+    text: "ADX above 25 signals what?"
+    type: mcq
+    choices:
+      - "Range market."
+      - "TRENDING market — use trend-following strategies (BoS pullbacks, momentum continuation). Below 20 = ranging, use mean-reversion strategies."
+      - "Always sell."
+      - "Random."
+    correct: 1
+    topic_tag: adx
+    explanation: "ADX is your regime filter. 25+ = trend regime → trend strategies work. Below 20 = range regime → mean-reversion strategies work. Matching strategy to regime avoids the most common mistake: trend strategies in chop (constant fakeouts) or range strategies in trends (constant stop-outs)."
+
+  - id: q7
+    text: "In a strong uptrend, RSI camps at 70+. How does Stochastic complement it?"
+    type: mcq
+    choices:
+      - "Same as RSI — redundant."
+      - "Stochastic uses a short lookback that RESETS during each pullback. Stochastic 20 in a strong uptrend marks pullback entries that RSI (regime-saturated) misses entirely."
+      - "Stochastic is for shorts only."
+      - "They contradict each other."
+    correct: 1
+    topic_tag: stoch
+    explanation: "RSI and Stochastic cover different territory. RSI gives regime view (bullish/bearish macro). Stochastic catches tactical pullback extremes within the trend. Together: strong trend (RSI 65) + pullback complete (Stochastic 18) = high-quality entry setup."
+
+  - id: q8
+    text: "Fibonacci retracement to 0.5 lands at $62K. Same price is ALSO a previous resistance + 50 EMA + round number. What does this combination represent?"
+    type: mcq
+    choices:
+      - "Random alignment."
+      - "MAJOR confluence — 4 independent groups of traders watching the same level. Very high-quality bounce zone."
+      - "Bearish signal."
+      - "Skip the trade."
+    correct: 1
+    topic_tag: fibonacci
+    explanation: "Multi-confluence levels are what make Fibs powerful. Standalone Fib = weak. Fib + S/R + MA + round number = institutional+retail+algo all watching the same price. The cumulative liquidity creates real reaction zones. These are the highest-quality Fib trades."
+
+  - id: q9
+    text: "Why do FIXED % stop losses fail across different assets?"
+    type: mcq
+    choices:
+      - "They work fine universally."
+      - "2% on a calm asset might be 4× daily volatility (wide); 2% on a volatile asset might be inside a single candle's range (gets stopped on noise). Different assets need different scaling — ATR adapts automatically."
+      - "They're against exchange rules."
+      - "Too expensive."
+    correct: 1
+    topic_tag: atr
+    explanation: "Same numeric % means different actual risk on different assets. ATR scales stops to actual recent volatility — '1.5× ATR' is approximately the same level of conservativeness on every asset. This fixes the cross-asset stop-sizing problem that fixed-% strategies have."
+
+  - id: q10
+    text: "Bullish volume divergence is:"
+    type: mcq
+    choices:
+      - "Price up + volume up."
+      - "Price makes LOWER LOWS but volume DECREASES on each subsequent low. Sellers exhausting. Reversal warning at the bottom."
+      - "Random noise."
+      - "Same as bullish RSI divergence."
+    correct: 1
+    topic_tag: divergence
+    explanation: "Volume divergence directly measures participation. Lower lows in price + lower volume on each = sellers can't sustain selling momentum. Often more reliable than indicator-derived divergences because it measures the actual participation that drives price. Combined with reversal candle + level + RSI/MACD divergence = strongest setup."
+
+  - id: q11
+    text: "Common MACD mistake?"
+    type: mcq
+    choices:
+      - "Using it at all."
+      - "Trading every signal line cross as an entry — they lag by design and fakeout in chop. Net result usually negative. Use histogram for early signals and divergences for setups; treat crosses as confirmation, not triggers."
+      - "Adding it to the chart."
+      - "Looking at it once a week."
+    correct: 1
+    topic_tag: macd
+    explanation: "MACD crosses lag for the same reason MA crosses do (derived from smoothed price). By cross time, the move is often 50%+ done. Plus in chop the crosses fakeout constantly. The histogram catches changes earlier; divergences show momentum exhaustion. Use those — not the crosses."
+
+  - id: q12
+    text: "Which single statement best summarizes Tier 3?"
+    type: mcq
+    choices:
+      - "Indicators predict the future."
+      - "Indicators are NOT standalone signals — they're CONFIRMATIONS. Use them with regime awareness (RSI regime, ADX filter), confluence (multiple indicators + chart structure), and chart context (S/R levels, candle patterns)."
+      - "More indicators = better."
+      - "Indicators replace chart reading."
+    correct: 1
+    topic_tag: indicators
+    explanation: "The recurring theme through Tier 3: indicators amplify chart reading; they don't replace it. Standalone indicator signals have low win rates. Combined with chart structure (Tier 2) and traded with regime awareness (this tier), they become powerful. The trader who learned only indicators is still missing the foundation; the one who layered indicators on top of structure is operating at full capability."

@@ -1,0 +1,124 @@
+{
+  "slug": "24-macd",
+  "subtitle": "MACD is the second most popular momentum indicator after RSI. The signal line cross gets all the attention, but the histogram tells the real story — and divergences on MACD are some of the most reliable trade signals in the toolkit.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>MACD (Moving Average Convergence Divergence) is RSI's structural cousin. Both measure momentum, but from different angles. RSI compares recent gains to losses; MACD compares two moving averages. Both produce divergences. Both are most useful when combined with chart context.</p><p>Most retail uses MACD wrong — chasing every signal-line cross as an entry trigger. The real value is in the histogram and in divergences.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What MACD measures"
+    },
+    {
+      "type": "text",
+      "content": "<p>MACD has three components:</p><ul><li><strong>MACD line</strong>: difference between a fast EMA (default 12) and a slow EMA (default 26). When the fast EMA pulls away from the slow EMA, the MACD line grows. When they converge, MACD shrinks toward zero.</li><li><strong>Signal line</strong>: a 9-EMA of the MACD line itself. Smooths the MACD line further.</li><li><strong>Histogram</strong>: the difference between MACD line and signal line. Visualized as vertical bars centered at zero.</li></ul><p>When MACD is positive, fast EMA is above slow EMA (bullish momentum). Negative MACD = fast below slow (bearish momentum). Zero = equal.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The three classic MACD signals"
+    },
+    {
+      "type": "table",
+      "headers": ["Signal", "Description", "Reliability"],
+      "rows": [
+        ["<strong>Signal line cross</strong>", "MACD line crosses above (bullish) or below (bearish) the signal line", "Low-medium — produces many false signals, especially in chop"],
+        ["<strong>Zero line cross</strong>", "MACD line crosses from negative to positive (or vice versa) = momentum regime change", "Medium — lags by design but more meaningful than signal cross"],
+        ["<strong>Divergence</strong>", "Price makes new high/low but MACD doesn't = momentum exhaustion", "Medium-High — one of the most reliable MACD signals when combined with context"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Signal line crosses lag",
+      "content": "<p>By the time MACD line crosses its signal line, the price move has often already played out. The cross is confirming the change, not predicting it. Same problem as MA crossovers (lesson 22) — useful as background context, terrible as standalone entry triggers.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The histogram — the most useful part"
+    },
+    {
+      "type": "text",
+      "content": "<p>The histogram visualizes MACD's distance from its signal line. Bars get LONGER when momentum is accelerating, SHORTER when momentum is decelerating.</p><p>Histogram tells you the momentum BEFORE the line cross prints. This is more predictive than the cross itself.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Histogram pattern", "What it shows", "Implication"],
+      "rows": [
+        ["Bars growing taller (above zero)", "Bullish momentum accelerating", "Trend continuing strong"],
+        ["Bars shrinking (above zero)", "Bullish momentum decelerating, still positive", "Trend losing steam — consider tightening SL on longs"],
+        ["Bars crossing below zero", "Bullish momentum gone — bearish momentum begins", "Bearish bias forming"],
+        ["Bars growing taller (below zero)", "Bearish momentum accelerating", "Downtrend continuing"],
+        ["Bars shrinking (below zero)", "Bearish momentum decelerating", "Downtrend losing steam — possible bounce coming"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Watch the histogram for early signals",
+      "content": "<p>Histogram bars shrinking BEFORE the MACD line cross = early warning that momentum is fading. By the time the cross prints, the move is already 50-70% done. The histogram shrinkage often precedes the cross by several candles.</p><p>Practical: in an uptrend, when histogram bars start visibly shrinking, take partial profits or tighten SL. Don't wait for the official MACD cross — that's late.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "MACD divergences"
+    },
+    {
+      "type": "text",
+      "content": "<p>Same logic as RSI divergences (lesson 23). Price making new highs/lows but MACD failing to confirm = momentum disagreement.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Divergence", "Price", "MACD", "Signal"],
+      "rows": [
+        ["<strong>Regular bullish</strong>", "Lower low", "Higher low", "Bullish reversal warning"],
+        ["<strong>Regular bearish</strong>", "Higher high", "Lower high", "Bearish reversal warning"],
+        ["<strong>Hidden bullish</strong>", "Higher low", "Lower low", "Bullish continuation (trade with trend)"],
+        ["<strong>Hidden bearish</strong>", "Lower high", "Higher high", "Bearish continuation"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>MACD divergences tend to be more reliable than RSI divergences because MACD is constructed from longer-period EMAs, so divergence forms more slowly and represents more substantial momentum exhaustion.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "When divergence appears on BOTH RSI and MACD"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Double divergence = stronger signal",
+      "content": "<p>When BOTH RSI and MACD show divergence at the same time, the signal is much stronger than either alone. The two indicators measure momentum slightly differently — they confirming each other independently is meaningful.</p><p>Best use: scan charts for setups where BOTH indicators diverge at a key level (S/R + reversal candle). These are some of the highest-quality trades available.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "MACD in trends vs chop"
+    },
+    {
+      "type": "text",
+      "content": "<p>Like all indicators, MACD's signals mean different things in different regimes:</p><ul><li><strong>Strong trend:</strong> MACD camps above zero (uptrend) or below zero (downtrend). Signal line crosses become noise — they trigger many fakeouts. Use the histogram for momentum and divergences for warning of trend end.</li><li><strong>Range/chop:</strong> MACD oscillates around zero with regular crosses. Signal crosses become more meaningful as mean-reversion triggers. Trading the crosses with a tight SL can work.</li></ul><p>Default to: histogram + divergences in trends. Signal line crosses only in clean ranges.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Common MACD mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<p>Patterns that lose money:</p><ol><li><strong>Trading every signal line cross.</strong> Lags by design + many fakeouts = net loss in chop.</li><li><strong>Ignoring the histogram.</strong> The histogram is the leading edge of the MACD signal. Watching only the line crosses is using a delayed version of the same data.</li><li><strong>Trusting MACD signals without chart context.</strong> Bearish divergence in the middle of a strong uptrend means little. Same divergence at a major resistance with reversal candle = real signal.</li><li><strong>Using default settings (12/26/9) without question.</strong> These work but aren't sacred. Some traders use 8/17/9 for faster signals, 19/39/9 for slower. Experiment if defaults don't fit your style.</li><li><strong>Treating MACD divergence as an entry trigger.</strong> Same as RSI: divergence is a warning. Need confirmation from price action.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart over 10 days:</p><ul><li>Price has been trending up: $60K → $65K with HH/HL structure.</li><li>MACD camped above zero throughout — confirming uptrend.</li><li>Last 3 price peaks: $63K, $64K, $65K (HH series).</li><li>Last 3 MACD histogram peaks: 850, 720, 540 (LOWER PEAKS — divergence forming).</li><li>RSI also showing lower highs (RSI 78, 75, 71).</li><li>Price at $65K is at major weekly resistance.</li><li>Just printed a bearish engulfing 4H candle with high volume.</li></ul><p>Five signals stacking: structural resistance, bearish engulfing, RSI divergence, MACD divergence, volume confirmation. This is an A+ short setup.</p><ul><li><strong>Entry:</strong> $64,700 (just below engulfing close)</li><li><strong>SL:</strong> $65,500 (above engulfing high + above key resistance)</li><li><strong>TP1:</strong> $62,500 (recent swing high, now support)</li><li><strong>TP2:</strong> $60,000 (next major support)</li></ul><p>R:R ≈ 1:3 to TP1. Consider sizing up to 2-3% on this rare A+ setup if rules allow.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Histogram &gt; signal line crosses.</strong> The histogram shows momentum changes earlier and more reliably.</li><li><strong>Divergences are warnings.</strong> Need confirmation (level + candle pattern + volume) before entry.</li><li><strong>RSI + MACD divergence together = strong signal.</strong> Two independent confirmations of momentum exhaustion at the same time.</li></ol><p>Next lesson: Bollinger Bands — the volatility envelope that contextualizes the momentum indicators you just learned.</p>"
+    }
+  ]
+}

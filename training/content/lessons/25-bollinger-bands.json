@@ -1,0 +1,129 @@
+{
+  "slug": "25-bollinger-bands",
+  "subtitle": "Bollinger Bands turn volatility into a visible envelope around price. The squeeze (bands compressing) is one of the most reliable pre-move signals in technical analysis. \"The market is calm before the storm\" is literally what BBs show.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Bollinger Bands (BBs) are an envelope of two bands plotted around a moving average. The bands expand when volatility is high and contract when volatility is low. This visual representation of volatility is what makes BBs uniquely useful.</p><p>The most-watched signal: the SQUEEZE. When bands contract dramatically, the market is unusually calm. Calm before a storm. Volatility expansion almost always follows — often a big directional move. Spotting squeezes early is a structural edge.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How Bollinger Bands are calculated"
+    },
+    {
+      "type": "table",
+      "headers": ["Component", "Formula", "What it represents"],
+      "rows": [
+        ["Middle band", "20-period SMA (default)", "The mean — average price over recent period"],
+        ["Upper band", "Middle + 2 × standard deviation", "Statistical upper limit — most price action stays below"],
+        ["Lower band", "Middle - 2 × standard deviation", "Statistical lower limit — most price action stays above"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>Because the bands are 2 standard deviations from the mean, statistically ~95% of price action stays within them in a normal distribution. When price pokes outside the bands, it's the statistical 5% — significant.</p><p>When volatility increases, standard deviation increases, bands expand. When volatility decreases, bands contract. The width of the bands IS the volatility measurement.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The four main BB scenarios"
+    },
+    {
+      "type": "table",
+      "headers": ["Band state", "What it shows", "Trade implication"],
+      "rows": [
+        ["<strong>Wide bands</strong>", "High volatility — recent price has been swinging widely", "Wait for contraction or trade existing trend; mean-reversion harder"],
+        ["<strong>Squeezed bands (narrow)</strong>", "Low volatility — market is unusually calm", "Expansion incoming — set up for breakout in either direction"],
+        ["<strong>Price riding upper band</strong>", "Strong uptrend — momentum keeps pushing price to upper extreme", "Don't short the band touch; trend is strong"],
+        ["<strong>Price riding lower band</strong>", "Strong downtrend — momentum keeps pushing price to lower extreme", "Don't long the band touch; trend is strong"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "The squeeze — the most useful BB signal",
+      "content": "<p>Bands compressing dramatically signals that volatility has collapsed. Markets don't stay calm forever. The squeeze almost always resolves with an EXPANSION — bands widen rapidly as a directional move develops.</p><p>The direction of the expansion isn't predicted by the squeeze itself. The squeeze just tells you a move is coming. You combine with other signals (volume, trend, key levels) to bias direction. Or trade the breakout in whichever direction confirms.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Trading the squeeze"
+    },
+    {
+      "type": "text",
+      "content": "<p>Classic squeeze setup:</p><ol><li>Identify a period of dramatically narrow bands — often the narrowest in the last 50-100 candles.</li><li>Note the direction of the surrounding trend (HH/HL = bullish bias on breakout; LH/LL = bearish bias).</li><li>Wait for price to break out beyond a band with above-average volume.</li><li>Enter in the breakout direction. SL below the breakout candle's low (for long) or above the breakout candle's high (for short).</li><li>TP at the next major resistance/support level.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Don't pre-position before the breakout",
+      "content": "<p>Common mistake: see the squeeze, guess the direction, enter early. Often the squeeze breaks in the OPPOSITE direction of what you assumed and you stop out.</p><p>The squeeze tells you 'something's coming'. The BREAKOUT tells you which direction. Wait for the breakout to commit (close beyond the band with volume), then trade with the move. Missing the first 0.5% is fine; being on the wrong side of the breakout is expensive.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Mean reversion vs trend following"
+    },
+    {
+      "type": "text",
+      "content": "<p>BBs can be used for two opposite strategies depending on regime:</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Strategy", "When to use", "Trade approach"],
+      "rows": [
+        ["<strong>Mean reversion</strong>", "Range-bound or low-volatility markets", "Buy at lower band, sell at upper band — price tends to return to the middle"],
+        ["<strong>Trend following</strong>", "Strong trending markets — price rides the band", "Buy on pullbacks toward middle band (in uptrend); sell on pullbacks toward middle (downtrend)"],
+        ["<strong>Breakout trading</strong>", "After a squeeze", "Trade the directional move beyond the bands"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "The 'band touch = reverse' trap",
+      "content": "<p>Beginner mistake: seeing price touch the upper band and shorting because \"it must reverse\". In a strong uptrend, price RIDES the upper band for weeks. The touch is normal, not a reversal signal.</p><p>Same for downtrends — price rides the lower band. Don't fade trend strength with simple band touches. Use bands for mean reversion ONLY in clear ranges.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Bollinger Bandwidth — explicit volatility measurement"
+    },
+    {
+      "type": "text",
+      "content": "<p>Some platforms include a separate \"Bollinger Bandwidth\" indicator that explicitly measures the gap between upper and lower bands. This makes squeeze detection objective:</p><ul><li>Plot Bandwidth as a line below the chart.</li><li>Note the historical lows of Bandwidth — these are previous squeezes.</li><li>When current Bandwidth approaches or breaks past these lows, a squeeze is in play.</li></ul><p>This is more rigorous than eyeballing the bands. The trading journal can compute Bollinger Bandwidth — useful for systematic squeeze detection.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "BBs combined with other indicators"
+    },
+    {
+      "type": "table",
+      "headers": ["BB signal + other signal", "What it means", "Trade quality"],
+      "rows": [
+        ["Squeeze + low ATR + low volume", "Maximum calm — biggest expansions often follow", "High — wait for breakout"],
+        ["Price at lower band + RSI oversold + at support", "Strong mean-reversion long signal in ranges", "High — multi-factor confirmation"],
+        ["Price riding upper band + bullish MACD + strong volume", "Strong trend; don't fade", "Continuation likely"],
+        ["Price at upper band + bearish RSI divergence + bearish candle", "Strong reversal warning", "High — short setup forming"],
+        ["Squeeze + at key resistance + bearish bias", "Expect breakout DOWN; pre-position with limit short above current price", "Medium-High — directional bias from context"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Common BB mistakes"
+    },
+    {
+      "type": "text",
+      "content": "<p>Patterns that lose money:</p><ol><li><strong>Shorting every upper-band touch in an uptrend.</strong> Price rides bands; touches are normal. Use bands for reversal ONLY with confirming signals (resistance + reversal candle + divergence + volume).</li><li><strong>Pre-positioning before a squeeze breaks.</strong> Guess wrong = stop out. Wait for breakout confirmation.</li><li><strong>Ignoring band width.</strong> Wide bands = high volatility = different trade approach than calm markets. Always note the current band state.</li><li><strong>Using default settings without thought.</strong> 20-period SMA + 2 SD works on most TFs but isn't sacred. Some traders use 14-period + 2 SD for more sensitivity.</li><li><strong>Trading mean reversion in strong trends.</strong> Bands aren't mean-reversion indicators in trends — they're trend-strength indicators.</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "Worked example — squeeze breakout"
+    },
+    {
+      "type": "text",
+      "content": "<p>BTC 4H chart over 5 days has been remarkably calm. Bands compressed to their narrowest width in 60 days. Price oscillating $61,500-$62,500 (range of 1.6%) with low volume. Bollinger Bandwidth indicator at its lowest reading in 2 months.</p><p>Multi-TF context: 1D is in a clear uptrend (HH/HL). Recent 4H pullback completed at $61,500 support. Bias = long if it breaks up.</p><p>Plan: wait for the squeeze breakout.</p><ul><li>If price breaks UP above $62,500 with above-average volume → LONG. Entry $62,700, SL $61,800 (back inside the range), TP1 $64,500, TP2 $66,000.</li><li>If price breaks DOWN below $61,500 with volume → SKIP (bias was long, counter-trend = lower probability).</li></ul><p>The squeeze + multi-TF bias + clear breakout level = clean setup. Wait for the move to confirm; don't pre-position.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>Three rules:</p><ol><li><strong>Squeeze = expansion incoming.</strong> Most useful single BB signal. Wait for the breakout direction, then trade with it.</li><li><strong>Band touches in trends are NORMAL.</strong> Don't fade trend strength. Use bands for mean reversion only in ranges.</li><li><strong>Combine with other signals.</strong> Standalone BBs produce many false signals. With confluences (S/R, RSI, MACD divergences, volume), they become powerful.</li></ol><p>Next lesson: Volume + VWAP — the participation dimension that confirms or denies every other signal.</p>"
+    }
+  ]
+}
