@@ -4,7 +4,7 @@
   "blocks": [
     {
       "type": "text",
-      "content": "<p>Most retail crypto traders don't actually know what kind of contract they're trading. They open Binance, buy BTC, then lose 20% in a month and assume \"crypto is risky\" — when in reality they were on perpetual futures with 5x leverage and didn't realize the liquidation price was 19% away.</p><p>Before anything else — risk management, indicators, candle patterns — you need to know <strong>what you're actually trading</strong>. Three flavors, very different rules:</p>"
+      "content": "<p>A common story: someone opens Binance, sees BTC at $60,000, buys what feels like \"a chunk of BTC\" with $1,000, and a month later their balance reads $200. They assume \"crypto is volatile\" — but the real story is they were on perpetual futures with 5× leverage, and BTC only fell 16%. The leverage took the rest. They never realized they signed up for that.</p><p>This isn't rare. Most exchanges default new users into derivatives because that's where the fees are. The UI surface looks almost identical to spot trading. If you don't know what to look for, you don't know what you're trading.</p><p>So before risk management, before indicators, before candle patterns — you need to know <strong>what you're actually trading</strong>. Crypto has three flavors and each has wildly different rules:</p>"
     },
     {
       "type": "heading",
@@ -14,27 +14,33 @@
       "type": "table",
       "headers": ["", "Spot", "Futures (dated)", "Perpetual"],
       "rows": [
-        ["<strong>What you own</strong>", "The actual coin", "A contract that expires", "A contract that never expires"],
+        ["<strong>What you actually own</strong>", "The coin itself (sits in your wallet)", "A contract — paper promise to exchange at expiry", "A contract that never expires"],
         ["<strong>Expiry</strong>", "Never", "Fixed date (e.g. last Friday of quarter)", "Never — held indefinitely"],
-        ["<strong>Leverage</strong>", "None (1x always)", "Yes (e.g. 5x, 10x, 100x)", "Yes (same)"],
-        ["<strong>Funding</strong>", "None", "None", "Yes — every 8h, longs pay shorts or vice versa"],
-        ["<strong>Liquidation</strong>", "Impossible", "Possible if leveraged", "Possible if leveraged"],
-        ["<strong>Who uses it</strong>", "Long-term holders, savings", "Institutions hedging", "≈95% of retail crypto trading"]
+        ["<strong>Leverage</strong>", "None — always 1×", "Yes (e.g. 5×, 10×, 100×)", "Yes (same)"],
+        ["<strong>Funding</strong>", "None", "None — settles at expiry", "Yes — every 8h, longs pay shorts or vice versa"],
+        ["<strong>Can you be liquidated</strong>", "No, ever", "Yes if leveraged", "Yes if leveraged"],
+        ["<strong>Counterparty</strong>", "Another buyer/seller of the actual coin", "Another contract holder, settled at expiry", "Another perp trader, continuously"],
+        ["<strong>Who uses it</strong>", "Long-term holders, savers, payment", "Institutions hedging, market-makers, arbitrage", "≈95% of retail crypto trading"],
+        ["<strong>Settlement</strong>", "Instant — coin lands in wallet", "Cash or physical, at the expiry date", "Continuous — funding payments + mark-to-market"]
       ]
     },
     {
       "type": "heading",
-      "content": "Spot — the simplest"
+      "content": "Spot — what you actually own a coin"
     },
     {
       "type": "text",
-      "content": "<p>You buy BTC. You own BTC. Price doubles, you doubled. Price drops 90%, you have 10% left. No leverage, no liquidation, no funding. You can wait 5 years for your bag to recover.</p><p>This is what \"holding crypto\" means in the strict sense. Good for long-term conviction plays. Bad for short-term opportunities (you can't short, and your gains are 1:1 with price).</p>"
+      "content": "<p>Spot trading is the simplest possible form. You exchange dollars (or USDT) for a coin. The coin ends up in your wallet. You own it the same way you own a stock through your brokerage — fully, no contract terms.</p><p>The price moves 1-to-1: if BTC doubles, your USD value doubles. If BTC drops 90%, you have 10% left. There's no leverage to amplify either side, and no exchange can force you out of the position. You can hold for 5 years, transfer to a hardware wallet, stake it for yield, lend it on DeFi, or send it to a friend — all because it's actually yours.</p>"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Concrete example:</strong> you buy 1 BTC at $60,000 in March. By November BTC has fallen to $40,000 (-33%). Your balance shows 1 BTC worth $40,000. You still own the same 1 BTC. You haven't \"lost\" any BTC — you've lost the USD-denominated value. If BTC eventually returns to $80,000 in two years (which has happened multiple times in BTC's history), your 1 BTC is now worth $80,000. The drawdown was paper — the asset survived.</p><p>Now do the same scenario with 5× leverage on perps and you would have been liquidated long before BTC reached $40,000. You'd own zero BTC. No recovery possible.</p>"
     },
     {
       "type": "callout",
       "kind": "key",
-      "title": "Why retail isn't on spot",
-      "content": "<p>Most retail \"crypto trading\" looks like spot trading on the surface (\"I bought BTC at 60k\") but is usually perpetual futures with default 5-10x leverage. The exchange's UI doesn't always make this loud. Always check the badge: <code>USDT-M Futures</code> or <code>Spot</code>.</p>"
+      "title": "Why retail isn't mostly on spot",
+      "content": "<p>Spot's biggest weakness is also its strength: no leverage. A $1,000 spot position gives you exactly $1,000 of exposure. To make $100 profit you need a 10% move. Retail traders want bigger movements faster, so they migrate to leveraged products — usually without realizing they've made that choice.</p><p>Exchange UIs don't help. Binance, Bybit, OKX, and Bitget all bury the spot/futures toggle in tabs that look nearly identical. You can be on perps for weeks and only notice when a sudden 10% drop liquidates a position you thought was \"just holding BTC\".</p><p>Always look for the badge — typically labelled <code>USDT-M Futures</code>, <code>COIN-M Futures</code>, <code>Perpetual</code>, or just <code>Spot</code>. If you see a leverage selector (1×, 5×, 10×, etc.), you're not on spot.</p>"
     },
     {
       "type": "heading",
@@ -42,7 +48,11 @@
     },
     {
       "type": "text",
-      "content": "<p>Contracts that expire on a specific date. \"BTCUSD-1228\" is a contract that settles on Dec 28. Common at CME and on offshore exchanges as \"quarterly\" contracts. The price often trades at a premium or discount to spot (\"contango\" / \"backwardation\"), which closes as expiry approaches.</p><p>Almost no retail trader uses these. They exist for institutions hedging — a miner can sell quarterly futures to lock in a price for the BTC they'll produce.</p>"
+      "content": "<p>A dated future is a contract to exchange an asset on a specific calendar date. \"BTCUSD-1228\" settles on December 28. You can buy or sell the contract any time before that date — but at expiry, the position is closed and settled (typically in cash for crypto: the difference between contract price and spot at expiry).</p><p>Because of the fixed expiry, the contract price often diverges from spot. Two cases:</p><ul><li><strong>Contango</strong> — futures price ABOVE spot. Buyers expect higher prices by expiry, or there's a yield premium. As expiry approaches, the gap closes.</li><li><strong>Backwardation</strong> — futures price BELOW spot. Buyers expect lower prices, or sellers are desperate to lock in current price. Less common in crypto.</li></ul>"
+    },
+    {
+      "type": "text",
+      "content": "<p><strong>Concrete miner-hedging example:</strong> A bitcoin mining company knows it'll produce ~10 BTC per month for the next 6 months. Current price is $60,000. They're profitable at $50,000. They worry the price might fall to $40,000, which would push them into losses.</p><p>Solution: they sell 60 BTC of quarterly futures at $58,000 (the current futures price). Now no matter what spot does, they've locked in $58,000 per BTC for 60 of their next BTC. If spot crashes to $40,000, the futures position gains $18,000 per BTC, offsetting the lower spot price. If spot rallies to $80,000, the futures loses $22,000 per BTC, but the actual mined BTC sells at $80,000 — net positive but they capped their upside.</p><p>This is hedging — sacrificing upside for downside protection. Almost zero retail traders use dated futures because there's no compelling retail use case: you can't easily hedge what you don't have, and the contract complexity makes them annoying to trade for speculation.</p>"
     },
     {
       "type": "heading",
@@ -50,21 +60,76 @@
     },
     {
       "type": "text",
-      "content": "<p>This is where 95% of crypto leverage activity lives. Same idea as a future, but it never expires. So how does the price stay anchored to spot? <strong>Funding rates.</strong></p><p>Every 8 hours, if perp price is above spot, longs pay shorts a small fee (e.g. 0.01% of position). If perp is below spot, shorts pay longs. This continuous payment forces the prices to converge. It's elegant — and it's also a hidden cost most traders ignore.</p>"
+      "content": "<p>Perps are the dominant form of crypto leverage. The genius of the design: they behave like futures (you can go long or short with leverage, you can be liquidated) but they never expire. So how does the price stay anchored to spot? Through the funding rate mechanism.</p><p>Every 8 hours (typically at 00:00, 08:00, 16:00 UTC on most exchanges), the exchange calculates a small payment that flows between long and short holders, designed to nudge the perp price toward spot:</p><ul><li>If <strong>perp price &gt; spot</strong>: market is over-bid on the long side. Funding payment flows from <strong>longs → shorts</strong>. Holding a long becomes costly, motivating some longs to close or shorts to enter. This pushes perp price down toward spot.</li><li>If <strong>perp price &lt; spot</strong>: funding flows from <strong>shorts → longs</strong>. Mirror logic.</li></ul><p>The rate isn't fixed. It floats based on the gap between perp and spot — a typical rate is around 0.01% per 8h period (≈11% annualized). During euphoric rallies it can spike to 0.1% per 8h (≈110% annualized!). During panic flushes it can flip negative.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Funding cost — a worked example"
+    },
+    {
+      "type": "text",
+      "content": "<p>Here's where most retail bleeds money silently. Funding is paid on <strong>notional</strong> position size, not margin.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Scenario", "Margin", "Leverage", "Notional", "Funding rate / 8h", "Cost per 24h (3 payments)"],
+      "rows": [
+        ["1× leverage, low funding", "$1,000", "1×", "$1,000", "0.01%", "$0.30"],
+        ["5× leverage, low funding", "$1,000", "5×", "$5,000", "0.01%", "$1.50"],
+        ["10× leverage, low funding", "$1,000", "10×", "$10,000", "0.01%", "$3.00"],
+        ["10× leverage, hot funding", "$1,000", "10×", "$10,000", "0.05%", "$15.00"],
+        ["10× leverage, spike", "$1,000", "10×", "$10,000", "0.10%", "$30.00"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>Bottom row interpretation: holding a $10,000 leveraged long for 24 hours during a funding spike costs <strong>$30 — 3% of your margin per day</strong> just to stay in the position. The trade needs to make 3% per day net, BEFORE counting price moves against you, just to break even.</p><p>This is why some traders close positions before the funding payment hits (at the 8h boundary) when funding is unfavorable. It's also why \"holding a long position through the weekend\" can become an expensive habit during euphoric runs.</p>"
     },
     {
       "type": "callout",
       "kind": "warn",
-      "title": "Funding eats small wins",
-      "content": "<p>A trade held 3 days through three funding payments at 0.01% each = 0.03% in funding. On a 5x leveraged position that's 0.15% of your margin gone before any price move. If funding spikes to 0.1% (common during euphoric runs), you can pay 0.9% of margin per day just to hold.</p>"
+      "title": "Funding rate as a sentiment signal",
+      "content": "<p>Beyond cost, funding tells you what positioning looks like. When funding is sustained at &gt;+0.05% per 8h, longs are paying heavily to hold — sign of euphoric one-sided positioning. Historically these spikes often precede sharp pullbacks because the long side becomes structurally over-leveraged. We'll come back to this in Tier 4 (\"Funding rate as sentiment\").</p>"
     },
     {
       "type": "heading",
-      "content": "How to tell which you're on"
+      "content": "Liquidation — what \"leverage doesn't add risk\" actually means"
     },
     {
       "type": "text",
-      "content": "<p>Open your exchange. Look for these cues:</p><ul><li><strong>Spot</strong>: tab says \"Spot\" or \"Convert\". No leverage selector. Order book shows actual BTC quantities. You can withdraw the BTC.</li><li><strong>Futures / Perp</strong>: tab says \"USDT-M Futures\", \"COIN-M Futures\", \"Perpetual\", or you see a leverage selector (1x, 2x, 5x, 10x, 25x, 50x, 100x). Order quantities are denominated in contracts or USDT.</li><li><strong>Test</strong>: try to set the leverage to 1x. If you can't change it, you're on spot. If you can, you're on a leveraged product.</li></ul>"
+      "content": "<p>You'll hear experienced traders say \"leverage doesn't add risk, your stop loss does.\" That's literally true and worth internalizing.</p><p>Here's the math. Suppose your account has $1,000 and you go long BTC at $60,000 with 10× leverage. Your notional position is $10,000 — about 0.167 BTC. The exchange requires you to keep some maintenance margin (typically 0.5-1% of notional, so $50-100). The moment your margin falls below that floor, you're liquidated — your remaining margin is taken by the exchange and your position is closed at market.</p><p>The liquidation price for that scenario is roughly $54,000 — a 10% drop in BTC and you're out. Lose everything: $1,000 → $0.</p>"
+    },
+    {
+      "type": "table",
+      "headers": ["Leverage", "Liquidation distance (approx)", "What \"down 5%\" means", "What \"down 10%\" means"],
+      "rows": [
+        ["1×", "100%", "-5% loss", "-10% loss"],
+        ["3×", "~33%", "-15% loss", "-30% loss"],
+        ["5×", "~20%", "-25% loss", "-50% loss"],
+        ["10×", "~10%", "-50% loss", "<strong>Liquidated (-100%)</strong>"],
+        ["25×", "~4%", "<strong>Liquidated</strong>", "<strong>Liquidated</strong>"],
+        ["100×", "~1%", "<strong>Liquidated</strong>", "<strong>Liquidated</strong>"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>This is why \"leverage doesn't add risk, SL does\" is true: if you use 100× leverage with a 0.5% stop loss, your maximum loss is 50% of your account. If you use 5× leverage with NO stop loss, your maximum loss is also 100% (full liquidation). It's not the leverage number that determines your risk — it's the distance between entry and the price where you exit.</p><p>What leverage DOES change is how much margin you need to control a given position size. Higher leverage = smaller margin required = more positions you can hold simultaneously = more correlated risk. Most account blow-ups happen not from one bad trade but from five simultaneous bad trades, each individually \"reasonable\".</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to tell which you're on (right now)"
+    },
+    {
+      "type": "text",
+      "content": "<p>Open whichever exchange you use most. Right now. Don't trust your memory. Look for these signals:</p><ul><li><strong>Spot indicators</strong>: tab labeled \"Spot\" or \"Convert\". No leverage selector anywhere. Order quantities denominated in the coin (\"0.0234 BTC\"). You can transfer the asset to an external wallet.</li><li><strong>Futures / Perp indicators</strong>: tab labeled \"USDT-M Futures\", \"COIN-M Futures\", \"Perpetual\", or \"Derivatives\". A leverage selector with values like 1×, 2×, 5×, 10×, 25×, 50×, 100×. Order quantities often denominated in contracts or USDT notional.</li><li><strong>The leverage test</strong>: try to set leverage to 1×. If the control accepts it without comment, you're on a leveraged product. If there's no leverage control at all, you're on spot.</li><li><strong>The withdrawal test</strong>: try to withdraw the asset. If you can withdraw to an external wallet, it's spot. If the option doesn't exist for that position, it's a derivative (you only own a contract, not the asset).</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "A scenario that costs people money"
+    },
+    {
+      "type": "text",
+      "content": "<p>Real-world pattern, repeated thousands of times every week:</p><p>Trader opens Binance, hears BTC is going up, clicks \"Trade BTC\". The exchange takes them to USDT-M Futures (the default tab for most exchange marketing). The leverage is pre-set to 20× because that's what they used last time, or because it's the platform default for new users. They type \"$200\" into the order box (their account size) and click Long.</p><p>What just happened technically: they took a $4,000 notional long position (20× their $200) at the current price. Their liquidation is roughly 5% away.</p><p>What they THINK happened: they bought \"$200 of BTC\".</p><p>BTC drops 5% over the next 8 hours (a totally normal daily move). Their position is liquidated. Account: $0. They think \"crypto is too volatile\" — but the real story is they had no idea they were leveraged.</p><p>The whole point of this lesson is to make sure that scenario can never describe you.</p>"
     },
     {
       "type": "heading",
@@ -74,18 +139,19 @@
       "type": "table",
       "headers": ["Your goal", "Use", "Why"],
       "rows": [
-        ["Hold BTC for years", "Spot", "Survive deep drawdowns without forced liquidation."],
-        ["Short-term price view (days–weeks)", "Perp at 2-5x", "Leverage amplifies but funding doesn't kill you over short timeframes."],
-        ["Hedge a spot position", "Dated future or perp short", "You're locking in a price, not speculating."],
-        ["Day-trade swings", "Perp at 3-10x", "Liquidity is on perps; no waiting for expiry."],
-        ["Scalp tiny moves", "Don't — fees + funding eat your edge", "Math typically loses for retail scalpers."]
+        ["Hold BTC for years through cycles", "<strong>Spot</strong>", "Survive deep drawdowns without forced liquidation. No funding cost over long periods. You actually own the asset."],
+        ["Short-term directional view (1-5 days)", "<strong>Perp at 2-3×</strong>", "Modest leverage amplifies returns; over short timeframes funding hasn't compounded enough to bite. SL gives you defined risk."],
+        ["Day-trade swings (intraday)", "<strong>Perp at 3-5×</strong>", "Liquidity is on perps. Tight SLs with moderate leverage = reasonable R:R without liquidation risk."],
+        ["Hedge a spot position", "<strong>Dated future or perp short</strong>", "Locking in a price, not speculating. Match the size of what you want hedged."],
+        ["Scalp tiny moves (&lt;0.5%)", "<strong>Don't — math fails you</strong>", "Fees + slippage + funding will exceed your edge. Most successful scalpers are professional market-makers with rebates and direct exchange connections."],
+        ["Use \"a little leverage\" without thinking", "<strong>Don't.</strong> Spot first.", "If leverage isn't part of an explicit plan with defined SL, it's just gambling. Better to learn unleveraged first."]
       ]
     },
     {
       "type": "callout",
       "kind": "key",
       "title": "Take this with you",
-      "content": "<p>For the rest of this course, when we say \"trade\" we mean <strong>perpetual futures</strong> unless noted. That's where the journal lives, where the auto-trader runs, and where you'll spend 95% of your screen time.</p><p>Now go look at your exchange right now and confirm which market your wallet currently has open. Don't trust your memory.</p>"
+      "content": "<p>For the rest of this course, when we say \"trade\" we mean <strong>perpetual futures</strong> unless noted otherwise. That's where the journal lives, where the auto-trader runs, and where you'll spend 95% of your screen time once you're comfortable.</p><p>But — and this matters — for at least the first 10 trades you do after finishing this course, consider doing them on <strong>spot or 1× perp</strong>. The point isn't to maximize profit. The point is to learn how setups behave WITHOUT the noise of leverage decisions. Once you can read the chart and consistently identify decent entries on spot, you've earned the right to add leverage.</p><p>Right now, go open your exchange. Confirm which market your account is set to. Confirm what leverage is currently selected. If you're not sure, switch to spot until you've finished Tier 1.</p>"
     }
   ]
 }
