@@ -10,30 +10,54 @@ Runs in two modes from the same code:
 
 ## Install on a fresh machine (verified)
 
+> ⚠ **Important**: `python -m training` MUST be run from the PARENT directory
+> of `training/`, NOT from inside it. If you `cd training && python -m training`,
+> Python errors with `No module named training` — it can't see the package from
+> within itself.
+
+### Option A — git clone (recommended if internet works)
+
 ```bash
-# 1. Prerequisites — Python 3.10+ and pip
-python3 --version    # should be 3.10 or higher
+# 1. Prerequisites
+python3 --version           # 3.10+ required
 pip3 --version
 
-# 2. Get the code — either git clone the full repo, or copy just the training/ folder
+# 2. Clone the repo
 git clone https://github.com/anvilfilbert/Auto-Crypto-Tradingjournal.git
-cd Auto-Crypto-Tradingjournal/training
-# OR if you only want the training module:
-# scp -r training/ pi@<host>:/path/to/install/
+cd Auto-Crypto-Tradingjournal      # ← parent of training/, NOT cd'd into training/
 
-# 3. Install Python dependencies
-pip3 install -r requirements.txt
+# 3. Install deps
+pip3 install -r training/requirements.txt
 
 # 4. Run the standalone server
-python3 -m training --port 5050
+python3 -m training --port 5050    # cwd is the parent of training/
 
-# 5. Open in browser
+# 5. Open in any browser on the LAN
 # http://<the-Pi's-IP>:5050/
 ```
 
-That's it. On first run, the SQLite database (`training.db`) is created
-automatically in the current working directory and seeded with the 51-lesson
-catalog.
+### Option B — tarball transfer (no internet on target Pi)
+
+```bash
+# On your machine: create the tarball (excludes noise + any local DB)
+tar -czf training.tgz \
+  --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' \
+  --exclude='training/training.db' \
+  training/
+
+# Copy to the new Pi
+scp training.tgz pi@<new-pi-ip>:~/
+
+# On the new Pi
+ssh pi@<new-pi-ip>
+tar -xzf ~/training.tgz             # creates ./training/ in cwd
+pip3 install -r training/requirements.txt
+python3 -m training --port 5050     # cwd is the parent of training/
+```
+
+That's it. On first request, `training.db` is created automatically next to
+the cwd and seeded with the 51-lesson catalog. ~2 MB tarball, ~5 seconds to
+unpack + boot.
 
 ## Command-line options
 
