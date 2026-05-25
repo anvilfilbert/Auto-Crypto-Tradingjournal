@@ -1,9 +1,22 @@
 import logging
 import os
 import signal
+import sys
 import atexit
 
 from flask import Flask, render_template, make_response
+
+# Configure root logger to write to stderr so _log.info reaches journalctl.
+# Without this, only print() calls show up in systemd logs; logger.info is
+# silently dropped. force=True overrides any default handler installed by
+# imports that ran before this point.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    datefmt="%H:%M:%S",
+    stream=sys.stderr,
+    force=True,
+)
 
 _log = logging.getLogger(__name__)
 

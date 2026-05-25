@@ -242,7 +242,24 @@ def get_similar_trades_for_prompt(symbol: str, setup_type: str, direction: str,
 
 # ── Stats collection ───────────────────────────────────────────────────────────
 
-def _collect_stats(conn) -> dict:
+VALID_CHAINS = ("manual", "auto_ai")
+
+
+def _validate_chain(chain: str) -> str:
+    if chain not in VALID_CHAINS:
+        raise ValueError(f"invalid chain {chain!r}; expected one of {VALID_CHAINS}")
+    return chain
+
+
+def _collect_stats(conn, chain: str = "manual") -> dict:
+    """Aggregate trade stats for rule mining. Filters all generic queries by
+    the given chain. Skill-provenance queries (hard-coded chain='auto_ai')
+    naturally return empty for the manual chain — correct, since manual
+    trades carry no skill provenance."""
+    _validate_chain(chain)
+    # Chain filter fragment — safe to interpolate because validated above.
+    CF = f"chain='{chain}'"
+
     def rows(sql):
         return [dict(r) for r in conn.execute(sql).fetchall()]
 
@@ -251,7 +268,7 @@ def _collect_stats(conn) -> dict:
     # market regime flipped (the 'last 20 deteriorating' Q4 finding showed
     # exactly this). The prompt below instructs the AI to weight recent
     # more when the two windows diverge.
-    by_weekday_30d = rows("""
+    by_weekday_30d = rows(f"""
         SELECT CASE strftime('%w',close_time)
                  WHEN '0' THEN 'Sunday' WHEN '1' THEN 'Monday' WHEN '2' THEN 'Tuesday'
                  WHEN '3' THEN 'Wednesday' WHEN '4' THEN 'Thursday' WHEN '5' THEN 'Friday'
@@ -260,32 +277,32 @@ def _collect_stats(conn) -> dict:
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(SUM(realized_pnl),2) AS total_pnl
         FROM positions
-        WHERE close_time >= datetime('now','-30 days')
+        WHERE {CF} AND close_time >= datetime('now','-30 days')
         GROUP BY day HAVING n >= 3 ORDER BY total_pnl DESC
     """)
-    by_setup_30d = rows("""
+    by_setup_30d = rows(f"""
         SELECT setup_type, COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(SUM(realized_pnl),2) AS total_pnl
         FROM positions
-        WHERE close_time >= datetime('now','-30 days')
+        WHERE {CF} AND close_time >= datetime('now','-30 days')
           AND setup_type IS NOT NULL AND setup_type != ''
         GROUP BY setup_type HAVING n >= 3 ORDER BY total_pnl DESC
     """)
 
-    by_setup = rows("""
+    by_setup = rows(f"""
         SELECT setup_type, COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(AVG(realized_pnl),2) AS avg_pnl,
                ROUND(SUM(realized_pnl),2) AS total_pnl
-        FROM positions WHERE setup_type IS NOT NULL AND setup_type != ''
+        FROM positions WHERE {CF} AND setup_type IS NOT NULL AND setup_type != ''
         GROUP BY setup_type HAVING n >= 5 ORDER BY n DESC
     """)
     # Sort by total_pnl (expectancy proxy) instead of win_rate — a day with 69%
     # WR but -$105 P&L is worse than one with 75% WR and +$166. The miner used
     # to pick rules off WR alone, which produced misleading 'avoid Monday'
     # rules where Monday's WR was actually fine; the real signal is expectancy.
-    by_weekday = rows("""
+    by_weekday = rows(f"""
         SELECT CASE strftime('%w',close_time)
                  WHEN '0' THEN 'Sunday' WHEN '1' THEN 'Monday' WHEN '2' THEN 'Tuesday'
                  WHEN '3' THEN 'Wednesday' WHEN '4' THEN 'Thursday' WHEN '5' THEN 'Friday'
@@ -294,9 +311,10 @@ def _collect_stats(conn) -> dict:
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(AVG(realized_pnl),2) AS avg_pnl,
                ROUND(SUM(realized_pnl),2) AS total_pnl
-        FROM positions GROUP BY day HAVING n >= 5 ORDER BY total_pnl DESC
+        FROM positions WHERE {CF}
+        GROUP BY day HAVING n >= 5 ORDER BY total_pnl DESC
     """)
-    by_session = rows("""
+    by_session = rows(f"""
         SELECT CASE
                  WHEN CAST(strftime('%H',open_time) AS INT) BETWEEN 0  AND 7  THEN 'Asia (00-08)'
                  WHEN CAST(strftime('%H',open_time) AS INT) BETWEEN 8  AND 12 THEN 'London (08-13)'
@@ -307,16 +325,17 @@ def _collect_stats(conn) -> dict:
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(AVG(realized_pnl),2) AS avg_pnl,
                ROUND(SUM(realized_pnl),2) AS total_pnl
-        FROM positions GROUP BY session HAVING n >= 5 ORDER BY total_pnl DESC
+        FROM positions WHERE {CF}
+        GROUP BY session HAVING n >= 5 ORDER BY total_pnl DESC
     """)
-    by_direction = rows("""
+    by_direction = rows(f"""
         SELECT direction, COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(AVG(realized_pnl),2) AS avg_pnl,
                ROUND(SUM(realized_pnl),2) AS total_pnl
-        FROM positions GROUP BY direction
+        FROM positions WHERE {CF} GROUP BY direction
     """)
-    by_duration = rows("""
+    by_duration = rows(f"""
         SELECT CASE
                  WHEN duration_minutes < 60    THEN '< 1h'
                  WHEN duration_minutes < 240   THEN '1-4h'
@@ -328,43 +347,43 @@ def _collect_stats(conn) -> dict:
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(AVG(realized_pnl),2) AS avg_pnl,
                ROUND(SUM(realized_pnl),2) AS total_pnl
-        FROM positions WHERE duration_minutes IS NOT NULL
+        FROM positions WHERE {CF} AND duration_minutes IS NOT NULL
         GROUP BY bucket HAVING n >= 5 ORDER BY total_pnl DESC
     """)
-    by_grade = rows("""
+    by_grade = rows(f"""
         SELECT execution_grade AS grade, COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(AVG(realized_pnl),2) AS avg_pnl
-        FROM positions WHERE execution_grade IS NOT NULL
+        FROM positions WHERE {CF} AND execution_grade IS NOT NULL
         GROUP BY grade HAVING n >= 3 ORDER BY grade
     """)
-    worst = rows("""
+    worst = rows(f"""
         SELECT symbol, COUNT(*) AS n,
                ROUND(SUM(realized_pnl),2) AS total_pnl,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate
-        FROM positions GROUP BY symbol HAVING n >= 5
+        FROM positions WHERE {CF} GROUP BY symbol HAVING n >= 5
         ORDER BY total_pnl ASC LIMIT 5
     """)
-    best = rows("""
+    best = rows(f"""
         SELECT symbol, COUNT(*) AS n,
                ROUND(SUM(realized_pnl),2) AS total_pnl,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate
-        FROM positions GROUP BY symbol HAVING n >= 5
+        FROM positions WHERE {CF} GROUP BY symbol HAVING n >= 5
         ORDER BY total_pnl DESC LIMIT 5
     """)
-    overall = dict(conn.execute("""
+    overall = dict(conn.execute(f"""
         SELECT COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(SUM(realized_pnl),2) AS total_pnl,
                ROUND(AVG(CASE WHEN realized_pnl>0 THEN realized_pnl END),2) AS avg_win,
                ROUND(AVG(CASE WHEN realized_pnl<0 THEN realized_pnl END),2) AS avg_loss
-        FROM positions
+        FROM positions WHERE {CF}
     """).fetchone())
-    recent = dict(conn.execute("""
+    recent = dict(conn.execute(f"""
         SELECT COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(SUM(realized_pnl),2) AS total_pnl
-        FROM (SELECT realized_pnl FROM positions ORDER BY close_time DESC LIMIT 20)
+        FROM (SELECT realized_pnl FROM positions WHERE {CF} ORDER BY close_time DESC LIMIT 20)
     """).fetchone())
 
     # ── Skill-provenance slices (added 2026-05-24) ──────────────────────────
@@ -436,13 +455,13 @@ def _collect_stats(conn) -> dict:
         WHERE chain='auto_ai'
         GROUP BY tp_count HAVING n >= 3 ORDER BY tp_count ASC
     """)
-    # Close-reason mix (mostly auto_ai but include manual for completeness)
-    by_close_reason = rows("""
+    # Close-reason mix — now chain-filtered (was previously cross-chain mix).
+    by_close_reason = rows(f"""
         SELECT close_reason, COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(SUM(realized_pnl),2) AS total_pnl
         FROM positions
-        WHERE close_reason IS NOT NULL AND close_reason != ''
+        WHERE {CF} AND close_reason IS NOT NULL AND close_reason != ''
         GROUP BY close_reason HAVING n >= 2 ORDER BY total_pnl DESC
     """)
 
@@ -569,38 +588,52 @@ def _ask_claude(stats: dict, total: int) -> list:
 MIN_NEW_TRADES = 5   # minimum new closed trades required to regenerate the rulebook
 
 
-def update_rulebook(conn=None, force: bool = False) -> dict:
-    """Generate fresh rules and persist to trader_rulebook. Returns result dict.
-    Pass force=True to bypass the new-trade guard."""
+def _settings_keys(chain: str) -> tuple[str, str]:
+    """Per-chain settings keys for rulebook timestamps + trade counts."""
+    if chain == "manual":
+        # Keep legacy key names for backward compat — pre-existing operator data
+        return "rulebook_updated_at", "rulebook_trade_count"
+    return f"rulebook_updated_at_{chain}", f"rulebook_trade_count_{chain}"
+
+
+def update_rulebook(conn=None, force: bool = False, chain: str = "manual") -> dict:
+    """Generate fresh rules and persist to trader_rulebook for the given chain.
+    Pass force=True to bypass the new-trade guard. Each chain has its own
+    rule set, settings keys, and history versioning."""
+    _validate_chain(chain)
     own_conn = conn is None
     if own_conn:
         conn = get_conn()
     try:
-        total = conn.execute("SELECT COUNT(*) FROM positions").fetchone()[0]
+        ts_key, ct_key = _settings_keys(chain)
+        total = conn.execute(
+            "SELECT COUNT(*) FROM positions WHERE chain=?", (chain,)
+        ).fetchone()[0]
         if total < MIN_TRADES:
             return {
-                "rules": [], "trade_count": total, "insufficient_data": True,
-                "message": f"Need at least {MIN_TRADES} trades — you have {total}.",
+                "rules": [], "trade_count": total, "chain": chain, "insufficient_data": True,
+                "message": f"Need at least {MIN_TRADES} {chain} trades — you have {total}.",
             }
 
         if not force:
             stored = conn.execute(
-                "SELECT value FROM settings WHERE key='rulebook_trade_count'"
+                "SELECT value FROM settings WHERE key=?", (ct_key,)
             ).fetchone()
             prev_count = int(stored[0]) if stored else 0
             delta = total - prev_count
             if delta < MIN_NEW_TRADES:
                 return {
-                    **get_rulebook(conn), "skipped": True,
-                    "message": f"Only {delta} new trade(s) since last update — need {MIN_NEW_TRADES}+. Use force=true to override.",
+                    **get_rulebook(conn, chain=chain), "skipped": True,
+                    "message": f"Only {delta} new {chain} trade(s) since last update — need {MIN_NEW_TRADES}+. Use force=true to override.",
                 }
 
-        stats = _collect_stats(conn)
+        stats = _collect_stats(conn, chain=chain)
         rules = _ask_claude(stats, total)
 
-        # Archive current rules before wiping (keep last 3 versions)
+        # Archive current chain's rules before wiping (keep last 3 versions per chain)
         current_rules = [dict(r) for r in conn.execute(
-            "SELECT rule_type, title, rule, confidence, data_points FROM trader_rulebook"
+            "SELECT rule_type, title, rule, confidence, data_points FROM trader_rulebook WHERE chain=?",
+            (chain,)
         ).fetchall()]
         if current_rules:
             last_ver = (conn.execute(
@@ -608,36 +641,37 @@ def update_rulebook(conn=None, force: bool = False) -> dict:
             ).fetchone()[0] or 0)
             conn.execute(
                 "INSERT INTO trader_rulebook_history (version, rules_json, trade_count) VALUES (?,?,?)",
-                (last_ver + 1, json.dumps(current_rules), total)
+                (last_ver + 1, json.dumps({"chain": chain, "rules": current_rules}), total)
             )
             conn.execute(
                 "DELETE FROM trader_rulebook_history WHERE version <= ?",
                 (last_ver + 1 - 3,)
             )
 
-        conn.execute("DELETE FROM trader_rulebook")
+        conn.execute("DELETE FROM trader_rulebook WHERE chain=?", (chain,))
         suppressed = 0
         for r in rules:
             if _should_suppress(r):
                 suppressed += 1
                 continue
             conn.execute(
-                "INSERT INTO trader_rulebook (rule_type, title, rule, confidence, data_points) "
-                "VALUES (?,?,?,?,?)",
+                "INSERT INTO trader_rulebook (rule_type, title, rule, confidence, data_points, chain) "
+                "VALUES (?,?,?,?,?,?)",
                 (r.get("type","insight"), r.get("title",""),
-                 r.get("rule",""), r.get("confidence","medium"), r.get("data_points",0))
+                 r.get("rule",""), r.get("confidence","medium"),
+                 r.get("data_points",0), chain)
             )
         if suppressed:
-            print(f"[rulebook] suppressed {suppressed} rule(s) matching RULEBOOK_SUPPRESS_PATTERNS")
+            print(f"[rulebook:{chain}] suppressed {suppressed} rule(s) matching RULEBOOK_SUPPRESS_PATTERNS")
         now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         conn.execute(
-            "INSERT OR REPLACE INTO settings (key,value) VALUES ('rulebook_updated_at',?)", (now,)
+            "INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", (ts_key, now)
         )
         conn.execute(
-            "INSERT OR REPLACE INTO settings (key,value) VALUES ('rulebook_trade_count',?)", (str(total),)
+            "INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)", (ct_key, str(total))
         )
         conn.commit()
-        return get_rulebook(conn)
+        return get_rulebook(conn, chain=chain)
 
     except Exception as e:
         traceback.print_exc()
@@ -647,8 +681,9 @@ def update_rulebook(conn=None, force: bool = False) -> dict:
             conn.close()
 
 
-def get_rulebook(conn=None) -> dict:
-    """Return rulebook rules + metadata for API response."""
+def get_rulebook(conn=None, chain: str = "manual") -> dict:
+    """Return rulebook rules + metadata for the given chain."""
+    _validate_chain(chain)
     own_conn = conn is None
     if own_conn:
         conn = get_conn()
@@ -656,25 +691,27 @@ def get_rulebook(conn=None) -> dict:
         rules = [dict(r) for r in conn.execute("""
             SELECT id, rule_type, title, rule, confidence, data_points, generated_at
             FROM trader_rulebook
+            WHERE chain=?
             ORDER BY CASE rule_type
                 WHEN 'warning' THEN 1 WHEN 'calibration' THEN 2
                 WHEN 'habit' THEN 3 WHEN 'strength' THEN 4 ELSE 5 END
-        """).fetchall()]
-        updated = conn.execute(
-            "SELECT value FROM settings WHERE key='rulebook_updated_at'"
-        ).fetchone()
-        return {"rules": rules, "updated_at": updated[0] if updated else None, "count": len(rules)}
+        """, (chain,)).fetchall()]
+        ts_key, _ = _settings_keys(chain)
+        updated = conn.execute("SELECT value FROM settings WHERE key=?", (ts_key,)).fetchone()
+        return {
+            "rules": rules,
+            "updated_at": updated[0] if updated else None,
+            "count": len(rules),
+            "chain": chain,
+        }
     finally:
         if own_conn:
             conn.close()
 
 
-def get_rulebook_for_prompt(conn=None) -> str:
-    """
-    Concise text block for Claude prompt injection.
-    Rules older than 30 days get a [stale] annotation so Claude can down-weight them.
-    Warnings and calibration first — most safety-critical.
-    """
+def get_rulebook_for_prompt(conn=None, chain: str = "manual") -> str:
+    """Concise text block for Claude prompt injection. Per-chain."""
+    _validate_chain(chain)
     own_conn = conn is None
     if own_conn:
         conn = get_conn()
@@ -683,18 +720,18 @@ def get_rulebook_for_prompt(conn=None) -> str:
             SELECT rule_type, title, rule, confidence,
                    CAST(julianday('now') - julianday(generated_at) AS INTEGER) AS age_days
             FROM trader_rulebook
+            WHERE chain=?
             ORDER BY CASE rule_type
                 WHEN 'warning' THEN 1 WHEN 'calibration' THEN 2
                 WHEN 'habit' THEN 3 WHEN 'strength' THEN 4 ELSE 5 END
-        """).fetchall()
+        """, (chain,)).fetchall()
         if not rows:
             return ""
-        updated = conn.execute(
-            "SELECT value FROM settings WHERE key='rulebook_updated_at'"
-        ).fetchone()
+        ts_key, _ = _settings_keys(chain)
+        updated = conn.execute("SELECT value FROM settings WHERE key=?", (ts_key,)).fetchone()
         ts = updated[0] if updated else "unknown"
         icon = {"warning": "⚠", "strength": "✓", "habit": "→", "calibration": "~"}
-        lines = [f"TRADER RULEBOOK (personalised from trade history, updated {ts}):"]
+        lines = [f"TRADER RULEBOOK [{chain}] (personalised from trade history, updated {ts}):"]
         for r in rows:
             age = r[4] or 0
             stale = " [stale — may not reflect recent behaviour]" if age > 30 else ""

@@ -203,13 +203,13 @@ def _annotate_kill_zone(result: dict, utc_hour: int = None) -> dict:
     """
     Append warnings to the urgency field:
       - '⚠ Outside kill zone' when outside institutional London/NY-AM windows
-      - '⚠ Personal bad-hour window' when in the trader's known dead spots
+
+    Personal bad-hour annotation removed 2026-05-25 — operator-behavior
+    priors are no longer applied to scanner output.
     """
     notes: list[str] = []
     if not _is_in_kill_zone(utc_hour):
         notes.append("⚠ Outside kill zone")
-    if _is_in_personal_bad_hour(utc_hour):
-        notes.append("⛔ Personal bad-hour window")
     if not notes:
         return result
     warning = " ".join(notes)

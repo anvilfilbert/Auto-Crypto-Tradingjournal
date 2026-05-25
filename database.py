@@ -540,6 +540,17 @@ def init_db():
                   notes           TEXT
               )""")
 
+    # Migration 64 — chain isolation for trader_rulebook (2026-05-25).
+    # Existing rules become chain='manual' (they were generated from the
+    # main operator chain). auto_ai rules will be generated separately.
+    _apply(64, "trader_rulebook.chain",
+           "ALTER TABLE trader_rulebook ADD COLUMN chain TEXT DEFAULT 'manual'")
+
+    # Migration 65 — chain isolation for trade_hindsight (2026-05-25).
+    # Same schema gap as migration 64. Existing rows backfilled to 'manual'.
+    _apply(65, "trade_hindsight.chain",
+           "ALTER TABLE trade_hindsight ADD COLUMN chain TEXT DEFAULT 'manual'")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

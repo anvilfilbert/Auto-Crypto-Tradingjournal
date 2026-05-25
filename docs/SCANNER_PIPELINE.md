@@ -30,8 +30,8 @@ Updated 2026-05-23.*
                    │
                    ▼  remain "quick_score_only" — no Sonnet, displayed with rationale
             │
-            ▼   STAGE 4 — Modifiers (PO3 + bear-phase + RSI mastery)
-            ▼   STAGE 5 — Strategic caps (macro, personal bad-hour, reversal)
+            ▼   STAGE 4 — Modifiers (PO3 + bear-phase + RSI mastery + HMM)
+            ▼   STAGE 5 — Strategic caps (macro event proximity)
             ▼   STAGE 6 — Score threshold filter
             ▼   STAGE 7 — Output → orchestrator → consensus → sizing → open
 ```
@@ -187,12 +187,9 @@ Hard ceilings independent of how well the setup scored.
 | Cap | Source | Threshold | Effect |
 |---|---|---|---|
 | **Macro cap** | `_apply_macro_cap` | VIX > 35 → cap at 6.0 · VIX 25-35 → cap at 7.5 · macro event in 24h → cap at 7.0 | Score = min(score, cap) |
-| **Personal bad-hour cap** | `_apply_personal_bad_hour_cap` | UTC hour ∈ {13, 15, 19, 20} | Score = min(score, 5.5) — effectively kills the setup since < SCANNER_MIN_SCORE |
-| **Reversal cap** | `_apply_reversal_cap` | archetype="reversal" + < 3 same-side confluence signals | Score = min(score, 5.5) |
-| **Kill-zone modifier re-applied** | — | personal bad-hour cap re-applied after kill-zone boost | Hard ceiling stays |
 
-### Why the personal bad-hour cap exists
-Derived from this trader's 90d analytics: UTC hours 13/15/19/20 = combined -$365 (60% of NY-session total loss). The cap is **per-operator** — disabled or recalibrated for different accounts.
+### Removed 2026-05-25 — operator-behavior priors
+Two caps were removed: the **personal bad-hour cap** (UTC 13/15/19/20) and the **reversal-archetype cap**. Both were derived from this trader's own 90d loss patterns rather than from market structure. The auto-trader now scores setups purely on market facts + sentiment data; the operator's historical loss patterns no longer bias the algorithm. The constants `PERSONAL_BAD_HOURS_UTC`, `PERSONAL_BAD_HOUR_CAP`, `REVERSAL_CAP` remain in `scanner_criteria.py` as dead references but are no longer called.
 
 ---
 
@@ -229,7 +226,6 @@ See [`AI_ARCHITECTURE.md`](AI_ARCHITECTURE.md) and the auto-trader docs in `arch
 | `SCANNER_CACHE_TTL` | 30 min | `constants.py` | Stale-scan cache lifetime |
 | `SCANNER_TOP_N` | 30 | (scanner_stages internal) | How many finalists from Stage 2 |
 | `CRITERIA_DEFAULTS` | per-signal weights | `scanner_criteria.py` | Per-signal weight overrides |
-| Personal bad hours | `{13, 15, 19, 20}` UTC | `scanner_criteria.PERSONAL_BAD_HOURS_UTC` | Strategic cap hours |
 | `FUTURES_AI_CONSENSUS_MIN_SCORE` | 7 (env) / 8 (default) | `.env` | Sonnet consensus gate for auto-trader |
 
 ---
@@ -259,7 +255,6 @@ See [`AI_ARCHITECTURE.md`](AI_ARCHITECTURE.md) and the auto-trader docs in `arch
 | Stage 3b coverage | top 6 (~20% of finalists get Sonnet) |
 | Total scan duration | 287-371s |
 | Setups published per scan | 2-6 (depends on market regime) |
-| Personal bad-hour filter | 4/24 hours blocked = ~17% of scans |
 | Stage 3b Sonnet cache hit | 74% within batch |
 
 ---

@@ -45,8 +45,11 @@ def api_hindsight_results():
     try:
         limit    = int(request.args.get("limit", 200))
         exchange = request.args.get("exchange", "").strip().lower()
+        chain    = request.args.get("chain", "").strip().lower()
         return _ok(ai_hindsight.get_results(
-            limit, exchange=exchange if exchange in ("bitget", "blofin") else None
+            limit,
+            exchange=exchange if exchange in ("bitget", "blofin") else None,
+            chain=chain if chain in ("manual", "auto_ai") else None,
         ))
     except Exception:
         traceback.print_exc()

@@ -277,15 +277,16 @@ def _compute_comparison(result: dict, trade: dict) -> dict:
     }
 
 
-def _save_result(position_id: int, result: dict, comparison: dict, actual_pnl: float, conn):
+def _save_result(position_id: int, result: dict, comparison: dict, actual_pnl: float, conn, chain: str = "manual"):
     ent = result.get("entry_zone") or {}
     conn.execute("""
         INSERT OR REPLACE INTO trade_hindsight
         (position_id, analyzed_at, setup_score, setup_label, would_enter,
          rec_direction, direction_match, rec_entry_low, rec_entry_high,
          rec_sl, rec_tp1, rec_tp2, rec_rr, key_conditions, risks, skip_reason,
-         actual_pnl, hypothetical_pnl, verdict, analysis_json, input_tokens, output_tokens)
-        VALUES (?,datetime('now'),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         actual_pnl, hypothetical_pnl, verdict, analysis_json, input_tokens, output_tokens,
+         chain)
+        VALUES (?,datetime('now'),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         position_id,
         result.get("setup_score"),
@@ -305,6 +306,7 @@ def _save_result(position_id: int, result: dict, comparison: dict, actual_pnl: f
         json.dumps(result),
         result.get("_input_tokens"),
         result.get("_output_tokens"),
+        chain or "manual",
     ))
     conn.commit()
 
@@ -318,7 +320,8 @@ def _batch_thread(n: int):
     try:
         with db_conn() as conn:
             trades = [dict(r) for r in conn.execute("""
-                SELECT p.id, p.symbol, p.direction, p.open_time, p.entry_price, p.realized_pnl
+                SELECT p.id, p.symbol, p.direction, p.open_time, p.entry_price, p.realized_pnl,
+                       COALESCE(p.chain, 'manual') AS chain
                 FROM positions p
                 LEFT JOIN trade_hindsight h ON h.position_id = p.id
                 WHERE h.id IS NULL
@@ -352,7 +355,8 @@ def _batch_thread(n: int):
                 comp = _compute_comparison(result, trade)
                 with db_conn() as conn:
                     _save_result(trade["id"], result, comp,
-                                 float(trade.get("realized_pnl") or 0), conn)
+                                 float(trade.get("realized_pnl") or 0), conn,
+                                 chain=trade.get("chain") or "manual")
 
         _update(status="completed", completed_at=time.time(),
                 duration_sec=round(time.time() - t0, 1))
@@ -374,27 +378,33 @@ def start_batch(n: int = 50) -> bool:
     return True
 
 
-def get_results(limit: int = 100, exchange: str = None) -> dict:
+def get_results(limit: int = 100, exchange: str = None, chain: str = None) -> dict:
     """
     Fetch stored hindsight results + compute summary comparison metrics.
     Returns dict with {rows, summary}.
+
+    chain: 'manual' / 'auto_ai' / 'all' / None. None = no filter (all chains).
     """
-    exch_clause  = ""
-    exch_params  = []
+    extra_clause = ""
+    extra_params = []
     if exchange in ('bitget', 'blofin'):
-        exch_clause = " AND COALESCE(p.exchange, 'bitget') = ?"
-        exch_params = [exchange]
+        extra_clause += " AND COALESCE(p.exchange, 'bitget') = ?"
+        extra_params.append(exchange)
+    if chain in ('manual', 'auto_ai'):
+        extra_clause += " AND COALESCE(h.chain, p.chain, 'manual') = ?"
+        extra_params.append(chain)
     with db_conn() as conn:
         rows = [dict(r) for r in conn.execute(f"""
             SELECT h.*, p.symbol, p.direction, p.open_time, p.close_time,
                    p.entry_price, p.close_price, p.duration_minutes, p.setup_type,
-                   p.size_usdt
+                   p.size_usdt,
+                   COALESCE(h.chain, p.chain, 'manual') AS effective_chain
             FROM trade_hindsight h
             JOIN positions p ON p.id = h.position_id
-            WHERE 1=1{exch_clause}
+            WHERE 1=1{extra_clause}
             ORDER BY p.close_time DESC
             LIMIT ?
-        """, exch_params + [limit]).fetchall()]
+        """, extra_params + [limit]).fetchall()]
 
     if not rows:
         return {"rows": [], "summary": None}

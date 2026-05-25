@@ -70,41 +70,50 @@ def classify_phase(btc_change_24h_pct: Optional[float],
     btc_v = float(btc_change_24h_pct) if btc_change_24h_pct is not None else None
     btc_d = float(btc_dom_pct) if btc_dom_pct is not None else None
 
-    # 1. F&G-led primary classification
+    # 1. F&G-led primary classification — but BTC price action must confirm.
+    # F&G is a sentiment lag indicator; we require BTC ≥ ±1% 24h to confirm
+    # any directional phase. Without confirmation, return 'unknown' so no
+    # directional bias is applied (per 2026-05-25 audit — flat BTC with
+    # fearful F&G is "sentiment lag", not active decline).
     if fng_v is not None:
         if fng_v < 20:
+            # Extreme fear — capitulation is sentiment-driven and price often
+            # lags; we accept this without BTC confirmation.
             phase = "capitulation"
             label = f"capitulation (F&G {fng_v} extreme fear)"
         elif fng_v < 40:
-            # fear zone — could be early decline or late capitulation
-            if btc_v is not None and btc_v <= -3:
+            # Fear zone — REQUIRE BTC confirmation to call decline/recovery
+            if btc_v is not None and btc_v <= -1:
                 phase = "decline"
-                label = f"decline (F&G {fng_v} fear + BTC {btc_v:.1f}% 24h)"
+                label = f"decline (F&G {fng_v} fear + BTC {btc_v:+.1f}% 24h)"
             elif btc_v is not None and btc_v >= 2:
                 phase = "recovery"
                 label = f"recovery (F&G {fng_v} fear + BTC bouncing {btc_v:+.1f}%)"
             else:
-                phase = "decline"
-                label = f"decline (F&G {fng_v} fear, BTC drifting)"
+                phase = "unknown"
+                btc_str = f"BTC {btc_v:+.1f}%" if btc_v is not None else "BTC unknown"
+                label = f"sentiment-lag (F&G {fng_v} fear but {btc_str} — no confirming move)"
         elif fng_v > 75:
+            # Extreme greed — distribution is sentiment-driven; accept.
             phase = "distribution"
             label = f"distribution (F&G {fng_v} greed/euphoria)"
         elif fng_v >= 55:
-            # Mild greed
-            if btc_v is not None and btc_v >= 3:
+            # Mild greed — REQUIRE BTC confirmation
+            if btc_v is not None and btc_v >= 1:
                 phase = "recovery"
                 label = f"recovery (F&G {fng_v} optimistic + BTC {btc_v:+.1f}%)"
             elif btc_v is not None and btc_v <= -3:
                 phase = "distribution"
-                label = f"distribution (F&G {fng_v} but BTC {btc_v:.1f}% — topping)"
+                label = f"distribution (F&G {fng_v} but BTC {btc_v:+.1f}% — topping)"
             else:
-                phase = "recovery"
-                label = f"recovery (F&G {fng_v} optimistic, BTC flat)"
+                phase = "unknown"
+                btc_str = f"BTC {btc_v:+.1f}%" if btc_v is not None else "BTC unknown"
+                label = f"sentiment-lag (F&G {fng_v} optimistic but {btc_str} — no confirming move)"
         else:
-            # neutral F&G 40-55 — use BTC action
+            # Neutral F&G 40-55 — use BTC action (unchanged: BTC already required)
             if btc_v is not None and btc_v <= -2:
                 phase = "decline"
-                label = f"decline (neutral F&G {fng_v}, BTC {btc_v:.1f}%)"
+                label = f"decline (neutral F&G {fng_v}, BTC {btc_v:+.1f}%)"
             elif btc_v is not None and btc_v >= 2:
                 phase = "recovery"
                 label = f"recovery (neutral F&G {fng_v}, BTC {btc_v:+.1f}%)"

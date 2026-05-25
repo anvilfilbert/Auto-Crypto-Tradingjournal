@@ -249,9 +249,9 @@ filtered out as non-algorithmic.
 - `scanner_criteria._apply_kill_zone_modifier()` — Silver Bullet (13:30-
   14:30 UTC, +0.3), London (07-10 UTC, +0.2), NY AM (12-16 UTC, +0.2),
   NY PM (18:30-21 UTC, +0.15), Dead hour (16:30-17:30 UTC, -0.2)
-- All three apply AFTER macro/personal-bad-hour/reversal caps; personal
-  bad-hour cap is re-applied as a hard ceiling so PO3 boosts can't
-  punch through it
+- All three apply AFTER the macro cap. The personal-bad-hour and
+  reversal-archetype caps that previously sat alongside macro were removed
+  2026-05-25 — they were operator-behavior priors, not market facts.
 
 ### Sheet 3 — RSI Mastery Guide
 **Implementation**: new `chart_rsi.py` module replacing the static

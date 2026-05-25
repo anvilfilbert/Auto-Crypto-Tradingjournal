@@ -105,26 +105,33 @@ _HMM_CONFIDENCE_THRESHOLD = 0.60
 _HMM_ALIGNMENT_WEIGHT     = 0.20
 
 
-def hmm_alignment_weight(regime: dict, direction: str) -> tuple[float, str]:
+_HMM_SLOPE_CONTRADICTION_THRESHOLD = 0.5  # percent — HMM is suppressed when BTC 24h disagrees by more than this. Calibrated to the 2026-05-25 case (BTC +0.9%, HMM=trending_down).
+
+
+def hmm_alignment_weight(regime: dict,
+                         direction: str,
+                         btc_change_24h_pct: float | None = None) -> tuple[float, str]:
     """
     Standalone HMM regime modifier for setup scoring.
 
     Args:
       regime:    output of detect_regime() — must have 'ok', 'label', 'confidence'
       direction: "Long" or "Short" (the setup's direction)
-
-    Returns:
-      (weight, reason) — weight is ±0.2 or 0; reason is a short label suitable
-                          for logging and the summary line passed to Sonnet.
+      btc_change_24h_pct: optional sanity input. If HMM label disagrees with
+                          real BTC 24h direction by more than
+                          _HMM_SLOPE_CONTRADICTION_THRESHOLD %, the HMM
+                          signal is suppressed (the model is stale/wrong;
+                          trust price action).
 
     Rules:
-      trending_up + Long   → +0.2   "HMM: trending_up + Long → +0.2"
-      trending_up + Short  → -0.2   (fighting macro trend)
+      trending_up + Long   → +0.2
+      trending_up + Short  → -0.2
       trending_down + Long → -0.2
       trending_down + Short → +0.2
-      ranging              →  0.0  (no directional bias)
+      ranging              →  0.0
       confidence < 0.6     →  0.0  (boundary regime — don't bet on it)
       ok != True           →  0.0  (model didn't run; no signal)
+      HMM ↔ BTC 24h sign mismatch (|Δ| ≥ 1%) → 0.0   (model contradicts price)
     """
     if not regime or not regime.get("ok"):
         return 0.0, ""
@@ -133,6 +140,17 @@ def hmm_alignment_weight(regime: dict, direction: str) -> tuple[float, str]:
     conf  = float(regime.get("confidence") or 0)
     if conf < _HMM_CONFIDENCE_THRESHOLD:
         return 0.0, f"HMM: {label} (conf {conf:.2f} below threshold — skip)"
+
+    # Sanity check: HMM model can lag a regime turn. If the model claims a
+    # trend but actual BTC 24h move points the other way by more than the
+    # contradiction threshold, suppress. Price action overrides the model.
+    # (2026-05-25 audit: HMM=trending_down while actual BTC +0.9% 24h.)
+    if btc_change_24h_pct is not None:
+        btc_v = float(btc_change_24h_pct)
+        if "trending_up" in label and btc_v <= -_HMM_SLOPE_CONTRADICTION_THRESHOLD:
+            return 0.0, f"HMM: {label} but BTC {btc_v:+.1f}% 24h — contradicts, skip"
+        if "trending_down" in label and btc_v >= _HMM_SLOPE_CONTRADICTION_THRESHOLD:
+            return 0.0, f"HMM: {label} but BTC {btc_v:+.1f}% 24h — contradicts, skip"
 
     dir_lc = str(direction or "").strip().lower()
     is_long = dir_lc == "long"

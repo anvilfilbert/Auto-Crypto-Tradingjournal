@@ -106,11 +106,18 @@ def api_ai_analyze():
         return _err("Internal server error", 500)
 
 
+def _validated_chain(value, default: str = "manual") -> str:
+    if value in ai_rulebook.VALID_CHAINS:
+        return value
+    return default
+
+
 @bp.route("/api/rulebook")
 def api_rulebook_get():
     try:
+        chain = _validated_chain(request.args.get("chain"))
         with db_conn() as conn:
-            return _ok(ai_rulebook.get_rulebook(conn))
+            return _ok(ai_rulebook.get_rulebook(conn, chain=chain))
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)
@@ -121,8 +128,9 @@ def api_rulebook_update():
     try:
         body  = request.get_json(force=True, silent=True) or {}
         force = bool(body.get("force", False))
+        chain = _validated_chain(body.get("chain") or request.args.get("chain"))
         with db_conn() as conn:
-            return _ok(ai_rulebook.update_rulebook(conn, force=force))
+            return _ok(ai_rulebook.update_rulebook(conn, force=force, chain=chain))
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)

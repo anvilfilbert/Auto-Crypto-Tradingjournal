@@ -14,6 +14,43 @@ def strip_fence(raw: str) -> str:
     return raw
 
 
+def extract_json_object(raw: str) -> str | None:
+    """Extract the first balanced { ... } JSON object from a string.
+
+    Handles the common LLM failure modes: text before/after JSON, multiple
+    JSON objects concatenated, trailing prose, code fences. Returns the JSON
+    substring or None if no balanced object is found.
+
+    Tracks brace depth and only counts braces that aren't inside a string.
+    """
+    s = strip_fence(raw).strip()
+    start = s.find("{")
+    if start < 0:
+        return None
+    depth = 0
+    in_str = False
+    escape = False
+    for i, ch in enumerate(s[start:], start):
+        if escape:
+            escape = False
+            continue
+        if ch == "\\" and in_str:
+            escape = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return s[start:i+1]
+    return None
+
+
 def _ok(data):
     return jsonify({"ok": True, "data": data})
 

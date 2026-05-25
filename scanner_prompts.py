@@ -400,12 +400,24 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
             prompt         = variable,
             stable_prefix  = stable_prefix,
         )
+        # Bumped max_tokens 120→200 — was causing truncated JSON for setups
+        # whose reason string was a few words long. Same prompt, more headroom.
         msg_text, _cached = ai_send(
             "scanner_quick", FAST_MODEL,
             messages,
-            max_tokens=120,
+            max_tokens=200,
         )
-        r = json.loads(strip_fence(msg_text.strip()))
+        # Robust JSON extraction — handles models that prepend text or emit
+        # multiple JSON objects (~27% of Stage-2 scores were dropped by this).
+        from helpers import extract_json_object
+        raw = msg_text.strip()
+        obj_str = extract_json_object(raw) or strip_fence(raw)
+        try:
+            r = json.loads(obj_str)
+        except Exception:
+            # Final fallback: tighten quotes + trim trailing commas
+            cleaned = obj_str.replace("“", '"').replace("”", '"').replace(",}", "}").replace(",]", "]")
+            r = json.loads(cleaned)
         if r.get("score", 0) < min_score:
             return None
         return {
@@ -414,7 +426,10 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
             "reason":    r.get("reason", ""),
         }
     except Exception as e:
-        logger.warning("quick-score failed for %s: %s", symbol, e)
+        # Log first 160 chars of raw response so we can see what the model
+        # actually returned. Truncation/extra-data are the dominant modes.
+        snippet = (msg_text[:160] if 'msg_text' in dir() else '<no response>').replace("\n", " ")
+        logger.warning("quick-score failed for %s: %s | raw: %s", symbol, e, snippet)
         return None
 
 

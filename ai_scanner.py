@@ -195,27 +195,20 @@ def _score_finalists_with_agents(finalists: list, conn,
             score, macro_warnings = _apply_macro_cap(float(score), macro)
             if macro_warnings:
                 logger.info("macro cap applied to %s: %s", sym, "; ".join(macro_warnings))
-            # Apply per-trader bad-hour cap (UTC 13/15/19/20 = -$365 in 90d)
-            from scanner_criteria import _apply_personal_bad_hour_cap, _apply_reversal_cap
-            score, bh_warnings = _apply_personal_bad_hour_cap(score)
-            if bh_warnings:
-                logger.info("bad-hour cap applied to %s: %s", sym, "; ".join(bh_warnings))
-            # Detect archetype early so we can apply the reversal cap before
-            # the threshold check. Reversal trades have 54% WR + 1.76% MFE
-            # historically — cap at 5.5 unless confluence is strong (>=3
-            # same-side signals).
+            # Operator-behavior caps (personal bad-hour, reversal-archetype)
+            # were removed 2026-05-25 per the operator's directive: the auto-
+            # trader works with market facts and sentiment data only, not the
+            # operator's own historical loss patterns. Kill zones (market
+            # session timing) and macro caps (event risk) are KEPT because
+            # those are market facts, not operator behavior.
+            #
+            # Archetype is still detected here for downstream classification
+            # (logging / hindsight tags), just no longer used as a score cap.
             try:
                 from scanner_prompts import _detect_archetype as _det_arch
                 archetype = _det_arch(ctx, direction, symbol=sym)
             except Exception:
                 archetype = ""
-            score, rev_warnings = _apply_reversal_cap(
-                score, archetype,
-                bullish_signals=conf.get("bullish", 0),
-                bearish_signals=conf.get("bearish", 0),
-            )
-            if rev_warnings:
-                logger.info("reversal cap applied to %s: %s", sym, "; ".join(rev_warnings))
 
             # ── PO3 modifiers (added 2026-05-23) ─────────────────────────
             # Direction-aware: Premium/Discount + nearest unfilled FVG +
@@ -317,7 +310,9 @@ def _score_finalists_with_agents(finalists: list, conn,
             try:
                 from market_regime import hmm_alignment_weight, detect_regime
                 regime = detect_regime()
-                hmm_w, hmm_reason = hmm_alignment_weight(regime, direction)
+                # btc_24h fetched a few lines above for bear_phase — reuse it
+                # so HMM can sanity-check its label against actual price.
+                hmm_w, hmm_reason = hmm_alignment_weight(regime, direction, btc_24h)
                 if hmm_w != 0:
                     score = max(0.0, min(10.0, score + hmm_w))
                     hmm_label = hmm_reason
@@ -384,9 +379,7 @@ def _score_finalists_with_agents(finalists: list, conn,
             except Exception as e:
                 logger.debug("IB modifier error on %s: %s", sym, e)
 
-            # Re-apply personal bad-hour cap AFTER kill-zone boost — the cap
-            # is a hard ceiling that must not be exceeded by any boost.
-            score, _bh_post = _apply_personal_bad_hour_cap(score)
+            # (Operator-behavior bad-hour re-apply removed 2026-05-25 — see note above.)
 
             if score < min_score:
                 continue

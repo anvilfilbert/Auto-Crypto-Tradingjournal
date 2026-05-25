@@ -20,7 +20,25 @@ Runs as a systemd service on a Raspberry Pi 5 (<Pi-IP>). Accessible from any bro
 - **Close categorisation:** `positions.close_reason TEXT` (migration 49). Categorical tag: TP / SL / BE / MAE_cut / trail_stop / manual_close / hedge_unwind:<r> / pending_reconcile. Populated by `executor._categorize_close_reason()`.
 - **Multi-TP ladder:** `positions.tp_levels TEXT` JSON (migration 50, and same on `analyzed_calls` via migration 51). JSON array of `{idx, price, pct, hit, hit_at}` per Opus-emitted TP tier. Phase-1 multi-TP work — DB stores the ladder, charts render all levels, but only TP1 is actually placed as a Bitget plan order. Operator handles partial closes manually until Phase 2 wires per-tier execution.
 - **Skill provenance:** 6 columns added 2026-05-23 (migrations 52-57) — `consensus_model_used`, `bear_phase_at_open` (normalised keyword only — distribution/decline/capitulation/recovery), `archetype_at_open`, `po3_total`, `opus_had_overrides`, `tp_levels_count`. Populated by `trading/executor.py::_insert_open_position`. Used by `analytics.get_deep_stats` for the 6 new skill-cohort aggregations consumed by `ai_advisor`. **NB:** these aggregations hard-code `chain='auto_ai'` since skills only exist on the auto-trader. Skill backfill for historical positions: `scripts/backfill_position_skills.py` (idempotent).
-- **Opus calibration score:** `positions.ai_score_at_open REAL` (migration 58, added 2026-05-24). Captures the ai_score that Opus consensus assigned at entry — separate from `setup_score` (scanner score) and `consensus_model_used` (which model graded it). Used by `ai_calibration.compute_calibration()` to bucket outcomes by entry-time confidence. Populated by `trading/executor.py::_insert_open_position` from the orchestrator's signal dict. New entries only — column starts NULL on legacy positions.
+- **Opus calibration score:** `positions.ai_score_at_open REAL` (migration 58, added 2026-05-24). Captures the ai_score that Opus consensus assigned at entry — separate from `setup_score` (scanner score) and `consensus_model_used` (which model graded it). Used by `ai_calibration.compute_calibration()` to bucket outcomes by entry-time confidence. Populated by `trading/executor.py::_insert_open_position` from the orchestrator's signal dict. **2026-05-25 fix**: previously read from `signal.get("ai_score")` but consensus emits it as `signal["ai"]["score"]` — name mismatch left every value NULL. Now reads from the nested path with a flat-key fallback.
+- **Rulebook chain isolation:** `trader_rulebook.chain TEXT DEFAULT 'manual'` (migration 64, added 2026-05-25). Existing rules were back-tagged 'manual'. `ai_rulebook.get_rulebook(conn, chain=...)`, `update_rulebook(conn, force, chain=...)`, and `get_rulebook_for_prompt(conn, chain=...)` now filter by chain. Settings keys are per-chain: `manual` uses legacy `rulebook_updated_at`/`rulebook_trade_count`; other chains use `rulebook_updated_at_<chain>`/`rulebook_trade_count_<chain>`. API: `GET /api/rulebook?chain=auto_ai` and `POST /api/rulebook/update {"chain": "auto_ai"}` both honour the parameter.
+- **Hindsight chain isolation:** `trade_hindsight.chain TEXT DEFAULT 'manual'` (migration 65, added 2026-05-25). Same schema gap as migration 64 — the table existed for months without a chain column despite the architecture claiming it. Backfill happens implicitly via `COALESCE(h.chain, p.chain, 'manual')` in `ai_hindsight.get_results`. Writer signature changed: `_save_result(..., chain='manual')` — derived from `p.chain` in the batch query. API: `GET /api/hindsight/results?chain=auto_ai` honours the param.
+
+## Operator-behavior caps removed (2026-05-25)
+The personal-bad-hour cap (UTC 13/15/19/20 → score ≤ 5.5) and reversal-archetype
+cap (reversal trades → ≤ 5.5) were removed from scanner scoring. Both were
+operator-behavior priors derived from this trader's 90d loss patterns — the
+auto-trader works with market facts + sentiment data only, not user-history
+filters. The constants `PERSONAL_BAD_HOURS_UTC`, `PERSONAL_BAD_HOUR_CAP`,
+`REVERSAL_CAP` are kept in `scanner_criteria.py` as dead references for any
+legacy reports; no live code calls them. Snapshot keys `personal_bad_hours_utc`
+and `reversal_cap` were dropped from `system_state.py`.
+
+## Logging visibility (2026-05-25)
+`app.py` now sets `logging.basicConfig(stream=sys.stderr, force=True)` so
+`_log.info()` messages reach journalctl. Before this fix, only `print()`
+statements were visible — `_log.*` calls produced no output anywhere
+(no StreamHandler attached to the root logger).
 
 ## Import Graph (safe edit order)
 constants.py, prompt_fragments.py, trade_history.py, chart_sr.py, chart_indicators.py — no internal deps, edit freely
@@ -222,9 +240,8 @@ the trader research RSI Mastery framework:
 ## PO3 Score Modifiers (applied in ai_scanner Stage 3, after caps)
 Direction-aware modifiers added 2026-05-23 from the trader research
 "Power of 3" framework. Each can shift the setup_score by ±0.3 and runs
-after the macro / personal-bad-hour / reversal caps. The personal bad-hour
-cap is then re-applied as a hard ceiling so the PO3 boosts can't punch
-through it.
+after the macro cap. (Personal-bad-hour and reversal-archetype caps were
+removed 2026-05-25 — they were operator-behavior priors, not market facts.)
 
 - **Premium/Discount** (`chart_confluence.directional_range_weight`): Long
   in discount (bottom 1/3 of 40-bar swing) = +0.3; Long in premium = -0.3;

@@ -125,8 +125,11 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
         signal.get("po3_total"),
         int(signal.get("opus_had_overrides") or 0),
         int(signal.get("tp_levels_count") or 0),
-        # AI score at open — added 2026-05-24 for Opus calibration analysis
-        signal.get("ai_score"),
+        # AI score at open — added 2026-05-24 for Opus calibration analysis.
+        # Read from the nested consensus location (signal["ai"]["score"]),
+        # with a flat-key fallback in case paper-mode passes it differently.
+        ((signal.get("ai") or {}).get("score") if isinstance(signal.get("ai"), dict)
+         else None) or signal.get("ai_score"),
     ))
     conn.commit()
     return cur.lastrowid

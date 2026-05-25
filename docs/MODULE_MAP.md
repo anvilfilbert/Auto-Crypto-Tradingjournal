@@ -126,7 +126,7 @@ Total: ~120 backend modules + 19 JS files + 14 route blueprints + 76 tests.
 | File | Purpose |
 |---|---|
 | `scanner_watchlist.py` | Symbol lists (314 USDT-M futures) + Bitget filters |
-| `scanner_criteria.py` | `CRITERIA_DEFAULTS`, kill zones (PO3), personal bad-hour cap, reversal cap |
+| `scanner_criteria.py` | `CRITERIA_DEFAULTS`, kill zones (PO3). Operator-behavior caps (personal bad-hour, reversal) removed 2026-05-25 — constants kept as dead refs. |
 | `scanner_prompts.py` | Stage 3 prompt builders (`_build_prompt`, `_build_batch_prompt`, `_quick_score`) |
 | `scanner_stages.py` | Stage 1 (Confluence filter) + Stage 2 (Quality gate) + macro context fetch |
 | `scanner_scheduler.py` | 30-min cadence + alert dispatch + price-proximity guards |
