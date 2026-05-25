@@ -583,12 +583,6 @@ HTML = f"""<!DOCTYPE html>
     </p>
   </div>
 
-  <div class="cta">
-    <h3>Want to see it live? Spin it up in 5 minutes.</h3>
-    <p>Tested on Raspberry Pi 5 (Bookworm), Ubuntu 24, macOS Sonoma. Python 3.10+ and a free port is all you need.</p>
-    <a class="cta-link">github.com/anvilfilbert/Auto-Crypto-Tradingjournal</a>
-  </div>
-
   <div class="footer">
     <span>Page 4 of 4 — Install &amp; Extend</span>
     <span>Open source · No API keys · No registration · 2 deps</span>
