@@ -336,10 +336,11 @@ def _score_finalists_with_agents(finalists: list, conn,
             try:
                 import os
                 if int(os.environ.get("FUTURES_AI_CPR_ENABLED", "1")):
+                    from chart_candles import get_candles
                     from chart_cpr import (compute_cpr_from_df,
                                             two_day_relationship,
                                             cpr_alignment_weight)
-                    df_1d = (ctx.get("1D") or {}).get("df")
+                    df_1d = get_candles(sym, "1D", limit=100)
                     if df_1d is not None and len(df_1d) >= 3:
                         curr_cpr = compute_cpr_from_df(df_1d)
                         prev_cpr = compute_cpr_from_df(df_1d.iloc[:-1])
@@ -350,10 +351,10 @@ def _score_finalists_with_agents(finalists: list, conn,
                             curr_cpr, curr_px, two_day, direction)
                         if cpr_w != 0:
                             score = max(0.0, min(10.0, score + cpr_w))
-                            cpr_label = cpr_reason
+                            cpr_label = f"CPR: {two_day.get('label','')} → {cpr_w:+.1f}"
                             logger.info("CPR mod applied to %s: %s", sym, cpr_label)
-                        elif cpr_reason:
-                            cpr_label = cpr_reason
+                        elif two_day.get("label"):
+                            cpr_label = f"CPR: {two_day.get('label','')}"
             except Exception as e:
                 logger.debug("CPR modifier error on %s: %s", sym, e)
 
@@ -365,9 +366,10 @@ def _score_finalists_with_agents(finalists: list, conn,
             try:
                 import os as _os
                 if int(_os.environ.get("FUTURES_AI_IB_ENABLED", "1")):
+                    from chart_candles import get_candles as _get_candles_ib
                     from chart_session import compute_initial_balance, ib_alignment_weight
-                    # Use 1H candles (already fetched for finalists at Stage 3)
-                    df_1h = (ctx.get("1H") or {}).get("df")
+                    # 1H candles — need enough bars to cover NYSE session window
+                    df_1h = _get_candles_ib(sym, "1H", limit=200)
                     if df_1h is not None and len(df_1h) >= 2:
                         ib = compute_initial_balance(df_1h)
                         ema_4h = ((ctx.get("4H") or {}).get("indicators") or {}).get("ema") or {}

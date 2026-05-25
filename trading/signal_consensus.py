@@ -247,6 +247,23 @@ def _build_call_text(setup: dict) -> str:
     arch  = setup.get("trade_type") or "—"
     reason = setup.get("_rationale") or setup.get("summary") or ""
 
+    # Phase 1-4 modifier context — explicit visibility into each modifier
+    # the scanner applied. Each field is a human-readable label with the
+    # signed magnitude embedded (e.g. "CPR: higher_value → +0.3").
+    mod_lines = []
+    for f in ("_bear_phase", "_hmm_regime", "_cpr", "_ib",
+              "_po3_range", "_po3_fvg", "_po3_session"):
+        v = setup.get(f)
+        if v:
+            mod_lines.append(f"  · {v}")
+    mod_block = ""
+    if mod_lines:
+        mod_block = (
+            "\n\nPhase 1-4 modifier context (already applied to scanner score "
+            "— provided for transparency, not for re-application):\n"
+            + "\n".join(mod_lines)
+        )
+
     return (
         f"Auto-trader consensus check — score {setup.get('setup_score','?')}/10\n"
         f"Symbol: {sym}\n"
@@ -257,7 +274,8 @@ def _build_call_text(setup: dict) -> str:
         f"Proposed TP1: {tp1}\n"
         f"Proposed TP2: {tp2}\n"
         f"R:R: {rr}\n\n"
-        f"Scanner rationale:\n{reason}\n\n"
+        f"Scanner rationale:\n{reason}"
+        f"{mod_block}\n\n"
         "Please independently evaluate this setup. If you agree, return a "
         "score ≥ 7 with the same direction. If you disagree, return your "
         "honest score and direction with reasoning. The trader will only "
