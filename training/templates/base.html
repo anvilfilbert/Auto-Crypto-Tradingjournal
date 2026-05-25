@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Training{% endblock %} · Trading Journal</title>
+<link rel="stylesheet" href="{{ url_for('training.static', filename='css/training.css') }}">
+</head>
+<body class="training-body">
+<div class="training-shell">
+  <header class="training-header">
+    <div class="training-brand">
+      <span class="training-brand-icon">🎓</span>
+      <span class="training-brand-title">Trading Training</span>
+    </div>
+    <nav class="training-nav">
+      <a href="{{ url_for('training.path_view') }}">Path</a>
+      {% if request.path != '/training/' and not request.path.endswith('/training') %}
+      <a href="/" class="training-back">← Journal</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="training-main">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="{{ url_for('training.static', filename='js/training.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

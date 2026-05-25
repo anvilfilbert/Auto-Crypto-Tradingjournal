@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block content %}
+
+<article class="training-lesson">
+  <header class="training-lesson-header">
+    <div class="training-breadcrumb">
+      <a href="{{ url_for('training.path_view') }}">← Path</a>
+      <span class="training-sep">/</span>
+      <span>Tier {{ lesson.tier }}</span>
+      <span class="training-sep">/</span>
+      <span>Lesson {{ lesson.order_in_tier }}</span>
+    </div>
+    <h1>{{ lesson.title }}</h1>
+    {% if content.subtitle %}<p class="training-lesson-subtitle">{{ content.subtitle }}</p>{% endif %}
+    <div class="training-lesson-stats">
+      <span>~{{ lesson.estimated_minutes }} min</span>
+      <span>·</span>
+      <span>Pass quiz at 8/10 to unlock the next lesson</span>
+    </div>
+  </header>
+
+  <div class="training-lesson-body">
+    {% for block in content.blocks %}
+      {% if block.type == 'text' %}
+        <div class="training-block training-block-text">{{ block.content|safe }}</div>
+      {% elif block.type == 'heading' %}
+        <h2 class="training-block-heading">{{ block.content }}</h2>
+      {% elif block.type == 'callout' %}
+        <div class="training-callout training-callout-{{ block.kind or 'info' }}">
+          {% if block.title %}<div class="training-callout-title">{{ block.title }}</div>{% endif %}
+          <div class="training-callout-body">{{ block.content|safe }}</div>
+        </div>
+      {% elif block.type == 'image' %}
+        <figure class="training-block-image">
+          <img src="{{ url_for('training.static', filename=block.src) }}" alt="{{ block.alt or '' }}">
+          {% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}
+        </figure>
+      {% elif block.type == 'code' %}
+        <pre class="training-block-code"><code>{{ block.content }}</code></pre>
+      {% elif block.type == 'table' %}
+        <div class="training-block-table-wrap">
+          <table class="training-block-table">
+            <thead><tr>{% for h in block.headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+            <tbody>
+              {% for row in block.rows %}
+              <tr>{% for cell in row %}<td>{{ cell|safe }}</td>{% endfor %}</tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% elif block.type == 'widget' %}
+        <div class="training-widget" data-widget="{{ block.id }}" data-config='{{ block.config|tojson }}'>
+          <p style="opacity:.7">Interactive widget: <strong>{{ block.id }}</strong> (renders client-side on load)</p>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <footer class="training-lesson-footer">
+    <a class="training-btn training-btn-primary" href="{{ url_for('training.quiz_view', slug=lesson.slug) }}">
+      Take the quiz →
+    </a>
+  </footer>
+</article>
+
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block content %}
+<article class="training-lesson">
+  <header class="training-lesson-header">
+    <div class="training-breadcrumb">
+      <a href="{{ url_for('training.path_view') }}">← Path</a>
+    </div>
+    <h1>{{ lesson.title }}</h1>
+  </header>
+  <div class="training-callout training-callout-info">
+    <div class="training-callout-title">Content pending</div>
+    <div class="training-callout-body">
+      This lesson's content hasn't been written yet. The first lesson
+      (Tier 1 · #1 Spot vs Futures vs Perpetuals) is the proof-of-shape;
+      the remaining ~50 lessons are authored iteratively.
+    </div>
+  </div>
+</article>
+{% endblock %}

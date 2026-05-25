@@ -1,0 +1,414 @@
+/* Training module — scoped under .training-* to avoid clashing with journal CSS */
+:root {
+  --training-bg:      #0d1117;
+  --training-bg2:     #131922;
+  --training-bg3:     #1a2030;
+  --training-text:    #e7eaf3;
+  --training-muted:   #8a93a6;
+  --training-border:  #2a3140;
+  --training-accent:  #6c63ff;
+  --training-accent2: #4fc3f7;
+  --training-green:   #26d96b;
+  --training-red:     #ef5350;
+  --training-yellow:  #ffb300;
+  --training-radius:  8px;
+}
+
+* { box-sizing: border-box; }
+
+.training-body {
+  margin: 0;
+  background: var(--training-bg);
+  color: var(--training-text);
+  font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+}
+
+.training-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+
+.training-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--training-border);
+  margin-bottom: 32px;
+}
+.training-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.training-brand-icon { font-size: 1.4rem; }
+.training-nav { display: flex; gap: 18px; }
+.training-nav a {
+  color: var(--training-muted);
+  text-decoration: none;
+  font-size: .85rem;
+}
+.training-nav a:hover { color: var(--training-text); }
+.training-back { color: var(--training-accent2) !important; }
+
+/* Path view */
+.training-path-hero {
+  text-align: center;
+  padding: 32px 0 40px;
+}
+.training-path-hero h1 {
+  font-size: 2rem;
+  margin: 0 0 8px;
+  letter-spacing: -.02em;
+}
+.training-subtitle {
+  color: var(--training-muted);
+  margin: 0 0 28px;
+}
+.training-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--training-bg3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.training-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--training-accent), var(--training-green));
+  transition: width .5s;
+}
+.training-progress-text {
+  margin-top: 8px;
+  font-size: .85rem;
+  color: var(--training-muted);
+}
+
+.training-tier {
+  margin-bottom: 40px;
+}
+.training-tier-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 14px;
+  border-left: 4px solid var(--training-accent);
+  margin: 0 0 18px;
+  font-size: 1.15rem;
+}
+.training-tier-icon { font-size: 1.2rem; }
+.training-tier-name { flex: 1; }
+.training-tier-count {
+  font-size: .8rem;
+  font-weight: 400;
+  color: var(--training-muted);
+  background: var(--training-bg2);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.training-lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.training-lesson-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--training-bg2);
+  border: 1px solid var(--training-border);
+  border-radius: var(--training-radius);
+  transition: border-color .15s, transform .15s;
+}
+.training-lesson-card:hover {
+  border-color: var(--training-accent);
+}
+.training-lesson-card.locked {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.training-lesson-card.passed {
+  border-left: 3px solid var(--training-green);
+}
+.training-lesson-card.in-progress {
+  border-left: 3px solid var(--training-yellow);
+}
+.training-lesson-card.unlocked:not(.passed):not(.in-progress) {
+  border-left: 3px solid var(--training-accent);
+}
+.training-lesson-icon {
+  font-size: 1.4rem;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.training-lesson-meta { flex: 1; min-width: 0; }
+.training-lesson-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+  font-size: .92rem;
+}
+.training-lesson-title a {
+  color: var(--training-text);
+  text-decoration: none;
+}
+.training-lesson-title a:hover {
+  color: var(--training-accent2);
+}
+.training-lesson-sub {
+  font-size: .73rem;
+  color: var(--training-muted);
+}
+
+/* Lesson view */
+.training-lesson {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.training-lesson-header {
+  margin-bottom: 32px;
+}
+.training-lesson-header h1 {
+  font-size: 1.8rem;
+  margin: 6px 0 8px;
+  letter-spacing: -.01em;
+}
+.training-lesson-subtitle {
+  color: var(--training-muted);
+  font-size: 1rem;
+  margin: 0 0 12px;
+}
+.training-lesson-stats {
+  display: flex;
+  gap: 10px;
+  font-size: .8rem;
+  color: var(--training-muted);
+}
+.training-breadcrumb {
+  font-size: .78rem;
+  color: var(--training-muted);
+}
+.training-breadcrumb a {
+  color: var(--training-accent2);
+  text-decoration: none;
+}
+.training-breadcrumb a:hover { text-decoration: underline; }
+.training-sep { margin: 0 6px; }
+
+.training-lesson-body {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.training-block {
+  margin: 18px 0;
+}
+.training-block-heading {
+  font-size: 1.3rem;
+  margin: 32px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--training-border);
+}
+.training-block-text p { margin: 0 0 14px; }
+.training-block-text strong { color: var(--training-accent2); }
+.training-block-text code {
+  background: var(--training-bg3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: .88em;
+}
+.training-block-text ul, .training-block-text ol {
+  padding-left: 24px;
+  margin: 12px 0;
+}
+.training-block-text li { margin: 6px 0; }
+
+.training-callout {
+  margin: 24px 0;
+  padding: 14px 18px;
+  border-radius: var(--training-radius);
+  border-left: 3px solid var(--training-accent);
+  background: rgba(108, 99, 255, .08);
+}
+.training-callout-info { border-color: var(--training-accent2); background: rgba(79,195,247,.08); }
+.training-callout-key  { border-color: var(--training-green);   background: rgba(38,217,107,.08); }
+.training-callout-warn { border-color: var(--training-yellow);  background: rgba(255,179,0,.08); }
+.training-callout-danger {border-color: var(--training-red);    background: rgba(239,83,80,.08); }
+.training-callout-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: .85rem;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.training-block-image {
+  margin: 24px 0;
+  text-align: center;
+}
+.training-block-image img {
+  max-width: 100%;
+  border-radius: var(--training-radius);
+  border: 1px solid var(--training-border);
+}
+.training-block-image figcaption {
+  font-size: .78rem;
+  color: var(--training-muted);
+  margin-top: 8px;
+}
+
+.training-block-code {
+  background: #0a0f17;
+  padding: 14px 18px;
+  border-radius: var(--training-radius);
+  overflow-x: auto;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: .85rem;
+  border: 1px solid var(--training-border);
+}
+
+.training-block-table-wrap { overflow-x: auto; margin: 18px 0; }
+.training-block-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+}
+.training-block-table th, .training-block-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--training-border);
+  text-align: left;
+}
+.training-block-table th {
+  background: var(--training-bg2);
+  font-weight: 600;
+  font-size: .82rem;
+  color: var(--training-muted);
+}
+
+.training-widget {
+  margin: 24px 0;
+  padding: 18px;
+  background: var(--training-bg2);
+  border: 1px dashed var(--training-border);
+  border-radius: var(--training-radius);
+}
+
+.training-lesson-footer {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--training-border);
+  text-align: center;
+}
+
+.training-btn {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: var(--training-radius);
+  font-size: .9rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.training-btn:active { transform: translateY(1px); }
+.training-btn-primary {
+  background: var(--training-accent);
+  color: white;
+}
+.training-btn-primary:hover { background: #5a52e0; }
+
+/* Quiz */
+.training-quiz {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.training-quiz-meta {
+  color: var(--training-muted);
+  font-size: .9rem;
+}
+.training-question {
+  background: var(--training-bg2);
+  border: 1px solid var(--training-border);
+  border-radius: var(--training-radius);
+  padding: 18px 22px;
+  margin: 16px 0;
+  position: relative;
+}
+.training-question.correct  { border-left: 3px solid var(--training-green); }
+.training-question.incorrect { border-left: 3px solid var(--training-red); }
+.training-question-num {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: .72rem;
+  color: var(--training-muted);
+  letter-spacing: .05em;
+}
+.training-question-text {
+  font-weight: 500;
+  margin-bottom: 14px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.training-question-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.training-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--training-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+  font-size: .9rem;
+}
+.training-choice:hover { background: var(--training-bg3); }
+.training-choice input[type="radio"] {
+  margin-top: 2px;
+  accent-color: var(--training-accent);
+}
+.training-choice.correct  { border-color: var(--training-green); background: rgba(38,217,107,.1); }
+.training-choice.incorrect { border-color: var(--training-red); background: rgba(239,83,80,.1); }
+.training-choice.correct-answer { border-color: var(--training-green); background: rgba(38,217,107,.05); }
+.training-question-feedback {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--training-bg3);
+  border-radius: 6px;
+  font-size: .86rem;
+  color: var(--training-muted);
+  border-left: 2px solid var(--training-accent2);
+}
+
+.training-quiz-actions {
+  margin-top: 24px;
+  text-align: center;
+}
+
+#training-quiz-result {
+  margin-top: 32px;
+  padding: 24px;
+  background: var(--training-bg2);
+  border-radius: var(--training-radius);
+  text-align: center;
+  border: 1px solid var(--training-border);
+}
+.training-quiz-result-score {
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin: 8px 0;
+}
+.training-quiz-result-score.pass { color: var(--training-green); }
+.training-quiz-result-score.fail { color: var(--training-yellow); }
+.training-quiz-result-msg {
+  color: var(--training-muted);
+  margin-bottom: 18px;
+}

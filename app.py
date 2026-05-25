@@ -71,6 +71,23 @@ app.register_blueprint(backtest_bp)
 app.register_blueprint(risk_bp)
 app.register_blueprint(futures_ai_bp)
 
+# Training module — standalone-capable package mounted at /training.
+# The single line of coupling between journal and training. Removing this
+# block leaves the journal fully functional without training.
+try:
+    from training.blueprint import bp as training_bp
+    from training.db import init_db as _t_init_db, seed_catalog_if_empty as _t_seed
+    from pathlib import Path as _PathT
+    _TRAINING_DIR = _PathT(__file__).parent / "training"
+    _TRAINING_DB = _TRAINING_DIR / "training.db"
+    app.config["TRAINING_DB_PATH"] = str(_TRAINING_DB)
+    _t_init_db(_TRAINING_DB)
+    _t_seed(_TRAINING_DB, _TRAINING_DIR / "content")
+    app.register_blueprint(training_bp, url_prefix="/training")
+except Exception as _training_err:
+    import logging as _log
+    _log.warning("training module failed to mount: %s", _training_err)
+
 
 @app.route("/")
 def index():

@@ -1,0 +1,123 @@
+id: "01"
+lesson_id: 1
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "You buy 1 BTC on the Spot market at $60,000. The price drops to $30,000. What happens to your position?"
+    type: mcq
+    choices:
+      - "You get liquidated and lose everything."
+      - "You still own 1 BTC; its USD value is now $30,000. You can wait for recovery."
+      - "You owe the exchange $30,000."
+      - "You're auto-stopped out at -50%."
+    correct: 1
+    topic_tag: market_basics
+    explanation: "Spot has no leverage and no liquidation. You own the actual coin. The position can drop 99% without being closed by the exchange — you can hold and wait."
+
+  - id: q2
+    text: "What is the defining feature that distinguishes perpetual futures from dated futures?"
+    type: mcq
+    choices:
+      - "Perpetuals have higher leverage available."
+      - "Perpetuals never expire; dated futures have a fixed settlement date."
+      - "Perpetuals trade only on US exchanges."
+      - "Dated futures don't allow shorting."
+    correct: 1
+    topic_tag: derivatives
+    explanation: "Perpetuals are continuous contracts with no expiry. Dated futures settle on a specific calendar date (often quarterly). To keep perp price anchored to spot without an expiry mechanism, perps use funding rates."
+
+  - id: q3
+    text: "Funding rate on a perpetual contract: who pays whom when the perp price is ABOVE the spot price?"
+    type: mcq
+    choices:
+      - "Longs pay shorts."
+      - "Shorts pay longs."
+      - "Both sides pay the exchange."
+      - "The exchange pays both sides."
+    correct: 0
+    topic_tag: funding
+    explanation: "When perp > spot, the market is over-bid on the long side. Funding payments flow from longs to shorts to pull the perp price back down toward spot. Every 8 hours typically."
+
+  - id: q4
+    text: "You're holding a 5x leveraged long perpetual position. Funding payments are 0.05% per 8h. You hold for 24 hours. Approximately what % of your margin do you pay in funding?"
+    type: mcq
+    choices:
+      - "0.05% (one payment)"
+      - "0.15% (three payments — every 8h for 24h)"
+      - "0.75% (three payments × 5x leverage = pays on notional)"
+      - "5% (heavy funding always wipes you)"
+    correct: 2
+    topic_tag: funding
+    explanation: "Funding is paid on NOTIONAL position size, not margin. With 5x leverage your notional is 5× your margin. 3 funding payments × 0.05% × 5x = 0.75% of margin in 24 hours. Hidden cost most retail ignores."
+
+  - id: q5
+    text: "Roughly what percentage of retail crypto trading volume happens on perpetual futures rather than spot?"
+    type: mcq
+    choices:
+      - "About 10%"
+      - "About 30%"
+      - "About 50%"
+      - "About 90%+"
+    correct: 3
+    topic_tag: market_basics
+    explanation: "Perpetual futures dominate retail crypto volume — roughly 90-95%. Spot is mostly the domain of long-term holders and businesses (savings, payments). The leverage + 24/7 liquidity of perps is why retail flocks there."
+
+  - id: q6
+    text: "Which product CANNOT result in liquidation, regardless of how far the price moves against you?"
+    type: mcq
+    choices:
+      - "Perpetual futures at 1x leverage"
+      - "Dated futures at 1x leverage"
+      - "Spot"
+      - "All three can liquidate"
+    correct: 2
+    topic_tag: market_basics
+    explanation: "Spot has no leverage — you own the asset outright. You can NEVER be liquidated. (1x leverage on futures still uses margin and can technically be liquidated if the exchange charges fees that erode margin below maintenance.)"
+
+  - id: q7
+    text: "You see 'BTCUSD-1228' on a CME quote screen. What does the '1228' indicate?"
+    type: mcq
+    choices:
+      - "Contract size of 1,228 BTC."
+      - "An expiry date — typically Dec 28."
+      - "Position number 1228."
+      - "The maximum leverage available is 1,228x."
+    correct: 1
+    topic_tag: derivatives
+    explanation: "Dated futures are named by their expiry date. '1228' is shorthand for December 28 of the current year. CME and most institutional venues use this convention. After expiry, the contract settles."
+
+  - id: q8
+    text: "You're on Binance and want to check whether you're on Spot or Perpetual. Which is the most reliable test?"
+    type: mcq
+    choices:
+      - "Look at the symbol: spot is BTC, perp is BTCUSDT."
+      - "Try to set leverage to 1x. If you can't change it, you're on Spot."
+      - "Check the candlestick color — perps are red, spot is green."
+      - "Refresh the page; perps reload, spot doesn't."
+    correct: 1
+    topic_tag: market_basics
+    explanation: "Leverage selectors only appear on margin/futures products. If there's no leverage slider, you're on Spot. (The symbol can be misleading because most exchanges use the same ticker for both products — distinguishing only by tab/section.)"
+
+  - id: q9
+    text: "Which scenario is the BEST use case for spot rather than perpetual futures?"
+    type: mcq
+    choices:
+      - "Day-trading a 4-hour swing pattern."
+      - "Holding BTC for 3-5 years through bull and bear cycles."
+      - "Scalping a 0.3% move during a news event."
+      - "Hedging a position you opened on Bitget."
+    correct: 1
+    topic_tag: market_basics
+    explanation: "Long-term holding is the textbook spot use case. You survive deep drawdowns without forced liquidation, you don't pay funding for years, and you actually own the asset (can transfer, stake, etc.). All the other scenarios are short-timeframe situations where leverage and 24/7 fills matter — perp territory."
+
+  - id: q10
+    text: "Funding rate spiked to +0.1% per 8h (longs pay 0.1% of notional every 8 hours). What does this typically signal about market sentiment?"
+    type: mcq
+    choices:
+      - "Bearish sentiment — shorts are over-positioned and being charged to hold."
+      - "Bullish euphoria — longs are over-positioned and getting charged a premium to stay long. Often a contrarian warning sign."
+      - "The market is balanced and stable."
+      - "An exchange bug; ignore it."
+    correct: 1
+    topic_tag: funding
+    explanation: "Extreme positive funding means longs are paying heavily to hold their bets — a sign of euphoric one-sided positioning. Historically these spikes often precede sharp pullbacks because the long-side becomes structurally over-leveraged. Many traders watch funding as a contrarian sentiment gauge."

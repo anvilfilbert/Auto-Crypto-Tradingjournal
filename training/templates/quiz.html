@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Quiz · {{ lesson.title }}{% endblock %}
+{% block content %}
+
+<div class="training-quiz">
+  <header class="training-lesson-header">
+    <div class="training-breadcrumb">
+      <a href="{{ url_for('training.lesson_view', slug=lesson.slug) }}">← Lesson</a>
+    </div>
+    <h1>Quiz — {{ lesson.title }}</h1>
+    <p class="training-quiz-meta">{{ safe_questions|length }} questions · pass at 8/10</p>
+  </header>
+
+  <form id="training-quiz-form" data-slug="{{ lesson.slug }}">
+    {% for q in safe_questions %}
+    <div class="training-question" data-qid="{{ q.id }}">
+      <div class="training-question-num">Q{{ loop.index }}</div>
+      <div class="training-question-text">{{ q.text }}</div>
+      <div class="training-question-choices">
+        {% for choice in q.choices %}
+        <label class="training-choice">
+          <input type="radio" name="q-{{ q.id }}" value="{{ loop.index0 }}">
+          <span>{{ choice }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="training-question-feedback" style="display:none"></div>
+    </div>
+    {% endfor %}
+
+    <div class="training-quiz-actions">
+      <button type="submit" class="training-btn training-btn-primary">Submit answers</button>
+    </div>
+  </form>
+
+  <div id="training-quiz-result" style="display:none"></div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+  window.TRAINING_QUIZ = {
+    slug: "{{ lesson.slug }}",
+    submit_url: "{{ url_for('training.quiz_submit', slug=lesson.slug) }}"
+  };
+</script>
+{% endblock %}

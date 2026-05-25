@@ -1,0 +1,91 @@
+{
+  "slug": "01-spot-vs-futures",
+  "subtitle": "Same coin, three completely different battlefields. Pick the wrong one and you're playing a game you didn't sign up for.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>Most retail crypto traders don't actually know what kind of contract they're trading. They open Binance, buy BTC, then lose 20% in a month and assume \"crypto is risky\" — when in reality they were on perpetual futures with 5x leverage and didn't realize the liquidation price was 19% away.</p><p>Before anything else — risk management, indicators, candle patterns — you need to know <strong>what you're actually trading</strong>. Three flavors, very different rules:</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The three flavors"
+    },
+    {
+      "type": "table",
+      "headers": ["", "Spot", "Futures (dated)", "Perpetual"],
+      "rows": [
+        ["<strong>What you own</strong>", "The actual coin", "A contract that expires", "A contract that never expires"],
+        ["<strong>Expiry</strong>", "Never", "Fixed date (e.g. last Friday of quarter)", "Never — held indefinitely"],
+        ["<strong>Leverage</strong>", "None (1x always)", "Yes (e.g. 5x, 10x, 100x)", "Yes (same)"],
+        ["<strong>Funding</strong>", "None", "None", "Yes — every 8h, longs pay shorts or vice versa"],
+        ["<strong>Liquidation</strong>", "Impossible", "Possible if leveraged", "Possible if leveraged"],
+        ["<strong>Who uses it</strong>", "Long-term holders, savings", "Institutions hedging", "≈95% of retail crypto trading"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Spot — the simplest"
+    },
+    {
+      "type": "text",
+      "content": "<p>You buy BTC. You own BTC. Price doubles, you doubled. Price drops 90%, you have 10% left. No leverage, no liquidation, no funding. You can wait 5 years for your bag to recover.</p><p>This is what \"holding crypto\" means in the strict sense. Good for long-term conviction plays. Bad for short-term opportunities (you can't short, and your gains are 1:1 with price).</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Why retail isn't on spot",
+      "content": "<p>Most retail \"crypto trading\" looks like spot trading on the surface (\"I bought BTC at 60k\") but is usually perpetual futures with default 5-10x leverage. The exchange's UI doesn't always make this loud. Always check the badge: <code>USDT-M Futures</code> or <code>Spot</code>.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Dated futures — the institutional version"
+    },
+    {
+      "type": "text",
+      "content": "<p>Contracts that expire on a specific date. \"BTCUSD-1228\" is a contract that settles on Dec 28. Common at CME and on offshore exchanges as \"quarterly\" contracts. The price often trades at a premium or discount to spot (\"contango\" / \"backwardation\"), which closes as expiry approaches.</p><p>Almost no retail trader uses these. They exist for institutions hedging — a miner can sell quarterly futures to lock in a price for the BTC they'll produce.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Perpetual futures — the retail default"
+    },
+    {
+      "type": "text",
+      "content": "<p>This is where 95% of crypto leverage activity lives. Same idea as a future, but it never expires. So how does the price stay anchored to spot? <strong>Funding rates.</strong></p><p>Every 8 hours, if perp price is above spot, longs pay shorts a small fee (e.g. 0.01% of position). If perp is below spot, shorts pay longs. This continuous payment forces the prices to converge. It's elegant — and it's also a hidden cost most traders ignore.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warn",
+      "title": "Funding eats small wins",
+      "content": "<p>A trade held 3 days through three funding payments at 0.01% each = 0.03% in funding. On a 5x leveraged position that's 0.15% of your margin gone before any price move. If funding spikes to 0.1% (common during euphoric runs), you can pay 0.9% of margin per day just to hold.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to tell which you're on"
+    },
+    {
+      "type": "text",
+      "content": "<p>Open your exchange. Look for these cues:</p><ul><li><strong>Spot</strong>: tab says \"Spot\" or \"Convert\". No leverage selector. Order book shows actual BTC quantities. You can withdraw the BTC.</li><li><strong>Futures / Perp</strong>: tab says \"USDT-M Futures\", \"COIN-M Futures\", \"Perpetual\", or you see a leverage selector (1x, 2x, 5x, 10x, 25x, 50x, 100x). Order quantities are denominated in contracts or USDT.</li><li><strong>Test</strong>: try to set the leverage to 1x. If you can't change it, you're on spot. If you can, you're on a leveraged product.</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Which should YOU trade?"
+    },
+    {
+      "type": "table",
+      "headers": ["Your goal", "Use", "Why"],
+      "rows": [
+        ["Hold BTC for years", "Spot", "Survive deep drawdowns without forced liquidation."],
+        ["Short-term price view (days–weeks)", "Perp at 2-5x", "Leverage amplifies but funding doesn't kill you over short timeframes."],
+        ["Hedge a spot position", "Dated future or perp short", "You're locking in a price, not speculating."],
+        ["Day-trade swings", "Perp at 3-10x", "Liquidity is on perps; no waiting for expiry."],
+        ["Scalp tiny moves", "Don't — fees + funding eat your edge", "Math typically loses for retail scalpers."]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Take this with you",
+      "content": "<p>For the rest of this course, when we say \"trade\" we mean <strong>perpetual futures</strong> unless noted. That's where the journal lives, where the auto-trader runs, and where you'll spend 95% of your screen time.</p><p>Now go look at your exchange right now and confirm which market your wallet currently has open. Don't trust your memory.</p>"
+    }
+  ]
+}
