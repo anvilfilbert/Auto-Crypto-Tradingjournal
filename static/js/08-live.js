@@ -250,34 +250,8 @@ function renderPositionCards(positions, waitingLimits) {
           <div class="pos-stat-val ${pnlCol}">${p.unrealized_pnl>=0?'+':''}${fmtC(p.unrealized_pnl)} USDT</div>
           <div style="font-size:.7rem;${isLoss?'color:var(--red)':'color:var(--accent3)'}">${p.unrealized_pct>=0?'+':''}${p.unrealized_pct}%</div>
         </div>
-        <div class="pos-stat">
-          <div class="pos-stat-label">TP / SL <span id="tp-ladder-toggle-${i}" style="cursor:pointer;opacity:0.6;font-size:.7rem" onclick="event.stopPropagation();loadTpLadder(${i})" title="Click to load full TP ladder from exchange">⛓</span></div>
-          <div class="pos-stat-val" style="font-size:.8rem">
-            ${(() => {
-              const tiers = Array.isArray(p.tp_levels) ? p.tp_levels.slice() : [];
-              // append p.take_profit as the final tier if it's not already represented
-              if (p.take_profit) {
-                const tpFinal = parseFloat(p.take_profit);
-                const already = tiers.some(t => Math.abs(parseFloat(t.price) - tpFinal) / tpFinal < 1e-6);
-                if (!already) tiers.push({ idx: tiers.length + 1, price: tpFinal, pct: null, hit: false });
-              }
-              if (tiers.length === 0) {
-                return `<span style="color:var(--accent3)">—</span> / <span style="color:var(--red)">${p.stop_loss || '—'}</span>`;
-              }
-              if (tiers.length === 1) {
-                return `<span style="color:var(--accent3)">${tiers[0].price}</span> / <span style="color:var(--red)">${p.stop_loss || '—'}</span>`;
-              }
-              // Multi-TP — stack vertically
-              const tpRows = tiers.map((t, idx) => {
-                const hitMark = t.hit ? '✓ ' : '';
-                const pctTxt = t.pct ? ` <span style="opacity:.55">(${t.pct}%)</span>` : '';
-                return `<div style="line-height:1.3"><span style="opacity:.6">TP${idx+1}</span> <span style="color:var(--accent3)">${hitMark}${t.price}</span>${pctTxt}</div>`;
-              }).join('');
-              return tpRows + `<div style="line-height:1.3;margin-top:2px"><span style="opacity:.6">SL</span> <span style="color:var(--red)">${p.stop_loss || '—'}</span></div>`;
-            })()}
-          </div>
-          <div id="tp-ladder-${i}" style="font-size:.65rem;color:var(--muted);margin-top:2px"></div>
-        </div>
+        <!-- TP/SL summary column removed 2026-05-25 — full breakdown lives in the
+             position-targets card row below the main position row. -->
         <div class="pos-stat">
           <div class="pos-stat-label">Open</div>
           <div class="pos-stat-val" style="font-size:.8rem">${dur}</div>
@@ -308,7 +282,10 @@ function renderPositionCards(positions, waitingLimits) {
           <span>Realized so far: <strong class="${pnlClass(p.achieved_profits)}">${p.achieved_profits>=0?'+':''}${fmtC(p.achieved_profits)}</strong></span>
         </div>
       </div>
-      <!-- Call targets panel (shown when matched to a saved call) -->
+      <!-- Position TP/SL cards (always shown when position has TPs or SL configured) -->
+      ${renderPositionTpCards(p)}
+      <!-- Call targets panel (shown when matched to a saved call) — call metadata only,
+           no more stale TP/SL cards (those are now position-driven in the row above). -->
       ${liveCallMatches[key] ? renderCallTargetsPanel(liveCallMatches[key], p) : ''}
       <!-- AI Analysis Panel — pre-open if it was open before the refresh -->
       <div class="pos-ai-panel${openByKey.has(key) ? ' open' : ''}" id="ai-panel-${i}"></div>

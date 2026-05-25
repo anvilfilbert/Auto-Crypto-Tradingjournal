@@ -3,6 +3,15 @@
 // LIVE TRADES — Call Match + Targets Panel (split from 08-live.js v2.1)
 // ══════════════════════════════════════════════════════════════════════════════
 
+// Compact coin-amount formatter (15000 → "15k", 30000000 → "30M").
+function _fmtCoins(n) {
+  const v = Math.abs(parseFloat(n) || 0);
+  if (v >= 1e9) return (v / 1e9).toFixed(v >= 10e9 ? 0 : 1) + 'B';
+  if (v >= 1e6) return (v / 1e6).toFixed(v >= 10e6 ? 0 : 1) + 'M';
+  if (v >= 1e3) return (v / 1e3).toFixed(v >= 10e3 ? 0 : 1) + 'k';
+  return String(Math.round(v));
+}
+
 function renderMatchBanners(pendingMatches, positions) {
   const container = document.getElementById('match-confirmations');
   const entries   = Object.entries(pendingMatches);
@@ -61,58 +70,124 @@ async function dismissMatch(callId) {
   document.getElementById('match-banner-' + callId)?.remove();
 }
 
-function renderCallTargetsPanel(call, pos) {
-  const mark   = parseFloat(pos.mark_price || 0);
-  const dir    = pos.direction === 'Long' ? 1 : -1;
-  const tp1p   = parseFloat(call.tp1_price || 0);
-  const beP    = parseFloat(pos.break_even_price || 0);
-  const entryF = parseFloat(pos.entry_price || 0);
-  // TP1 must be on the FAR side of entry to be a valid "next target".
-  // If the position entered ABOVE TP1 (Long) or BELOW it (Short), TP1
-  // was already passed before entry and "TP1 reached" is meaningless.
-  const tp1OnFarSide = tp1p > 0 && entryF > 0 && (
-    (pos.direction === 'Long'  && tp1p > entryF) ||
-    (pos.direction === 'Short' && tp1p < entryF)
-  );
-  const tp1Crossed = tp1OnFarSide && mark > 0 && (
-    (pos.direction === 'Long'  && mark >= tp1p) ||
-    (pos.direction === 'Short' && mark <= tp1p)
-  );
-  const tp1Stale = tp1p > 0 && entryF > 0 && !tp1OnFarSide;
-  const callKey = call.symbol + '_' + call.direction;
+// ── Position TP/SL cards ─────────────────────────────────────────────────────
+// Renders the position's REAL configured TPs and SL as cards (read from the
+// position object — these are the actual Bitget plan orders, not the call's
+// stale targets). Each card shows: price · % from mark · $ PnL at the
+// position's configured size. If SL is missing, the SL card shows
+// "SL not set" explicitly so the operator can't miss the gap.
+//
+// 2026-05-25 redesign — replaced the upper-right "TP / SL" stat summary
+// AND the lower call-driven TP/SL cards with this single position-driven row.
+function renderPositionTpCards(pos) {
+  const mark           = parseFloat(pos.mark_price    || 0);
+  const entry          = parseFloat(pos.entry_price   || 0);
+  const totalContracts = parseFloat(pos.total         || 0);   // size in coins
+  const dir            = pos.direction === 'Long' ? 1 : -1;
 
-  // Sanity check: the linked call's price scale must match the position's.
-  // When an analyst-feed parser misreads a number (e.g. captured a percentage
-  // as an absolute price) the call's TP/SL stay internally consistent but get
-  // attached to a totally different price level. Surfacing the gap stops the
-  // UI from showing misleading "+232% from mark" deltas.
-  const callEntryRef = parseFloat(call.avg_entry || call.entry_price || 0);
-  const posEntry     = parseFloat(pos.entry_price || 0);
-  const entryGap     = (callEntryRef > 0 && posEntry > 0)
-    ? Math.abs(callEntryRef - posEntry) / posEntry
-    : 0;
-  const scaleMismatch = entryGap > 0.20;   // >20% off price scale → not the same call
-
-  function distRow(label, price, cls) {
-    if (!price) return '';
-    const p    = parseFloat(price);
-    const dist = ((p - mark) / mark * 100 * dir);
-    const distStr = (dist >= 0 ? '+' : '') + dist.toFixed(2) + '%';
-    const distCol = dist >= 0 ? 'color:var(--accent3)' : 'color:var(--red)';
-    return `
-      <div class="target-cell ${cls}">
-        <div class="target-cell-label">${label}</div>
-        <div class="target-cell-price" style="${cls.includes('sl') ? 'color:var(--red)' : 'color:var(--accent3)'}">${p}</div>
-        <div class="target-cell-dist" style="${distCol}">${distStr} from mark</div>
-      </div>`;
+  // pos.tp_levels[i].size = REAL configured amount per TP (in coins/contracts),
+  // populated by bitget_client._get_plan_orders_grouped() from each plan order.
+  // pos.tp_levels[i].pct is a SYNTHETIC even-split (100/N) — not the real
+  // configured ratio — so we ignore it and price PnL off `size` directly.
+  // For Bitget's legacy "Final TP" (the position-level take_profit field that
+  // closes ALL remaining when hit), we append it as the last tier with
+  // size = total − sum(prior plan sizes).
+  const tiers = Array.isArray(pos.tp_levels) ? pos.tp_levels.slice() : [];
+  if (pos.take_profit) {
+    const tpFinal = parseFloat(pos.take_profit);
+    const already = tiers.some(t =>
+      Math.abs(parseFloat(t.price) - tpFinal) / tpFinal < 1e-6
+    );
+    if (!already) {
+      const usedContracts = tiers.reduce(
+        (s, t) => s + (parseFloat(t.size) || 0), 0
+      );
+      const remaining = Math.max(0, totalContracts - usedContracts);
+      tiers.push({
+        idx: tiers.length + 1, price: tpFinal,
+        size: remaining || null, hit: false, _is_final: true,
+      });
+    }
   }
 
-  const entryDist = call.avg_entry
-    ? (((parseFloat(call.avg_entry) - mark) / mark * 100 * dir * -1)).toFixed(2)
-    : null;
+  const sl = pos.stop_loss ? parseFloat(pos.stop_loss) : null;
+
+  // Nothing to show if neither TPs nor SL are configured
+  if (tiers.length === 0 && !sl) return '';
+
+  const cards = [];
+
+  tiers.forEach((t, idx) => {
+    const tp        = parseFloat(t.price);
+    const tpSize    = parseFloat(t.size || 0);   // contracts that close at this TP
+    const distMark  = mark > 0  ? ((tp - mark)  / mark  * 100 * dir) : 0;
+    const distEntry = entry > 0 ? ((tp - entry) / entry * 100 * dir) : 0;
+    // PnL in USDT = contracts × Δprice × direction. Falls back to using the
+    // full notional when size is unknown (single-TP legacy without plan-order
+    // size info).
+    const pnl = tpSize > 0
+      ? tpSize * (tp - entry) * dir
+      : (parseFloat(pos.size_usdt || 0) * distEntry / 100);
+    // Show the actual coin amount on the badge instead of the misleading
+    // synthetic percentage. "Final" tag for the legacy close-all TP.
+    const amtTxt = tpSize > 0
+      ? ` <span style="opacity:.55">(${_fmtCoins(tpSize)})</span>`
+      : '';
+    const finalTag = t._is_final ? ' <span style="opacity:.6;font-size:.65rem">final</span>' : '';
+    const hitMark  = t.hit ? '✓ ' : '';
+    const distCol  = distMark >= 0 ? 'color:var(--accent3)' : 'color:var(--red)';
+    cards.push(`
+      <div class="target-cell target-tp">
+        <div class="target-cell-label">${hitMark}TP${idx + 1}${amtTxt}${finalTag}</div>
+        <div class="target-cell-price" style="color:var(--accent3)">${tp}</div>
+        <div class="target-cell-dist" style="${distCol}">${distMark >= 0 ? '+' : ''}${distMark.toFixed(2)}% from mark</div>
+        <div class="target-cell-dist" style="color:var(--accent3);font-weight:600">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT</div>
+      </div>`);
+  });
+
+  if (sl !== null) {
+    const distMark = mark > 0  ? ((sl - mark)  / mark  * 100 * dir) : 0;
+    // SL closes the FULL remaining position by convention → use total contracts.
+    const pnl      = totalContracts > 0
+      ? totalContracts * (sl - entry) * dir
+      : 0;
+    const distCol  = distMark >= 0 ? 'color:var(--accent3)' : 'color:var(--red)';
+    cards.push(`
+      <div class="target-cell target-sl">
+        <div class="target-cell-label">SL</div>
+        <div class="target-cell-price" style="color:var(--red)">${sl}</div>
+        <div class="target-cell-dist" style="${distCol}">${distMark >= 0 ? '+' : ''}${distMark.toFixed(2)}% from mark</div>
+        <div class="target-cell-dist" style="color:var(--red);font-weight:600">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT</div>
+      </div>`);
+  } else {
+    // No SL set — make this loud, not subtle. Operator must see the gap.
+    cards.push(`
+      <div class="target-cell target-sl" style="border-color:rgba(255,179,0,.4);background:rgba(255,179,0,.06)">
+        <div class="target-cell-label" style="color:var(--yellow)">SL</div>
+        <div class="target-cell-price" style="color:var(--yellow);font-size:.85rem">SL not set</div>
+        <div class="target-cell-dist" style="color:var(--muted)">—</div>
+        <div class="target-cell-dist" style="color:var(--muted)">—</div>
+      </div>`);
+  }
 
   return `
     <div class="call-targets-panel">
+      <div class="targets-grid">${cards.join('')}</div>
+    </div>`;
+}
+
+// ── Linked call metadata panel ───────────────────────────────────────────────
+// 2026-05-25: stripped down to just the call's metadata (setup score, R:R,
+// archetype, entry timing) + the Mark-Call-Closed control. Previously this
+// also showed the call's TP1/TP2/SL/avg-entry as cards, but those were
+// computed for the call's recommended entry — not where the position actually
+// filled — so they routinely showed values outside the trade's valid range.
+// The position's REAL configured TPs/SL are rendered separately in
+// renderPositionTpCards() above.
+function renderCallTargetsPanel(call, pos) {
+  const callKey = call.symbol + '_' + call.direction;
+  return `
+    <div class="call-targets-panel" style="padding-top:8px">
       ${call.status === 'closed' ? `
       <div style="font-size:.75rem;padding:6px 10px 6px 12px;margin-bottom:10px;
                   background:rgba(255,179,0,.1);border:1px solid rgba(255,179,0,.25);
@@ -124,43 +199,8 @@ function renderCallTargetsPanel(call, pos) {
         </button>
       </div>` : ''}
       <h4>📡 Linked Call — ${call.trade_type || ''} · ${call.setup_score || '?'}/10 ${call.setup_label || ''} · R:R ${call.rr_ratio || '—'}</h4>
-      ${scaleMismatch ? `
-      <div style="font-size:.78rem;padding:8px 12px;margin-bottom:10px;
-                  background:rgba(255,69,69,.10);border:1px solid rgba(255,69,69,.35);
-                  border-radius:6px;color:var(--red);line-height:1.5">
-        ⚠ <strong>Linked call's entry price (${callEntryRef.toPrecision(5)}) differs from position entry (${posEntry.toPrecision(5)}) by ${(entryGap*100).toFixed(0)}%.</strong><br>
-        TP/SL values below are on a different price scale and likely do <em>not</em> apply to this trade — most likely the analyst-feed parser captured the wrong number. Consider unlinking the call.
-        <div style="margin-top:6px;display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="dismissMatch(${call.id});loadLiveTrades()">Unlink Call</button>
-        </div>
-      </div>` : ''}
-      <div class="targets-grid"${scaleMismatch ? ' style="opacity:.45"' : ''}>
-        ${call.tp1_price ? distRow('Take Profit 1', call.tp1_price, 'target-tp') : ''}
-        ${call.tp2_price ? distRow('Take Profit 2', call.tp2_price, 'target-tp') : ''}
-        ${call.sl_price  ? distRow('Stop Loss',      call.sl_price,  'target-sl') : ''}
-        ${call.avg_entry ? `
-        <div class="target-cell">
-          <div class="target-cell-label">Call Avg Entry</div>
-          <div class="target-cell-price" style="color:var(--accent2)">${parseFloat(call.avg_entry).toPrecision(5)}</div>
-          <div class="target-cell-dist" style="${parseFloat(entryDist) >= 0 ? 'color:var(--accent3)' : 'color:var(--red)'}">
-            ${parseFloat(entryDist) >= 0 ? '+' : ''}${entryDist}% from mark
-          </div>
-        </div>` : ''}
-      </div>
-      ${tp1Crossed ? `
-        <div class="be-prompt">
-          ✅ <strong>TP1 reached</strong> — consider moving Stop Loss to break-even (${beP > 0 ? beP.toPrecision(5) : 'entry price'}) to protect profits
-        </div>` : ''}
-      ${tp1Stale ? `
-        <div style="font-size:.78rem;padding:8px 12px;margin-top:8px;
-                    background:rgba(255,179,0,.10);border:1px solid rgba(255,179,0,.35);
-                    border-radius:6px;color:var(--yellow);line-height:1.5">
-          ⚠ <strong>Linked call's TPs are stale</strong> — position entered at ${entryF.toPrecision(5)} but TP1 sits at ${tp1p.toPrecision(5)} (${pos.direction === 'Long' ? 'below' : 'above'} entry). The call's targets were valid for its avg entry, not for where you actually got in. Manage this trade against your own TP/SL on the position, not the call's.
-        </div>` : ''}
-      ${call.has_candle_close_sl ? `
-        <div class="candle-sl-chip">⚠ Candle-close SL at ${call.sl_price} — monitor manually, close on 4H close below</div>` : ''}
       ${call.entry_timing ? `
-        <div style="font-size:.75rem;color:var(--muted);margin-top:8px"><strong style="color:var(--text)">Entry timing:</strong> ${call.entry_timing}</div>` : ''}
+        <div style="font-size:.75rem;color:var(--muted);margin-top:4px"><strong style="color:var(--text)">Entry timing:</strong> ${call.entry_timing}</div>` : ''}
       <div style="margin-top:10px;display:flex;gap:8px">
         <button class="btn btn-secondary btn-sm" onclick="closeCall(${call.id});loadLiveTrades()">Mark Call Closed</button>
       </div>
