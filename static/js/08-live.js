@@ -253,8 +253,28 @@ function renderPositionCards(positions, waitingLimits) {
         <div class="pos-stat">
           <div class="pos-stat-label">TP / SL <span id="tp-ladder-toggle-${i}" style="cursor:pointer;opacity:0.6;font-size:.7rem" onclick="event.stopPropagation();loadTpLadder(${i})" title="Click to load full TP ladder from exchange">⛓</span></div>
           <div class="pos-stat-val" style="font-size:.8rem">
-            <span style="color:var(--accent3)">${p.take_profit || '—'}</span> /
-            <span style="color:var(--red)">${p.stop_loss || '—'}</span>
+            ${(() => {
+              const tiers = Array.isArray(p.tp_levels) ? p.tp_levels.slice() : [];
+              // append p.take_profit as the final tier if it's not already represented
+              if (p.take_profit) {
+                const tpFinal = parseFloat(p.take_profit);
+                const already = tiers.some(t => Math.abs(parseFloat(t.price) - tpFinal) / tpFinal < 1e-6);
+                if (!already) tiers.push({ idx: tiers.length + 1, price: tpFinal, pct: null, hit: false });
+              }
+              if (tiers.length === 0) {
+                return `<span style="color:var(--accent3)">—</span> / <span style="color:var(--red)">${p.stop_loss || '—'}</span>`;
+              }
+              if (tiers.length === 1) {
+                return `<span style="color:var(--accent3)">${tiers[0].price}</span> / <span style="color:var(--red)">${p.stop_loss || '—'}</span>`;
+              }
+              // Multi-TP — stack vertically
+              const tpRows = tiers.map((t, idx) => {
+                const hitMark = t.hit ? '✓ ' : '';
+                const pctTxt = t.pct ? ` <span style="opacity:.55">(${t.pct}%)</span>` : '';
+                return `<div style="line-height:1.3"><span style="opacity:.6">TP${idx+1}</span> <span style="color:var(--accent3)">${hitMark}${t.price}</span>${pctTxt}</div>`;
+              }).join('');
+              return tpRows + `<div style="line-height:1.3;margin-top:2px"><span style="opacity:.6">SL</span> <span style="color:var(--red)">${p.stop_loss || '—'}</span></div>`;
+            })()}
           </div>
           <div id="tp-ladder-${i}" style="font-size:.65rem;color:var(--muted);margin-top:2px"></div>
         </div>
