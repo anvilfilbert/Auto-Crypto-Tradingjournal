@@ -24,3 +24,8 @@ data/dodex_watch/
 .remember/
 scripts/journal-session_*.zip
 scripts/journal-session_*.tar.xz
+
+# Training module — Indonesian PDF intermediates (regeneratable from
+# scripts/build_training_pdf_id.py). The .pdf deliverable IS tracked.
+docs/training_id.html
+docs/training_id/
