@@ -154,6 +154,20 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     _log(conn, "rejected_killswitch", setup, reason)
                     continue
 
+                # 1b. Archetype gate (2026-05-26):
+                # Calibration finding from 12 closed auto_ai trades showed
+                # `low_conviction` archetype was 0-for-7 (lost on every
+                # single trade). Reject these before the consensus call —
+                # saves an Opus call AND avoids known-bad setups.
+                # Re-evaluate when n ≥ 30 with the new tiered sizing in place.
+                archetype_now = (setup.get("trade_type") or "").lower()
+                if archetype_now == "low_conviction":
+                    summary["rejected_killswitch"] += 1  # bucket with safety rejects
+                    _log(conn, "rejected_archetype", setup,
+                         "low_conviction archetype — 0/7 historical wins (auto_ai n=12 calibration). "
+                         "Auto-rejected pre-consensus. Re-evaluate threshold at n ≥ 30.")
+                    continue
+
                 # 2. consensus — gated by CONSENSUS_MIN_SCORE for cost.
                 # Setups between SCANNER_MIN_SCORE and CONSENSUS_MIN_SCORE
                 # skip the Sonnet second-opinion entirely and feed paper
@@ -328,6 +342,9 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     # AI score at open — added 2026-05-24 for Opus calibration
                     "ai_score":             (verdict.get("ai") or {}).get("score")
                                             or verdict.get("consensus_score"),
+                    # Scan completion timestamp — executor uses it to compute
+                    # execution_lag_minutes at insert time (2026-05-26).
+                    "_scan_completed_at":   scan_ts,
                 }
                 if fa_config.is_real_mode():
                     opened_ok = _open_real(conn, signal, sizing)

@@ -397,13 +397,14 @@ async function loadAlphaDecayPanel() {
     try {
         const d = await fetch('/api/risk/alpha-decay').then(r => r.json());
         if (!d.ok || !d.data || !d.data.available) {
-            // Hide the panel entirely when execution_lag_minutes isn't being
-            // populated (auto_ai chain currently doesn't write this field).
-            if (section) { section.style.display = 'none'; return; }
+            // Show inline empty-state until enough auto_ai trades accrue.
+            // Auto_ai now populates execution_lag_minutes (2026-05-26) so
+            // this tile activates after ~5 closed auto_ai trades.
             el.appendChild(_emptyState(
                 (d.data && d.data.reason) ||
-                'Execution-lag data unavailable. The auto-trader does not currently populate positions.execution_lag_minutes; this tile will activate when manual-chain trades are journaled with timing data.'
+                'Execution-lag data accumulating. Activates after 5 closed auto_ai trades with timing data.'
             ));
+            if (section) section.style.display = '';
             return;
         }
         if (section) section.style.display = '';

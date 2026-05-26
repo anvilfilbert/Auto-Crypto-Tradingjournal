@@ -40,6 +40,27 @@ from . import config as fa_config
 from . import bitget_trader
 
 
+def _compute_lag_minutes(scan_completed_at) -> Optional[int]:
+    """Time between scan completion and now, in minutes. Returns None when
+    the input is missing/unparseable so the DB column stays NULL.
+    Used to populate positions.execution_lag_minutes for auto_ai trades —
+    feeds the alpha-decay panel in the risk dashboard."""
+    if scan_completed_at is None or scan_completed_at == "":
+        return None
+    try:
+        import time as _t
+        ts = float(scan_completed_at)
+        if ts <= 0:
+            return None
+        delta_min = (_t.time() - ts) / 60.0
+        # Sanity: cap absurd values (e.g. clock skew) at +/- 1 day.
+        if abs(delta_min) > 1440:
+            return None
+        return max(0, int(delta_min))
+    except (TypeError, ValueError):
+        return None
+
+
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
 def _open_auto_positions(conn) -> list[dict]:
@@ -92,7 +113,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             chain, setup_type, setup_score, signal_price, tp_levels,
             consensus_model_used, bear_phase_at_open, archetype_at_open,
             po3_total, opus_had_overrides, tp_levels_count,
-            ai_score_at_open, sizing_tier
+            ai_score_at_open, sizing_tier, execution_lag_minutes
         ) VALUES (
             ?, ?, ?,
             'isolated', datetime('now'), '',
@@ -104,7 +125,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             'auto_ai', ?, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?, ?
+            ?, ?, ?
         )
     """, (
         sym,
@@ -132,6 +153,10 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
          else None) or signal.get("ai_score"),
         # Sizing tier (2026-05-26): "full" (Opus≥6) or "half" (Opus=5).
         (sizing.get("sizing_tier") or "full"),
+        # Execution lag in minutes (2026-05-26): time between the scan that
+        # produced this setup and the actual fill. Useful for the risk
+        # dashboard's alpha-decay analysis. Computed at insert time.
+        _compute_lag_minutes(signal.get("_scan_completed_at")),
     ))
     conn.commit()
     return cur.lastrowid
@@ -352,9 +377,11 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
 
         else:
             # Outside zone AND outside tolerance — compute R:R at live mark.
-            # MIN_RR_AT_FILL = 1.5: at minimum, reward must be 1.5× the risk
-            # for the trade to be worth taking at the new entry.
-            MIN_RR_AT_FILL = 1.5
+            # MIN_RR_AT_FILL: minimum reward/risk ratio for a "rescued" entry
+            # to still be worth taking. Default 1.5 (reward must be ≥1.5× the
+            # risk). Env-tunable via FUTURES_AI_MIN_RR_AT_FILL.
+            import os as _os
+            MIN_RR_AT_FILL = float(_os.environ.get("FUTURES_AI_MIN_RR_AT_FILL", "1.5"))
             is_long = dir_.lower() == "long"
             if is_long:
                 reward = tp1_px_pre - live_mark
