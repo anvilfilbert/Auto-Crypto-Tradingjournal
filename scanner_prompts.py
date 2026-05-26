@@ -61,7 +61,7 @@ def _archetype_rubric(archetype: str, direction: str, min_score: int) -> str:
         rsi_zone = "< 32" if is_long else "> 68"
         return (
             f"SETUP ARCHETYPE — REVERSAL / MEAN REVERSION\n"
-            f"Primary trigger: WaveTrend crossover signal is REQUIRED (gold_buy/buy for Long, sell for Short).\n"
+            f"Primary trigger: WaveTrend crossover signal is REQUIRED (gold_buy/buy for Long, gold_sell/sell for Short).\n"
             f"RSI extremes required for 8+: RSI {rsi_zone} — exhaustion must be clear.\n"
             f"S/R anchor: Entry MUST be at or near a named structural level (support for Long, resistance for Short).\n"
             f"ADX: LOW is favourable (< 28) — ranging/choppy markets are ripe for reversals.\n"

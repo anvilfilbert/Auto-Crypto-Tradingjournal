@@ -219,12 +219,18 @@ def compute_wavetrend(df: pd.DataFrame,
     cross_bear = (wt1 < wt2) & (wt1.shift(1) >= wt2.shift(1))
 
     signal = pd.Series(None, index=df.index, dtype=object)
-    gold_mask = cross_bull & (wt2 < -80)
-    buy_mask  = cross_bull & (wt2 < os_) & ~gold_mask
-    sell_mask = cross_bear & (wt2 > ob)
-    signal[gold_mask] = "gold_buy"
-    signal[buy_mask]  = "buy"
-    signal[sell_mask] = "sell"
+    # Gold signals fire at the deepest extremes (±80). 2026-05-26: added the
+    # gold_sell mirror — previously only gold_buy existed, leaving WaveTrend
+    # structurally Long-biased (extreme oversold gave +1.0 but extreme
+    # overbought gave only -0.85).
+    gold_buy_mask  = cross_bull & (wt2 < -80)
+    gold_sell_mask = cross_bear & (wt2 >  80)
+    buy_mask       = cross_bull & (wt2 < os_) & ~gold_buy_mask
+    sell_mask      = cross_bear & (wt2 >  ob) & ~gold_sell_mask
+    signal[gold_buy_mask]  = "gold_buy"
+    signal[gold_sell_mask] = "gold_sell"
+    signal[buy_mask]       = "buy"
+    signal[sell_mask]      = "sell"
 
     return pd.DataFrame({
         "wt1":       wt1.round(2),

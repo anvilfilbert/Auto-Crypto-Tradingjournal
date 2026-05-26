@@ -133,13 +133,17 @@ def _wt_weight(wt: dict) -> float:
     """
     WaveTrend contribution (Cipher A/B).
     Crossover signals in OB/OS zones are the strongest inputs (±1.0).
-    Gold signal (extreme oversold cross) = max bullish (1.0).
-    Position-only (no cross) scales WT1 value like RSI: ±0.5 max.
+    Gold signals (cross at the extremes, wt2 < -80 or > +80) = ±1.0;
+    regular OB/OS crosses = ±0.85. Position-only (no cross) scales WT1
+    value: ±0.5 max.
+    2026-05-26: gold_sell added as the mirror of gold_buy — the indicator
+    upstream now emits both, and the weight here matches.
     """
     if not wt:
         return 0.0
     signal = wt.get("signal")
     if signal == "gold_buy":   return  1.0
+    if signal == "gold_sell":  return -1.0
     if signal == "buy":        return  0.85
     if signal == "sell":       return -0.85
     # No fresh cross — use WT1 position scaled to ±0.5

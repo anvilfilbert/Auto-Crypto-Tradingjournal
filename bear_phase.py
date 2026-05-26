@@ -148,9 +148,15 @@ def phase_alignment_weight(phase: str, setup_direction: str) -> tuple[float, str
     Score modifier when a setup's direction aligns (or fights) the
     current bear-phase bias. Returns (weight, reason).
 
-      Aligned → +0.3 (e.g. Short setup in Distribution phase)
-      Against → -0.3 (e.g. Long setup in Decline phase)
+      Aligned → +0.15 (e.g. Short setup in Distribution phase)
+      Against → -0.15 (e.g. Long setup in Decline phase)
       Neutral → 0 (unknown phase or no bias)
+
+    Magnitude lowered from ±0.3 to ±0.15 on 2026-05-26 — F&G is a sentiment
+    indicator and is acknowledged as marginal vs structural macro
+    (BTC trend, VIX, BTC dominance). It should nudge scoring, not dominate
+    the decision. The HMM gate sits at ±0.2 — bear_phase is now slightly
+    softer than HMM, which matches their relative signal quality.
     """
     bias = PHASE_BIAS.get(phase)
     if not bias or not setup_direction:
@@ -158,5 +164,5 @@ def phase_alignment_weight(phase: str, setup_direction: str) -> tuple[float, str
     sd = setup_direction.strip().lower()
     bd = bias.strip().lower()
     if sd == bd:
-        return +0.3, f"bear-phase {phase} favors {bias} → setup aligned (+0.3)"
-    return -0.3, f"bear-phase {phase} favors {bias} → setup counter-trend (-0.3)"
+        return +0.15, f"bear-phase {phase} favors {bias} → setup aligned (+0.15)"
+    return -0.15, f"bear-phase {phase} favors {bias} → setup counter-trend (-0.15)"

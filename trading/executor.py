@@ -303,6 +303,50 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
                   "reason": "auto-position already open"})
             return None
 
+    # ── Pre-flight drift check (added 2026-05-26) ────────────────────────────
+    # Previously we placed the market order FIRST, then checked drift on the
+    # fill price, then closed if drift > tolerance. That produced ~15 trades
+    # per day that opened and closed within 5-6 seconds on Bitget when fast
+    # altcoins pumped 8-33% between the scan and execution. Now we check the
+    # live mark price BEFORE placing the order and skip the round-trip if the
+    # entry premise is already gone.
+    #
+    # The fill may still drift between this check and the order fill, so the
+    # post-fill guard further down stays in place as a second line of defence.
+    intended_entry_pre = float(signal.get("entry_price") or 0)
+    zone_pre           = signal.get("entry_zone") or {}
+    zone_low_pre       = float(zone_pre.get("low")  or 0)
+    zone_high_pre      = float(zone_pre.get("high") or 0)
+    if zone_low_pre > zone_high_pre:
+        zone_low_pre, zone_high_pre = zone_high_pre, zone_low_pre
+    try:
+        live_mark = float(bitget_trader.get_mark_price(sym) or 0)
+    except Exception:
+        live_mark = 0.0
+
+    if live_mark > 0 and intended_entry_pre > 0:
+        drift_pre = abs(live_mark - intended_entry_pre) / intended_entry_pre
+        inside_zone_pre = False
+        if zone_low_pre > 0 and zone_high_pre > 0:
+            zone_mid_pre = (zone_low_pre + zone_high_pre) / 2.0
+            pad_pre = zone_mid_pre * 0.0025
+            inside_zone_pre = (zone_low_pre - pad_pre) <= live_mark <= (zone_high_pre + pad_pre)
+
+        if (drift_pre > fa_config.MAX_ENTRY_DRIFT_PCT and not inside_zone_pre
+                and fa_config.MAX_ENTRY_DRIFT_PCT > 0):
+            _log(conn, "rejected_drift_pre_order", None, {
+                "symbol":         sym,
+                "direction":      dir_,
+                "intended_entry": intended_entry_pre,
+                "live_mark":      live_mark,
+                "drift_pct":      round(drift_pre * 100, 3),
+                "tolerance_pct":  fa_config.MAX_ENTRY_DRIFT_PCT * 100,
+                "zone_low":       zone_low_pre or None,
+                "zone_high":      zone_high_pre or None,
+                "reason":         "entry premise stale before order — price moved too far from planned entry",
+            })
+            return None
+
     try:
         client_oid = f"fa-{uuid.uuid4().hex[:16]}"
         result = bitget_trader.place_market_order(
@@ -323,52 +367,75 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
         return None
 
     # ── Entry-drift guard ────────────────────────────────────────────────────
-    # The scanner derives `signal["entry_price"]` from a recent candle close.
-    # A fast move between scan-time and order-time can mean the market fill
-    # is meaningfully above (Long) / below (Short) the intended entry. Two
-    # consecutive trades on 2026-05-24 hit this — QNTUSDT +7.3% drift,
-    # ARKMUSDT +21% drift. The TP ladder is anchored to the SCANNER entry,
-    # so when fill drifts up on a Long, TP1/TP2 end up BELOW entry → they
-    # would fire as partial losses on Phase-2 execution. The setup's premise
-    # (Opus's entry-zone reasoning) is also gone if price moved that much.
+    # The scanner produces both a point-estimate `signal["entry_price"]` (the
+    # ideal entry) AND an `signal["entry_zone"] = {low, high}` (the band the
+    # operator's analysis blessed). The TP ladder is anchored to the scanner
+    # entry, so when fill drifts far enough that the trade no longer makes
+    # sense (TP1 ends up below entry on a Long, etc.) we abort.
     #
-    # Mitigation: if |fill - signal.entry| / signal.entry > tolerance, close
-    # the position immediately and log a real_entry_drift_aborted event.
-    # The close is at the same market price + a few seconds later — slippage
-    # is bounded and predictable. Better to eat ~0.1% in fees than ride a
-    # broken ladder for hours.
+    # Two-tier check (updated 2026-05-26):
+    #   1. If `entry_zone` is set, the fill is OK as long as it sits inside
+    #      the zone — that's the band the scanner already accepted. This is
+    #      the primary check; respects the scanner's intent rather than
+    #      arbitrary ±2% around a single point.
+    #   2. Outside the zone we fall back to a tolerance around the point
+    #      estimate (MAX_ENTRY_DRIFT_PCT). When no zone is available the
+    #      tolerance check is the only gate.
+    #
+    # Either failure → close immediately + log `real_entry_drift_aborted`.
     fill_px = float(result.get("mark_at_entry") or 0)
     intended_entry = float(signal.get("entry_price") or 0)
-    if (fill_px and intended_entry and
-            fa_config.MAX_ENTRY_DRIFT_PCT > 0):
-        drift = abs(fill_px - intended_entry) / intended_entry
-        if drift > fa_config.MAX_ENTRY_DRIFT_PCT:
-            try:
-                bitget_trader.close_position(sym, dir_.lower(), percentage=100.0)
-            except Exception as e:
-                _log(conn, "real_entry_drift_close_failed", None, {
-                    "symbol": sym, "direction": dir_,
-                    "intended_entry": intended_entry, "fill_price": fill_px,
-                    "drift_pct": round(drift * 100, 3),
-                    "error": str(e)[:200],
-                })
-                # Even on close failure we don't try to "recover" — the
-                # ladder is already wrong; let the operator see this state.
-                return None
-            _log(conn, "real_entry_drift_aborted", None, {
-                "symbol":         sym,
-                "direction":      dir_,
-                "intended_entry": intended_entry,
-                "fill_price":     fill_px,
-                "drift_pct":      round(drift * 100, 3),
-                "tolerance_pct":  fa_config.MAX_ENTRY_DRIFT_PCT * 100,
-                "tp1":            signal.get("tp1_price"),
-                "tp2":            signal.get("tp2_price"),
-                "sl":             signal.get("sl_price"),
-                "order_id":       result.get("order_id"),
-                "client_oid":     client_oid,
+    zone = signal.get("entry_zone") or {}
+    zone_low  = float(zone.get("low")  or 0)
+    zone_high = float(zone.get("high") or 0)
+    if zone_low > zone_high:
+        zone_low, zone_high = zone_high, zone_low
+
+    drift_pct = None
+    inside_zone = False
+    if fill_px and intended_entry:
+        drift_pct = abs(fill_px - intended_entry) / intended_entry
+    if fill_px and zone_low > 0 and zone_high > 0:
+        # Small (0.25% of mid) tolerance lets a fill right at the edge pass.
+        zone_mid = (zone_low + zone_high) / 2.0
+        pad = zone_mid * 0.0025
+        inside_zone = (zone_low - pad) <= fill_px <= (zone_high + pad)
+
+    drift_violation = (
+        fill_px and intended_entry and
+        fa_config.MAX_ENTRY_DRIFT_PCT > 0 and
+        drift_pct is not None and drift_pct > fa_config.MAX_ENTRY_DRIFT_PCT and
+        not inside_zone
+    )
+    if drift_violation:
+        try:
+            bitget_trader.close_position(sym, dir_.lower(), percentage=100.0)
+        except Exception as e:
+            _log(conn, "real_entry_drift_close_failed", None, {
+                "symbol": sym, "direction": dir_,
+                "intended_entry": intended_entry, "fill_price": fill_px,
+                "drift_pct": round(drift_pct * 100, 3),
+                "zone_low": zone_low, "zone_high": zone_high,
+                "error": str(e)[:200],
             })
             return None
+        _log(conn, "real_entry_drift_aborted", None, {
+            "symbol":         sym,
+            "direction":      dir_,
+            "intended_entry": intended_entry,
+            "fill_price":     fill_px,
+            "drift_pct":      round(drift_pct * 100, 3),
+            "tolerance_pct":  fa_config.MAX_ENTRY_DRIFT_PCT * 100,
+            "zone_low":       zone_low or None,
+            "zone_high":      zone_high or None,
+            "inside_zone":    inside_zone,
+            "tp1":            signal.get("tp1_price"),
+            "tp2":            signal.get("tp2_price"),
+            "sl":             signal.get("sl_price"),
+            "order_id":       result.get("order_id"),
+            "client_oid":     client_oid,
+        })
+        return None
 
     pos_id = _insert_open_position(conn, signal, sizing, result)
     _log(conn, "real_open", pos_id, {

@@ -95,19 +95,41 @@ def run_call_analysis(
     except Exception as e:
         return _degraded(str(e))
 
+    # 2026-05-26 bug fix: previously a single try/except wrapped BOTH
+    # f_interp.result() and f_sent.result() — if EITHER raised, BOTH got
+    # replaced with empties. A Grok rate-limit or transient failure in
+    # sentiment was silently poisoning the interpreter result, making the
+    # reviewer see confluence_score=0 ("Confluence 0.0 — weak multi-signal
+    # alignment") and Opus penalise → reject. Now they fail independently
+    # and log which one failed.
+    import logging as _lg
+    _log = _lg.getLogger(__name__)
+    interpreted = None
+    sentiment   = None
     try:
-        # Carry contextvars (force_provider, etc.) into worker threads
-        ctx = contextvars.copy_context()
+        ctx = contextvars.copy_context()  # carry force_provider etc. into workers
         with ThreadPoolExecutor(max_workers=2) as ex:
             f_interp = ex.submit(ctx.run, agent_data_interpreter.run, {"collected": collected})
             f_sent   = ex.submit(ctx.run, agent_market_sentiment.run,
                                  {"symbol": symbol, "direction": direction,
                                   "collected": collected})
-            interpreted = f_interp.result()
-            sentiment   = f_sent.result()
-    except Exception:
-        interpreted = empty_interpreter(symbol)
-        sentiment   = empty_sentiment()
+            try:
+                interpreted = f_interp.result()
+            except Exception as _ie:
+                _log.warning("[%s] data_interpreter failed → empty fallback: %s",
+                             symbol, _ie)
+                interpreted = empty_interpreter(symbol)
+            try:
+                sentiment = f_sent.result()
+            except Exception as _se:
+                _log.warning("[%s] market_sentiment failed → empty fallback: %s",
+                             symbol, _se)
+                sentiment = empty_sentiment()
+    except Exception as _e:
+        # Outer guard — pool itself failed; very rare
+        _log.exception("[%s] interp/sentiment executor failed: %s", symbol, _e)
+        if interpreted is None: interpreted = empty_interpreter(symbol)
+        if sentiment   is None: sentiment   = empty_sentiment()
 
     try:
         reviewed = agent_data_reviewer.run({
