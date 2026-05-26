@@ -326,28 +326,73 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
     except Exception:
         live_mark = 0.0
 
+    # ── Pre-flight viability check (Path 3, 2026-05-26) ─────────────────────
+    # Old gate: "is fill within 2% of planned entry?" — that blocked every
+    # setup where price moved meaningfully (the XAN/TIA pumping-alts pattern).
+    # The right question isn't "did price drift" but "does the trade still
+    # have favorable math at the live price?". Compute R:R using live mark
+    # and the unchanged TP1/SL. If R:R is still ≥ MIN_RR_AT_FILL the trade
+    # is still tradeable at market — allow it. If R:R has flipped against
+    # us (TP1 already passed, or reward < 1× the risk) reject.
+    sl_px_pre  = float(signal.get("sl_price")  or 0)
+    tp1_px_pre = float(signal.get("tp1_price") or 0)
+    inside_zone_pre = False
+    if zone_low_pre > 0 and zone_high_pre > 0 and live_mark > 0:
+        zone_mid_pre = (zone_low_pre + zone_high_pre) / 2.0
+        pad_pre = zone_mid_pre * 0.0025
+        inside_zone_pre = (zone_low_pre - pad_pre) <= live_mark <= (zone_high_pre + pad_pre)
+
     if live_mark > 0 and intended_entry_pre > 0:
         drift_pre = abs(live_mark - intended_entry_pre) / intended_entry_pre
-        inside_zone_pre = False
-        if zone_low_pre > 0 and zone_high_pre > 0:
-            zone_mid_pre = (zone_low_pre + zone_high_pre) / 2.0
-            pad_pre = zone_mid_pre * 0.0025
-            inside_zone_pre = (zone_low_pre - pad_pre) <= live_mark <= (zone_high_pre + pad_pre)
 
-        if (drift_pre > fa_config.MAX_ENTRY_DRIFT_PCT and not inside_zone_pre
-                and fa_config.MAX_ENTRY_DRIFT_PCT > 0):
-            _log(conn, "rejected_drift_pre_order", None, {
-                "symbol":         sym,
-                "direction":      dir_,
-                "intended_entry": intended_entry_pre,
-                "live_mark":      live_mark,
-                "drift_pct":      round(drift_pre * 100, 3),
-                "tolerance_pct":  fa_config.MAX_ENTRY_DRIFT_PCT * 100,
-                "zone_low":       zone_low_pre or None,
-                "zone_high":      zone_high_pre or None,
-                "reason":         "entry premise stale before order — price moved too far from planned entry",
+        # If fill is INSIDE the scanner's entry_zone OR within tolerance,
+        # the original analysis still holds → skip the R:R check entirely.
+        if inside_zone_pre or drift_pre <= fa_config.MAX_ENTRY_DRIFT_PCT:
+            pass  # original behaviour — allow trade
+
+        else:
+            # Outside zone AND outside tolerance — compute R:R at live mark.
+            # MIN_RR_AT_FILL = 1.5: at minimum, reward must be 1.5× the risk
+            # for the trade to be worth taking at the new entry.
+            MIN_RR_AT_FILL = 1.5
+            is_long = dir_.lower() == "long"
+            if is_long:
+                reward = tp1_px_pre - live_mark
+                risk   = live_mark - sl_px_pre
+            else:  # Short
+                reward = live_mark - tp1_px_pre
+                risk   = sl_px_pre - live_mark
+
+            new_rr = (reward / risk) if (reward > 0 and risk > 0) else None
+            viable_at_live = (new_rr is not None and new_rr >= MIN_RR_AT_FILL)
+
+            if not viable_at_live:
+                # Either TP1 already passed (reward ≤ 0) or SL already passed
+                # (risk ≤ 0) or new R:R < threshold. The trade premise died.
+                _log(conn, "rejected_drift_pre_order", None, {
+                    "symbol":         sym,
+                    "direction":      dir_,
+                    "intended_entry": intended_entry_pre,
+                    "live_mark":      live_mark,
+                    "drift_pct":      round(drift_pre * 100, 3),
+                    "sl_price":       sl_px_pre,
+                    "tp1_price":      tp1_px_pre,
+                    "new_rr":         round(new_rr, 2) if new_rr is not None else None,
+                    "min_rr_required": MIN_RR_AT_FILL,
+                    "zone_low":       zone_low_pre or None,
+                    "zone_high":      zone_high_pre or None,
+                    "reason":         "R:R math no longer favourable at live mark — TP1 passed or reward < 1.5× risk",
+                })
+                return None
+            # Otherwise: drift is large but R:R still works → allow trade
+            # at market. Log this for visibility — it's a "rescued" entry.
+            _log(conn, "drift_allowed_rr_viable", None, {
+                "symbol":   sym, "direction": dir_,
+                "drift_pct": round(drift_pre * 100, 3),
+                "new_rr":    round(new_rr, 2),
+                "live_mark": live_mark, "intended_entry": intended_entry_pre,
+                "reason": "drift > tolerance but R:R still ≥ 1.5 — trade still viable",
             })
-            return None
 
     try:
         client_oid = f"fa-{uuid.uuid4().hex[:16]}"

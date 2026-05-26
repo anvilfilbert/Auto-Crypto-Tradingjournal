@@ -17,7 +17,12 @@ MODEL                  = "claude-sonnet-4-6"
 FAST_MODEL             = "claude-haiku-4-5-20251001"
 
 # ── Cache TTLs (seconds) ──────────────────────────────────────────────────────
-CHART_CACHE_TTL        = 600    # 10 min — candle cache in chart_context
+# CHART_CACHE_TTL reduced 600→120 (2026-05-26) to shrink the scan-to-fill
+# window. Bitget's klines endpoint returns the in-progress bar so close.iloc[-1]
+# is effectively live AT FETCH TIME — but a stale 10-min cache could surface
+# 10-min-old prices to the scanner. 2 min keeps the scanner fresh without
+# hitting Bitget too often (8 scans/hour × 80 symbols = 640 candle requests).
+CHART_CACHE_TTL        = 120    # 2 min — candle cache in chart_context
 SCANNER_CACHE_TTL      = 1800   # 30 min — scanner result cache
 MARKET_CACHE_TTL       = 300    # 5 min  — Fear & Greed / funding rates
 NANSEN_CACHE_TTL       = 1800   # 30 min — Nansen smart money cache
@@ -29,7 +34,12 @@ ACCURACY_TARGET        = 35     # calls needed for 85% statistical confidence
 SCANNER_MIN_SCORE         = 7   # raised from 6: hindsight showed score-6 = 50/50,
                                 # score 7-8 = 86.5% TP rate. Scanner shouldn't
                                 # surface borderline setups it can't predict.
-SCANNER_FULL_DETAIL_TOP_N = 6   # was 12 — halved to fit free-tier 30 RPM cascade burst budget (2026-05-20)
+# SCANNER_FULL_DETAIL_TOP_N reduced 6→3 (2026-05-26) to cut Stage-3 LLM time.
+# At 80-symbol curated watchlist, Top-3 covers the genuinely-elite setups
+# without burning 4+ min on borderline marginal ones. Trade-off: a setup
+# scored just outside the top-3 by the Haiku quick-score may miss Sonnet's
+# deeper read. Acceptable because the bottom-3 are usually low-conviction.
+SCANNER_FULL_DETAIL_TOP_N = 3   # was 6 — see comment above
 SCANNER_MAX_WORKERS       = 4   # ThreadPoolExecutor — tuned to Pi 4-core CPU
 
 # ── Position sizing ───────────────────────────────────────────────────────────
