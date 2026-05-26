@@ -224,10 +224,16 @@ async function loadAttributionPanel() {
             'A good trader has positive alpha. Negative alpha means the market did the work.'
         ));
 
+        // Chain label — attribution is now per-chain (default auto_ai, since manual
+        // chain has corrupt size_usdt in some legacy rows that produced absurd numbers).
+        const chainLabel = (a.chain || 'auto_ai').toUpperCase() + ' chain · last ' + (a.lookback_days || 90) + 'd';
+        const skipNote = (a.skipped_bad_size && a.skipped_bad_size > 0)
+            ? ' · ' + a.skipped_bad_size + ' excluded (bad size_usdt)' : '';
+
         el.appendChild(_kpiGrid([
-            ['Total P&L', (a.total_pnl >= 0 ? '+' : '') + '$' + a.total_pnl.toFixed(2), 'Last 90 days', a.total_pnl >= 0 ? 'var(--accent3)' : 'var(--red)'],
-            ['Alpha — Your Skill', (a.alpha_pnl >= 0 ? '+' : '') + '$' + a.alpha_pnl.toFixed(2), a.alpha_pct.toFixed(1) + '% of total P&L', a.alpha_pnl >= 0 ? 'var(--accent3)' : 'var(--red)'],
-            ['Beta — BTC Move', (a.beta_pnl >= 0 ? '+' : '') + '$' + a.beta_pnl.toFixed(2), 'What BTC gave you', a.beta_pnl >= 0 ? 'var(--accent2)' : 'var(--muted)'],
+            ['Total P&L', (a.total_pnl >= 0 ? '+' : '') + '$' + a.total_pnl.toFixed(2), chainLabel + skipNote, a.total_pnl >= 0 ? 'var(--accent3)' : 'var(--red)'],
+            ['Alpha — vs BTC buy-and-hold', (a.alpha_pnl >= 0 ? '+' : '') + '$' + a.alpha_pnl.toFixed(2), (a.alpha_pnl >= 0 ? 'outperforming' : 'underperforming') + ' passive BTC', a.alpha_pnl >= 0 ? 'var(--accent3)' : 'var(--red)'],
+            ['Beta — BTC market move', (a.beta_pnl >= 0 ? '+' : '') + '$' + a.beta_pnl.toFixed(2), 'What buy-and-hold would have earned', a.beta_pnl >= 0 ? 'var(--accent2)' : 'var(--muted)'],
         ], 3));
 
         // Visual split bar
@@ -385,15 +391,22 @@ async function loadAlphaDecayPanel() {
     const el = document.getElementById('risk-alpha-decay');
     if (!el) return;
     while (el.firstChild) el.removeChild(el.firstChild);
+    // 2026-05-26: also try to hide the section header above the tile when
+    // there's no data. Otherwise an empty card under a heading looks broken.
+    const section = el.closest('.risk-section') || el.parentElement;
     try {
         const d = await fetch('/api/risk/alpha-decay').then(r => r.json());
         if (!d.ok || !d.data || !d.data.available) {
+            // Hide the panel entirely when execution_lag_minutes isn't being
+            // populated (auto_ai chain currently doesn't write this field).
+            if (section) { section.style.display = 'none'; return; }
             el.appendChild(_emptyState(
                 (d.data && d.data.reason) ||
-                'No execution lag data yet. Trades need to be linked to scanner signals via the call analyzer.'
+                'Execution-lag data unavailable. The auto-trader does not currently populate positions.execution_lag_minutes; this tile will activate when manual-chain trades are journaled with timing data.'
             ));
             return;
         }
+        if (section) section.style.display = '';
         const a = d.data;
 
         el.appendChild(_riskInsight(

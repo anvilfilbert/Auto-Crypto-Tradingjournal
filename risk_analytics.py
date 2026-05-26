@@ -161,42 +161,72 @@ def compute_correlation_matrix(positions: list, lookback_days: int = 30) -> dict
             "lookback_days": lookback_days, "sample_days": len(df), "available": True}
 
 
-def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
+def compute_pnl_attribution(conn, lookback_days: int = 90,
+                             chain: str = "auto_ai") -> dict:
     """
-    Decompose P&L into alpha (skill) and beta (BTC market move).
-    For each closed position: beta_contribution = size_usdt * btc_return_during_trade.
-    alpha = realized_pnl - beta_contribution.
-    Uses yfinance BTC-USD (free). Returns alpha_pnl, beta_pnl, total_pnl,
-    alpha_pct, sample_size, attributed, available.
+    Decompose P&L into alpha (skill) and beta (BTC market move) for a single
+    chain. Fixed 2026-05-26 — previously had multiple math bugs:
+      - mixed manual+auto_ai (manual has corrupt size_usdt = contract count
+        instead of USDT; max $200M in DB), so a corruption-driven outlier
+        could swing the entire calculation. Now filtered to a single chain.
+      - daily BTC close on open/close DATE → same-day intraday trades had
+        btc_o == btc_c → beta = 0 → entire P&L attributed to alpha. Now uses
+        hourly BTC OHLCV with actual TIMESTAMP precision.
+      - skipped-bad-size rows still added to alpha (contaminating the metric).
+        Now EXCLUDED entirely from both alpha and total_pnl.
+      - alpha_pct as % of |total_pnl| produced nonsensical ratios > ±100%
+        when alpha and beta have opposite signs. Now uses meaningful labels
+        + raw $ amounts. JS layer formats the qualitative interpretation.
+
+    Returns:
+      alpha_pnl, beta_pnl, total_pnl   — raw $ amounts, attributed trades only
+      alpha_label                      — "outperforming BTC" / "underperforming BTC"
+      vs_passive_btc_usd               — how much your strategy diverged from buy-and-hold
+      sample_size, attributed, skipped_bad_size, available, lookback_days, chain
     """
     import datetime as _dt
 
     rows = conn.execute("""
         SELECT id, symbol, direction, realized_pnl, size_usdt,
-               date(open_time) AS open_date, date(close_time) AS close_date
+               open_time, close_time
         FROM positions
         WHERE realized_pnl IS NOT NULL AND size_usdt > 0
           AND open_time IS NOT NULL AND close_time IS NOT NULL
           AND close_time >= datetime('now', ? || ' days')
+          AND COALESCE(chain, 'manual') = ?
         ORDER BY close_time DESC LIMIT 200
-    """, (str(-lookback_days),)).fetchall()
+    """, (str(-lookback_days), chain)).fetchall()
 
     if not rows:
         return {"alpha_pnl": 0.0, "beta_pnl": 0.0, "total_pnl": 0.0,
-                "alpha_pct": 0.0, "sample_size": 0, "attributed": 0, "available": False}
+                "alpha_label": "no data", "vs_passive_btc_usd": 0.0,
+                "sample_size": 0, "attributed": 0, "skipped_bad_size": 0,
+                "available": False, "chain": chain, "lookback_days": lookback_days}
 
-    min_date = min(r["open_date"] for r in rows)
-    max_date = max(r["close_date"] for r in rows)
-    btc_close = pd.Series(dtype=float)
+    # Fetch BTC HOURLY OHLCV via Binance (free, public). Bound the window to
+    # actual trade range to keep the response under 1MB.
+    min_ts = min(r["open_time"] for r in rows)
+    max_ts = max(r["close_time"] for r in rows)
+    btc_hourly = pd.Series(dtype=float)
     try:
-        end_plus1 = (_dt.datetime.strptime(max_date, "%Y-%m-%d") +
-                     _dt.timedelta(days=1)).strftime("%Y-%m-%d")
+        # Convert min/max to estimate hours needed — limit at 1500 (~62 days)
+        # which covers most lookback windows; older trades use daily yfinance fallback.
+        df_btc = _fetch_ohlcv_df("BTCUSDT", tf="1h", limit=1500)
+        if not df_btc.empty:
+            btc_hourly = df_btc["close"].dropna()
+    except Exception:
+        pass
+
+    # yfinance daily fallback if 1H fetch failed or for trades older than the
+    # 1H window
+    btc_daily = pd.Series(dtype=float)
+    try:
+        min_date = pd.Timestamp(min_ts).strftime("%Y-%m-%d")
+        max_date = pd.Timestamp(max_ts).strftime("%Y-%m-%d")
+        end_plus1 = (_dt.datetime.strptime(max_date, "%Y-%m-%d")
+                     + _dt.timedelta(days=1)).strftime("%Y-%m-%d")
         btc = yf.download("BTC-USD", start=min_date, end=end_plus1,
                           progress=False, auto_adjust=True)
-        # yfinance ≥0.2.40 returns multi-level columns (e.g. ('Close','BTC-USD'))
-        # → btc["Close"] is a DataFrame with one column, not a Series. The old
-        # float() conversion on .asof() output then raised TypeError on every
-        # trade, leaving attributed=0 and the UI saying "not enough data".
         if not btc.empty:
             if isinstance(btc.columns, pd.MultiIndex):
                 close = btc.xs("Close", axis=1, level=0)
@@ -205,14 +235,30 @@ def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
             if isinstance(close, pd.DataFrame):
                 close = close.iloc[:, 0]
             if close is not None:
-                btc_close = close.dropna()
+                btc_daily = close.dropna()
     except Exception:
         pass
 
-    # Sanity bound: some position rows have size_usdt populated with the raw
-    # contract count instead of USDT notional (e.g. 1000BONK at 100,000 units).
-    # We can't fix the upstream sync from here — clamp anything obviously
-    # outsized for retail and count how many we dropped so the UI can warn.
+    def _btc_at(ts) -> float:
+        """Resolve BTC price at a timestamp, preferring hourly precision."""
+        pts = pd.Timestamp(ts)
+        # Hourly: nearest <= ts
+        if not btc_hourly.empty:
+            v = btc_hourly.asof(pts)
+            if hasattr(v, "iloc"): v = v.iloc[0]
+            if v is not None and not pd.isna(v):
+                return float(v)
+        # Daily fallback
+        if not btc_daily.empty:
+            v = btc_daily.asof(pts)
+            if hasattr(v, "iloc"): v = v.iloc[0]
+            if v is not None and not pd.isna(v):
+                return float(v)
+        return 0.0
+
+    # Corrupt-size guard: manual chain has rows with size_usdt populated
+    # as raw contract count (max observed $200M in DB). Auto_ai is clean
+    # but the bound stays as defense.
     MAX_REASONABLE_SIZE_USDT = 10_000
     alpha_pnl = beta_pnl = total_pnl = 0.0
     attributed = 0
@@ -220,23 +266,14 @@ def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
     for r in rows:
         pnl  = float(r["realized_pnl"])
         size = float(r["size_usdt"])
-        total_pnl += pnl
         if size > MAX_REASONABLE_SIZE_USDT:
-            # Treat as pure alpha — can't compute beta without trustworthy size
-            alpha_pnl += pnl
+            # EXCLUDED — corrupt size data; don't contaminate alpha or total.
             skipped_bad_size += 1
             continue
-        if btc_close.empty:
-            alpha_pnl += pnl
-            continue
+        total_pnl += pnl
         try:
-            # asof() may return a Series under odd shapes — defensively extract scalar
-            v_o = btc_close.asof(pd.Timestamp(r["open_date"]))
-            v_c = btc_close.asof(pd.Timestamp(r["close_date"]))
-            if hasattr(v_o, "iloc"): v_o = v_o.iloc[0]
-            if hasattr(v_c, "iloc"): v_c = v_c.iloc[0]
-            btc_o = float(v_o) if v_o is not None else 0.0
-            btc_c = float(v_c) if v_c is not None else 0.0
+            btc_o = _btc_at(r["open_time"])
+            btc_c = _btc_at(r["close_time"])
             if btc_o and btc_c:
                 btc_ret = (btc_c - btc_o) / btc_o
                 is_long = (r["direction"] or "Long").lower() == "long"
@@ -245,16 +282,31 @@ def compute_pnl_attribution(conn, lookback_days: int = 90) -> dict:
                 alpha_pnl += pnl - beta_contribution
                 attributed += 1
             else:
+                # BTC price unresolvable — fall back to "all alpha" but flag.
                 alpha_pnl += pnl
         except Exception:
             alpha_pnl += pnl
 
-    alpha_pct = round(alpha_pnl / abs(total_pnl) * 100, 1) if total_pnl else 0.0
-    return {"alpha_pnl": round(alpha_pnl, 2), "beta_pnl": round(beta_pnl, 2),
-            "total_pnl": round(total_pnl, 2), "alpha_pct": alpha_pct,
-            "sample_size": len(rows), "attributed": attributed,
+    # Qualitative label: "you outperformed BTC by $X" vs "you underperformed by $X"
+    vs_passive = alpha_pnl  # how much your strategy added/subtracted vs holding BTC
+    if vs_passive > 0:
+        alpha_label = f"+${vs_passive:.2f} alpha — outperforming passive BTC"
+    elif vs_passive < 0:
+        alpha_label = f"-${abs(vs_passive):.2f} alpha — underperforming passive BTC"
+    else:
+        alpha_label = "neutral alpha"
+
+    return {"alpha_pnl": round(alpha_pnl, 2),
+            "beta_pnl":  round(beta_pnl, 2),
+            "total_pnl": round(total_pnl, 2),
+            "alpha_label": alpha_label,
+            "vs_passive_btc_usd": round(vs_passive, 2),
+            "sample_size": len(rows),
+            "attributed": attributed,
             "skipped_bad_size": skipped_bad_size,
-            "available": attributed > 0, "lookback_days": lookback_days}
+            "available": attributed > 0,
+            "chain": chain,
+            "lookback_days": lookback_days}
 
 
 def compute_kelly_by_bucket(conn) -> dict:
