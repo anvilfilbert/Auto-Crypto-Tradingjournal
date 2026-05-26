@@ -230,7 +230,13 @@ def empty_interpreter(symbol: str = "") -> InterpreterResult:
 
 
 def empty_sentiment(symbol: str = "") -> SentimentResult:
-    """Return a minimal valid SentimentResult for degraded/error paths."""
+    """Return a minimal valid SentimentResult for degraded/error paths.
+
+    prompt_text now carries an EXPLICIT "sentiment unavailable" notice so
+    downstream Opus consensus knows the field is absent (vs being silently
+    pre-populated with neutral defaults — Opus can't distinguish).
+    Added 2026-05-26 alongside agent-isolation fix in agent_orchestrator.
+    """
     return SentimentResult(
         macro_bias="neutral",
         sentiment_score=5.0,
@@ -239,7 +245,11 @@ def empty_sentiment(symbol: str = "") -> SentimentResult:
         contra_signal=False,
         key_factors=[],
         grok_summary="",
-        prompt_text="",
+        prompt_text=(
+            "SENTIMENT: unavailable this scan (sentiment provider did not "
+            "respond — likely rate-limit). Grade purely on chart + structure "
+            "data; do not infer crowd positioning from absence."
+        ),
     )
 
 
