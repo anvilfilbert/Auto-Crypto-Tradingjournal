@@ -281,12 +281,14 @@ def size_trade(score: int, entry: float, sl: float,
     cap = _effective_notional_cap(eq)
     notional = min(notional_raw, cap)
 
-    # Leverage = notional / margin_per_position. With our notional small
-    # relative to equity, even 1× covers it. Force lev to whatever brings
-    # required margin to ~10% of equity so we don't over-collateralise.
-    target_margin = max(eq * 0.10, 1.0)
-    lev = max(1, math.ceil(notional / target_margin))
-    lev = min(lev, config.MAX_LEVERAGE)
+    # Leverage policy (2026-05-26): operator preference is to always use
+    # MAX_LEVERAGE (currently 10×) regardless of notional/equity ratio.
+    # Rationale: identical risk per trade (risk = notional × SL distance)
+    # but smaller margin lock-up — leaves more headroom for concurrent
+    # positions. Downside: liquidation distance is tighter (~9% at 10× vs
+    # ~30% at 3×) but the pre-placed SL fires well before liquidation in
+    # normal market conditions. Operator accepts this trade-off.
+    lev = config.MAX_LEVERAGE
 
     return {
         "notional_usdt":      round(notional, 2),
