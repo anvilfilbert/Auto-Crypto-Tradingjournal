@@ -107,10 +107,17 @@ def run_call_analysis(
     interpreted = None
     sentiment   = None
     try:
-        ctx = contextvars.copy_context()  # carry force_provider etc. into workers
+        # 2026-05-26 bug fix #2: each thread needs its OWN context copy.
+        # Sharing one ctx across both submissions causes
+        #   "cannot enter context: <Context> is already entered"
+        # — whichever thread enters first wins; the other fails 100%. This
+        # is why sentiment had been failing every single trade since
+        # yesterday's split fix landed.
+        ctx_interp = contextvars.copy_context()
+        ctx_sent   = contextvars.copy_context()
         with ThreadPoolExecutor(max_workers=2) as ex:
-            f_interp = ex.submit(ctx.run, agent_data_interpreter.run, {"collected": collected})
-            f_sent   = ex.submit(ctx.run, agent_market_sentiment.run,
+            f_interp = ex.submit(ctx_interp.run, agent_data_interpreter.run, {"collected": collected})
+            f_sent   = ex.submit(ctx_sent.run, agent_market_sentiment.run,
                                  {"symbol": symbol, "direction": direction,
                                   "collected": collected})
             try:
