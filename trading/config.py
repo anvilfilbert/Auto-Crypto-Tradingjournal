@@ -41,7 +41,7 @@ _STARTING_EQUITY = float(os.environ.get("FUTURES_AI_STARTING_EQUITY", "100"))
 #     to Opus on 2026-05-23 — empirical re-review showed Opus would have
 #     approved 5/5 score-6 setups that Sonnet rejected, and hindsight showed
 #     4 of 5 hit TP. Cost: +$40/mo at ~26 consensus calls/day.
-CONSENSUS_MIN_SCORE = int(os.environ.get("FUTURES_AI_CONSENSUS_MIN_SCORE", "8"))
+CONSENSUS_MIN_SCORE = int(os.environ.get("FUTURES_AI_CONSENSUS_MIN_SCORE", "5"))
 CONSENSUS_MODEL     = os.environ.get("FUTURES_AI_CONSENSUS_MODEL", "opus").lower()
 
 

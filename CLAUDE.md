@@ -24,6 +24,16 @@ Runs as a systemd service on a Raspberry Pi 5 (<Pi-IP>). Accessible from any bro
 - **Rulebook chain isolation:** `trader_rulebook.chain TEXT DEFAULT 'manual'` (migration 64, added 2026-05-25). Existing rules were back-tagged 'manual'. `ai_rulebook.get_rulebook(conn, chain=...)`, `update_rulebook(conn, force, chain=...)`, and `get_rulebook_for_prompt(conn, chain=...)` now filter by chain. Settings keys are per-chain: `manual` uses legacy `rulebook_updated_at`/`rulebook_trade_count`; other chains use `rulebook_updated_at_<chain>`/`rulebook_trade_count_<chain>`. API: `GET /api/rulebook?chain=auto_ai` and `POST /api/rulebook/update {"chain": "auto_ai"}` both honour the parameter.
 - **Hindsight chain isolation:** `trade_hindsight.chain TEXT DEFAULT 'manual'` (migration 65, added 2026-05-25). Same schema gap as migration 64 — the table existed for months without a chain column despite the architecture claiming it. Backfill happens implicitly via `COALESCE(h.chain, p.chain, 'manual')` in `ai_hindsight.get_results`. Writer signature changed: `_save_result(..., chain='manual')` — derived from `p.chain` in the batch query. API: `GET /api/hindsight/results?chain=auto_ai` honours the param.
 
+## executor.py vs paper.py — intentional duplication
+Both write a position record at trade-open. They look duplicated but write
+to DIFFERENT TABLES with different schemas: `positions` (30+ columns
+including chain, skill-provenance, multi-TP ladder) for the real-money
+auto_ai chain; `paper_positions` (12 columns, simpler) for the paper book.
+Sharing a unified writer would force paper to carry columns it doesn't
+need, OR create a thin abstraction over two genuinely-different schemas.
+Neither is a win. Pattern: when fixing one, eyeball the other for an
+equivalent fix. This was reviewed 2026-05-26 and confirmed intentional.
+
 ## Operator-behavior caps removed (2026-05-25)
 The personal-bad-hour cap (UTC 13/15/19/20 → score ≤ 5.5) and reversal-archetype
 cap (reversal trades → ≤ 5.5) were removed from scanner scoring. Both were

@@ -229,15 +229,23 @@ def _drawdown_dampener(equity_usdt: float) -> tuple[float, str]:
 def size_trade(score: int, entry: float, sl: float,
                equity_usdt: Optional[float] = None,
                conn=None,
-               symbol: Optional[str] = None) -> Optional[dict]:
+               symbol: Optional[str] = None,
+               opus_score: Optional[int] = None) -> Optional[dict]:
     """
     Returns sizing dict or None if not sizeable.
       {
         notional_usdt: float, leverage: int, risk_usdt: float,
         sl_distance_pct: float, score_multiplier: float,
         streak_multiplier: float, win_streak: int,
-        effective_cap_usdt: float, capped: bool
+        effective_cap_usdt: float, capped: bool,
+        sizing_tier: "full"|"half"
       }
+
+    2026-05-26 — tiered Opus sizing (Phase 1):
+      opus_score >= 6 → tier="full" — normal 2% risk
+      opus_score == 5 → tier="half" — 1% risk (half notional)
+    Phase 2 (deferred): DCA averaging at -0.5% from entry — needs state-
+    machine tracking, separate design session.
     """
     if score < min(config.RISK_SCORE_MULTIPLIERS):
         return None
@@ -281,13 +289,22 @@ def size_trade(score: int, entry: float, sl: float,
     cap = _effective_notional_cap(eq)
     notional = min(notional_raw, cap)
 
+    # ── Tiered Opus sizing (2026-05-26 Phase 1) ─────────────────────────────
+    # When Opus consensus grade is marginal (=5), halve the position so the
+    # SL-hit loss is ~1% of equity instead of ~2%. Opus 6+ trades stay at
+    # full size. Phase 2 will add DCA averaging at -0.5% from entry — that
+    # mechanic is deferred (state-machine + monitoring complexity).
+    sizing_tier = "full"
+    if opus_score is not None and opus_score <= 5:
+        notional = notional * 0.5
+        risk_dollars = risk_dollars * 0.5
+        sizing_tier = "half"
+
     # Leverage policy (2026-05-26): operator preference is to always use
     # MAX_LEVERAGE (currently 10×) regardless of notional/equity ratio.
     # Rationale: identical risk per trade (risk = notional × SL distance)
-    # but smaller margin lock-up — leaves more headroom for concurrent
-    # positions. Downside: liquidation distance is tighter (~9% at 10× vs
-    # ~30% at 3×) but the pre-placed SL fires well before liquidation in
-    # normal market conditions. Operator accepts this trade-off.
+    # but smaller margin lock-up. Downside: liquidation distance tighter
+    # but the pre-placed SL fires well before liquidation.
     lev = config.MAX_LEVERAGE
 
     return {
@@ -304,4 +321,6 @@ def size_trade(score: int, entry: float, sl: float,
         "vol_dampener_reason": vol_reason,
         "effective_cap_usdt": round(cap, 2),
         "capped":             notional_raw > cap,
+        "sizing_tier":        sizing_tier,
+        "opus_score":         opus_score,
     }

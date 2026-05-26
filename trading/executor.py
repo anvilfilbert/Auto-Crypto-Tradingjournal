@@ -92,7 +92,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             chain, setup_type, setup_score, signal_price, tp_levels,
             consensus_model_used, bear_phase_at_open, archetype_at_open,
             po3_total, opus_had_overrides, tp_levels_count,
-            ai_score_at_open
+            ai_score_at_open, sizing_tier
         ) VALUES (
             ?, ?, ?,
             'isolated', datetime('now'), '',
@@ -104,7 +104,7 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             'auto_ai', ?, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?
+            ?, ?
         )
     """, (
         sym,
@@ -130,6 +130,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
         # with a flat-key fallback in case paper-mode passes it differently.
         ((signal.get("ai") or {}).get("score") if isinstance(signal.get("ai"), dict)
          else None) or signal.get("ai_score"),
+        # Sizing tier (2026-05-26): "full" (Opus≥6) or "half" (Opus=5).
+        (sizing.get("sizing_tier") or "full"),
     ))
     conn.commit()
     return cur.lastrowid

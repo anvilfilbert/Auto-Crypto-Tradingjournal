@@ -698,6 +698,34 @@ def _get_tf_weights(ctx: dict, tf: str, symbol: str = "") -> list:
             of_w, vol_w, bb_sq_w, trap_w, wmb_w, sot_w, wave_w, climactic_w, div_agg_w]
 
 
+# ── Within-cycle memoization (2026-05-26) ───────────────────────────────────
+# Scanner Stage-1 + call-analyzer pipeline both call confluence_score() for
+# the same symbol within the same scan window (≤30 min). The function takes
+# ~20-50ms per call (aggregation over 15 weight functions); duplicating it
+# across the pipeline costs ~5s/scan total. This 3-min TTL cache eliminates
+# the redundant pass when the inputs haven't materially changed.
+import time as _ti
+_CONF_CACHE_TTL = 180  # 3 min — shorter than candle cache (10min) for safety
+_conf_cache: dict[tuple, tuple[float, dict]] = {}
+
+
+def _conf_cache_key(symbol: str, tfs: list, ctx: dict | None) -> tuple | None:
+    """Hash the inputs that materially affect the output. Returns None when
+    ctx isn't suitable for caching (e.g. partial fetch)."""
+    if not ctx:
+        return None
+    parts = [symbol, tuple(tfs)]
+    # Use the most-recent candle close + RSI value per TF as a freshness key
+    for tf in tfs:
+        inds = (ctx.get(tf) or {}).get("indicators") or {}
+        if not inds.get("ok"):
+            return None
+        rsi_v = (inds.get("rsi") or {}).get("value")
+        price = (inds.get("ema") or {}).get("current_price")
+        parts.extend([rsi_v, price])
+    return tuple(parts)
+
+
 def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> dict:
     """
     Aggregate RSI/MACD/EMA/ADX direction signals across timeframes with
@@ -706,6 +734,12 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
     Pass ctx to reuse an already-computed get_chart_context() result.
     """
     tfs = timeframes or ["4H", "1D"]
+    # In-cycle cache hit?
+    _key = _conf_cache_key(symbol, tfs, ctx)
+    if _key is not None:
+        hit = _conf_cache.get(_key)
+        if hit is not None and (_ti.time() - hit[0]) < _CONF_CACHE_TTL:
+            return hit[1]
     if ctx is None:
         from chart_context import get_chart_context  # lazy to avoid circular import
         ctx = get_chart_context(symbol, tfs)
@@ -944,7 +978,7 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
     if liq_w != 0.0:
         parts.append(f"liquidation cluster {'support' if liq_w > 0 else 'overhead'}")
 
-    return {
+    result = {
         "score":   round(total_score, 2),
         "max":     max_val,
         "bullish": bull_total,
@@ -954,3 +988,10 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
         "parts":   parts,    # human-readable signal contributions (Kaizen-style)
         "vix_regime_active": vix_mult != 1.0,
     }
+    # Cache for within-cycle re-use (3-min TTL — see top of function)
+    if _key is not None:
+        _conf_cache[_key] = (_ti.time(), result)
+        # Bound the cache to avoid unbounded growth across long sessions.
+        if len(_conf_cache) > 1000:
+            _conf_cache.clear()
+    return result

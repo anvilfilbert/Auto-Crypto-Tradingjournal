@@ -96,9 +96,8 @@ def _calibration_snapshot() -> dict:
         snap["trail_atr"] = TRAIL_ATR_MULTIPLE
     except Exception:
         pass
-    # Personal bad-hour + reversal-archetype caps were removed from scoring
-    # 2026-05-25. The constants still exist in scanner_criteria as dead
-    # references; not surfaced here to avoid implying they're active.
+    # Personal bad-hour + reversal-archetype caps fully removed from
+    # scanner_criteria.py 2026-05-26 (were dead refs since 2026-05-25).
     try:
         from setup_classifier import ARCHETYPES, _MIN_CONFIDENCE_FLOOR
         snap["classifier_archetypes"]   = list(ARCHETYPES)

@@ -204,13 +204,19 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 # 3. sizing
                 from trading.kill_switch import _equity_now
                 equity = _equity_now(conn)
+                # Tiered Opus sizing (2026-05-26): pass Opus's AI score so
+                # risk_budget can halve the position when Opus is marginal
+                # (Opus = 5 → "half" tier, 1% equity risk instead of 2%).
+                opus_ai_score = ((verdict.get("ai") or {}).get("score")
+                                 if isinstance(verdict.get("ai"), dict) else None)
                 sizing = risk_budget.size_trade(
-                    score   = verdict["consensus_score"],
-                    entry   = setup.get("entry_zone", {}).get("low") or setup.get("entry_price"),
-                    sl      = setup.get("sl_price"),
-                    equity_usdt = equity,
-                    conn    = conn,
-                    symbol  = setup.get("symbol"),  # for per-asset vol dampener
+                    score      = verdict["consensus_score"],
+                    entry      = setup.get("entry_zone", {}).get("low") or setup.get("entry_price"),
+                    sl         = setup.get("sl_price"),
+                    equity_usdt= equity,
+                    conn       = conn,
+                    symbol     = setup.get("symbol"),  # for per-asset vol dampener
+                    opus_score = opus_ai_score,
                 )
                 if not sizing:
                     summary["rejected_sizing"] += 1

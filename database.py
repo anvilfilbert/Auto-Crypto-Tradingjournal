@@ -551,6 +551,15 @@ def init_db():
     _apply(65, "trade_hindsight.chain",
            "ALTER TABLE trade_hindsight ADD COLUMN chain TEXT DEFAULT 'manual'")
 
+    # Migration 66 — sizing tier on positions (2026-05-26).
+    # Records WHICH sizing rule produced this position so calibration can
+    # bucket outcomes by tier. Tiers:
+    #   "full"          — Opus ≥ 6 → normal 2% risk per trade
+    #   "half"          — Opus = 5 → half-size, ~1% risk per trade
+    #   (future) "half_dca_initial" / "half_dca_add" — when DCA mechanic ships (Phase 2)
+    _apply(66, "positions.sizing_tier",
+           "ALTER TABLE positions ADD COLUMN sizing_tier TEXT DEFAULT 'full'")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

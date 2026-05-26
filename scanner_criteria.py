@@ -139,64 +139,15 @@ def _apply_kill_zone_modifier(score: float, utc_hour: int = None,
 # Combined = -$365 (60% of NY-session total loss). Entries opened in these
 # hours get score-capped so the AI can't surface fresh setups during the
 # trader's historically toxic windows.
-PERSONAL_BAD_HOURS_UTC: set[int] = {13, 15, 19, 20}
-PERSONAL_BAD_HOUR_CAP  = 5.5   # below SCANNER_MIN_SCORE=7 → effectively blocked
-
-
-def _is_in_personal_bad_hour(utc_hour: int = None) -> bool:
-    """
-    Per-trader rule: hours 13, 15, 19, 20 UTC have negative expectancy
-    in this trader's history. Not the same as institutional kill zones —
-    those flag *all* trades; this flags the trader's specific dead spots.
-    """
-    h = utc_hour if utc_hour is not None else datetime.datetime.utcnow().hour
-    return h in PERSONAL_BAD_HOURS_UTC
-
-
-# Reversal-archetype trades produced -$375 across 26 trades (54% WR,
-# avg MFE only 1.76% before reversing). Cap scores when the AI sees a
-# reversal setup unless there's strong confluence to justify it.
-REVERSAL_CAP                  = 5.5
-REVERSAL_CONFLUENCE_BYPASS    = 3   # >=3 confluence signals lifts the cap
-
-
-def _apply_reversal_cap(score: float, archetype: str,
-                         bullish_signals: int = 0, bearish_signals: int = 0
-                         ) -> tuple[float, list[str]]:
-    """
-    Cap reversal-archetype scores at 5.5 unless the confluence count is
-    strong (>=3 same-side signals). Reversals in this trader's history
-    only paid off when multiple signals lined up — pure RSI-extreme or
-    WT-cross plays bled money. Returns (capped_score, warnings).
-    """
-    warnings: list[str] = []
-    if archetype != "reversal" or score <= REVERSAL_CAP:
-        return score, warnings
-    same_side_signals = max(bullish_signals or 0, bearish_signals or 0)
-    if same_side_signals >= REVERSAL_CONFLUENCE_BYPASS:
-        return score, warnings
-    warnings.append(
-        f"Reversal archetype with only {same_side_signals} confluence signals "
-        f"(needs {REVERSAL_CONFLUENCE_BYPASS}+) — score capped at {REVERSAL_CAP}. "
-        f"Historical reversals 26 trades 54% WR -$375 total."
-    )
-    return min(score, REVERSAL_CAP), warnings
-
-
-def _apply_personal_bad_hour_cap(score: float, utc_hour: int = None
-                                  ) -> tuple[float, list[str]]:
-    """Cap score during the trader's known bad hours so the scanner can
-    not surface a fresh entry inside a -$285 leak window. Returns
-    (capped_score, warnings)."""
-    warnings: list[str] = []
-    if _is_in_personal_bad_hour(utc_hour) and score > PERSONAL_BAD_HOUR_CAP:
-        h = utc_hour if utc_hour is not None else datetime.datetime.utcnow().hour
-        warnings.append(
-            f"UTC hour {h:02d} is in personal bad-hour set "
-            f"{sorted(PERSONAL_BAD_HOURS_UTC)} (90d P&L -$365) — score capped at {PERSONAL_BAD_HOUR_CAP}"
-        )
-        score = min(score, PERSONAL_BAD_HOUR_CAP)
-    return score, warnings
+# Operator-behavior caps (personal bad-hour + reversal archetype) were
+# removed from scanner scoring 2026-05-25 — they were operator-history
+# priors, not market facts. The constants and helper functions were kept
+# for one week as dead refs in case a legacy report imported them; none
+# did. Fully removed 2026-05-26.
+#
+# For audit: the prior rules were
+#   PERSONAL_BAD_HOURS_UTC = {13, 15, 19, 20}  → cap score to 5.5
+#   REVERSAL_CAP = 5.5 unless ≥3 same-side confluence signals (archetype=reversal)
 
 
 def _annotate_kill_zone(result: dict, utc_hour: int = None) -> dict:
