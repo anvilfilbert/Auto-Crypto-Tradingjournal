@@ -1,0 +1,84 @@
+{
+  "slug": "53-vmc-cipher-a",
+  "subtitle": "VuManChu Cipher A is the most-quoted price-chart overlay in crypto trading. It plots eight markers DIRECTLY on the candles, ranked from rare-but-strong (yellow X) to common-but-weak (bull candle). Understanding which marker means what is the difference between informed and astrology.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>The VuManChu indicator suite has two components: Cipher A (this lesson) draws signals ON the price chart; Cipher B (next lesson) draws a separate oscillator pane below. Both are derived from <strong>WaveTrend</strong> (LazyBear's oscillator) plus an 8-EMA ribbon and a few cross-derived conditions.</p><p>This lesson covers Cipher A's eight signal markers — what each one means, how rare each is, and what action (if any) they suggest.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 8-EMA ribbon"
+    },
+    {
+      "type": "text",
+      "content": "<p>Cipher A starts with an EMA ribbon of 8 lengths: 5, 11, 15, 18, 21, 24, 28, 34. Plotted together they form a smooth, gradient-coloured band.</p><ul><li>When the ribbon is <strong>stacked bullish</strong> (EMA-5 highest, EMA-34 lowest), the trend is up. Coloured green / shades of blue.</li><li>When <strong>stacked bearish</strong> (EMA-34 highest), the trend is down. Coloured red.</li><li>When <strong>crossing</strong>, the trend is transitioning.</li></ul><p>The ribbon itself isn't a signal — it's the BACKDROP that contextualises the markers below.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The 8 markers — ranked by strength"
+    },
+    {
+      "type": "table",
+      "headers": [
+        "Marker",
+        "Pine condition",
+        "Meaning",
+        "How rare",
+        "Action"
+      ],
+      "rows": [
+        ["Yellow X", "Red Diamond + WT2 in (-80, +45) + RSI in (15, 30) + RSI-MFI < -5", "Textbook deep-oversold reversal at multiple-condition extreme", "Very rare — maybe 1-2 per coin per month", "★ STRONGEST BULLISH — high-conviction long entry"],
+        ["Blood Diamond", "Red Diamond + Red Cross fired same bar", "WaveTrend crossing down WHILE the ribbon's fast EMA crosses below slow", "Rare — fires at confirmed momentum exhaustion", "STRONG BEARISH — short entry or exit longs"],
+        ["Long EMA (green circle)", "crossover(EMA-11, EMA-34)", "The 11-EMA crosses above the 34-EMA — ribbon flip from bear to bull", "A few per month", "TREND-START LONG — confirm with confluence"],
+        ["Short EMA (red circle)", "crossover(EMA-34, EMA-11)", "Ribbon flip from bull to bear", "A few per month", "TREND-START SHORT"],
+        ["Blue Triangle (▲)", "crossover(EMA-11, EMA-15)", "Very early bullish ribbon shift", "Frequent — many false signals", "EARLY WARN — wait for Long EMA to confirm"],
+        ["Red Cross (×)", "crossunder(EMA-5, EMA-11)", "Fastest EMAs cross down — early bearish", "Frequent — many false signals", "EARLY WARN — wait for Short EMA to confirm"],
+        ["Red Diamond (◆)", "WaveTrend cross-down ANY zone", "Momentum exhaustion warning", "Common — many fire mid-trend", "WARNING — note but don't act alone"],
+        ["Bull Candle (yellow ◆)", "open>EMA-11, open>EMA-34, prior + current candle green, no Red Diamond/Cross", "Momentum-continuation bar", "Frequent in uptrends", "WEAKEST — confirms ongoing strength only"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Yellow X is the prize",
+      "content": "<p>If you see ONE setup per week worth describing as \"textbook\", it's a Yellow X. It requires simultaneous conditions: WaveTrend at deep oversold (-60 to -80 zone), RSI between 15-30 (extreme oversold), AND money flow negative. When all align, the bounce probability historically lands in the 75-85% range. Treat Yellow X with the respect that rarity deserves — full size, not half.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Blood Diamond — when momentum dies"
+    },
+    {
+      "type": "text",
+      "content": "<p>A Blood Diamond fires when TWO bearish conditions converge in the same bar: the WaveTrend oscillator crosses down AND the fast EMA crosses below the slow EMA. Think of it as 'the indicator agrees with the ribbon — momentum is officially exhausted.'</p><p>Real example from our trading: on 2026-05-27 16:00 UTC, HYPEUSDT printed Blood Diamond + Red Cross + Red Diamond on the same 4H bar. Price was $60.16 with WaveTrend at +60 (overbought). Over the next 16 hours, HYPE dropped from $60 → $57.5 (−4.4%). That marker was the warning.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What Red Diamond ALONE means"
+    },
+    {
+      "type": "text",
+      "content": "<p>A Red Diamond by itself fires often — every time the WaveTrend crosses down, regardless of zone. In a strong uptrend, you might see 3-4 per week, most of them meaningless (price just cools off briefly then continues). The Red Diamond becomes meaningful only when paired with other signals:</p><ul><li>Red Diamond + Red Cross = <strong>Blood Diamond</strong> (strong)</li><li>Red Diamond at WaveTrend > +60 = at OB extreme, fade-worthy</li><li>Red Diamond + RSI > 70 = exhaustion fading from overbought</li></ul>"
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "title": "Don't trade on a single marker",
+      "content": "<p>None of the eight markers — even Yellow X — should be a standalone entry trigger. Always confirm with at least one other source: macro context (the MTF EMA verdict from lesson 22.5), the oscillator pane (Cipher B, next lesson), or structural confluence (S/R, FVG). A single marker without confluence has roughly 50% accuracy. Two confluent signals push that to 65%. Three push it to 75%+.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How to use Cipher A practically"
+    },
+    {
+      "type": "text",
+      "content": "<p>The workflow:</p><ol><li><strong>Macro filter first</strong>: Check the MTF EMA verdict. If \"trend_up_confirmed\", favor longs. If \"trend_down_confirmed\", favor shorts. If \"reversal_warning\" or chop, be cautious about counter-trend.</li><li><strong>Mark Cipher A signals</strong> over the last 10 bars on your decision timeframe (usually 4H for swings, 1H for scalps).</li><li><strong>Score the confluence</strong>: ribbon direction + most recent strong marker + macro alignment.</li><li><strong>Plan the trade</strong>: entry near the marker bar's close, SL beyond the structural anchor, TPs at the next 2-3 levels.</li></ol>"
+    },
+    {
+      "type": "callout",
+      "kind": "summary",
+      "title": "Bottom line",
+      "content": "<p>Cipher A's 8 markers form a hierarchy from very rare/strong (Yellow X, Blood Diamond) to common/weak (Bull Candle, Red Diamond alone). Never treat any single marker as a standalone signal — always combine with macro filter + structural confluence. The Yellow X is the trade of the month; everything else is graded weight in a confluence stack.</p>"
+    }
+  ]
+}

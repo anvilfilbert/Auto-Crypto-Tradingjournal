@@ -1,0 +1,123 @@
+id: "58"
+lesson_id: 58
+pass_threshold: 8
+questions:
+  - id: q1
+    text: "What single question separates GOOD DCA from BAD DCA on a losing position?"
+    type: mcq
+    choices:
+      - "How much money do I have left?"
+      - "WOULD YOU ENTER FRESH at this price right now? If YES → DCA might be justified. If NO → DON'T DCA."
+      - "What does the chart look like in 5 years?"
+      - "What's my friend doing?"
+    correct: 1
+    topic_tag: dca
+    explanation: "The honest test: pretend you have NO existing position. Look at the chart RIGHT NOW. Would you open this trade with fresh capital at the current price? If YES, the thesis is intact and lowering your average is consistent with your view. If NO, you're throwing capital at a setup you wouldn't otherwise enter — pure tilt behavior."
+
+  - id: q2
+    text: "If unified VMC verdict on an underwater position is 'strong_long (≥ +0.50)', what does the lesson recommend?"
+    type: mcq
+    choices:
+      - "CUT immediately."
+      - "DCA if you have capacity — all signals confirm the original thesis is intact AND improving. The lower price is opportunity, not panic."
+      - "Hold to SL — don't add."
+      - "Close half."
+    correct: 1
+    topic_tag: dca
+    explanation: "Strong_long (≥+0.50) on an underwater position is the ONLY VMC verdict that justifies DCA. Multiple high-weight bullish signals have stacked, and now you have a lower entry. This matches the 'would you enter fresh?' YES scenario. But limit to ONE add — never multiple averaging-down rounds."
+
+  - id: q3
+    text: "If unified VMC verdict is 'strong_short (≤ -0.50)' on a LONG position, what should you do?"
+    type: mcq
+    choices:
+      - "DCA hard — it must bounce soon."
+      - "CUT — definitely don't DCA. Original thesis is broken — DCA would be throwing money away into a degrading setup."
+      - "Add a hedge."
+      - "Wait and watch."
+    correct: 1
+    topic_tag: dca
+    explanation: "Strong_short verdict on a long position means market signals have turned strongly against your direction. Your thesis is broken. DCA-ing here is the most expensive psychological mistake in trading — averaging down into a fundamentally broken setup. Cut, accept the loss, free capital for cleaner setups."
+
+  - id: q4
+    text: "What's the 'compounding error' of DCA-ing a losing position?"
+    type: mcq
+    choices:
+      - "It always works out."
+      - "DCA against a broken trade DOUBLES your exposure AND HALVES your error-correction speed. Original −5% on $500 = $25 loss potential. After 1 DCA: $1000 position, still −5%, now $50 loss potential. Trade has to make MORE to break even."
+      - "Math doesn't matter in crypto."
+      - "DCA is always good."
+    correct: 1
+    topic_tag: risk
+    explanation: "The math is unforgiving. Doubling position size doubles your dollar exposure AND requires a bigger percentage move to recover. Original −5% loss requires +5% to break even. After DCA on doubled size, you need the SAME +5% but on a bigger position — bigger move needed in absolute terms. You're EXTENDING max loss horizon, not 'helping' the trade."
+
+  - id: q5
+    text: "What's the 'rotation principle' as an alternative to DCA?"
+    type: mcq
+    choices:
+      - "DCA into more coins."
+      - "Take your available margin to a NEW, clean setup (VMC strong_long, fresh oversold + gold buy + macro support) — diversifies into a fresh edge instead of concentrating on a degrading thesis."
+      - "Spin the chair."
+      - "Random new trades."
+    correct: 1
+    topic_tag: dca
+    explanation: "Rotation alternative: same $300 margin, two choices. (A) DCA into TAO (bearish chart, VMC short) = compounding losing thesis. (B) Open NEW long on a clean setup (Yellow X + gold buy + macro support) = redeploy to better edge. Total $ exposed to loss is similar but expected value is much higher with rotation."
+
+  - id: q6
+    text: "When DOES DCA actually work?"
+    type: mcq
+    choices:
+      - "Always."
+      - "Narrow window: (1) Setup is mean-reversion + macro intact, (2) VMC signal IMPROVING with new bullish confluences (e.g., Gold Buy fires deeper than your entry), (3) You have EXPLICIT DCA capacity planned, (4) DCA price is at STRUCTURAL support (not random)."
+      - "Whenever underwater."
+      - "Only on Mondays."
+    correct: 1
+    topic_tag: dca
+    explanation: "Legitimate DCA conditions: improving signal + intact macro + planned capacity + structural target. Even when all 4 conditions are met, limit to ONE add. 'Averaging down' with 3-4 entries during a continued downtrend is how 50% drawdowns become 70% drawdowns. One add, structured, planned — that's it."
+
+  - id: q7
+    text: "From the real example: 5 underwater positions (~−$50), $321 available margin. VMC verdict ran on all 5. How many qualified for DCA?"
+    type: mcq
+    choices:
+      - "All 5."
+      - "ZERO. TAO (VMC -0.30), HYPE (-0.10 + Blood Diamond), AR (-0.09 + long_reversal_warning), CHZ (-0.15 + trend_down_confirmed), WLD (+0.05 just opened). $321 was saved."
+      - "Just WLD."
+      - "Just TAO."
+    correct: 1
+    topic_tag: dca
+    explanation: "Real audit ran VMC on all 5. NONE hit strong_long threshold. Each had specific bearish signals. The $321 was saved by not DCA-ing — and the next morning, 4 of 5 stopped out anyway (−$192). If DCA had been deployed, the additional capital would have stopped too, doubling losses to ~$220-260+. Discipline saved capital."
+
+  - id: q8
+    text: "When the book is RED, what should the trader do?"
+    type: mcq
+    choices:
+      - "Add more positions."
+      - "LESS, not more: ensure every position has wick-safe SL, consider cutting worst-conviction loser early, add small DIRECTIONALLY-CORRECT short hedge (NOT DCA), wait for cascade to play out before deploying new long capital."
+      - "DCA aggressively."
+      - "Increase leverage."
+    correct: 1
+    topic_tag: psychology
+    explanation: "When the book is bleeding, the discipline move is REDUCING risk, not adding. Activity ≠ progress. Sometimes the highest-EV action is patience: protect what you have (SLs), trim worst losers, hedge directionally, then wait. Throwing new long capital into a degrading market is how account-wide blowups happen."
+
+  - id: q9
+    text: "Why do losing traders DCA reflexively when underwater?"
+    type: mcq
+    choices:
+      - "They don't — DCA is rare."
+      - "Psychological: 'lower my average' feels like 'making the loss smaller' even though it actually DOUBLES dollar exposure. Loss aversion makes admitting the original thesis was wrong painful, so adding feels like avoiding the admission."
+      - "DCA always wins."
+      - "Random."
+    correct: 1
+    topic_tag: psychology
+    explanation: "Loss aversion is the root cause. Admitting a trade was wrong = accepting a small loss now. DCA-ing = postponing that admission. The brain prefers the postponement even though the math gets worse. The 'would you enter fresh?' test bypasses this bias by forcing an objective evaluation. Use it religiously."
+
+  - id: q10
+    text: "Bottom line: when is DCA on a losing position the right move?"
+    type: mcq
+    choices:
+      - "Almost always."
+      - "When BOTH conditions hold: (1) you'd enter fresh at the current price AND (2) the VMC verdict is still LONG (or stronger) on the position. Otherwise NEVER. Default action when underwater on multiple positions is NOT to add more — it's to ensure protection (SLs), rotate to cleaner setups, maintain patience."
+      - "After 3 losses in a row."
+      - "Whenever you have money."
+    correct: 1
+    topic_tag: dca
+    explanation: "The two-condition test: 'would I enter fresh here?' AND 'is VMC still long?' Both must be YES. If either is NO, no DCA. This eliminates 80% of bad DCAs that traders make on tilt. The phrase 'averaging down on a falling chart' is literally how most retail crypto accounts die. Don't be that statistic."

@@ -68,6 +68,7 @@ def path_view():
     passed = sum(1 for l in lessons if l["status"] == "passed")
     return render_template("path.html", tiers=tiers, tier_meta=tier_meta,
                            total=total, passed=passed,
+                           lessons_total=len(lessons),
                            unlock_mode=unlock_mode)
 
 

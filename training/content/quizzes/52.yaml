@@ -1,0 +1,123 @@
+id: '52'
+lesson_id: 52
+pass_threshold: 8
+questions:
+- id: q1
+  text: What does the MTF EMA Average indicator compute?
+  type: mcq
+  choices:
+  - A single 200-EMA on the 1H chart only.
+  - The simple average of the 200-EMA value across 6 timeframes (1H, 4H, 12H, 1D, 3D, 1W).
+  - The exponential blend of all moving averages on the 4H chart.
+  - The slope of the 50-EMA only.
+  correct: 1
+  topic_tag: multi_tf
+  explanation: MTF EMA Average sums the 200-EMA value from 1H/4H/12H/1D/3D/1W and divides by 6. This blended line smooths out single-TF noise and represents the dominant trend across multiple horizons.
+    Using ONE timeframe alone (a) misses how shorter and longer trends interact.
+- id: q2
+  text: Why does the bias buffer use ±0.5% rather than triggering at exactly 0%?
+  type: mcq
+  choices:
+  - Because 0.5% matches the typical exchange trading fee.
+  - To filter out chop where price oscillates a fraction of a percent around the MTF line, producing meaningless bias flips.
+  - Random — no specific reason.
+  - To match Bitcoin's typical daily volatility.
+  correct: 1
+  topic_tag: moving_averages
+  explanation: Without the buffer, price hovering within fractions of a percent above/below the MTF average would flip the bias label constantly during chop, generating false signals. The ±0.5% deadband
+    requires meaningful displacement before flipping bias, giving the indicator real predictive value.
+- id: q3
+  text: In the 9-state verdict matrix, what does 'trend_up_aging' mean?
+  type: mcq
+  choices:
+  - The trend just started.
+  - Bias is LONG (price > MTF + 0.5%), but the slope is decelerating toward zero — the uptrend is losing momentum even though it's still technically up.
+  - Price is now below the MTF line.
+  - An accidental data point — ignore it.
+  correct: 1
+  topic_tag: indicators
+  explanation: trend_up_aging signals that the bias is still LONG but slope is flat/negligible. The macro thesis isn't broken yet, but momentum is fading. This regime favors mean-reversion / counter-trend
+    setups over momentum trend-following.
+- id: q4
+  text: Which two dimensions does the 9-state verdict matrix cross-tabulate?
+  type: mcq
+  choices:
+  - Volume × volatility.
+  - Bias (LONG / SHORT / FLAT) × Slope (rising / flat / falling).
+  - RSI × MACD.
+  - Funding rate × open interest.
+  correct: 1
+  topic_tag: indicators
+  explanation: Bias (where price sits relative to MTF line) crossed with slope (whether MTF line is rising, flat, or falling) generates 9 distinct macro states. This separates 'trend_up_confirmed' (LONG
+    bias + rising) from 'trend_up_aging' (LONG bias + flat) — both bullish, but with very different conviction levels.
+- id: q5
+  text: What does the SLOPE_LOOKBACK constant control?
+  type: mcq
+  choices:
+  - How fast the indicator refreshes.
+  - 'The number of bars on each timeframe used to compute slope (typically ~7 days worth: 168 on 1H, 42 on 4H, etc.).'
+  - The number of decimals shown.
+  - Nothing — it's deprecated.
+  correct: 1
+  topic_tag: multi_tf
+  explanation: 'SLOPE_LOOKBACK = (168, 42, 14, 7, 2, 1) gives ~7 days of slope context per timeframe regardless of bar size. This makes slope readings TF-comparable: ''7-day momentum'' is consistent across
+    all 6 inputs.'
+- id: q6
+  text: If MTF verdict is 'trend_down_confirmed' (bias SHORT + falling slope), what setup direction does it favor?
+  type: mcq
+  choices:
+  - Long entries.
+  - Short entries — the macro is aligned against longs, every dip is just a relief bounce in a downtrend.
+  - Sideways scalps.
+  - Bond positions.
+  correct: 1
+  topic_tag: indicators
+  explanation: trend_down_confirmed means price is below MTF and the MTF line is descending. Going long against this is fighting macro — losing setups will be common. Shorts get the wind at their back.
+- id: q7
+  text: Why average 200-EMAs from 1H through 1W rather than just using one timeframe?
+  type: mcq
+  choices:
+  - It's faster to compute.
+  - Single-TF EMAs are noisy and can flip bias rapidly. Blending 6 TFs reveals the DOMINANT trend that survives across multiple horizons — the kind that matters for macro decisions, not local fluctuations.
+  - Tradition.
+  - It's smaller storage.
+  correct: 1
+  topic_tag: multi_tf
+  explanation: 'The 1H 200-EMA can be above price while the 1D 200-EMA is well below — those are conflicting signals. The 6-TF average resolves them into a single dominant trend reading: short-term noise
+    gets averaged out, long-term direction dominates.'
+- id: q8
+  text: What does it mean when MTF verdict returns 'sideways_flat'?
+  type: mcq
+  choices:
+  - Major trend just started.
+  - Bias is within ±0.5% of MTF line AND slope is near zero — the market has no directional edge.
+  - Massive bullish breakout.
+  - Network error.
+  correct: 1
+  topic_tag: indicators
+  explanation: sideways_flat = neither bias nor slope shows directional commitment. This favors range-trading strategies (sell resistance, buy support) and disfavors trend-following. Counter-trend setups
+    can also work in this regime.
+- id: q9
+  text: How should you use MTF verdict when grading a setup?
+  type: mcq
+  choices:
+  - Ignore it — only chart structure matters.
+  - 'As a macro filter: setups going WITH the verdict bias get a confidence boost; setups against the verdict need extra confluences to justify entry.'
+  - As the sole signal — enter every setup aligned with the verdict.
+  - Only on weekends.
+  correct: 1
+  topic_tag: macro
+  explanation: MTF verdict is a MACRO FILTER, not a standalone signal. Setups aligned with the verdict (Long during trend_up_confirmed) work more often. Setups fighting it (Long during trend_down) need
+    exceptional confluence (extreme oversold + Gold Buy + multiple divergences) — and even then, half size.
+- id: q10
+  text: When the MTF verdict transitions from 'trend_up_confirmed' to 'trend_up_aging' over a few bars, what should the trader do?
+  type: mcq
+  choices:
+  - Add more long size aggressively.
+  - Shift bias from 'momentum-follow' (chasing breakouts) to 'mean-reversion' (waiting for pullbacks to support). Begin taking some profits on stretched longs.
+  - Nothing — keep doing the same thing.
+  - Close everything and go to cash.
+  correct: 1
+  topic_tag: indicators
+  explanation: Aging trends still have positive bias but are losing momentum. This is the regime where chasing breakouts gets you stopped, and waiting for clean pullback entries works well. Take some profits
+    because the trend may be near its end.

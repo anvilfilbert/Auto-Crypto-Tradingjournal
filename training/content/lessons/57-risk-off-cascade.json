@@ -1,0 +1,98 @@
+{
+  "slug": "57-risk-off-cascade",
+  "subtitle": "When BTC dumps, correlations across all alts spike toward 1.0. Independent technical setups stop working. A book of 5 \"diversified\" longs becomes one trade with five names. Understanding cascade dynamics is the difference between survival and account-wide blowup.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You learned about correlation regimes in lesson 44. This lesson goes deeper into the specific case that hurts retail traders most: the <strong>risk-off cascade</strong>. It's when a single trigger (BTC dump, macro news, exchange issue) causes correlations to spike across the entire crypto universe — and every long position you hold starts losing simultaneously.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "How correlation behaves"
+    },
+    {
+      "type": "text",
+      "content": "<p>In normal conditions, BTC and alts are moderately correlated (typically 0.5-0.7). Different sector alts (DeFi, gaming, AI, memes) often decorrelate from each other — DeFi can rally while memes dump.</p><p>When risk-off hits, correlations spike to 0.85-0.95. Suddenly every coin moves together. The reasons:</p><ul><li><strong>Margin calls cascade</strong> — leveraged longs in any coin start getting liquidated, forcing sell pressure across the board</li><li><strong>Risk-off algorithms</strong> — institutional traders dump everything when BTC breaks key levels</li><li><strong>Retail panic</strong> — \"sell everything\" psychology overwhelms individual setups</li><li><strong>Stablecoin flight</strong> — money rotates from positions to USDT/USDC, drawing liquidity from all books</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "The 1-2-3-4-5 stop-out sequence"
+    },
+    {
+      "type": "text",
+      "content": "<p>In a cascade, your portfolio doesn't lose at the same time — it loses in SEQUENCE. The position with the tightest SL goes first. Then the next one. Then the next. Each one fires roughly 30-90 minutes apart as the wave moves through the book.</p><p>Real example from 2026-05-28 overnight:</p>"
+    },
+    {
+      "type": "table",
+      "headers": [
+        "Time UTC",
+        "Symbol",
+        "What happened",
+        "Realized loss"
+      ],
+      "rows": [
+        ["00:42", "FILUSDT short", "Closed at profit (HEDGE WORKED)", "+$6.55"],
+        ["01:05", "WLDUSDT long", "Stopped at SL", "−$29"],
+        ["02:51", "ARUSDT long", "Stopped at SL", "−$27"],
+        ["03:18", "TAOUSDT long", "Stopped at SL", "−$50"],
+        ["04:12", "CHZUSDT long", "Stopped at SL (with slippage)", "−$46"]
+      ]
+    },
+    {
+      "type": "text",
+      "content": "<p>Four coins stopped within 3 hours. The five longs collectively lost $192. The single short HEDGE gained $6.55 — only +3% of the long losses, but directionally correct.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Diversification is partial protection",
+      "content": "<p>Holding 5 different alts doesn't mean 5 independent risks. In a cascade, they're 1 trade × 5 names. A truly diversified portfolio mixes:</p><ul><li><strong>Direction</strong> — some longs, some shorts (the FIL hedge)</li><li><strong>Asset class</strong> — crypto + some non-crypto if possible</li><li><strong>Timeframe</strong> — some short-term, some long-term</li></ul><p>Without direction-diversification, your alt longs are just one big BTC long with extra steps.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Hedging mechanics"
+    },
+    {
+      "type": "text",
+      "content": "<p>A small short position in a high-conviction bearish setup can offset 5-15% of long losses in a cascade. Math:</p><ul><li>5 longs total notional $3000, average drops 5% in dump = $150 loss</li><li>1 short notional $500, gains 5% from dump = $25 gain</li><li>Net: $125 loss instead of $150 — 17% mitigation</li></ul><p>You can't fully hedge a long book with a single short — that defeats the long thesis. But you can REDUCE the cascade impact with a directionally-correct short on the weakest coin.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What to do BEFORE the cascade"
+    },
+    {
+      "type": "callout",
+      "kind": "tip",
+      "title": "Pre-cascade checklist",
+      "content": "<ol><li><strong>SL on every position</strong> — no exceptions, no \"I'll watch it manually\"</li><li><strong>Wick-safe SL placement</strong> — 0.5-1.0× ATR_4H below the recent 10-bar low (see SL placement lesson)</li><li><strong>Sum your worst-case</strong> — if every SL fires, what's the dollar loss? Keep it under 5% of equity</li><li><strong>Hold a small short hedge</strong> in the weakest coin (deep_overbought + gold_sell)</li><li><strong>Position size for cascade scenario</strong> — not just for the best case</li></ol>"
+    },
+    {
+      "type": "heading",
+      "content": "What to do DURING the cascade"
+    },
+    {
+      "type": "text",
+      "content": "<p>The temptation when 3 positions just stopped: \"buy the dip\" on the 4th. RESIST. The cascade isn't over until correlation normalises. Adding longs into a falling cascade compounds losses.</p><p>If you must act, the ONLY two productive actions:</p><ul><li><strong>Add to the SHORT hedge</strong> — the trend is now confirmed</li><li><strong>Close remaining longs early</strong> — accept the loss before SL hits, free capital for after</li></ul><p>Stay away from adding longs until the macro filter (MTF EMA) shows a clear regime change.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "What to do AFTER the cascade"
+    },
+    {
+      "type": "text",
+      "content": "<p>Once price stabilises and the dump pressure exhausts, the next 6-12 hours often present the BEST counter-trend long opportunities of the cycle:</p><ul><li>WT2 has reached deep oversold across most coins</li><li>RSI is in the 25-35 range</li><li>Forced sellers (margin calls, panic) have cleared</li><li>The MTF EMA verdict might still say \"trend_up_aging\" — the macro thesis isn't broken, just retraced</li></ul><p>The Yellow X / Gold Buy setups that appear post-cascade are the highest-probability counter-trend longs of the year. Be patient, wait for the cascade to exhaust, then deploy fresh capital into clean setups.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "title": "Slippage during cascades is REAL",
+      "content": "<p>During a fast dump, your tick-based SL may fill 1-2% below the trigger price due to thin liquidity and slip. Real example: CHZ SL set at $0.0345 → filled at $0.0339 (~$9 extra loss on a $546 notional). Plan for this — your displayed \"worst-case loss\" should include a 0.5-1% slippage buffer.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "summary",
+      "title": "Bottom line",
+      "content": "<p>In a cascade, correlations spike, your \"diversified\" alt longs become one trade with five names, and SLs fire in sequence over 2-4 hours. The best protection is direction-diversification (small short hedge), wick-safe SL placement, and discipline NOT to add longs mid-cascade. Post-cascade exhaustion often presents the best counter-trend longs of the year. Wait for the cascade to end before deploying fresh capital.</p>"
+    }
+  ]
+}

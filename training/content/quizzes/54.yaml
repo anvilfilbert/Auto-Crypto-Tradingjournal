@@ -1,0 +1,124 @@
+id: '54'
+lesson_id: 54
+pass_threshold: 8
+questions:
+- id: q1
+  text: Where does VuManChu Cipher B display?
+  type: mcq
+  choices:
+  - Directly on the price chart as an overlay.
+  - In a SEPARATE pane BELOW the price chart — it's an oscillator panel showing WaveTrend, MFI, VWAP, and divergences.
+  - In a Telegram message only.
+  - In your email inbox.
+  correct: 1
+  topic_tag: vmc
+  explanation: Cipher B is the OSCILLATOR PANE component (below price). Cipher A is the OVERLAY (on price). The pane shows WaveTrend WT1/WT2, MFI histogram, VWAP, and divergence markers — all bounded between
+    roughly -100 and +100.
+- id: q2
+  text: What WaveTrend parameters does Cipher B use?
+  type: mcq
+  choices:
+  - 100, 200, 300.
+  - Channel length 9, average length 12, smoothing 3.
+  - 5, 5, 5.
+  - Random per timeframe.
+  correct: 1
+  topic_tag: wavetrend
+  explanation: Cipher B WaveTrend uses (9, 12, 3) — channel 9, average 12, smoothing 3. These give responsive oscillator readings that mark overbought/oversold extremes around ±53 to ±60 in normal markets.
+- id: q3
+  text: What does the WT2 line crossing above +53 typically signal?
+  type: mcq
+  choices:
+  - Deep oversold — buy signal.
+  - Approaching deep overbought zone — potential overbought / mean reversion short setup. Gold Sell dots fire here.
+  - Random noise.
+  - Network error.
+  correct: 1
+  topic_tag: wavetrend
+  explanation: The +53 line in WaveTrend is the 'gold' threshold for overbought. WT2 > +53 = deep overbought zone. This is where Gold Sell (red dot) signals fire and where counter-trend short setups become
+    viable. WT2 < -53 mirrors this for the oversold side.
+- id: q4
+  text: What does the gold buy/sell dot in Cipher B represent?
+  type: mcq
+  choices:
+  - Decorative chart marker.
+  - A specific WT cross at a deep extreme (WT2 ≤ -53 = gold buy / WT2 ≥ +53 = gold sell). High-edge mean-reversion signal.
+  - A trading bot's purchase confirmation.
+  - Wifi signal strength.
+  correct: 1
+  topic_tag: vmc
+  explanation: Gold dots fire only when a WaveTrend cross happens AT a deep extreme. They're the rarest and highest-edge Cipher B signal because the confluence of cross + extreme zone has historically marked
+    many reversals. They're worth more than ordinary WT crosses that happen in the middle of the oscillator range.
+- id: q5
+  text: What's the Pine Script formula for Cipher B's MFI in V6?
+  type: mcq
+  choices:
+  - (high + low) / 2
+  - (close - open) / (high - low) × 150 - 2.5
+  - (close - prev_close) × volume
+  - Random — no fixed formula.
+  correct: 1
+  topic_tag: indicators
+  explanation: 'Cipher B''s MFI uses the Pine V6 formula: (close - open) / (high - low) × 150 - 2.5. The 150 multiplier amplifies range, the -2.5 offset centers it. This produces a histogram that flips
+    sign at exhaustion points — a leading indicator for momentum changes.'
+- id: q6
+  text: Which two oscillators is the VWAP in Cipher B computed FROM?
+  type: mcq
+  choices:
+  - Stochastic and RSI
+  - WT1 minus WT2 — it's the divergence between the two WaveTrend lines, plotted as a separate momentum line.
+  - Volume and OBV
+  - Open and close
+  correct: 1
+  topic_tag: wavetrend
+  explanation: The 'VWAP' line on Cipher B isn't the volume-weighted average price you might expect — it's literally WT1 minus WT2, plotted as a momentum oscillator. Its zero-line crosses signal momentum
+    transitions.
+- id: q7
+  text: 'Real example from the lesson: FIL short was opened with WT2 at +74. What does that reading indicate?'
+  type: mcq
+  choices:
+  - Deep oversold — bad timing for a short.
+  - Deep overbought (well above +60) — textbook overbought zone for a counter-trend short. Combined with other confluences, this trade won +$6.55.
+  - Random number.
+  - Neutral zone — no edge.
+  correct: 1
+  topic_tag: wavetrend
+  explanation: WT2 = +74 is significantly above the +60 'extreme' threshold, marking a clear deep overbought condition. Opening a short here aligned with the WaveTrend signal. The trade winning +$6.55 confirmed
+    the setup's validity.
+- id: q8
+  text: What is a 'pivot-based divergence' in Cipher B?
+  type: mcq
+  choices:
+  - A discount you get for using Cipher B.
+  - When price makes a new high/low pivot but WaveTrend doesn't confirm it (e.g., price HH but WT2 LH). Cipher B auto-detects these and draws lines connecting the divergent pivots.
+  - Network divergence between exchanges.
+  - A type of order.
+  correct: 1
+  topic_tag: divergence
+  explanation: Cipher B's divergence engine looks at price pivots vs WT pivots. When price extends a high but WT fails to make a new high (bearish regular divergence), it draws a line marker. Regular divergences
+    signal potential reversals; hidden divergences signal trend continuation.
+- id: q9
+  text: How should WT1 and WT2 be interpreted together?
+  type: mcq
+  choices:
+  - They're independent — interpret separately.
+  - WT2 is the slower line, WT1 the faster. A WT1-over-WT2 cross from below = bullish momentum shift (echoes EMA cross logic). Their relative position and slope tell you momentum direction and strength.
+  - WT1 is for shorts only.
+  - WT2 is the price.
+  correct: 1
+  topic_tag: wavetrend
+  explanation: WT1 is the faster oscillator, WT2 the smoothed/slower version. WT1 crossing above WT2 = bullish momentum just shifted up. A cross at deep oversold (-53 or lower) = gold buy. A cross at deep
+    overbought (+53+) = gold sell. The dual-line setup mirrors MACD-style momentum reading.
+- id: q10
+  text: How do Cipher A and Cipher B work together best?
+  type: mcq
+  choices:
+  - Use one or the other — they conflict.
+  - 'Use BOTH in confluence: Cipher A markers identify chart-overlay setups (Yellow X, Bull Candle), Cipher B confirms with oscillator state (deep oversold, gold buy). When both fire in the same direction
+    at the same time = highest-edge signal.'
+  - Use Cipher A on Monday, Cipher B on Friday.
+  - They're identical, no need for both.
+  correct: 1
+  topic_tag: vmc
+  explanation: The two Cipher components are designed to be COMPLEMENTARY. Cipher A says 'something is happening on price' (visual marker). Cipher B says 'the underlying momentum confirms it' (oscillator
+    state). When BOTH align (e.g., Yellow X on price + gold buy in pane + RSI < 30), you have a textbook 3-condition setup.

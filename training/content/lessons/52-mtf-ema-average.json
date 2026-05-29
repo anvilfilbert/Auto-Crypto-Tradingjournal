@@ -1,0 +1,87 @@
+{
+  "slug": "52-mtf-ema-average",
+  "subtitle": "A single moving average tells you where the market is on one timeframe. A multi-timeframe blend tells you where it is across all of them at once — and whether the macro trend is intact or aging.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You learned about EMAs and SMAs in lesson 22. They work well, but they have a famous problem: which timeframe? A 200-EMA on a 1H chart says one thing. The same 200-EMA on a 1W chart says something completely different. Traders argue about which timeframe matters most — and the honest answer is <em>they all matter</em>, just for different decisions.</p><p>The Multi-Timeframe EMA Average solves this by computing the 200-EMA on six timeframes (1H / 4H / 12H / 1D / 3D / 1W) and taking the arithmetic mean. The result is a single line that respects both short-term momentum and long-term trend simultaneously.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Why blend timeframes?"
+    },
+    {
+      "type": "text",
+      "content": "<p>Each timeframe's 200-EMA has a different memory window:</p><ul><li><strong>1H 200-EMA</strong> — last ~8 days of price action</li><li><strong>4H 200-EMA</strong> — last ~33 days</li><li><strong>12H 200-EMA</strong> — last ~100 days</li><li><strong>1D 200-EMA</strong> — last ~6.5 months</li><li><strong>3D 200-EMA</strong> — last ~1.6 years</li><li><strong>1W 200-EMA</strong> — last ~3.8 years</li></ul><p>Average them, and you get one number that captures both the most recent momentum AND the multi-year context. When current price sits ABOVE this blended average, the macro stack agrees on \"long bias\". When BELOW, the stack agrees on \"short bias\".</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Bias buffer prevents whipsaws",
+      "content": "<p>Don't react to every cross of price across the MTF average — small wiggles around the line will whipsaw you. Use a ±0.5% buffer:</p><ul><li><strong>Price > avg × 1.005</strong> → long bias</li><li><strong>Price < avg × 0.995</strong> → short bias</li><li><strong>Inside ±0.5%</strong> → neutral / chop zone — no edge</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "The slope adds direction"
+    },
+    {
+      "type": "text",
+      "content": "<p>Knowing WHERE the average is matters less than knowing WHERE IT'S GOING. The MTF blend is even more useful when you also compute the <strong>slope</strong> — how much each TF's 200-EMA has moved over the last ~7 calendar days. Then average the per-TF slopes.</p><p>This gives you a percentage: positive = the multi-TF stack is rising; negative = falling; near-zero = flat / consolidating.</p>"
+    },
+    {
+      "type": "table",
+      "headers": [
+        "Slope %",
+        "Label",
+        "Implication"
+      ],
+      "rows": [
+        ["> +0.30%/week", "rising", "Stack climbing — uptrend healthy"],
+        ["−0.30% to +0.30%", "flat", "Consolidation / transition — no momentum bias"],
+        ["< −0.30%/week", "falling", "Stack rolling over — downtrend in motion"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The 9-state verdict matrix"
+    },
+    {
+      "type": "text",
+      "content": "<p>Cross the price-vs-avg <em>bias</em> against the slope <em>direction</em> and you get nine possible states. Three are strong, three are moderate, three are warnings:</p>"
+    },
+    {
+      "type": "table",
+      "headers": [
+        "Bias \\ Slope",
+        "Rising",
+        "Flat",
+        "Falling"
+      ],
+      "rows": [
+        ["Long bias", "trend_up_confirmed (STRONG)", "trend_up_aging (moderate)", "long_reversal_warning (WARN)"],
+        ["Neutral", "chop_with_uplift (weak)", "chop (weak)", "chop_with_downdrift (weak)"],
+        ["Short bias", "short_reversal_warning (WARN)", "trend_down_aging (moderate)", "trend_down_confirmed (STRONG)"]
+      ]
+    },
+    {
+      "type": "callout",
+      "kind": "tip",
+      "title": "Use as a swing-trade filter",
+      "content": "<p>Before opening any swing trade (hold &gt; 4 hours), check the MTF verdict:</p><ul><li><strong>STRONG</strong> states → trade in the bias direction with full confidence</li><li><strong>Moderate</strong> states → trade in the bias direction but smaller size</li><li><strong>WARNING</strong> states → if you're entering a trade that goes AGAINST the slope, expect lower win-rate. Halve your position or skip.</li><li><strong>Chop</strong> states → only counter-trend / mean-reversion setups; no swing entries</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Honest limitations"
+    },
+    {
+      "type": "text",
+      "content": "<p>The MTF EMA Average is competent but not magic:</p><ul><li>Equal-weighting (1/6 each) is arbitrary. A 1H EMA reacts in hours; a 1W EMA barely moves in a month. Treating them equally throws away signal-weighting nuance.</li><li>All EMAs are <strong>lagging</strong>. Averaging six lagging signals = MORE lag. Won't catch fast regime flips.</li><li>The slope window (~7 days) is one calibration. Faster traders might use 3-day slope; longer-term traders might use 30-day.</li><li>Equal weighting smooths well-behaved trends but masks divergent signals (e.g., 1H crashing while 1W still rising — the average doesn't show that conflict).</li></ul><p>Treat the MTF EMA verdict as a <strong>macro filter</strong>, not a primary entry signal. Combine it with the indicator stack you'll learn in the next lessons.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "summary",
+      "title": "Bottom line",
+      "content": "<p>The MTF EMA Average compresses six timeframes into one trend bias scalar. Add the slope component and you get a 9-state verdict matrix that tells you whether the macro stack is confirming the trend, aging out of it, or warning of a reversal. Use it as a swing-trade filter — not a trigger.</p>"
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 
 <div class="training-path-hero">
   <h1>Crypto Trading — Beginner to Pro</h1>
-  <p class="training-subtitle">51 graded units across 6 tiers. Pass each tier's lessons to unlock the next.</p>
+  <p class="training-subtitle">{{ lessons_total }} graded units across {{ tiers|length }} tiers. Pass each tier's lessons to unlock the next.</p>
   <div class="training-progress-bar">
     <div class="training-progress-fill" style="width: {{ (passed / total * 100) if total else 0 }}%"></div>
   </div>
