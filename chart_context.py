@@ -35,6 +35,13 @@ def compute_indicators(df: pd.DataFrame) -> dict:
 
     Delegates indicator computation to chart_indicators.compute_all_indicators,
     then adds S/R levels (from chart_sr) and trendlines (detected locally).
+
+    2026-05-30 enrichments — also appends:
+      - vwap (chart_vwap.compute_vwap, session-anchored)
+      - volume_profile (chart_volume_profile.compute_volume_profile)
+      - supertrend (chart_indicators.compute_supertrend)
+    These are metadata-only (no scoring weight changes — see chart_confluence
+    where weights live).
     """
     result = compute_all_indicators(df)
     if result.get("ok"):
@@ -44,6 +51,30 @@ def compute_indicators(df: pd.DataFrame) -> dict:
         tl = detect_trendlines(df)
         if tl:
             result["trendlines"] = tl
+
+        # New indicators — lazy import to avoid circular deps and to keep them
+        # optional (a missing module won't crash the indicator path).
+        try:
+            from chart_vwap import compute_vwap
+            vwap = compute_vwap(df)
+            if vwap:
+                result["vwap"] = vwap
+        except Exception:
+            pass
+        try:
+            from chart_volume_profile import compute_volume_profile
+            vp = compute_volume_profile(df)
+            if vp:
+                result["volume_profile"] = vp
+        except Exception:
+            pass
+        try:
+            from chart_indicators import compute_supertrend
+            st = compute_supertrend(df)
+            if st:
+                result["supertrend"] = st
+        except Exception:
+            pass
     return result
 
 
@@ -135,6 +166,40 @@ def format_for_prompt(symbol: str, indicators: dict, timeframe: str) -> str:
         if k is not None:
             tag = "OB" if k > 80 else ("OS" if k < 20 else "")
             parts.append(f"Stoch K{k:.0f}" + (f"({tag})" if tag else ""))
+
+    # 2026-05-30 additions — metadata-only, surfaced to the Sonnet/Opus prompt.
+    if "vwap" in indicators:
+        vw = indicators["vwap"]
+        pos_short = {
+            "above_2sigma":  "↑↑2σ", "above_1sigma":  "↑1σ",
+            "above_vwap":    "↑",    "at_vwap":       "=",
+            "below_vwap":    "↓",    "below_1sigma":  "↓1σ",
+            "below_2sigma":  "↓↓2σ",
+        }.get(vw.get("position", ""), "")
+        dist = vw.get("distance_pct", 0)
+        parts.append(f"VWAP {dist:+.2f}%{pos_short}")
+
+    if "volume_profile" in indicators:
+        vp = indicators["volume_profile"]
+        dist = vp.get("distance_to_poc_pct", 0)
+        at = vp.get("at_poc", "")
+        in_va = "in-VA" if vp.get("in_value_area") else "out-VA"
+        # Compact form: POC ±N% (at/above/below, in/out-VA), HVN count
+        hvn_count = len(vp.get("hvn", []))
+        parts.append(
+            f"POC{dist:+.2f}%({at[:3]},{in_va},HVN{hvn_count})"
+        )
+
+    if "supertrend" in indicators:
+        ts = indicators["supertrend"]
+        sig = ts.get("signal", "")
+        flip = ts.get("flip_bars_ago", -1)
+        if sig.startswith("flip"):
+            arrow = "↑FLIP" if sig == "flip_bullish" else "↓FLIP"
+            parts.append(f"ST {arrow}")
+        else:
+            arrow = "↑" if ts.get("direction", 0) > 0 else "↓"
+            parts.append(f"ST{arrow}({flip}b)")
 
     if "support_resistance" in indicators:
         sr   = indicators["support_resistance"]
