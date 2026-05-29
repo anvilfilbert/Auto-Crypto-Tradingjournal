@@ -12,6 +12,7 @@ On risk_rating >= 7 or action != "Hold":
 import os
 import threading
 import time
+from datetime import datetime, timezone
 
 import bitget_client
 import telegram_notify
@@ -27,6 +28,14 @@ from database import db_conn
 _exposure_alerted: set[tuple] = set()
 
 FIRST_DELAY = int(os.environ.get("MONITOR_FIRST_DELAY", "120"))   # 2 min
+
+# ── Scanner-silence watchdog ───────────────────────────────────────────
+# When no decisions land in futures_ai_log for a while, something is wrong
+# (AI providers exhausted, scanner thread crashed, auto-trader paused).
+# Catch it BEFORE the operator notices via eyeballing the manual book.
+SILENCE_THRESHOLD_HOURS  = float(os.environ.get("SCANNER_SILENCE_THRESHOLD_H", "4"))
+SILENCE_ALERT_COOLDOWN_H = float(os.environ.get("SCANNER_SILENCE_COOLDOWN_H", "6"))
+_last_silence_alert: datetime | None = None
 
 
 def _passes_filter(position: dict) -> bool:
@@ -185,6 +194,55 @@ def _run_once():
             print(f"[Monitor] Error for {symbol}: {e}", flush=True)
 
 
+def _check_scanner_silence() -> None:
+    """Alert if no futures_ai_log activity for SILENCE_THRESHOLD_HOURS.
+
+    Detected silent states: AI provider quota exhausted, scanner thread dead,
+    auto-trader paused without operator awareness. Skips when:
+      - no log entries exist at all (fresh DB)
+      - auto-trader pause flag is set (silence is expected)
+      - we already alerted within the cooldown window
+    """
+    global _last_silence_alert
+    if not _monitor_alerts_enabled():
+        return
+    try:
+        with db_conn() as conn:
+            row = conn.execute(
+                "SELECT ts FROM futures_ai_log ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+            paused_row = conn.execute(
+                "SELECT value FROM settings WHERE key='futures_ai_state'"
+            ).fetchone()
+        if row is None:
+            return
+        if paused_row and paused_row[0] in ("pause_now", "pause_after_close", "circuit_breaker"):
+            return  # operator explicitly paused — silence is expected
+        last_ts = datetime.fromisoformat(row[0].replace(" ", "T"))
+        if last_ts.tzinfo is None:
+            last_ts = last_ts.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        silence_h = (now - last_ts).total_seconds() / 3600.0
+        if silence_h < SILENCE_THRESHOLD_HOURS:
+            return
+        # Cooldown: don't spam — once per SILENCE_ALERT_COOLDOWN_H
+        if _last_silence_alert is not None:
+            since_last = (now - _last_silence_alert).total_seconds() / 3600.0
+            if since_last < SILENCE_ALERT_COOLDOWN_H:
+                return
+        msg = (
+            f"⚠️ Scanner SILENT for {silence_h:.1f}h\n"
+            f"Last futures_ai_log entry: {row[0]}\n"
+            f"Likely cause: AI quota out, scanner crashed, or paused.\n"
+            f"Check `journalctl -u trading-journal -f` to diagnose."
+        )
+        telegram_notify.send_message(msg)
+        _last_silence_alert = now
+        print(f"[Monitor] silence alert sent ({silence_h:.1f}h of inactivity)", flush=True)
+    except Exception as e:
+        print(f"[Monitor] silence check failed: {e}", flush=True)
+
+
 def _monitor_alerts_enabled() -> bool:
     """Check whether position monitor Telegram alerts are enabled (default on)."""
     try:
@@ -283,6 +341,9 @@ def start():
                     print("[Monitor] paused — skipping monitor cycle", flush=True)
                 else:
                     _run_once()
+                # Scanner-silence watchdog runs every cycle regardless of
+                # journal_paused (we WANT to be told when scanner is quiet).
+                _check_scanner_silence()
             except Exception as e:
                 print(f"[Monitor] Unexpected error in monitor loop: {e}", flush=True)
             time.sleep(MONITOR_INTERVAL)

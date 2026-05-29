@@ -337,6 +337,127 @@ def api_token_usage():
         return _err("Internal server error", 500)
 
 
+@bp.route("/api/chart/vmc-cipher/<symbol>")
+def api_chart_vmc_cipher(symbol):
+    """
+    GET /api/chart/vmc-cipher/BTCUSDT?timeframe=4H&limit=200&format=json|png
+    VMC Cipher B indicator data for a symbol.
+      format=json (default) → JSON payload for LightweightCharts popup
+      format=png            → base64 PNG (price+VMC dual-pane) for static use
+      format=pane           → base64 PNG (oscillator pane only)
+    """
+    try:
+        import chart_candles
+        import chart_vmc_cipher
+        import chart_vmc_draw
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        fmt       = (request.args.get("format") or "json").lower()
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        if fmt == "png":
+            b64 = chart_vmc_draw.draw_price_and_vmc(df, symbol=sym)
+            return _ok({"symbol": sym, "timeframe": timeframe,
+                        "format": "png", "image_b64": b64})
+        if fmt == "pane":
+            b64 = chart_vmc_draw.draw_vmc_only(df, symbol=sym)
+            return _ok({"symbol": sym, "timeframe": timeframe,
+                        "format": "pane", "image_b64": b64})
+
+        vmc = chart_vmc_cipher.compute_vmc_cipher(df)
+        payload = chart_vmc_cipher.to_json_payload(vmc, df)
+        payload["symbol"]    = sym
+        payload["timeframe"] = timeframe
+        payload["bars"]      = len(df)
+        return _ok(payload)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/vmc-cipher-a/<symbol>")
+def api_chart_vmc_cipher_a(symbol):
+    """
+    GET /api/chart/vmc-cipher-a/BTCUSDT?timeframe=4H&limit=200
+    Cipher A — EMA ribbon (8 EMAs) + signal markers (long_ema, short_ema,
+    red_cross, blue_triangle, red_diamond, blood_diamond, yellow_x, bull_candle).
+    Always JSON — Cipher A is an on-chart overlay, no standalone PNG.
+    """
+    try:
+        import chart_candles
+        import chart_vmc_cipher_a
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+        cipher_a = chart_vmc_cipher_a.compute_cipher_a(df)
+        payload = chart_vmc_cipher_a.to_json_payload(cipher_a, df)
+        payload["symbol"]    = sym
+        payload["timeframe"] = timeframe
+        return _ok(payload)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/mtf-ema/<symbol>")
+def api_chart_mtf_ema(symbol):
+    """
+    GET /api/chart/mtf-ema/BTCUSDT?length=200
+    Multi-Timeframe EMA average — average of N-period EMA across
+    1H/4H/12H/1D/3D/1W. Returns scalar + bias (long/short/neutral).
+    """
+    try:
+        import chart_mtf_ema
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        length = max(20, min(500, int(request.args.get("length", 200))))
+        result = chart_mtf_ema.compute_mtf_ema_avg(sym, length=length)
+        return _ok(result)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/vmc-signal/<symbol>")
+def api_chart_vmc_signal(symbol):
+    """
+    GET /api/chart/vmc-signal/BTCUSDT?timeframe=4H
+    Unified VuManChu signal — combines Cipher A + Cipher B + MTF EMA into a
+    signed score [-1.0, +1.0] with active-signal breakdown and label.
+    """
+    try:
+        import chart_candles
+        import chart_vmc_signals
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(80, min(500, int(request.args.get("limit", 250))))
+        include_mtf = (request.args.get("mtf", "1") not in ("0", "false", "no"))
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+        result = chart_vmc_signals.compute_unified_signal(sym, df,
+                                                            include_mtf=include_mtf)
+        result["timeframe"] = timeframe
+        return _ok(result)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
 @bp.route("/api/chart/indicators")
 def api_chart_indicators():
     """

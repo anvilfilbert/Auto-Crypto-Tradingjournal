@@ -133,9 +133,17 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     if len(_evaluated_setups) > 500:
                         _evaluated_setups.clear()
 
-                score = int(setup.get("setup_score") or 0)
+                # BUG-001 fix (2026-05-26): use float comparison so a setup
+                # scored 6.95 isn't silently truncated to 6 — important once
+                # SCANNER_MIN_SCORE is allowed to be fractional (e.g. 6.5).
+                score = float(setup.get("setup_score") or 0)
                 from constants import SCANNER_MIN_SCORE
                 if score < SCANNER_MIN_SCORE:
+                    # BUG-002 fix (2026-05-26): used to be a silent skip — no
+                    # visibility into why nothing fired. Now logged so the
+                    # operator can see "13 setups produced, 13 below threshold".
+                    _log(conn, "rejected_low_score", setup,
+                         f"setup_score {score:.2f} < SCANNER_MIN_SCORE {SCANNER_MIN_SCORE}")
                     continue
                 summary["evaluated"] += 1
 
@@ -223,10 +231,18 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 # (Opus = 5 → "half" tier, 1% equity risk instead of 2%).
                 opus_ai_score = ((verdict.get("ai") or {}).get("score")
                                  if isinstance(verdict.get("ai"), dict) else None)
+                # BUG-010 fix (2026-05-26): use Opus-emitted override prices
+                # when the scanner setup had none (quick_score_only path).
+                # Without this, EIGEN-style setups passed consensus but died
+                # in sizing because size_trade got entry=None, sl=None.
+                sizing_entry = (setup.get("_override_entry")
+                                or setup.get("entry_zone", {}).get("low")
+                                or setup.get("entry_price"))
+                sizing_sl    = setup.get("_override_sl") or setup.get("sl_price")
                 sizing = risk_budget.size_trade(
                     score      = verdict["consensus_score"],
-                    entry      = setup.get("entry_zone", {}).get("low") or setup.get("entry_price"),
-                    sl         = setup.get("sl_price"),
+                    entry      = sizing_entry,
+                    sl         = sizing_sl,
                     equity_usdt= equity,
                     conn       = conn,
                     symbol     = setup.get("symbol"),  # for per-asset vol dampener

@@ -328,12 +328,12 @@ REVERSAL — WaveTrend crossover at RSI extreme (oversold-bounce or overbought-f
 
 BREAKOUT — Range escape with volume + momentum.
   Best when: volume ratio >1.8x, ADX rising past 18-20, price closing above prior swing high (long) or below low (short).
-  Score boost: +1 if 1D context confirms (1D above EMA20 for long breakouts).
+  Score boost: +1 if 1D context confirms (1D above EMA20 for long breakouts, below EMA20 for short breakouts).
   Score cap: 7 if entry is mid-range — wait for retest or confirmed close beyond level.
 
 CONTINUATION — Trend pullback to structural level.
   Best when: 4H + 1D EMA stack agrees with direction, 1H pullback into 4H S/R, RSI reset to 40-55 (long) or 45-60 (short).
-  Score boost: +1 if pullback bounces with WaveTrend reset (rising from low for long).
+  Score boost: +1 if pullback bounces with WaveTrend reset (rising from low for long, falling from high for short).
   Score cap: 8 — this is the highest-conviction archetype when alignment is clean.
 
 COMMON DOWNGRADES (apply these against your initial score):
@@ -343,6 +343,19 @@ COMMON DOWNGRADES (apply these against your initial score):
 - RSI > 75 (long) or < 25 (short): -1 (already extended, late entry)
 - 4H + 1H disagree on direction: -1 (TF conflict)
 - Price within ATR×0.5 of major resistance (long) or support (short): -1 (no room to TP)
+
+ENTRY VALIDITY — HARD RULE (added 2026-05-26):
+The entry price you emit MUST be reachable from the current chart, not a memory
+of where support used to be. Specifically:
+- Entry must be within ±5% of the current price OR within the last 24h range.
+- If the only valid structural entry is further than that, the setup is NOT
+  currently tradeable — score it ≤ 5 and put "wait for retrace to <level>" in
+  the rationale. Do NOT emit an entry the market hasn't recently visited.
+- If you're emitting a Long entry below the current price by more than 5%,
+  OR a Short entry above the current price by more than 5%, you are picking
+  a structural level the market has already left behind. Either find a level
+  closer to current price (e.g. nearest recent S/R within ±5%) or admit no
+  current entry is available.
 
 QUALITY OVER QUANTITY: a 5 with one strong factor beats a 7 you can't justify. If you can't name 3 concrete factors driving the score in one sentence, score it ≤5.
 """
@@ -379,6 +392,16 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
     ) or "none"
     pt_1h_block = f"\n{pt_1h}" if pt_1h else ""
 
+    # BUG-005 fix (2026-05-26): example reason is now direction-aware. The
+    # previous bullish-only example ("4H EMA stack bullish, RSI reset to 52")
+    # anchored Haiku toward bullish criteria, dropping 100% of Shorts that
+    # survived Stage 2 (observed funnel: 19 Shorts → 0 final on 2026-05-26).
+    is_long = direction.lower() == "long"
+    example_reason = (
+        "4H EMA stack bullish, RSI reset to 52, clean S/R entry zone"
+        if is_long else
+        "4H EMA stack bearish, RSI rejected at 62, clean S/R rejection zone"
+    )
     variable = (
         f"Score this {direction.upper()} setup for {symbol} — return score 0-10 "
         f"and one short sentence explaining the key factor behind the score.\n\n"
@@ -386,7 +409,7 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
         f"Confluence: {conf_line}\n4H S/R: {sr_compact}\n1H S/R: {sr_1h_compact}\n\n"
         f'If score < {min_score}: {{"score":0}}\n'
         f'If score >= {min_score}: {{"score":7,"direction":"{direction}",'
-        f'"reason":"one sentence — main factor (e.g. \'4H EMA stack bullish, RSI reset to 52, clean S/R entry zone\')"}}\n'
+        f'"reason":"one sentence — main factor (e.g. \'{example_reason}\')"}}\n'
         "Respond with ONLY valid JSON — no extras."
     )
 

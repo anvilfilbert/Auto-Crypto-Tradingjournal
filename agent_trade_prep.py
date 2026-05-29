@@ -191,10 +191,15 @@ def _build_prompt(call_text: str, equity: float, setup_type: str) -> str:
     else:
         trade_section = (
             "Scanner-generated signal — no analyst call text. "
-            "Using technical context above: derive a precise entry_price from the current price "
-            "and nearest S/R level, set sl_price at the structural support/resistance below (long) "
-            "or above (short) the entry, and set tp1/tp2 at the next liquidity levels. "
-            "entry_price MUST be non-zero."
+            "Using technical context above: derive a precise entry_price that is REACHABLE from "
+            "the current price (within ±5% OR within the last 24h range) anchored to the "
+            "nearest valid S/R level inside that band. Set sl_price at the structural support/"
+            "resistance below (long) or above (short) the entry, and set tp1/tp2 at the next "
+            "liquidity levels. entry_price MUST be non-zero. "
+            "If the only valid structural entry is further than ±5% from current price AND "
+            "outside the 24h range, the setup is NOT currently tradeable — set setup_score ≤ 5 "
+            "and put 'wait for retrace to <level>' in cot_reasoning. DO NOT emit an entry the "
+            "market hasn't recently visited."
         )
     return f"""You are a professional crypto futures trading analyst. Analyze the trade setup below.
 
@@ -211,6 +216,7 @@ Rules:
 - setup_score: 1-4=avoid, 5-6=monitor, 7-8=good, 9-10=strong conviction
 - Long: sl_price MUST be below entry_price. Short: sl_price MUST be above entry_price.
 - entry_price, sl_price, tp1, tp2 MUST all be non-zero real prices
+- entry_price MUST be within ±5% of current price OR inside the last 24h range. If you can't find a structural anchor in that window, score it ≤ 5 with "wait for retrace to <level>" in cot_reasoning. NEVER emit a long entry > 5% below current price or a short entry > 5% above — that's a setup the market already left behind.
 - tp1 = conservative target (1.5:1 R:R min), tp2 = full target (2.5:1+ R:R)
 - **tp_prices is now MANDATORY for any setup you score ≥ 7.**
   Default count: 3 levels (TP1/TP2/TP3) at REAL structural levels —

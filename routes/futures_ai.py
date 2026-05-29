@@ -271,7 +271,8 @@ def api_futures_ai_positions():
                 closed = [dict(r) for r in conn.execute(
                     "SELECT symbol, direction, entry_price, close_price, "
                     "realized_pnl, open_time, close_time, setup_type, "
-                    "setup_score, close_reason, is_hedge "
+                    "setup_score, close_reason, is_hedge, "
+                    "size_usdt, leverage "
                     "FROM positions WHERE chain='auto_ai' AND "
                     "close_time IS NOT NULL AND close_time != '' "
                     "ORDER BY close_time DESC LIMIT ?", (n_closed,)
@@ -297,10 +298,21 @@ def api_futures_ai_positions():
                 """, (n_closed,)).fetchall()]
                 source = "paper"
 
+        # Equity passed so the frontend can render "% of portfolio" on each
+        # closed trade without a second fetch. Best-effort — falls back to
+        # starting equity if the live read fails.
+        equity_now = None
+        try:
+            from trading import kill_switch as _ks
+            with db_conn() as _conn2:
+                equity_now = _ks._equity_now(_conn2)
+        except Exception:
+            equity_now = None
         return _ok({
             "source":         source,
             "open":           open_rows,
             "recent_closed":  closed,
+            "equity_usdt":    equity_now,
         })
     except Exception:
         traceback.print_exc()

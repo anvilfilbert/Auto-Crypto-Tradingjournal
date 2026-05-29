@@ -133,8 +133,17 @@ def evaluate(scanner_setup: dict, conn) -> dict:
     # rationale (summary + warnings) so the operator can see WHY Sonnet
     # disagreed — not just that it did. Without this the decision log
     # tells you a setup was killed but gives no learnable signal.
-    if ai_score < SCANNER_MIN_SCORE:
-        base["reason"] = f"AI scored {ai_score} (below {SCANNER_MIN_SCORE} threshold)"
+    #
+    # BUG-006 fix (2026-05-26): AI approval threshold uses CONSENSUS_MIN_SCORE
+    # (env-driven, default 5) instead of SCANNER_MIN_SCORE (6). The half-tier
+    # sizing path in risk_budget.size_trade triggers at opus_score==5 — but it
+    # was unreachable while consensus rejected at AI<6, making the half-tier
+    # dead code. CONSENSUS_MIN_SCORE is the threshold the half-tier was
+    # designed to work with; downstream Path 3 R:R viability + pre-flight
+    # drift check still apply as safety nets.
+    from trading import config as fa_config
+    if ai_score < fa_config.CONSENSUS_MIN_SCORE:
+        base["reason"] = f"AI scored {ai_score} (below {fa_config.CONSENSUS_MIN_SCORE} threshold)"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
              json.dumps({**snap, "reject_kind": "low_score", "reason": base["reason"]}))
         return base
@@ -190,7 +199,12 @@ def _build_overrides(scanner_setup: dict, ai_result: dict) -> dict:
 
     ai_entry = ai_result.get("entry_price") or 0
     ai_sl    = ai_result.get("sl_price") or 0
-    ai_tps   = ai_result.get("tp_prices") or []
+    # BUG-007 fix (2026-05-26): filter None out of ai_tps before comparing.
+    # Opus occasionally emits a sparse ladder (e.g. [1.0, None, 2.0]) which
+    # crashed the monotonicity check with "'>' not supported between float
+    # and NoneType" — observed on VIRTUALUSDT during a quick_score_only call.
+    ai_tps_raw = ai_result.get("tp_prices") or []
+    ai_tps = [float(t) for t in ai_tps_raw if t is not None]
     # Backfill ai_tps from tp1/tp2 if Opus didn't emit a ladder
     if not ai_tps:
         for v in (ai_result.get("tp1_price"), ai_result.get("tp2_price")):
@@ -203,6 +217,14 @@ def _build_overrides(scanner_setup: dict, ai_result: dict) -> dict:
         if drift_pct < 2.0:
             out["entry"] = float(ai_entry)
         # else: too far — likely a hallucination, ignore
+
+    # BUG-007 fix (2026-05-26): when scanner setup is quick_score_only it has
+    # no entry/sl prices. Use Opus's values directly — there's nothing to
+    # override against, but the trade still needs an entry/sl to fire.
+    if not sc_entry and ai_entry:
+        out["entry"] = float(ai_entry)
+    if not sc_sl and ai_sl:
+        out["sl"] = float(ai_sl)
 
     # SL override — ONLY accept tighter (closer to entry). Loosening is unsafe.
     entry_for_sl = ai_entry or sc_entry
@@ -223,11 +245,16 @@ def _build_overrides(scanner_setup: dict, ai_result: dict) -> dict:
             ok = all(ai_tps[i+1] > ai_tps[i] for i in range(len(ai_tps)-1))
         else:
             ok = all(ai_tps[i+1] < ai_tps[i] for i in range(len(ai_tps)-1))
-        # And first TP on the right side of entry
-        first_tp_ok = (ai_tps[0] > (out.get("entry") or sc_entry)) if direction == "long" \
-                       else (ai_tps[0] < (out.get("entry") or sc_entry))
-        if ok and first_tp_ok:
-            out["tp_prices"] = ai_tps[:7]
+        # And first TP on the right side of entry. BUG-007 fix (2026-05-26):
+        # guard against None entry_ref — quick_score_only setups have no
+        # scanner entry, and if Opus didn't supply one either we can't
+        # validate the TP ladder side.
+        entry_ref = out.get("entry") or sc_entry
+        if entry_ref:
+            first_tp_ok = (ai_tps[0] > entry_ref) if direction == "long" \
+                           else (ai_tps[0] < entry_ref)
+            if ok and first_tp_ok:
+                out["tp_prices"] = ai_tps[:7]
 
     return out
 

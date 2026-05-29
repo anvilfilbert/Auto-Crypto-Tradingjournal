@@ -245,6 +245,7 @@ async function _loadFuturesAIPositions() {
     const source = d.source;   // 'real' or 'paper'
     const openRows = d.open || [];
     const closedRows = d.recent_closed || [];
+    const equityNow  = parseFloat(d.equity_usdt) || 0;
 
     // Header counts
     const openCount = document.getElementById('fai-open-count');
@@ -271,7 +272,7 @@ async function _loadFuturesAIPositions() {
     if (!closedRows.length) {
       closedEl.textContent = 'No closed auto-trader trades yet.';
     } else {
-      closedEl.appendChild(_buildClosedPositionsTable(closedRows, source));
+      closedEl.appendChild(_buildClosedPositionsTable(closedRows, source, equityNow));
     }
   } catch (e) {
     openEl.textContent = 'Failed: ' + e.message;
@@ -313,7 +314,7 @@ function _buildOpenPositionsTable(rows, source) {
   const hrow = thead.insertRow();
   // Different columns for real (live data from Bitget) vs paper (DB)
   const headers = source === 'real'
-    ? ['Symbol','Dir','Entry','Mark','% Move','Unrl P&L','Size','Lev','SL','TPs']
+    ? ['Symbol','Dir','Entry','Mark','% Move','Unrl P&L','Size','Notional','Lev','SL','TPs']
     : ['Symbol','Dir','Score','Archetype','Entry','SL','TPs','Notional','Lev'];
   headers.forEach(h => {
     const th = document.createElement('th');
@@ -340,6 +341,7 @@ function _buildOpenPositionsTable(rows, source) {
       ((p.unrealized_pct >= 0 ? '+' : '') + (p.unrealized_pct ?? 0).toFixed(2) + '%'),
       ((p.unrealized_pnl >= 0 ? '+' : '') + '$' + (p.unrealized_pnl ?? 0).toFixed(2)),
       _num(p.size_contracts),
+      '$' + (p.notional_usdt ?? 0).toFixed(2),
       p.leverage + 'x',
       _num(p.preset_sl) || '—',
       _formatTpLevels(p),
@@ -404,19 +406,23 @@ function _formatCloseReason(raw, source) {
 }
 
 
-function _buildClosedPositionsTable(rows, source) {
+function _buildClosedPositionsTable(rows, source, equityNow) {
   const tbl = document.createElement('table');
   tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem;table-layout:fixed';
   const thead = tbl.createTHead();
   const hrow = thead.insertRow();
   // Explicit column widths so the Reason column has room to wrap legibly
   // when a hedge unwind or other longer string lands there.
+  // 'Trade%'  — return on the margin used for this trade (PnL ÷ margin).
+  // 'Port%'   — impact on total portfolio (PnL ÷ equity_now).
   const headerSpec = [
     ['Symbol',  '95px'],
     ['Dir',     '50px'],
     ['Entry',   '85px'],
     ['Close',   '85px'],
     ['P&L',     '80px'],
+    ['Trade%',  '70px'],
+    ['Port%',   '65px'],
     ['Reason',  'auto'],
     ['Opened',  '95px'],
     ['Closed',  '95px'],
@@ -435,12 +441,31 @@ function _buildClosedPositionsTable(rows, source) {
     const closePrice = source === 'real' ? p.close_price : p.tp2_price;
     const isHedge = !!p.is_hedge;
     const symbolLabel = isHedge ? `${p.symbol} 🛡` : p.symbol;
+
+    // Trade% — return on margin invested. margin = notional / leverage.
+    // Falls back to '—' when we can't reconstruct margin (legacy rows).
+    const notional = parseFloat(p.size_usdt ?? p.notional_usdt) || 0;
+    const lev      = parseFloat(p.leverage) || 0;
+    const margin   = (notional > 0 && lev > 0) ? (notional / lev) : 0;
+    const tradePct = margin > 0 ? (pnl / margin) * 100 : null;
+    const tradeCell = tradePct == null
+      ? '—'
+      : ((tradePct >= 0 ? '+' : '') + tradePct.toFixed(2) + '%');
+
+    // Port% — impact on total portfolio.
+    const portPct = (equityNow && equityNow > 0) ? (pnl / equityNow) * 100 : null;
+    const portCell = portPct == null
+      ? '—'
+      : ((portPct >= 0 ? '+' : '') + portPct.toFixed(2) + '%');
+
     const cells = [
       symbolLabel,
       p.direction,
       _num(p.entry_price),
       _num(closePrice),
       ((pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2)),
+      tradeCell,
+      portCell,
       _formatCloseReason(p.close_reason, source),
       (p.opened_at || p.open_time || '').slice(5, 16),
       (p.closed_at || p.close_time || '').slice(5, 16),
@@ -451,10 +476,18 @@ function _buildClosedPositionsTable(rows, source) {
       const td = tr.insertCell();
       td.textContent = v;
       let cls = baseStyle;
-      if (i === 4) {   // P&L column
+      if (i === 4) {        // P&L column
         cls += ';color:' + (pnl >= 0 ? 'var(--accent3)' : 'var(--red)');
         cls += ';white-space:nowrap';
-      } else if (i === 5) {   // Reason column — wrap long strings
+      } else if (i === 5) { // Trade%
+        cls += ';color:' + (tradePct == null ? 'var(--muted)'
+                            : tradePct >= 0 ? 'var(--accent3)' : 'var(--red)');
+        cls += ';white-space:nowrap';
+      } else if (i === 6) { // Port%
+        cls += ';color:' + (portPct == null ? 'var(--muted)'
+                            : portPct >= 0 ? 'var(--accent3)' : 'var(--red)');
+        cls += ';white-space:nowrap';
+      } else if (i === 7) { // Reason column — wrap long strings
         cls += ';white-space:normal;word-break:break-word';
       } else {
         cls += ';white-space:nowrap';

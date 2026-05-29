@@ -30,12 +30,16 @@ _request_times: list[float] = []
 
 
 def _rate_limit():
-    """Block if 28+ requests have been made in the last 60 seconds (leaves 2 buffer)."""
+    """Block if 10+ requests have been made in the last 60 seconds.
+
+    CoinGecko's keyless tier was tightened in Q4 2025 to ~10-15 req/min
+    (down from ~30). 10/min stays safely under the floor; if you add a
+    free API key you can raise this. 429s now retry-respected per call site.
+    """
     with _ratelimit_lock:
         now = time.time()
-        # Drop timestamps older than 60s
         _request_times[:] = [t for t in _request_times if now - t < 60]
-        if len(_request_times) >= 28:
+        if len(_request_times) >= 10:
             sleep_for = 60 - (now - _request_times[0])
             if sleep_for > 0:
                 time.sleep(sleep_for)

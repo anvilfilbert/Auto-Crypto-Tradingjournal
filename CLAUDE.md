@@ -127,7 +127,9 @@ See Tools → Data Sources page in the UI for the full interactive reference.
 - get_category_caps() in coingecko_client.py: calls /coins/categories → meme_cap_usd (MEME.C), stable_cap_usd, stable_dominance_pct (STABLE.C.D)
 
 ## Confluence Signals (chart_confluence.py)
-15 signals total → max_per_tf = 6.35 (non-SMT) / 6.65 (SMT):
+16+ signals total → max_per_tf = 6.35 (non-SMT) / 6.65 (SMT).
+Phase-2 additions beyond the listing below: bb_squeeze ±0.2, wyckoff_trap ±0.3,
+wyckoff_multibar, sot, wave_ratio, climactic_volume ±0.2, composite_divergence.
 TF-level: RSI (regime-aware via `chart_rsi.summarize_rsi`),
           MACD (grouped momentum cap ±1.5), EMA, ADX,
           WaveTrend, MFI (grouped oscillator cap ±1.0),
@@ -201,10 +203,11 @@ were skipped — we don't hold spot):
   recovery, unknown} with a Long/Short bias.
     - distribution / decline   → favor Shorts
     - capitulation / recovery  → favor Longs
-  Setup direction agreeing with phase bias = +0.3 score modifier; fighting
-  it = -0.3. Applied in scanner Stage 3 alongside the PO3 modifiers.
-  Surfaced in setup `_bear_phase` field and the `summary` line Sonnet
-  consensus reads.
+  Setup direction agreeing with phase bias = **+0.15** score modifier; fighting
+  it = **-0.15** (lowered from ±0.3 on 2026-05-26 to reduce phase-driven
+  amplification noise). Applied in scanner Stage 3 alongside the PO3
+  modifiers. Surfaced in setup `_bear_phase` field and the `summary` line
+  Sonnet consensus reads.
 
 ## Profit Compounding Strategy (`trading/risk_budget.py`, 2026-05-23)
 Streak-based progressive risk + dynamic notional cap from the trader research
@@ -371,6 +374,17 @@ git commit -m "test: browser check clean — vX.Y.Z"
 ### Full scan (Phase 4 — one-time baseline or after major UI overhaul)
 After standard Phases 1–3 pass, run `phase4_full_scan` from the JSON.
 Use after: new tab added, major component redesign, or v2.x milestone.
+
+## Notes on naming / docs
+- `compute_cvd()` (chart_indicators.py + backtest_engine.py) is named "CVD" but
+  is actually Cumulative Money Flow Volume (Chaikin AD-line style):
+  `v × (2c - l - h) / (h - l)` accumulated. True tick-aggressor CVD would need
+  trade-by-trade buy/sell classification — not what this is. The invariant
+  (formula consistency between chart + backtest) still holds; the name is the
+  documented misnomer.
+- VWAP is referenced as a "primary indicator" in some older docs but is NOT
+  implemented as a standalone `compute_vwap()`. The Cipher B "VWAP" line is
+  `WT1 - WT2` (momentum oscillator), not price-volume VWAP.
 
 ## Calculation Invariants (do not change without updating both sides)
 - WaveTrend: n1=10, n2=21, rolling(4) — must match in both chart_indicators.py AND backtest_engine.py
@@ -551,7 +565,7 @@ Standalone-capable crypto trading curriculum. **Zero imports from the journal co
 - **Mounted inside the journal** at `/training` (single try/except in `app.py` ~line 74). Visible as 🎓 Training tab in the nav (above Acki section).
 - **Standalone** via `python -m training --port 5050` — verified working with only `flask` + `pyyaml` as runtime deps.
 
-51 graded units across 6 tiers (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution → Capstone). ~520 quiz questions. 24 visual diagrams (dark-themed PNGs generated via `training/scripts/generate_chart_diagrams.py`, wired into lessons via idempotent `training/scripts/insert_diagrams_into_lessons.py`).
+58 graded units across 6 tiers (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution → Capstone). ~590 quiz questions. 24 visual diagrams (dark-themed PNGs generated via `training/scripts/generate_chart_diagrams.py`, wired into lessons via idempotent `training/scripts/insert_diagrams_into_lessons.py`).
 
 ### Coupling rules (enforced)
 - training/ MUST NOT import journal modules (chart_*, trading/*, database.py, etc.). Delete training/ → journal works. Delete the try/except in app.py → training detaches cleanly.

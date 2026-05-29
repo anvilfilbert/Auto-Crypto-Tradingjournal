@@ -29,3 +29,7 @@ scripts/journal-session_*.tar.xz
 # scripts/build_training_pdf_id.py). The .pdf deliverable IS tracked.
 docs/training_id.html
 docs/training_id/
+
+# learn2trade lives in its own repo — never commit it here
+learn2trade/
+scripts/backup_learn2trade.sh

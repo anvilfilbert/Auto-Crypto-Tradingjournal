@@ -157,10 +157,14 @@ def classify_rules(symbol: str, direction: str, open_time: str,
     if not is_long and "fully bullish" in ema_align:    scores["reversal"] += 1
 
     # --- CONTINUATION (trend pullback) ---
+    # RSI bands aligned with scanner_prompts._archetype_rubric ("continuation"
+    # sweet spot 45-68 Long, 32-55 Short). The earlier symmetric 40/60 band
+    # under-credited the upper-half of the trend zone — RSI 60-68 in a strong
+    # uptrend reads as continuation in the rubric Sonnet uses to grade.
     if is_long     and "fully bullish" in ema_align:    scores["continuation"] += 2
     if not is_long and "fully bearish" in ema_align:    scores["continuation"] += 2
-    if is_long     and 40 <= rsi <= 60:                 scores["continuation"] += 1
-    if not is_long and 40 <= rsi <= 60:                 scores["continuation"] += 1
+    if is_long     and 45 <= rsi <= 68:                 scores["continuation"] += 1
+    if not is_long and 32 <= rsi <= 55:                 scores["continuation"] += 1
     if 15 <= adx <= 35:                                 scores["continuation"] += 1
     if 0.7 <= vol <= 1.5:                               scores["continuation"] += 1
     # range_bound dropped — AI never picked it (0/111). Trades with low ADX
@@ -169,16 +173,35 @@ def classify_rules(symbol: str, direction: str, open_time: str,
     # Pick the winner
     best = max(scores, key=scores.get)
     best_score = scores[best]
-    runner_up = sorted(scores.values(), reverse=True)[1]
-    margin = best_score - runner_up
-    # Below threshold → low_conviction
-    if best_score < _MIN_CONFIDENCE_FLOOR or margin == 0:
+    runner_up_score = sorted(scores.values(), reverse=True)[1]
+    margin = best_score - runner_up_score
+    tied = [a for a, s in scores.items() if s == best_score]
+
+    # Below floor → low_conviction unconditionally (no signal strong enough)
+    if best_score < _MIN_CONFIDENCE_FLOOR:
         return _result(
             "low_conviction",
-            best_score / 6.0,   # confidence still meaningful as raw evidence
-            f"top score {best_score}/{best!r} below floor {_MIN_CONFIDENCE_FLOOR} or tied",
+            best_score / 6.0,
+            f"top score {best_score}/{best!r} below floor {_MIN_CONFIDENCE_FLOOR}",
             scores,
         )
+    # At-or-above floor with a tie: only fall to low_conviction if the tie
+    # includes 'reversal' (genuinely opposing the directional archetypes).
+    # breakout/continuation ties are compatible — both bullish-trend for Long,
+    # bearish-trend for Short. Prefer continuation as the conservative
+    # trend-follow read; low-volume trend setups frequently land here.
+    if margin == 0:
+        if "reversal" in tied:
+            return _result(
+                "low_conviction",
+                best_score / 6.0,
+                f"tied with reversal ({tied!r}) — directional ambiguity",
+                scores,
+            )
+        if "continuation" in tied:
+            best = "continuation"
+        elif "breakout" in tied:
+            best = "breakout"
     confidence = min(1.0, best_score / 5.0)
     reasoning = (f"RSI={rsi:.0f} ADX={adx:.0f} vol={vol:.2f} EMA={ema_align or 'n/a'} "
                  f"WT_recent={wt_recent or 'none'} → {best} ({best_score}/{sum(scores.values())})")

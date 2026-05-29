@@ -31,9 +31,16 @@ NANSEN_CACHE_TTL       = 1800   # 30 min — Nansen smart money cache
 ACCURACY_TARGET        = 35     # calls needed for 85% statistical confidence
 
 # ── Scanner pipeline ──────────────────────────────────────────────────────────
-SCANNER_MIN_SCORE         = 7   # raised from 6: hindsight showed score-6 = 50/50,
-                                # score 7-8 = 86.5% TP rate. Scanner shouldn't
-                                # surface borderline setups it can't predict.
+SCANNER_MIN_SCORE         = 6   # restored from 7 → 6 (2026-05-26): the original
+                                # 50/50 finding predates the safety layers added
+                                # since — low_conviction archetype gate, Path 3
+                                # R:R viability check, pre-flight drift guard,
+                                # tiered Opus sizing (score=5 → half-size). A
+                                # score-6 setup that survives ALL of these is a
+                                # different distribution than the unsupervised
+                                # 50/50 trades that informed the original raise.
+                                # Re-evaluate at n ≥ 30 closed score-6 auto_ai
+                                # trades; revert if WR < 45%.
 # SCANNER_FULL_DETAIL_TOP_N reduced 6→3 (2026-05-26) to cut Stage-3 LLM time.
 # At 80-symbol curated watchlist, Top-3 covers the genuinely-elite setups
 # without burning 4+ min on borderline marginal ones. Trade-off: a setup

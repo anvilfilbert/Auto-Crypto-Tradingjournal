@@ -10,11 +10,12 @@ def sharpe_ratio(returns: list, periods_per_year: int = 2190) -> float:
     Annualised Sharpe ratio.
     periods_per_year=2190 for 4H candles (6 candles/day x 365 days, crypto trades 24/7).
     Returns 0.0 when std=0 or fewer than 2 returns.
+    Uses sample variance (ddof=1, Bessel correction) to match dashboard Sharpe.
     """
     r = np.array(returns, dtype=float)
     if len(r) < 2:
         return 0.0
-    std = r.std()
+    std = r.std(ddof=1)
     if std < 1e-10:  # tolerance for floating-point precision
         return 0.0
     return float(r.mean() / std * (periods_per_year ** 0.5))
@@ -26,6 +27,7 @@ def sortino_ratio(returns: list, periods_per_year: int = 2190) -> float:
     periods_per_year=2190 for 4H candles (6 candles/day x 365 days, crypto trades 24/7).
     Returns 0.0 when no variance or fewer than 2 returns.
     When there are no negative returns, uses full std as fallback.
+    Uses sample variance (ddof=1, Bessel correction).
     """
     r = np.array(returns, dtype=float)
     if len(r) < 2:
@@ -33,11 +35,13 @@ def sortino_ratio(returns: list, periods_per_year: int = 2190) -> float:
     downside = r[r < 0]
     if len(downside) == 0:
         # No downside: use full std as denominator
-        full_std = r.std()
+        full_std = r.std(ddof=1)
         if full_std < 1e-10:
             return 0.0
         return float(r.mean() / full_std * (periods_per_year ** 0.5))
-    downside_std = downside.std()
+    if len(downside) < 2:
+        return 0.0
+    downside_std = downside.std(ddof=1)
     if downside_std < 1e-10:
         return 0.0
     return float(r.mean() / downside_std * (periods_per_year ** 0.5))
