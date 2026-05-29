@@ -12,12 +12,15 @@ Public API:
   compute_kelly_by_bucket(conn)            -> dict
   compute_alpha_decay(conn)                -> dict
 """
+import logging
 import numpy as np
 import pandas as pd
 import yfinance as yf
 
+_log = logging.getLogger(__name__)
 
-def _fetch_ohlcv_df(symbol: str, tf: str = "4H", limit: int = 500) -> pd.DataFrame:
+
+def _fetch_ohlcv_df(symbol: str, tf: str = "4h", limit: int = 500) -> pd.DataFrame:
     """
     Fetch OHLCV from Binance futures public API (free, no auth).
     Returns DataFrame with columns: close, volume. Index: datetime.
@@ -33,14 +36,16 @@ def _fetch_ohlcv_df(symbol: str, tf: str = "4H", limit: int = 500) -> pd.DataFra
         df = pd.DataFrame(raw, columns=["ts", "open", "high", "low", "close", "volume"])
         df.index = pd.to_datetime(df["ts"], unit="ms")
         return df[["close", "volume"]].astype(float)
-    except Exception:
+    except Exception as e:
+        _log.warning("risk_analytics OHLCV fetch failed for %s tf=%s: %s",
+                     symbol, tf, e)
         return pd.DataFrame()
 
 
 def _daily_returns(symbol: str, lookback_days: int = 90) -> pd.Series:
     """Return daily return series for a symbol, resampled from 4H OHLCV."""
     limit = lookback_days * 6 + 10
-    df = _fetch_ohlcv_df(symbol, tf="4H", limit=limit)
+    df = _fetch_ohlcv_df(symbol, tf="4h", limit=limit)
     if df.empty:
         return pd.Series(dtype=float)
     daily = df["close"].resample("D").last().dropna()

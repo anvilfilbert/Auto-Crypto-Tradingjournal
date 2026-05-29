@@ -7,7 +7,7 @@ import pandas as pd
 
 @pytest.fixture
 def mock_ohlcv(monkeypatch):
-    def fake_fetch(symbol, tf="4H", limit=500):
+    def fake_fetch(symbol, tf="4h", limit=500):
         rng = np.random.default_rng(int(hash(symbol) % 10000))
         closes = 100 * np.cumprod(1 + rng.normal(0.001, 0.02, limit))
         idx = pd.date_range(end=pd.Timestamp.now(), periods=limit, freq="4h")
