@@ -148,8 +148,17 @@ def pick_max_tp_count(notional_usdt: float, ideal: int = 3) -> int:
 #   score 8  → 1.5×  (3%)
 #   score 9  → 2.0×  (4%)
 #   score 10 → 2.0×  (capped at 4% to bound max loss)
-RISK_PER_TRADE_PCT     = 0.02
-RISK_SCORE_MULTIPLIERS = {7: 1.0, 8: 1.5, 9: 2.0, 10: 2.0}
+RISK_PER_TRADE_PCT     = float(os.environ.get(
+    "FUTURES_AI_RISK_PER_TRADE_PCT", "0.01"))   # default 1% (halved from 2% on 2026-05-28 for learning phase — more trades, smaller bets)
+# BUG-008 fix (2026-05-26): extended down to cover scores 5 and 6 so the
+# tiered Opus sizing path (half-tier at opus_score==5) can actually reach a
+# trade. Previously the dict started at 7, so consensus_score=5 hit
+# `score < min(RISK_SCORE_MULTIPLIERS)=7` and risk_budget.size_trade returned
+# None — killing every Opus-approved score-5 setup before sizing.
+# Scores 5/6/7 share baseline 1.0× because the half-tier mechanic in
+# risk_budget.size_trade provides differentiation for marginal Opus grades;
+# Kelly amplification only kicks in at 8+.
+RISK_SCORE_MULTIPLIERS = {5: 1.0, 6: 1.0, 7: 1.0, 8: 1.5, 9: 2.0, 10: 2.0}
 
 # Hard ceilings — order size never exceeds these regardless of score
 MAX_LEVERAGE              = 10
@@ -160,7 +169,7 @@ MAX_NOTIONAL_USDT         = 25.0   # FLOOR for the dynamic cap (see below)
 # So a $100 starting equity → $25 cap; equity grows to $200 → $50 cap.
 # Floor of $25 ensures small accounts still get tradeable sizes.
 MAX_NOTIONAL_PCT          = 0.25
-MAX_CONCURRENT_POSITIONS  = 5      # raised 3→5 (2026-05-22) — operator request
+MAX_CONCURRENT_POSITIONS  = 8      # raised 5→8 (2026-05-29) — operator request, learning phase
 
 # Profit Compounding Strategy — streak-based risk progression. After N
 # consecutive winning auto_ai trades since the last loss (or breaker
@@ -277,7 +286,7 @@ HEDGE_MAX_DURATION_HOURS       = 24
 # risk = 14% if every stop fires together, sitting right under the
 # -15% total-DD breaker so the elite bypass can't put us over.
 ELITE_BYPASS_SCORE        = 10
-MAX_ELITE_POSITIONS       = 7
+MAX_ELITE_POSITIONS       = 10     # raised 7→10 (2026-05-29) — proportional to MAX_CONCURRENT 5→8, gives elite +2 headroom over soft cap. 10 × 1% per-trade risk = 10% total exposure, under -15% DD breaker.
 
 # Circuit breakers (auto-trip → state goes to "circuit_breaker") — these
 # are CAPITAL-PRESERVATION rules only. Strategic rules (which day, which

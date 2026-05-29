@@ -681,10 +681,23 @@ def _detect_tp_fills(conn, db_pos: dict, live: dict) -> list[dict]:
         # the existing /position-history path handles their close.
         return []
 
-    # Build a set of currently-pending TP prices (snapped to micro-precision
-    # so tick-rounding differences don't cause a false-positive "fill").
+    # BUG-014 fix (2026-05-27): use a TOLERANCE-based match between DB and
+    # live TP prices. Exact rounding to 6 decimals caused a false-positive
+    # on INJUSDT: DB tier prices were stored at 4 decimals (5.9157, 6.1724,
+    # 6.4291) but Bitget snapped them to its 3-decimal tick grid (5.916,
+    # 6.172, 6.429). Exact comparison treated all 3 as "not in pending"
+    # and marked them hit. AZTEC + TIA happened to have matching precision
+    # so they weren't affected. Tolerance-match (0.05%) covers any normal
+    # tick-rounding difference while still detecting real fills (which
+    # always move price by orders of magnitude more).
     live_tps = live.get("tp_levels") or []
-    pending_prices = {round(float(t.get("price") or 0), 6) for t in live_tps}
+    live_prices = [float(t.get("price") or 0) for t in live_tps if t.get("price")]
+
+    def _has_pending_match(target: float) -> bool:
+        """True if any live TP price is within 0.05% of target."""
+        if target <= 0:
+            return False
+        return any(abs(lp - target) / target < 0.0005 for lp in live_prices)
 
     newly_filled: list[dict] = []
     for tp in db_tps:
@@ -699,10 +712,10 @@ def _detect_tp_fills(conn, db_pos: dict, live: dict) -> list[dict]:
         if not tp.get("attached"):
             continue
         try:
-            price_key = round(float(tp.get("price") or 0), 6)
+            target_price = float(tp.get("price") or 0)
         except (TypeError, ValueError):
             continue
-        if price_key and price_key not in pending_prices:
+        if target_price and not _has_pending_match(target_price):
             tp["hit"]    = True
             tp["hit_at"] = _utc_iso_now()
             newly_filled.append(tp)
@@ -880,7 +893,15 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
             bitget_trader.close_position(live["symbol"],
                                           live["direction"].lower(),
                                           percentage=100.0)
-            _mark_closed(conn, db_pos["id"], mark, realized_pnl=0.0,
+            # Compute gross realized P&L from price diff × size × direction.
+            # Fees (~0.12% round-trip) are NOT subtracted here — the next
+            # reconcile cycle pulls the fee-adjusted net from Bitget's
+            # position history and overwrites. But this gross approximation
+            # is right to within ~1% and ends the "$0 reported for every
+            # MAE_cut close" bug.
+            size = float(live.get("total") or 0)
+            gross_pnl = (mark - entry) * size * sign
+            _mark_closed(conn, db_pos["id"], mark, realized_pnl=gross_pnl,
                           reason="MAE breach auto-cut")
             actions.append("mae_cut")
         except Exception as e:
