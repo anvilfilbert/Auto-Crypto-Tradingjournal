@@ -26,8 +26,11 @@ MARKET_CONTEXT_RULES = """MARKET CONTEXT WEIGHTING:
 - Funding rate > 0.05% in trade direction → reduce score by 1 (crowd on-side, squeeze risk)
 - Funding rate > 0.1% in trade direction → reduce score by 2 (extremely crowded)
 - Funding rate opposite direction → slight tailwind, can note as positive factor
-- Fear & Greed < 20 (Extreme Fear): long bias gets +0.5; short bias gets −0.5
-- Fear & Greed > 80 (Extreme Greed): long bias gets −0.5; short bias gets +0.5""".strip()
+- Fear & Greed ≤ 10 (Capitulation): long bias gets +0.3; short bias gets −0.3
+- Fear & Greed ≥ 90 (Euphoria):    long bias gets −0.3; short bias gets +0.3
+- DEFER TO TREND: if the 4H + 1D EMA stack agrees with trade direction, SKIP
+  the F&G contrarian adjustment — the rule is for true sentiment extremes,
+  not regimes where price action already confirms the directional bias.""".strip()
 
 DRAW_ON_LIQUIDITY_RULES = """TAKE-PROFIT TARGETING:
 Prefer TP targets that coincide with visible liquidity pools — equal highs/lows,

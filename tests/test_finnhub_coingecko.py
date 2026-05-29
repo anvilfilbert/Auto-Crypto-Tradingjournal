@@ -14,15 +14,43 @@ def test_finnhub_get_upcoming_events_structure():
 
 
 def test_finnhub_macro_risk_detected():
-    """macro_risk is True when FOMC event is in next 24h."""
+    """macro_risk is True when FOMC event is in next 24h.
+
+    Uses a future-relative timestamp so the test doesn't bit-rot — and so
+    the 2026-05-30 fix that filters out past events doesn't reject it.
+    """
+    from datetime import datetime, timedelta, timezone
+    future = (datetime.now(timezone.utc) + timedelta(hours=12)).strftime("%Y-%m-%dT%H:%M:%SZ")
     fake_events = {"economicCalendar": [
-        {"time": "2026-05-16T14:00:00Z", "event": "FOMC Meeting", "country": "US", "impact": "high"}
+        {"time": future, "event": "FOMC Meeting", "country": "US", "impact": "high"}
     ]}
     with patch("finnhub_client._get", return_value=fake_events):
         from finnhub_client import get_upcoming_events
         result = get_upcoming_events(hours_ahead=48)
     assert result["macro_risk"] is True
     assert result["next_event"] is not None
+    assert result["hours_until"] is not None and result["hours_until"] >= 0
+
+
+def test_finnhub_stale_event_ignored():
+    """Events with negative hours_until (already passed) must not set macro_risk.
+
+    Regression for 2026-05-30 bug — Finnhub's calendar starts at today midnight
+    UTC, so this-morning events stay in the response all day. Without filtering,
+    macro_risk=True with hours_until=-19.9 left the scanner capped at 7.0 for
+    20h after a Fed Jefferson speech.
+    """
+    from datetime import datetime, timedelta, timezone
+    past = (datetime.now(timezone.utc) - timedelta(hours=18)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    fake_events = {"economicCalendar": [
+        {"time": past, "event": "FOMC Meeting", "country": "US", "impact": "high"}
+    ]}
+    with patch("finnhub_client._get", return_value=fake_events):
+        from finnhub_client import get_upcoming_events
+        result = get_upcoming_events(hours_ahead=48)
+    assert result["macro_risk"] is False
+    assert result["next_event"] is None
+    assert result["hours_until"] is None
 
 
 def test_coingecko_global_market_structure():

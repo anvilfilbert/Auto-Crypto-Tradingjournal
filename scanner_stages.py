@@ -100,15 +100,17 @@ def _apply_macro_cap(score: float, macro_ctx: dict) -> tuple:
                 warnings.append(f"VIX {vix:.0f} (elevated fear) — score capped at {cap}")
                 score = min(score, cap)
 
-    # Macro event cap: major event in next 12h
+    # Macro event cap: major event in the next 12h (future only).
+    # Defense-in-depth against stale Finnhub events: ignore the flag when
+    # hours_until is missing or negative (event already passed).
     if macro_ctx.get("macro_risk"):
         hrs = macro_ctx.get("hours_until")
-        evt = macro_ctx.get("next_event", "macro event")
-        cap = 7.0
-        if score > cap:
-            hrs_str = f" in {hrs:.0f}h" if hrs else ""
-            warnings.append(f"{evt}{hrs_str} — macro risk, score capped at {cap}")
-            score = min(score, cap)
+        if hrs is not None and 0 <= hrs <= 12:
+            evt = macro_ctx.get("next_event", "macro event")
+            cap = 7.0
+            if score > cap:
+                warnings.append(f"{evt} in {hrs:.0f}h — macro risk, score capped at {cap}")
+                score = min(score, cap)
 
     return score, warnings
 
@@ -176,6 +178,14 @@ def _stage1(symbols: list, min_score: int = SCANNER_MIN_SCORE,
             if max(bull, bear) >= threshold:
                 direction = "Long" if bull > bear else "Short"
                 out.append((symbol, ctx, conf, direction))
+    # BUG-004 diagnostic (2026-05-26): surface direction split so the operator
+    # can see WHERE shorts disappear in the funnel — if 0 shorts here, the
+    # universe genuinely has none; if shorts are present but lost later,
+    # Stage 2 hard filters are too strict for the bear side.
+    longs  = sum(1 for _, _, _, d in out if d == "Long")
+    shorts = sum(1 for _, _, _, d in out if d == "Short")
+    logger.info("[scanner] Stage1 funnel: %d/%d passed | Long=%d Short=%d",
+                len(out), total, longs, shorts)
     return out
 
 
@@ -253,6 +263,15 @@ def _stage2(candidates: list, min_score: int = SCANNER_MIN_SCORE,
                 continue
 
         out.append((symbol, ctx, conf, direction))
+
+    # BUG-004 diagnostic (2026-05-26): direction split AFTER hard filters.
+    # If Stage1 has shorts but Stage2 doesn't, the bear-side gates (RSI <22,
+    # ADX direction, EMA alignment, MACD trend) are filtering them out —
+    # could be regime-correct or could be a symmetry bug worth investigating.
+    longs  = sum(1 for _, _, _, d in out if d == "Long")
+    shorts = sum(1 for _, _, _, d in out if d == "Short")
+    logger.info("[scanner] Stage2 funnel: %d/%d passed | Long=%d Short=%d",
+                len(out), len(candidates), longs, shorts)
 
     out.sort(key=lambda x: -abs(x[2].get("score", 0)))
     return out[:30]
