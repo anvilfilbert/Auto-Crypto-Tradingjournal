@@ -27,6 +27,86 @@ import numpy as np
 import pandas as pd
 
 
+def compute_vwap_series(df: pd.DataFrame,
+                         anchored: str = "session",
+                         bands: tuple = (1, 2)) -> list[dict] | None:
+    """Per-bar VWAP + bands series for chart overlays.
+
+    Returns a list of dicts ordered chronologically:
+      [
+        {"time": int, "vwap": float,
+         "upper_1": float, "lower_1": float,
+         "upper_2": float, "lower_2": float},
+        ...
+      ]
+
+    `time` is unix seconds (LightweightCharts native format).
+    Session-anchored — VWAP and bands restart at UTC midnight.
+    Returns None on insufficient data or missing columns.
+    """
+    required = {"high", "low", "close", "volume"}
+    if df is None or df.empty or not required.issubset(df.columns):
+        return None
+    if len(df) < 3:
+        return None
+
+    # Accept either the chart_candles convention (RangeIndex + 'timestamp' col
+    # in ms) or a DatetimeIndex. Both convert to unix SECONDS + UTC-day for
+    # session anchoring.
+    if "timestamp" in df.columns:
+        ts_ms = df["timestamp"].astype("int64").values
+        ts_s  = (ts_ms // 1000).astype("int64")
+        idx   = pd.to_datetime(ts_ms, unit="ms", utc=True)
+    elif isinstance(df.index, pd.DatetimeIndex):
+        idx = df.index
+        if idx.tz is not None:
+            idx = idx.tz_convert("UTC")
+        else:
+            idx = idx.tz_localize("UTC")
+        ts_s = (idx.asi8 // 1_000_000_000).astype("int64")
+    else:
+        return None
+
+    typ = ((df["high"] + df["low"] + df["close"]) / 3.0).values
+    vol = df["volume"].astype(float).values
+    session_id = idx.normalize()
+
+    series = []
+    cum_pv = 0.0
+    cum_v = 0.0
+    cum_pv2 = 0.0   # for running variance
+    prev_session = None
+
+    for i, sid in enumerate(session_id):
+        if sid != prev_session:
+            cum_pv = cum_pv2 = cum_v = 0.0
+            prev_session = sid
+
+        v = float(vol[i])
+        p = float(typ[i])
+        cum_pv += p * v
+        cum_v += v
+        cum_pv2 += v * p * p
+
+        if cum_v <= 0:
+            continue
+
+        vwap = cum_pv / cum_v
+        variance = max(0.0, (cum_pv2 / cum_v) - vwap * vwap)
+        stdev = variance ** 0.5
+
+        row = {
+            "time": int(ts_s[i]),
+            "vwap": round(vwap, 6),
+        }
+        for mult in bands:
+            row[f"upper_{mult}"] = round(vwap + mult * stdev, 6)
+            row[f"lower_{mult}"] = round(vwap - mult * stdev, 6)
+        series.append(row)
+
+    return series if series else None
+
+
 def compute_vwap(df: pd.DataFrame,
                   anchored: str = "session",
                   bands: tuple = (1, 2)) -> dict | None:

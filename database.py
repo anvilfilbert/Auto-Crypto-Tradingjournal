@@ -560,6 +560,63 @@ def init_db():
     _apply(66, "positions.sizing_tier",
            "ALTER TABLE positions ADD COLUMN sizing_tier TEXT DEFAULT 'full'")
 
+    # ── SL persistence (added 2026-05-31) ─────────────────────────────────────
+    # Snapshot of the INITIAL stop-loss price at trade open. Defines 1R risk
+    # for downstream realized-R computation in the stats page. Written by
+    # executor._insert_open_position and paper.open_paper_trade. Never moved
+    # — even if SL gets trailed or bumped to BE during the trade, this column
+    # holds the original SL so R-multiples stay anchored to the entry-time
+    # plan. NULL for historical positions opened before this migration.
+    _apply(67, "positions.sl_price",
+           "ALTER TABLE positions ADD COLUMN sl_price REAL DEFAULT NULL")
+
+    # ── R-3 funding cost + liquidation distance (2026-05-31, Master plan R-3)
+    # funding_paid_usd: total funding paid (positive) or received (negative)
+    #   across the hold period. Pulled from Bitget position history
+    #   (totalFunding field) at reconcile time. Default NULL for historical
+    #   positions; populated by funding_backfill job going forward.
+    # liq_distance_atr: at trade open, distance from entry to liquidation
+    #   measured in 4H ATR units. >5 = healthy, <2 = structurally fragile
+    #   (SL is likely inside liquidation zone, exchange forces close before
+    #   our SL fires). Written by executor._insert_open_position.
+    _apply(68, "positions.funding_paid_usd",
+           "ALTER TABLE positions ADD COLUMN funding_paid_usd REAL DEFAULT NULL")
+    _apply(69, "positions.liq_distance_atr",
+           "ALTER TABLE positions ADD COLUMN liq_distance_atr REAL DEFAULT NULL")
+
+    # ── L-0 (Master plan): self-learning foundation ──────────────────────────
+    # learned_params: versioned key-value store. The scanner / orchestrator /
+    # executor read tunables from here via trading.learned.get(). Pinned rows
+    # are operator overrides — the learner respects them.
+    _apply(70, "learned_params",
+           "CREATE TABLE IF NOT EXISTS learned_params ("
+           "key TEXT PRIMARY KEY, "
+           "value TEXT NOT NULL, "
+           "value_type TEXT NOT NULL DEFAULT 'json', "
+           "default_value TEXT, "
+           "updated_at TEXT NOT NULL DEFAULT (datetime('now')), "
+           "sample_size INTEGER DEFAULT 0, "
+           "ci_low REAL, ci_high REAL, p_value REAL, "
+           "pinned INTEGER NOT NULL DEFAULT 0, "
+           "pinned_reason TEXT, "
+           "last_revert_at TEXT, "
+           "revert_count INTEGER NOT NULL DEFAULT 0)")
+
+    # learner_log: every learner decision (apply / skip / revert) logged here.
+    # Read by daily Telegram report + Stats UI "Recent auto-adjustments" panel.
+    _apply(71, "learner_log",
+           "CREATE TABLE IF NOT EXISTS learner_log ("
+           "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+           "ts TEXT NOT NULL DEFAULT (datetime('now')), "
+           "learner_name TEXT NOT NULL, "
+           "param_key TEXT NOT NULL, "
+           "old_value TEXT, new_value TEXT, "
+           "action TEXT NOT NULL, "
+           "gate_reason TEXT, "
+           "sample_size INTEGER, "
+           "ci_low REAL, ci_high REAL, p_value REAL, "
+           "payload_json TEXT)")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here

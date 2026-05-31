@@ -477,6 +477,133 @@ def api_chart_indicators():
         return _err("Internal server error", 500)
 
 
+# ── 2026-05-30 chart-overlay endpoints for VWAP / Volume Profile / Supertrend ──
+# All return per-bar series shaped for LightweightCharts addLineSeries /
+# canvas overlay rendering. Defensive: each route is independently fail-soft —
+# a missing dep returns ok=true with empty data so the popup renders gracefully.
+
+@bp.route("/api/chart/vwap/<symbol>")
+def api_chart_vwap(symbol):
+    """
+    GET /api/chart/vwap/BTCUSDT?timeframe=4H&limit=200&anchored=session
+    Returns VWAP per-bar series for overlay plotting (one line per band).
+
+    Payload:
+      { "summary": { "vwap": float, "upper_1": float, "lower_1": float,
+                     "upper_2": float, "lower_2": float, ... },
+        "series":  [ {"time": int, "vwap": float, "upper_1": float, ...}, ... ],
+        "symbol":  str, "timeframe": str }
+    """
+    try:
+        import chart_candles
+        import chart_vwap
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        anchored  = request.args.get("anchored", "session").strip()
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        summary = chart_vwap.compute_vwap(df, anchored=anchored) or {}
+        series  = chart_vwap.compute_vwap_series(df, anchored=anchored) or []
+        return _ok({
+            "symbol":    sym,
+            "timeframe": timeframe,
+            "summary":   summary,
+            "series":    series,
+            "bars":      len(series),
+        })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/volume_profile/<symbol>")
+def api_chart_volume_profile(symbol):
+    """
+    GET /api/chart/volume_profile/BTCUSDT?timeframe=4H&limit=200&bins=24
+    Returns POC, VAH/VAL, HVN/LVN lists for drawing a right-side histogram
+    overlay on the popup chart.
+
+    Payload:
+      { "poc": float, "vah": float, "val": float,
+        "hvn": [float], "lvn": [float],
+        "at_poc": str, "distance_to_poc_pct": float,
+        "in_value_area": bool, "bins_used": int, "lookback_bars": int,
+        "symbol": str, "timeframe": str }
+    """
+    try:
+        import chart_candles
+        import chart_volume_profile
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        bins      = max(8, min(64, int(request.args.get("bins", 24))))
+        va_pct    = max(0.5, min(0.9, float(request.args.get("va_pct", 0.70))))
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        result = chart_volume_profile.compute_volume_profile(
+            df, bins=bins, va_pct=va_pct, lookback_bars=limit) or {}
+        result["symbol"]    = sym
+        result["timeframe"] = timeframe
+        return _ok(result)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/supertrend/<symbol>")
+def api_chart_supertrend(symbol):
+    """
+    GET /api/chart/supertrend/BTCUSDT?timeframe=4H&limit=200&period=10&mult=3.0
+    Returns current Supertrend state (line value + direction + flip age) for
+    overlay rendering. Frontend draws supertrend_value as a line, colored by
+    direction sign.
+
+    Payload:
+      { "direction": +1|-1, "supertrend_value": float, "flip_bars_ago": int,
+        "signal": str, "symbol": str, "timeframe": str }
+    """
+    try:
+        import chart_candles
+        import chart_indicators
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        period    = max(5, min(50, int(request.args.get("period", 10))))
+        mult      = max(1.0, min(5.0, float(request.args.get("mult", 3.0))))
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        summary = chart_indicators.compute_supertrend(df, period=period,
+                                                       multiplier=mult) or {}
+        series  = chart_indicators.compute_supertrend_series(df, period=period,
+                                                              multiplier=mult) or []
+        return _ok({
+            "symbol":    sym,
+            "timeframe": timeframe,
+            "summary":   summary,
+            "series":    series,
+            "bars":      len(series),
+        })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
 # ── Score Comparison (scanner vs Opus vs hindsight) ────────────────────────────
 # Added 2026-05-24. Backed by ai_score_comparison.compute_comparison() —
 # returns per-trade rows + per-system aggregates + disagreement cases. Cached

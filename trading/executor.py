@@ -113,7 +113,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             chain, setup_type, setup_score, signal_price, tp_levels,
             consensus_model_used, bear_phase_at_open, archetype_at_open,
             po3_total, opus_had_overrides, tp_levels_count,
-            ai_score_at_open, sizing_tier, execution_lag_minutes
+            ai_score_at_open, sizing_tier, execution_lag_minutes,
+            sl_price
         ) VALUES (
             ?, ?, ?,
             'isolated', datetime('now'), '',
@@ -125,7 +126,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             'auto_ai', ?, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?, ?, ?
+            ?, ?, ?,
+            ?
         )
     """, (
         sym,
@@ -157,6 +159,10 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
         # produced this setup and the actual fill. Useful for the risk
         # dashboard's alpha-decay analysis. Computed at insert time.
         _compute_lag_minutes(signal.get("_scan_completed_at")),
+        # Initial SL price (migration 67, 2026-05-31) — defines 1R for the
+        # stats-page realized-R computation. Snapshotted once at open and
+        # never updated even if SL is moved (BE / trail) during the trade.
+        signal.get("sl_price"),
     ))
     conn.commit()
     return cur.lastrowid
@@ -512,6 +518,23 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
         return None
 
     pos_id = _insert_open_position(conn, signal, sizing, result)
+
+    # A-D (Master plan Week 11) — record slippage on every fill so the
+    # Execution Quality Monitor can spot deteriorating fills before they
+    # erode the edge.
+    try:
+        from trading import exec_quality
+        actual_fill = float(result.get("mark_at_entry") or 0)
+        if intended_entry and actual_fill:
+            exec_quality.record_slippage(
+                conn, pos_id,
+                intended_entry=intended_entry,
+                actual_entry=actual_fill,
+                direction=dir_,
+            )
+    except Exception as _eq_err:
+        logger.debug("A-D slippage record failed for pos %s: %s", pos_id, _eq_err)
+
     _log(conn, "real_open", pos_id, {
         "symbol":         sym,
         "direction":      dir_,

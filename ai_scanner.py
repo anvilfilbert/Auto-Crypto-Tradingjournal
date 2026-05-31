@@ -425,6 +425,48 @@ def _score_finalists_with_agents(finalists: list, conn,
 
             # (Operator-behavior bad-hour re-apply removed 2026-05-25 — see note above.)
 
+            # ── N-3 noise gates (added — Master plan Week 7) ──────────────
+            # Wick rejection + ADX <20 + BB squeeze. Modifier-only by default;
+            # ADX hard-veto opt-in via FUTURES_AI_ADX_HARD_GATE=1.
+            n3_label = ""
+            try:
+                from trading import noise_gates
+                ctx_4h     = ctx.get("4H") or {}
+                ind_4h     = ctx_4h.get("indicators") or {}
+                adx_value  = (ind_4h.get("adx") or {}).get("value")
+                bb_info    = ind_4h.get("bollinger") or {}
+                current_bw = bb_info.get("band_width")
+                bw_history = ctx_4h.get("bb_widths_history") or []
+                last_candle = None
+                df_4h_for_n3 = ctx_4h.get("candles_df")
+                try:
+                    if df_4h_for_n3 is not None and len(df_4h_for_n3) >= 1:
+                        last = df_4h_for_n3.iloc[-1]
+                        last_candle = {"open": float(last["open"]),
+                                        "high": float(last["high"]),
+                                        "low": float(last["low"]),
+                                        "close": float(last["close"])}
+                except Exception:
+                    last_candle = None
+                arch_hint = (prep.get("archetype") or prep.get("setup_type") or "")
+                n3 = noise_gates.evaluate_all(
+                    last_candle=last_candle,
+                    adx_4h=adx_value,
+                    bb_widths_history=bw_history,
+                    bb_current_width=current_bw,
+                    direction=direction,
+                    archetype=arch_hint,
+                )
+                if n3.get("veto"):
+                    logger.info("N-3 hard veto on %s: %s", sym, "; ".join(n3["reasons"]))
+                    continue
+                if n3["total_delta"] != 0:
+                    score = max(0.0, min(10.0, score + n3["total_delta"]))
+                    n3_label = "; ".join(n3["reasons"])
+                    logger.info("N-3 mod applied to %s: %+.2f (%s)", sym, n3["total_delta"], n3_label)
+            except Exception as e:
+                logger.debug("N-3 modifier error on %s: %s", sym, e)
+
             if score < min_score:
                 continue
             entry_p = float(prep.get("entry_price", 0) or 0)
@@ -554,6 +596,7 @@ def _score_finalists_with_agents(finalists: list, conn,
                 "_cpr":           cpr_label,
                 "_ib":            ib_label,
                 "_vmc":           vmc_label,
+                "_n3_noise":      n3_label,
                 "rr_ratio":       prep.get("rr_ratio", 0),
                 "key_conditions": prep.get("key_conditions", []),
                 "chart_png_b64":  prep.get("chart_png_b64", ""),

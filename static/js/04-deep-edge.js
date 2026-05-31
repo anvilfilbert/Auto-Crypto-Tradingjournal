@@ -529,15 +529,18 @@ async function loadRulebook() {
   renderRulebook(res.data);
 }
 
-async function updateRulebook() {
+async function updateRulebook(opts) {
+  opts = opts || {};
+  const force = !!opts.force;
   const btn = document.getElementById('rulebook-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ Generating rules…';
+  btn.textContent = force ? '⏳ Force-regenerating rules…' : '⏳ Generating rules…';
   document.getElementById('rulebook-results').innerHTML =
     '<div style="color:var(--muted);font-size:.85rem;padding:12px">Analysing your trade history — this takes ~10 seconds…</div>';
 
   try {
-    const res = await api('/api/rulebook/update', 'POST', {});
+    const body = force ? { force: true } : {};
+    const res = await api('/api/rulebook/update', 'POST', body);
     if (!res.ok) throw new Error(res.error);
     renderRulebook(res.data);
   } catch(e) {
@@ -549,20 +552,55 @@ async function updateRulebook() {
   }
 }
 
+// Convenience for the "Force regenerate" link rendered when the gate skips.
+function forceUpdateRulebook() { updateRulebook({ force: true }); }
+
 function renderRulebook(data) {
   const el = document.getElementById('rulebook-results');
   const ts = document.getElementById('rulebook-updated');
 
   if (data.insufficient_data) {
-    el.innerHTML = `<div style="color:var(--muted);font-size:.85rem;padding:12px">${data.message}</div>`;
+    // Safe DOM construction — message comes from server but treat as text.
+    el.replaceChildren();
+    const d = document.createElement('div');
+    d.style.cssText = 'color:var(--muted);font-size:.85rem;padding:12px';
+    d.textContent = data.message || 'Insufficient data';
+    el.appendChild(d);
     return;
   }
   if (!data.rules || !data.rules.length) {
-    el.innerHTML = `<div style="color:var(--muted);font-size:.85rem;padding:12px">No rules yet — click Generate to build your rulebook.</div>`;
+    el.replaceChildren();
+    const d = document.createElement('div');
+    d.style.cssText = 'color:var(--muted);font-size:.85rem;padding:12px';
+    d.textContent = 'No rules yet — click Generate to build your rulebook.';
+    el.appendChild(d);
     return;
   }
 
   if (data.updated_at) ts.textContent = `Last updated: ${data.updated_at}`;
+
+  // If backend skipped regeneration because new-trade count < gate, show
+  // a notice above the existing rules with a Force-regenerate link.
+  // Built with safe DOM methods so the server message can't inject HTML.
+  if (data.skipped) {
+    const notice = document.createElement('div');
+    notice.style.cssText = 'background:rgba(255,179,0,.10);border:1px solid rgba(255,179,0,.35);'
+      + 'border-radius:6px;padding:10px 14px;margin-bottom:10px;'
+      + 'font-size:.85rem;color:var(--yellow,#ffb300);display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+    const msg = document.createElement('span');
+    msg.textContent = 'ℹ Regeneration skipped: ' + (data.message || 'gate not satisfied');
+    notice.appendChild(msg);
+    const link = document.createElement('a');
+    link.textContent = 'Force regenerate';
+    link.href = '#';
+    link.style.cssText = 'color:var(--accent);text-decoration:underline;cursor:pointer';
+    link.onclick = (e) => { e.preventDefault(); forceUpdateRulebook(); };
+    notice.appendChild(link);
+    // Place notice as first child so it's seen before the rules list.
+    el.replaceChildren(notice);
+  } else {
+    el.replaceChildren();
+  }
 
   const typeConfig = {
     warning:     { color: 'var(--red)',     icon: '⚠', label: 'WARNING' },
@@ -570,24 +608,52 @@ function renderRulebook(data) {
     habit:       { color: 'var(--yellow)',  icon: '→', label: 'HABIT' },
     calibration: { color: 'var(--accent2)', icon: '~', label: 'CALIBRATION' },
   };
-
   const confColor = { high: 'var(--accent3)', medium: 'var(--yellow)', low: 'var(--muted)' };
 
-  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">` +
-    data.rules.map(r => {
-      const rtype = r.rule_type || r.type || '';
-      const cfg = typeConfig[rtype] || { color: 'var(--muted)', icon: '•', label: rtype.toUpperCase() || 'RULE' };
-      const conf = r.confidence || 'medium';
-      return `
-        <div class="ai-item" style="border-left:3px solid ${cfg.color};padding-left:12px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-            <span style="color:${cfg.color};font-size:.72rem;font-weight:700;letter-spacing:.05em">${cfg.icon} ${cfg.label}</span>
-            <span style="font-weight:600;font-size:.88rem">${r.title}</span>
-            <span style="margin-left:auto;font-size:.72rem;color:${confColor[conf]}">${conf} confidence · ${r.data_points} trades</span>
-          </div>
-          <div style="font-size:.84rem;color:var(--fg)">${r.rule}</div>
-        </div>`;
-    }).join('') + `</div>`;
+  // Safe DOM construction for the rules list — no innerHTML, no template-
+  // string interpolation. Title/rule come from server but rendered via
+  // textContent so any markup in the strings is escaped, not executed.
+  const listWrap = document.createElement('div');
+  listWrap.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+
+  data.rules.forEach(r => {
+    const rtype = r.rule_type || r.type || '';
+    const cfg = typeConfig[rtype] || { color: 'var(--muted)', icon: '•', label: (rtype || 'RULE').toUpperCase() };
+    const conf = r.confidence || 'medium';
+
+    const item = document.createElement('div');
+    item.className = 'ai-item';
+    item.style.cssText = `border-left:3px solid ${cfg.color};padding-left:12px`;
+
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap';
+
+    const tag = document.createElement('span');
+    tag.style.cssText = `color:${cfg.color};font-size:.72rem;font-weight:700;letter-spacing:.05em`;
+    tag.textContent = `${cfg.icon} ${cfg.label}`;
+    head.appendChild(tag);
+
+    const title = document.createElement('span');
+    title.style.cssText = 'font-weight:600;font-size:.88rem';
+    title.textContent = r.title || '';
+    head.appendChild(title);
+
+    const meta = document.createElement('span');
+    meta.style.cssText = `margin-left:auto;font-size:.72rem;color:${confColor[conf] || 'var(--muted)'}`;
+    meta.textContent = `${conf} confidence · ${r.data_points} trades`;
+    head.appendChild(meta);
+
+    item.appendChild(head);
+
+    const body = document.createElement('div');
+    body.style.cssText = 'font-size:.84rem;color:var(--fg)';
+    body.textContent = r.rule || '';
+    item.appendChild(body);
+
+    listWrap.appendChild(item);
+  });
+
+  el.appendChild(listWrap);
 }
 
 

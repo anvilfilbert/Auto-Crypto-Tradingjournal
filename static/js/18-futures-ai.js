@@ -72,6 +72,27 @@ function _renderFuturesAI(d) {
     pn.style.color = pct >= 0 ? 'var(--accent3)' : 'var(--red)';
   }
 
+  // 7d + 30d realized P&L — dollar + percent (matches Unrealized pill format).
+  // % is of starting_equity (parallel to 24h pill's denominator).
+  const _fmtWindowPnl = (usd, pct) => {
+    const sign = usd >= 0 ? '+' : '';
+    return `${sign}$${usd.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
+  };
+  const p7 = document.getElementById('fai-pnl-7d');
+  if (p7) {
+    const usd = rt.pnl_7d_usd ?? 0;
+    const pct = rt.pnl_7d_pct ?? 0;
+    p7.textContent = _fmtWindowPnl(usd, pct);
+    p7.style.color = usd >= 0 ? 'var(--accent3)' : 'var(--red)';
+  }
+  const p30 = document.getElementById('fai-pnl-30d');
+  if (p30) {
+    const usd = rt.pnl_30d_usd ?? 0;
+    const pct = rt.pnl_30d_pct ?? 0;
+    p30.textContent = _fmtWindowPnl(usd, pct);
+    p30.style.color = usd >= 0 ? 'var(--accent3)' : 'var(--red)';
+  }
+
   // Headline one-liner — combines state + equity + breaker + hedge + streak
   // into a single read-at-a-glance summary. Color-coded against state.
   const headline = document.getElementById('fai-headline');
@@ -122,6 +143,25 @@ function _renderFuturesAI(d) {
       spans.push([' · ', null, null]);
       spans.push([`${losses} loss streak`, 'var(--red)', 600]);
     }
+
+    // 7d + 30d winrate (only show if any closes in window)
+    const wr7Total  = rt.winrate_7d_total  ?? 0;
+    const wr30Total = rt.winrate_30d_total ?? 0;
+    if (wr7Total > 0) {
+      const wr  = rt.winrate_7d_pct ?? 0;
+      const wins = rt.winrate_7d_wins ?? 0;
+      spans.push([' · ', null, null]);
+      spans.push([`7d WR ${wr.toFixed(0)}% (${wins}/${wr7Total})`,
+                  wr >= 50 ? 'var(--accent3)' : 'var(--red)', 600]);
+    }
+    if (wr30Total > 0) {
+      const wr  = rt.winrate_30d_pct ?? 0;
+      const wins = rt.winrate_30d_wins ?? 0;
+      spans.push([' · ', null, null]);
+      spans.push([`30d WR ${wr.toFixed(0)}% (${wins}/${wr30Total})`,
+                  wr >= 50 ? 'var(--accent3)' : 'var(--red)', 600]);
+    }
+
     if (hedge) {
       spans.push([' · ', null, null]);
       spans.push([`🛡 hedge active`, 'var(--yellow,#ffb300)', 700]);
@@ -290,17 +330,33 @@ function _formatTpLevels(p) {
     return _num(p.preset_tp) || '—';
   }
   // Stack one per line inside the cell. Active (not-yet-hit) levels in
-  // brighter text; hit levels dimmed + struck through.
+  // brighter text; hit levels dimmed + struck through + "· hit MM-DD HH:MM"
+  // appended in non-struck-through trailing span so the hit time is readable.
   const frag = document.createDocumentFragment();
   levels.forEach((lvl, i) => {
     const line = document.createElement('div');
     const idx = lvl.idx ?? (i + 1);
     const price = _num(lvl.price) || '?';
     const pct = lvl.pct != null ? `(${Math.round(lvl.pct)}%)` : '';
-    line.textContent = `TP${idx}  ${price}  ${pct}`.trim();
-    line.style.cssText = lvl.hit
-      ? 'opacity:.45;text-decoration:line-through;font-size:.74rem;line-height:1.4'
-      : 'font-size:.74rem;line-height:1.4';
+
+    if (lvl.hit) {
+      // Struck-through "TPn price (pct%)" + plain "· hit MM-DD HH:MM"
+      const struck = document.createElement('span');
+      struck.textContent = `TP${idx}  ${price}  ${pct}`.trim();
+      struck.style.cssText = 'text-decoration:line-through;opacity:.55';
+      line.appendChild(struck);
+      const ts = (lvl.hit_at || '').replace('T', ' ').slice(5, 16);
+      if (ts) {
+        const tag = document.createElement('span');
+        tag.textContent = `  · hit ${ts}`;
+        tag.style.cssText = 'opacity:.75;color:var(--accent3)';
+        line.appendChild(tag);
+      }
+      line.style.cssText = 'font-size:.74rem;line-height:1.4';
+    } else {
+      line.textContent = `TP${idx}  ${price}  ${pct}`.trim();
+      line.style.cssText = 'font-size:.74rem;line-height:1.4';
+    }
     frag.appendChild(line);
   });
   return frag;
@@ -314,8 +370,8 @@ function _buildOpenPositionsTable(rows, source) {
   const hrow = thead.insertRow();
   // Different columns for real (live data from Bitget) vs paper (DB)
   const headers = source === 'real'
-    ? ['Symbol','Dir','Entry','Mark','% Move','Unrl P&L','Size','Notional','Lev','SL','TPs']
-    : ['Symbol','Dir','Score','Archetype','Entry','SL','TPs','Notional','Lev'];
+    ? ['Symbol','Dir','Entered','Entry','Mark','% Move','Unrl P&L','Size','Notional','Lev','SL','TPs']
+    : ['Symbol','Dir','Entered','Score','Archetype','Entry','SL','TPs','Notional','Lev'];
   headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h;
@@ -333,9 +389,16 @@ function _buildOpenPositionsTable(rows, source) {
       if (p.tp2_price) synth.push({idx: 2, price: p.tp2_price, pct: 40, hit: false});
       p = Object.assign({}, p, {tp_levels: synth});
     }
+    // "Entered" formatter — MM-DD HH:MM from open_time / opened_at, else '—'
+    const _enteredStr = (rec) => {
+      const t = rec.open_time || rec.opened_at || '';
+      return t ? t.replace('T', ' ').slice(5, 16) : '—';
+    };
+
     const cells = source === 'real' ? [
       p.symbol,
       p.direction,
+      _enteredStr(p),
       _num(p.entry_price),
       _num(p.mark_price),
       ((p.unrealized_pct >= 0 ? '+' : '') + (p.unrealized_pct ?? 0).toFixed(2) + '%'),
@@ -348,6 +411,7 @@ function _buildOpenPositionsTable(rows, source) {
     ] : [
       p.symbol,
       p.direction,
+      _enteredStr(p),
       p.score_consensus + '/10',
       p.archetype || '—',
       _num(p.entry_price),
@@ -361,13 +425,14 @@ function _buildOpenPositionsTable(rows, source) {
       // Allow DocumentFragment for the TPs cell so multi-line stacking works
       if (v instanceof DocumentFragment) td.appendChild(v);
       else td.textContent = v;
-      // Multi-line TP cell needs top-aligned padding so other cells line up
-      const isTpCell = (source === 'real' && i === 9) || (source !== 'real' && i === 6);
+      // Multi-line TP cell needs top-aligned padding so other cells line up.
+      // Indexes shifted by 1 after the "Entered" column was added.
+      const isTpCell = (source === 'real' && i === 11) || (source !== 'real' && i === 7);
       let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
       if (isTpCell) cls += ';vertical-align:top';
-      // Color the %-move and P&L cells
-      if (source === 'real' && (i === 4 || i === 5)) {
-        const val = i === 4 ? (p.unrealized_pct || 0) : (p.unrealized_pnl || 0);
+      // Color the %-move and P&L cells (indexes 5/6 in the real layout now)
+      if (source === 'real' && (i === 5 || i === 6)) {
+        const val = i === 5 ? (p.unrealized_pct || 0) : (p.unrealized_pnl || 0);
         cls += ';color:' + (val >= 0 ? 'var(--accent3)' : 'var(--red)');
       }
       td.style.cssText = cls;

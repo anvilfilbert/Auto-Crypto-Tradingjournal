@@ -352,3 +352,225 @@ def start():
     t.start()
     print(f"[Monitor] Background monitor started (every {MONITOR_INTERVAL}s, "
           f"first run in {FIRST_DELAY}s)", flush=True)
+
+    # ── Daily Telegram report (09:00 UTC) ──────────────────────────────────
+    def _daily_report_loop():
+        import datetime
+        last_sent = None
+        while True:
+            try:
+                now = datetime.datetime.utcnow()
+                today = now.date()
+                # Fire at first cycle ≥ 09:00 UTC each day (next chance the loop runs after 09:00)
+                if now.hour >= 9 and last_sent != today:
+                    try:
+                        from trading import daily_report
+                        from database import db_conn
+                        with db_conn() as _conn:
+                            ok = daily_report.send_daily_report(_conn)
+                        print(f"[DailyReport] sent={ok} at {now.isoformat()}", flush=True)
+                    except Exception as e:
+                        print(f"[DailyReport] failed: {e}", flush=True)
+                    last_sent = today
+            except Exception as e:
+                print(f"[DailyReport] outer error: {e}", flush=True)
+            time.sleep(300)  # check every 5 min — once-per-day gating done by last_sent
+
+    t2 = threading.Thread(target=_daily_report_loop, name="daily-report", daemon=True)
+    t2.start()
+    print(f"[DailyReport] Background daily-report scheduler started (sends at first cycle ≥ 09:00 UTC)", flush=True)
+
+    # ── Hourly R-3 backfill (funding + liq_distance) ──────────────────────
+    def _r3_backfill_loop():
+        while True:
+            try:
+                from trading import r3_funding_liq
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = r3_funding_liq.run_all(_conn)
+                if summary.get("liq", {}).get("updated", 0) > 0 or summary.get("funding", {}).get("updated", 0) > 0:
+                    print(f"[R-3] backfilled: {summary}", flush=True)
+            except Exception as e:
+                print(f"[R-3] backfill error: {e}", flush=True)
+            time.sleep(3600)  # every 1h
+
+    t3 = threading.Thread(target=_r3_backfill_loop, name="r3-backfill", daemon=True)
+    t3.start()
+    print(f"[R-3] Background funding/liq backfill scheduler started (hourly)", flush=True)
+
+    # ── Per-symbol learner (every 6h) ──────────────────────────────────────
+    def _learner_symbol_loop():
+        import time as _t
+        _t.sleep(180)  # initial 3min delay so other inits finish first
+        while True:
+            try:
+                from trading import learner_symbol
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_symbol.evaluate_and_update(_conn)
+                applied = len(summary.get("applied", []))
+                if applied > 0:
+                    print(f"[Learner-symbol] applied {applied} change(s): {summary['applied']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-symbol] error: {e}", flush=True)
+            time.sleep(6 * 3600)  # every 6h
+
+    t4 = threading.Thread(target=_learner_symbol_loop, name="learner-symbol", daemon=True)
+    t4.start()
+    print(f"[Learner-symbol] Background per-symbol learner started (every 6h, first run in 3min)", flush=True)
+
+    # ── L-2 time-bucket learner (session/DoW/hour, every 6h) ─────────────
+    def _learner_time_loop():
+        import time as _t
+        _t.sleep(210)  # offset 30s after symbol-learner
+        while True:
+            try:
+                from trading import learner_time
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_time.run_all(_conn)
+                total_applied = sum(len(d.get("applied", [])) for d in summary.values())
+                if total_applied > 0:
+                    print(f"[Learner-time] applied {total_applied} change(s): {summary}", flush=True)
+            except Exception as e:
+                print(f"[Learner-time] error: {e}", flush=True)
+            time.sleep(6 * 3600)  # every 6h
+
+    t5 = threading.Thread(target=_learner_time_loop, name="learner-time", daemon=True)
+    t5.start()
+    print(f"[Learner-time] Background session/DoW/hour learner started (every 6h, first run in ~3.5min)", flush=True)
+
+    # ── L-3 threshold learner (consensus_min_score, once per day) ─────────
+    def _learner_threshold_loop():
+        import time as _t
+        _t.sleep(240)  # 4min initial offset
+        while True:
+            try:
+                from trading import learner_threshold
+                from database import db_conn
+                with db_conn() as _conn:
+                    result = learner_threshold.evaluate_and_update(_conn)
+                if result.get("action") == "applied":
+                    print(f"[Learner-threshold] applied {result['old']}→{result['new']}: {result['reason']}", flush=True)
+                elif result.get("action") == "rejected_by_validator":
+                    print(f"[Learner-threshold] proposal rejected by A-B: {result['reason']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-threshold] error: {e}", flush=True)
+            time.sleep(24 * 3600)  # daily
+
+    t6 = threading.Thread(target=_learner_threshold_loop, name="learner-threshold", daemon=True)
+    t6.start()
+    print(f"[Learner-threshold] Background threshold learner started (daily)", flush=True)
+
+    # ── A-C Post-Mortem agent (hourly — picks up new closes) ──────────────
+    def _post_mortem_loop():
+        import time as _t
+        _t.sleep(300)  # 5min initial offset
+        while True:
+            try:
+                from trading import post_mortem
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = post_mortem.run_pending(_conn, max_per_cycle=5)
+                if summary.get("analyzed", 0) > 0:
+                    print(f"[Post-mortem] analyzed {summary['analyzed']} loss(es), "
+                          f"cost=${summary['total_cost_usd']:.4f}: {summary['results']}",
+                          flush=True)
+            except Exception as e:
+                print(f"[Post-mortem] error: {e}", flush=True)
+            time.sleep(3600)  # hourly
+
+    t7 = threading.Thread(target=_post_mortem_loop, name="post-mortem", daemon=True)
+    t7.start()
+    print(f"[Post-mortem] Background post-mortem agent started (hourly)", flush=True)
+
+    # ── N-4 VPIN snapshot loop (every 5min, top watchlist) ────────────────
+    def _vpin_snapshot_loop():
+        import time as _t
+        _t.sleep(330)  # offset 5.5min so initial bursts don't collide
+        while True:
+            try:
+                from trading import vpin
+                from scanner_watchlist import get_watchlist
+                from database import db_conn
+                wl = get_watchlist() or []
+                # Sample top 20 symbols by 24h volume — VPIN only makes sense
+                # for highly-traded names anyway (low-vol names lack enough
+                # aggTrades to compute meaningful buckets).
+                symbols = list(wl)[:20]
+                with db_conn() as _conn:
+                    results = vpin.snapshot(_conn, symbols)
+                veto_n = sum(1 for r in results if r.get("vpin") and r["vpin"] >= 0.7)
+                print(f"[VPIN] sampled {len(results)}/{len(symbols)} symbols, "
+                      f"{veto_n} in veto zone (≥0.70)", flush=True)
+            except Exception as e:
+                print(f"[VPIN] error: {e}", flush=True)
+            time.sleep(5 * 60)  # every 5 min
+
+    t8 = threading.Thread(target=_vpin_snapshot_loop, name="vpin", daemon=True)
+    t8.start()
+    print(f"[VPIN] Background N-4 VPIN snapshot loop started (every 5min, top 20 by watchlist order)", flush=True)
+
+    # ── L-4 TP/SL distance learner (daily) ────────────────────────────────
+    def _learner_tpsl_loop():
+        import time as _t
+        _t.sleep(360)  # 6min initial offset
+        while True:
+            try:
+                from trading import learner_tpsl
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_tpsl.evaluate_and_update(_conn)
+                if summary.get("applied"):
+                    print(f"[Learner-TPSL] applied {len(summary['applied'])} change(s): "
+                          f"{summary['applied']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-TPSL] error: {e}", flush=True)
+            time.sleep(24 * 3600)
+
+    t9 = threading.Thread(target=_learner_tpsl_loop, name="learner-tpsl", daemon=True)
+    t9.start()
+    print(f"[Learner-TPSL] Background L-4 TP/SL learner started (daily)", flush=True)
+
+    # ── L-5 Risk-parameter learner (daily) ────────────────────────────────
+    def _learner_risk_loop():
+        import time as _t
+        _t.sleep(390)
+        while True:
+            try:
+                from trading import learner_risk
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_risk.evaluate_and_update(_conn)
+                if summary.get("applied"):
+                    print(f"[Learner-Risk] applied {len(summary['applied'])} change(s) "
+                          f"(dd_pause={summary.get('dd_pause')}): {summary['applied']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-Risk] error: {e}", flush=True)
+            time.sleep(24 * 3600)
+
+    t10 = threading.Thread(target=_learner_risk_loop, name="learner-risk", daemon=True)
+    t10.start()
+    print(f"[Learner-Risk] Background L-5 risk learner started (daily)", flush=True)
+
+    # ── A-D Execution-quality snapshot (hourly) ───────────────────────────
+    def _exec_quality_loop():
+        import time as _t
+        _t.sleep(420)
+        while True:
+            try:
+                from trading import exec_quality
+                from database import db_conn
+                with db_conn() as _conn:
+                    agg = exec_quality.snapshot_to_settings(_conn)
+                if agg.get("alert"):
+                    print(f"[ExecQuality] 🚨 ALERT avg_bps={agg['avg_bps']}", flush=True)
+                elif agg.get("warn"):
+                    print(f"[ExecQuality] ⚠ WARN avg_bps={agg['avg_bps']}", flush=True)
+            except Exception as e:
+                print(f"[ExecQuality] error: {e}", flush=True)
+            time.sleep(3600)
+
+    t11 = threading.Thread(target=_exec_quality_loop, name="exec-quality", daemon=True)
+    t11.start()
+    print(f"[ExecQuality] Background A-D snapshot loop started (hourly)", flush=True)

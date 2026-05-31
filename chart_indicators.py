@@ -633,6 +633,56 @@ def compute_atr(df: pd.DataFrame, period: int = 14) -> dict | None:
     }
 
 
+def compute_supertrend_series(df: pd.DataFrame, period: int = 10,
+                               multiplier: float = 3.0) -> list[dict] | None:
+    """Per-bar Supertrend series for chart overlays.
+
+    Returns chronological list:
+      [{"time": int, "value": float, "direction": +1|-1}, ...]
+    `time` is unix seconds (LightweightCharts native format).
+    Frontend colors the line by direction sign (green=up, red=down).
+    Returns None on insufficient data.
+
+    Accepts either chart_candles convention (RangeIndex + 'timestamp' col
+    in ms) or a DatetimeIndex — matches the chart_vmc_cipher pattern.
+    """
+    if len(df) < period + 5:
+        return None
+    try:
+        st = ta.supertrend(df["high"], df["low"], df["close"],
+                            length=period, multiplier=multiplier)
+    except Exception:
+        return None
+    if st is None or st.empty:
+        return None
+    value_col = next((c for c in st.columns if c.startswith("SUPERT_")), None)
+    dir_col = next((c for c in st.columns if c.startswith("SUPERTd_")), None)
+    if not (value_col and dir_col):
+        return None
+
+    # Extract unix-second timestamps the same way chart_vmc_cipher does
+    if "timestamp" in df.columns:
+        ts_s = (df["timestamp"].astype("int64") // 1000).values
+    elif isinstance(df.index, pd.DatetimeIndex):
+        idx = df.index.tz_convert("UTC") if df.index.tz is not None else df.index
+        ts_s = (idx.asi8 // 1_000_000_000)
+    else:
+        return None
+
+    series = []
+    for i in range(len(df)):
+        v = st[value_col].iloc[i]
+        d = st[dir_col].iloc[i]
+        if pd.isna(v) or pd.isna(d):
+            continue
+        series.append({
+            "time":      int(ts_s[i]),
+            "value":     round(float(v), 6),
+            "direction": int(d),
+        })
+    return series if series else None
+
+
 def compute_supertrend(df: pd.DataFrame, period: int = 10,
                         multiplier: float = 3.0) -> dict | None:
     """Supertrend trend-flip indicator (ATR-based).

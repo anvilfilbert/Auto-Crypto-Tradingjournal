@@ -148,6 +148,58 @@ def evaluate(scanner_setup: dict, conn) -> dict:
              json.dumps({**snap, "reject_kind": "low_score", "reason": base["reason"]}))
         return base
 
+    # N-1 (Master plan Noise §2.6) — consensus variance gate. Two voters
+    # (Sonnet scanner + Opus consensus) shouldn't disagree by more than
+    # 2.5 score points; if they do, the setup is ambiguous and the noise-
+    # free decision is to skip. Tunable via env FUTURES_AI_MAX_SCORE_GAP.
+    try:
+        import os as _os
+        max_gap = float(_os.environ.get("FUTURES_AI_MAX_SCORE_GAP", "2.5"))
+    except Exception:
+        max_gap = 2.5
+    score_gap = abs(int(sc_score) - int(ai_score))
+    if score_gap > max_gap:
+        base["reason"] = (f"voters disagree: scanner={sc_score}, AI={ai_score}, "
+                          f"gap {score_gap} > max_gap {max_gap}")
+        _log(conn, "rejected_consensus_variance", sym, direction, sc_score,
+             json.dumps({**snap, "reject_kind": "consensus_variance",
+                         "reason": base["reason"], "gap": score_gap,
+                         "max_gap": max_gap}))
+        return base
+
+    # N-4 (Master plan Noise §2.9) — VPIN toxicity gate. When VPIN >= 0.7
+    # the microstructure is informed-trader dominated → high cascade risk in
+    # the next 30-60min. Veto new entries until the toxicity normalises.
+    # Reads from the latest vpin_snapshot row (scheduler polls every 5min).
+    try:
+        from trading import vpin as _vpin
+        veto, vpin_reason, vpin_val = _vpin.vpin_veto(conn, sym)
+        if veto:
+            base["reason"] = f"VPIN veto: {vpin_reason}"
+            _log(conn, "rejected_vpin_toxicity", sym, direction, sc_score,
+                 json.dumps({**snap, "reject_kind": "vpin_toxicity",
+                             "vpin": vpin_val, "reason": vpin_reason}))
+            return base
+    except Exception:
+        pass  # never block on VPIN module errors
+
+    # A-E (Master plan Week 11) — Cascade Predictor. Fuses VPIN +
+    # funding spread + OI divergence into a single risk score and vetoes
+    # the side that's at risk of being squeezed. Direction-aware: only
+    # blocks the trade if the cascade pressure builds against this side.
+    try:
+        from trading import cascade_predictor
+        cascade_veto, cascade_reason, cascade_result = cascade_predictor.veto_check(
+            conn, sym, direction)
+        if cascade_veto:
+            base["reason"] = f"Cascade veto: {cascade_reason}"
+            _log(conn, "rejected_cascade_risk", sym, direction, sc_score,
+                 json.dumps({**snap, "reject_kind": "cascade_risk",
+                             "result": cascade_result, "reason": cascade_reason}))
+            return base
+    except Exception:
+        pass  # never block on cascade module errors
+
     if ai_dir and direction and ai_dir.lower() != direction.lower():
         base["reason"] = f"direction mismatch (scanner={direction}, AI={ai_dir})"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
@@ -164,6 +216,37 @@ def evaluate(scanner_setup: dict, conn) -> dict:
     base["approved"]        = True
     base["consensus_score"] = min(sc_score, ai_score)
     base["reason"]          = "ok"
+
+    # A-A (Master plan): Red-Team agent — adversarial second opinion.
+    # Soft mode (default): logs penalty for audit, does not block. Hard
+    # mode (after operator review at +14d): veto=True blocks the trade.
+    try:
+        from trading import red_team_agent as _rt
+        verdict = _rt.evaluate_setup({
+            "symbol":          sym,
+            "direction":       direction,
+            "scanner_score":   sc_score,
+            "ai_score":        ai_score,
+            "consensus_score": base["consensus_score"],
+            "ai_summary":      ai_summary,
+            "entry_price":     scanner_setup.get("entry_price"),
+            "sl_price":        scanner_setup.get("sl_price"),
+            "tp1_price":       scanner_setup.get("tp1_price"),
+        })
+        base["red_team"] = verdict
+        if verdict.get("veto") and verdict.get("mode") == "hard":
+            base["approved"] = False
+            base["reason"]   = f"red_team_veto: {verdict.get('summary', '')[:120]}"
+            _log(conn, "red_team_veto_hard", sym, direction, base["consensus_score"],
+                 json.dumps({**snap, "verdict": verdict}))
+            return base
+        if verdict.get("score_penalty", 0) > 0 or verdict.get("veto_raw"):
+            event = "red_team_penalty" if verdict.get("score_penalty", 0) > 0 else "red_team_passthrough"
+            _log(conn, event, sym, direction, base["consensus_score"],
+                 json.dumps({**snap, "verdict": verdict}))
+    except Exception as _rt_err:
+        # Never block trading because the red-team agent had an issue
+        base["red_team"] = {"error": str(_rt_err), "mode": "skipped"}
 
     # Opus override path: when the consensus model produces its own
     # entry/SL/TP ladder, merge them into the scanner setup so the executor

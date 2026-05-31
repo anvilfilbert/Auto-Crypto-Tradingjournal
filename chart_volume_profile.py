@@ -149,6 +149,18 @@ def compute_volume_profile(df: pd.DataFrame,
     else:
         at_poc = "below"
 
+    # Per-bin distribution for right-side histogram rendering
+    bins_data = []
+    max_vol = float(bin_volumes.max()) if total_vol > 0 else 1.0
+    for i in range(bins):
+        bins_data.append({
+            "price_low":  round(float(edges[i]), 6),
+            "price_high": round(float(edges[i + 1]), 6),
+            "volume":     round(float(bin_volumes[i]), 4),
+            "volume_pct": round(float(bin_volumes[i]) / total_vol * 100, 2),
+            "width_pct":  round(float(bin_volumes[i]) / max_vol * 100, 2),
+        })
+
     return {
         "poc":   round(poc, 6),
         "vah":   round(vah, 6),
@@ -160,6 +172,8 @@ def compute_volume_profile(df: pd.DataFrame,
         "in_value_area": val <= last_close <= vah,
         "bins_used":     bins,
         "lookback_bars": int(len(df_view)),
+        "bins_data":     bins_data,
+        "price_range":   {"low": round(low_min, 6), "high": round(high_max, 6)},
     }
 
 

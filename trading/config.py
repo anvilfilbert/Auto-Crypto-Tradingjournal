@@ -14,6 +14,73 @@ from __future__ import annotations
 import os
 from typing import Optional
 
+
+# ─── L-1 (Master plan): learned-param accessor layer ─────────────────────
+# These thin helpers consult learned_params first, fall back to the env-
+# driven constants below. Pre-L-1 calls (e.g., bare CONSENSUS_MIN_SCORE
+# reference) still work because we keep the constant; new call sites use
+# the accessor so they automatically pick up learner-updated values.
+
+def _learned_or(key: str, default, *, archetype: Optional[str] = None,
+                 symbol: Optional[str] = None, session: Optional[str] = None,
+                 direction: Optional[str] = None, dow: Optional[str] = None):
+    """Read a learned_params value with composite-key fallback.
+
+    On any error (DB unavailable, module not loaded, etc.) returns default.
+    No-op until L-0 schema is applied (returns default).
+    """
+    try:
+        from trading import learned
+        from database import db_conn
+        with db_conn() as _conn:
+            v = learned.get_or(_conn, key,
+                                 archetype=archetype, symbol=symbol,
+                                 session=session, direction=direction, dow=dow,
+                                 default=None)
+        return v if v is not None else default
+    except Exception:
+        return default
+
+
+def get_consensus_min_score(archetype: Optional[str] = None) -> int:
+    """Per-archetype threshold; falls back to global CONSENSUS_MIN_SCORE."""
+    raw = _learned_or("consensus_min_score", CONSENSUS_MIN_SCORE, archetype=archetype)
+    try: return int(raw)
+    except Exception: return CONSENSUS_MIN_SCORE
+
+
+def get_max_notional_usdt() -> float:
+    raw = _learned_or("max_notional_usdt", MAX_NOTIONAL_USDT)
+    try: return float(raw)
+    except Exception: return MAX_NOTIONAL_USDT
+
+
+def get_risk_per_trade_pct() -> float:
+    raw = _learned_or("risk_per_trade_pct", RISK_PER_TRADE_PCT)
+    try: return float(raw)
+    except Exception: return RISK_PER_TRADE_PCT
+
+
+def get_symbol_modifier(symbol: str) -> float:
+    """Learned per-symbol score modifier (default 0 = no adjustment)."""
+    raw = _learned_or("symbol_modifier", 0.0, symbol=symbol)
+    try: return float(raw)
+    except Exception: return 0.0
+
+
+def get_session_modifier(session: str, direction: Optional[str] = None) -> float:
+    """Learned per-session (and optionally per-direction) score modifier."""
+    raw = _learned_or("session_modifier", 0.0, session=session, direction=direction)
+    try: return float(raw)
+    except Exception: return 0.0
+
+
+def get_dow_modifier(dow: str, direction: Optional[str] = None) -> float:
+    """Learned per-day-of-week (and optionally per-direction) score modifier."""
+    raw = _learned_or("dow_modifier", 0.0, dow=dow, direction=direction)
+    try: return float(raw)
+    except Exception: return 0.0
+
 # ── env-var knobs (loaded once at import time) ───────────────────────────────
 
 # Global on/off switch. The chain literally cannot place an order unless
