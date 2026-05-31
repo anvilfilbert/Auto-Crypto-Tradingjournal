@@ -124,7 +124,13 @@ def _vpin_from_trades(trades: list[dict], bucket_v: float) -> tuple[float, int]:
             cur_sell += qty
         prev_price = price
         if cur_buy + cur_sell >= bucket_v:
-            imbalances.append(abs(cur_buy - cur_sell) / bucket_v)
+            # Clip at 1.0 — VPIN is bounded [0,1] by definition (proportion
+            # of imbalance). A single oversized trade can push cur_buy+cur_sell
+            # past bucket_v before the flush check, which would make the raw
+            # ratio exceed 1.0 and inflate the average above its theoretical
+            # max. Clipping preserves the math intent without re-bucketing.
+            imbalance = abs(cur_buy - cur_sell) / bucket_v
+            imbalances.append(min(imbalance, 1.0))
             cur_buy = cur_sell = 0.0
     if not imbalances:
         return 0.0, 0
