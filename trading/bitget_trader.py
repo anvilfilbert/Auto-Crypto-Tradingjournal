@@ -263,6 +263,11 @@ def get_open_positions() -> list:
                 "notional_usdt":  total * mark if mark else 0,
                 "leverage":       int(float(r.get("leverage") or 1)),
                 "unrealized_pnl": float(r.get("unrealizedPL") or 0),
+                # Realised P&L on partial-close fills so far. Bitget
+                # exposes it as `achievedProfits` (camelCase) on the
+                # position record; surfacing it lets the open-positions
+                # table show booked TP1 partials live.
+                "achieved_profits": float(r.get("achievedProfits") or 0),
                 # Two field-name styles for SL/TP — the Bitget-flavoured
                 # `preset_*` (matches main-account client) and the short
                 # `sl`/`tp1` aliases that downstream consumers expect.

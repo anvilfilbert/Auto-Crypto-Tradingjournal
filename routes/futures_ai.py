@@ -264,6 +264,7 @@ def api_futures_ai_positions():
                         "entry_price":     entry,
                         "mark_price":      mark,
                         "unrealized_pnl":  p.get("unrealized_pnl"),
+                        "achieved_profits": p.get("achieved_profits", 0),
                         "unrealized_pct":  round(move_pct, 2),
                         "size_contracts":  p.get("size_contracts"),
                         "notional_usdt":   p.get("notional_usdt"),
