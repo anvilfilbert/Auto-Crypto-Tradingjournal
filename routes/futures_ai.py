@@ -944,11 +944,19 @@ def l7_panels():
             except Exception:
                 edge = {}
 
+            # 5. Cost optimisation surfaces (cache stats etc.)
+            try:
+                from scanner_prompts import quick_score_cache_stats
+                quick_cache = quick_score_cache_stats()
+            except Exception:
+                quick_cache = {}
+
             return _ok({
                 "learned_log": learned_log,
                 "noise_gates": noise_gates,
                 "reminders":   reminders,
                 "edge_decay":  edge,
+                "quick_score_cache": quick_cache,
             })
     except Exception:
         traceback.print_exc()

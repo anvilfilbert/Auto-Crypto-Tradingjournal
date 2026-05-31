@@ -9,8 +9,10 @@ Provides:
 - _quick_score(): Haiku pass-1 cheap pre-filter.
 """
 
+import hashlib
 import json
 import logging
+import time as _time
 
 from prompt_fragments import SCORING_SCALE, LEVEL_PROXIMITY_RULES, MARKET_CONTEXT_RULES, DRAW_ON_LIQUIDITY_RULES
 from constants import MODEL, FAST_MODEL, SCANNER_MIN_SCORE, PROMPT_CACHE_MIN_CHARS
@@ -19,6 +21,74 @@ from helpers import strip_fence, build_cached_messages
 from scanner_criteria import CRITERIA_DEFAULTS, _disabled_criteria_block
 
 logger = logging.getLogger(__name__)
+
+# ── scanner_quick result cache (#1 cost optimisation) ───────────────────────
+# Scanner runs every 30 min but 4H candles only close every 4h → 87% of
+# consecutive scans have IDENTICAL OHLCV data for each symbol, so the Haiku
+# quick-score returns the same answer. Hash the deterministic inputs (candle
+# prompt_text + macro context + symbol/direction/threshold), cache the parsed
+# return value with a TTL just under the scanner cadence. Only successful
+# Haiku returns are cached — exceptions skip the cache so the next call
+# retries. Negative results (score < threshold) ARE cached: those are the
+# majority of the volume and the biggest single source of waste.
+_QUICK_SCORE_CACHE: dict[str, tuple[float, dict | None]] = {}
+_QUICK_SCORE_CACHE_TTL = 28 * 60       # 28 min — fires just before next scan
+_QUICK_SCORE_CACHE_MAX = 6000          # LRU evict at 6k entries (~12h watchlist × 4 dirs)
+_QUICK_SCORE_STATS = {"hits": 0, "misses": 0, "writes": 0, "evictions": 0}
+
+
+def _quick_score_cache_key(symbol: str, direction: str, mkt_str: str,
+                            pt_1d: str, pt_4h: str, pt_1h: str,
+                            min_score: int) -> str:
+    """Deterministic SHA-256 of the inputs that determine the Haiku output."""
+    h = hashlib.sha256()
+    for part in (symbol, direction, str(min_score), mkt_str or "",
+                  pt_1d or "", pt_4h or "", pt_1h or ""):
+        h.update(part.encode("utf-8", errors="replace"))
+        h.update(b"|")
+    return h.hexdigest()
+
+
+def _quick_score_cache_get(key: str):
+    """Returns (value, hit). value may legitimately be None when a previous
+    call returned None (score below threshold) — that's still a cache hit.
+    """
+    ent = _QUICK_SCORE_CACHE.get(key)
+    if not ent:
+        _QUICK_SCORE_STATS["misses"] += 1
+        return None, False
+    ts, value = ent
+    if _time.time() - ts > _QUICK_SCORE_CACHE_TTL:
+        _QUICK_SCORE_CACHE.pop(key, None)
+        _QUICK_SCORE_STATS["misses"] += 1
+        return None, False
+    _QUICK_SCORE_STATS["hits"] += 1
+    return value, True
+
+
+def _quick_score_cache_set(key: str, value):
+    if len(_QUICK_SCORE_CACHE) >= _QUICK_SCORE_CACHE_MAX:
+        # Cheap-and-correct LRU: drop the oldest entry by timestamp.
+        oldest = min(_QUICK_SCORE_CACHE, key=lambda k: _QUICK_SCORE_CACHE[k][0])
+        _QUICK_SCORE_CACHE.pop(oldest, None)
+        _QUICK_SCORE_STATS["evictions"] += 1
+    _QUICK_SCORE_CACHE[key] = (_time.time(), value)
+    _QUICK_SCORE_STATS["writes"] += 1
+
+
+def quick_score_cache_stats() -> dict:
+    """Snapshot for monitoring / UI surfaces."""
+    total = _QUICK_SCORE_STATS["hits"] + _QUICK_SCORE_STATS["misses"]
+    hit_rate = (_QUICK_SCORE_STATS["hits"] / total) if total else 0.0
+    return {
+        "hits":      _QUICK_SCORE_STATS["hits"],
+        "misses":    _QUICK_SCORE_STATS["misses"],
+        "writes":    _QUICK_SCORE_STATS["writes"],
+        "evictions": _QUICK_SCORE_STATS["evictions"],
+        "size":      len(_QUICK_SCORE_CACHE),
+        "ttl_min":   _QUICK_SCORE_CACHE_TTL // 60,
+        "hit_rate":  round(hit_rate, 3),
+    }
 
 
 def _detect_archetype(ctx: dict, direction: str, symbol: str = "") -> str:
@@ -376,6 +446,17 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
     pt_4h = ctx.get("4H", {}).get("prompt_text", "")
     pt_1h = ctx.get("1H", {}).get("prompt_text", "")
     pt_1d = ctx.get("1D", {}).get("prompt_text", "")
+
+    # Candle-hash cache check (#1 cost optimisation). pt_1d/4h/1h are
+    # deterministic functions of OHLCV — same candles → same string → same
+    # Haiku output. mkt_str adds the macro context layer so we don't reuse
+    # a score made under a different VIX/F&G snapshot.
+    _cache_key = _quick_score_cache_key(
+        symbol, direction, mkt_str, pt_1d, pt_4h, pt_1h, min_score)
+    _cached_value, _cache_hit = _quick_score_cache_get(_cache_key)
+    if _cache_hit:
+        return _cached_value
+
     conf_line = f"{conf['label']} ({conf['bullish']}↑/{conf['bearish']}↓)"
 
     inds_4h = ctx.get("4H", {}).get("indicators", {})
@@ -441,16 +522,22 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
             # Final fallback: tighten quotes + trim trailing commas
             cleaned = obj_str.replace("“", '"').replace("”", '"').replace(",}", "}").replace(",]", "]")
             r = json.loads(cleaned)
+        # Both branches below get cached — score-below-threshold is the
+        # dominant case and the biggest cost saving from this cache.
         if r.get("score", 0) < min_score:
+            _quick_score_cache_set(_cache_key, None)
             return None
-        return {
+        _result = {
             "score":     r["score"],
             "direction": r.get("direction", direction),
             "reason":    r.get("reason", ""),
         }
+        _quick_score_cache_set(_cache_key, _result)
+        return _result
     except Exception as e:
         # Log first 160 chars of raw response so we can see what the model
         # actually returned. Truncation/extra-data are the dominant modes.
+        # NB: do NOT cache exceptions — next call must retry.
         snippet = (msg_text[:160] if 'msg_text' in dir() else '<no response>').replace("\n", " ")
         logger.warning("quick-score failed for %s: %s | raw: %s", symbol, e, snippet)
         return None
