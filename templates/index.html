@@ -3023,6 +3023,76 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
       </div>
 
+      <!-- ─── GOSH.AI ecosystem update (added 2026-05-31) ──────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#6c63ff"></div>
+          <div class="src-layer-title">GOSH.AI — adjacent on-chain AI runtime (research note 2026-05-31)</div>
+          <div class="src-layer-sub">Same team (Mitja Goroshevsky · GOSH Technology Ltd) · separate org from gosh-sh</div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:8px">What it is</div>
+          <div style="font-size:.82rem;line-height:1.7;color:var(--muted)">
+            GOSH.AI is a <b>hybrid intelligence layer</b> (their tagline: "infinite context, any model, any scale · built around data, not models") that produces on-chain code via a DAO-governed workflow. It is <b>not</b> a self-trading on-chain agent — the agent runtime itself is off-chain (Rust), but it WRITES code that lives on the Acki Nacki / GOSH chain and gets reviewed + voted on by a DAO before being merged.
+            <br><br>
+            Workflow: upload <code>Spec.md</code> → bot creates a DAO + repository on chain → LLM proposes file changes as DAO proposals → DAO votes → accepted changes persist as immutable, timestamped on-chain commits. Currently supports <b>asynchronous Solidity only</b>.
+          </div>
+        </div>
+
+        <div class="src-grid">
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🌐</div><div><div class="src-name">gosh.ai (Runtime)</div><div class="src-provider">github.com/gosh-dot-ai/gosh.ai</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">"Gosh Runtime" — the orchestration layer</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">11 · last update Apr 3, 2026</span></div>
+            <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val">Developer preview</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🤖</div><div><div class="src-name">gosh.agent</div><div class="src-provider">Rust · MIT (Goroshevsky/GOSH Tech)</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">Off-chain task executor · MCP interface to LLM + memory</span></div>
+            <div class="src-row"><span class="src-row-label">Tools</span><span class="src-row-val"><code>agent_start</code> · <code>agent_status</code> · <code>agent_create_task</code></span></div>
+            <div class="src-row"><span class="src-row-label">Run</span><span class="src-row-val"><code>cargo build --release</code> → port 8767 default</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">13 · last update May 2, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🧠</div><div><div class="src-name">gosh.memory</div><div class="src-provider">Python · kNN context store</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">Persistent memory backend for the agent (MCP)</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">15 · last update Apr 5, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🛠️</div><div><div class="src-name">gosh.cli</div><div class="src-provider">Rust client</div></div></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">14 · last update May 2, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🚀</div><div><div class="src-name">gosh.startrek</div><div class="src-provider">Python · Community Edition</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">"GOSH.AI Community Edition" — free-tier deployment</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">0 · last update May 2, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">📦</div><div><div class="src-name">gosh.common</div><div class="src-provider">Shared library</div></div></div>
+            <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val">Most-recently updated repo — last commit May 29, 2026</span></div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:8px">Relevance to our DODEX integration</div>
+          <div style="font-size:.82rem;line-height:1.7;color:var(--muted)">
+            GOSH.AI does <b>not</b> change our integration plan. Our DODEX wiring is a Python client to the TVM-SDK Node sidecar reading DEX state and submitting orders — no AI code-generation step needed. However:
+            <ul style="margin:8px 0 0 18px;padding:0">
+              <li>If we ever want to deploy <b>custom on-chain trading logic</b> (e.g. a Solidity contract that manages multi-leg orders, hedging splits, or programmable take-profits on chain), GOSH.AI is the path that comes with DAO-governed review baked in.</li>
+              <li>The <code>gosh.agent</code> + <code>gosh.memory</code> stack is structurally similar to our own auto_ai self-learning ladder (off-chain agent + persistent memory + LLM orchestrator) — worth watching as a reference design.</li>
+              <li>Same team as the chain itself = closer alignment with Acki Nacki's Solidity dialect and execution model than third-party Solidity tooling would offer.</li>
+            </ul>
+            <b>Action:</b> none required. Watch for <code>gosh.common</code> activity (the most-active repo) as a signal that the runtime is preparing GA. Re-evaluate after DODEX Phase-2 ships if we need on-chain trade-logic surface area.
+          </div>
+        </div>
+      </div>
+
       <!-- ─── External references ────────────────────────────────────────────── -->
       <div class="src-layer">
         <div class="src-layer-hdr">
@@ -3054,6 +3124,22 @@ select:focus,input:focus{border-color:var(--accent)}
             <div class="src-row"><span class="src-row-label">Version</span><span class="src-row-val">v2.24.21 (2026-05-21)</span></div>
             <div class="src-row"><span class="src-row-label">npm</span><span class="src-row-val"><code>@tvmsdk/core</code> · <code>@tvmsdk/lib-node</code></span></div>
             <div class="src-row"><span class="src-row-label">Python binding</span><span class="src-row-val" style="color:var(--muted)">None official — using Node sidecar</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🤖</div><div><div class="src-name">GOSH.AI</div><div class="src-provider">Adjacent AI runtime — research watch</div></div></div>
+            <div class="src-row"><span class="src-row-label">Landing</span><span class="src-row-val"><a href="https://gosh.ai/" target="_blank" rel="noopener" style="color:var(--accent)">gosh.ai</a></span></div>
+            <div class="src-row"><span class="src-row-label">GitHub</span><span class="src-row-val"><a href="https://github.com/gosh-dot-ai" target="_blank" rel="noopener" style="color:var(--accent)">gosh-dot-ai</a> (8 repos)</span></div>
+            <div class="src-row"><span class="src-row-label">Docs</span><span class="src-row-val"><a href="https://docs.gosh.sh/working-with-gosh/gosh-ai/" target="_blank" rel="noopener" style="color:var(--accent)">docs.gosh.sh/.../gosh-ai</a></span></div>
+            <div class="src-row"><span class="src-row-label">Top repo</span><span class="src-row-val"><code>gosh.memory</code> 15★ · <code>gosh.cli</code> 14★ · <code>gosh.agent</code> 13★</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">📁</div><div><div class="src-name">goshai (LLM repo)</div><div class="src-provider">gosh-sh/goshai — distinct from GOSH.AI runtime</div></div></div>
+            <div class="src-row"><span class="src-row-label">Repo</span><span class="src-row-val"><a href="https://github.com/gosh-sh/goshai" target="_blank" rel="noopener" style="color:var(--accent)">gosh-sh/goshai</a></span></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">"LLM with knn-memory for code generation"</span></div>
+            <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val" style="color:var(--muted)">Stub repo · 1 commit · no README · no release</span></div>
+            <div class="src-row"><span class="src-row-label">Note</span><span class="src-row-val" style="color:var(--muted)">Likely an experimental sandbox — production work is in <code>gosh-dot-ai</code> org</span></div>
           </div>
         </div>
       </div>
