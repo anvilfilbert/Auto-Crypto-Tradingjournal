@@ -922,7 +922,13 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
             # position history and overwrites. But this gross approximation
             # is right to within ~1% and ends the "$0 reported for every
             # MAE_cut close" bug.
-            size = float(live.get("total") or 0)
+            # BUG 2026-05-31: get_open_positions() normalises the field as
+            # `size_contracts`, NOT `total`. Reading the wrong key gave 0
+            # and produced gross_pnl=0 — every MAE_cut close logged as $0
+            # P&L (MMT, GRASS, etc.). Fall through both names for safety.
+            size = float(live.get("size_contracts")
+                          or live.get("total")
+                          or 0)
             gross_pnl = (mark - entry) * size * sign
             _mark_closed(conn, db_pos["id"], mark, realized_pnl=gross_pnl,
                           reason="MAE breach auto-cut")

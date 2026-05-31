@@ -370,7 +370,7 @@ function _buildOpenPositionsTable(rows, source) {
   const hrow = thead.insertRow();
   // Different columns for real (live data from Bitget) vs paper (DB)
   const headers = source === 'real'
-    ? ['Symbol','Dir','Entered','Entry','Mark','% Move','Unrl P&L','Size','Notional','Lev','SL','TPs']
+    ? ['Symbol','Dir','Entered','Entry','Mark','% Move','Unrl P&L','Realised P&L','Size','Notional','Lev','SL','TPs']
     : ['Symbol','Dir','Entered','Score','Archetype','Entry','SL','TPs','Notional','Lev'];
   headers.forEach(h => {
     const th = document.createElement('th');
@@ -395,6 +395,10 @@ function _buildOpenPositionsTable(rows, source) {
       return t ? t.replace('T', ' ').slice(5, 16) : '—';
     };
 
+    // Realised on an OPEN position = partial-close profits already
+    // booked (e.g. TP1 partial close on a multi-tier ladder). Bitget
+    // calls this achieved_profits; defaults to 0 when no partial fired.
+    const _ach = parseFloat(p.achieved_profits || 0) || 0;
     const cells = source === 'real' ? [
       p.symbol,
       p.direction,
@@ -403,6 +407,7 @@ function _buildOpenPositionsTable(rows, source) {
       _num(p.mark_price),
       ((p.unrealized_pct >= 0 ? '+' : '') + (p.unrealized_pct ?? 0).toFixed(2) + '%'),
       ((p.unrealized_pnl >= 0 ? '+' : '') + '$' + (p.unrealized_pnl ?? 0).toFixed(2)),
+      (_ach === 0 ? '$0.00' : (_ach > 0 ? '+' : '') + '$' + _ach.toFixed(2)),
       _num(p.size_contracts),
       '$' + (p.notional_usdt ?? 0).toFixed(2),
       p.leverage + 'x',
@@ -426,14 +431,23 @@ function _buildOpenPositionsTable(rows, source) {
       if (v instanceof DocumentFragment) td.appendChild(v);
       else td.textContent = v;
       // Multi-line TP cell needs top-aligned padding so other cells line up.
-      // Indexes shifted by 1 after the "Entered" column was added.
-      const isTpCell = (source === 'real' && i === 11) || (source !== 'real' && i === 7);
+      // Indexes shifted by 2 since "Entered" + "Realised P&L" were added.
+      const isTpCell = (source === 'real' && i === 12) || (source !== 'real' && i === 7);
       let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
       if (isTpCell) cls += ';vertical-align:top';
-      // Color the %-move and P&L cells (indexes 5/6 in the real layout now)
-      if (source === 'real' && (i === 5 || i === 6)) {
-        const val = i === 5 ? (p.unrealized_pct || 0) : (p.unrealized_pnl || 0);
-        cls += ';color:' + (val >= 0 ? 'var(--accent3)' : 'var(--red)');
+      // Color the %-move, Unrl P&L and Realised P&L cells (real layout
+      // now: 5 = % Move, 6 = Unrl P&L, 7 = Realised P&L).
+      if (source === 'real' && (i === 5 || i === 6 || i === 7)) {
+        let val;
+        if (i === 5)      val = p.unrealized_pct || 0;
+        else if (i === 6) val = p.unrealized_pnl || 0;
+        else              val = _ach;  // Realised
+        if (val === 0 && i === 7) {
+          // muted neutral for zero realised — don't paint green/red on no data
+          // (keeps the column legible across many rows with no partials)
+        } else {
+          cls += ';color:' + (val >= 0 ? 'var(--accent3)' : 'var(--red)');
+        }
       }
       td.style.cssText = cls;
     });
