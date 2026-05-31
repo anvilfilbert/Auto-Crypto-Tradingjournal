@@ -264,3 +264,29 @@ See [`AI_ARCHITECTURE.md`](AI_ARCHITECTURE.md) and the auto-trader docs in `arch
 - [`DATA_SOURCES.md`](DATA_SOURCES.md) — what feeds the scanner
 - [`SCORING_GUIDE.md`](SCORING_GUIDE.md) — what each score (1-10) actually means
 - [`architecture.md`](architecture.md) — full system architecture
+
+---
+
+## N-3 noise gates in Stage 3 (added 2026-05-31)
+
+After all directional modifiers (PO3, HMM, bear-phase, CPR, IB, VMC) but BEFORE the min-score filter, `trading/noise_gates.evaluate_all` runs three structural checks:
+
+| Gate | Fires when | Score effect | Env knob |
+|---|---|---|---|
+| Wick rejection | 4H upper wick ≥ 1.5× body on Long (or lower on Short) AND body ≥ 30% of range | −0.4 | `FUTURES_AI_WICK_REJECT_RATIO` |
+| ADX low-trend | 4H ADX < 20 | −0.3 (or hard veto with `FUTURES_AI_ADX_HARD_GATE=1`) | `FUTURES_AI_ADX_THRESHOLD` |
+| BB squeeze | Band width in bottom 15% AND breakout-archetype | +0.2 boost | `FUTURES_AI_BB_SQUEEZE_DECILE` |
+
+## Post-consensus veto chain
+
+After the setup passes Stage-3 min_score AND Opus approval, five additional gates run in this order before order placement (later vetos spend more compute — keep the order):
+
+1. N-1 — Consensus variance gate (|scanner − ai| > 2.5)
+2. N-4 — VPIN toxicity (≥ 0.70 from `vpin_snapshot`)
+3. A-E — Cascade Predictor (risk ≥ 0.75 + direction = side-at-risk)
+4. AI direction mismatch
+5. A-A — Red-Team (Haiku adversarial review; logs penalty in soft mode, vetos in hard mode)
+
+Every rejection is logged to `futures_ai_log` with the full snapshot — surfaced in the Futures-AI Statistics page (Noise gates panel) and in the daily Telegram report (24h rejections).
+
+See [`SELF_LEARNING.md`](SELF_LEARNING.md) for the full architecture.

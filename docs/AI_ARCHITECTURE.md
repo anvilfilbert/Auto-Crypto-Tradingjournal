@@ -275,3 +275,39 @@ Approximate input + output tokens. Times in seconds at typical latency.
 - [`DATA_SOURCES.md`](DATA_SOURCES.md) — what the agents fan-in to
 - [`architecture.md`](architecture.md) — full system architecture
 - [`MODULE_MAP.md`](MODULE_MAP.md) — module index
+
+---
+
+## Specialized Agents (A-A → A-E, added 2026-05-31)
+
+Five adversarial / verification agents wrap the consensus call:
+
+| Code | Agent | When | Effect |
+|---|---|---|---|
+| A-A | Red-Team (`trading/red_team_agent.py`) | After consensus approves, before order placement | SOFT: score_penalty logged · HARD: veto blocks trade |
+| A-B | Backtest Validator (`trading/backtest_validator.py`) | Every L-3/L-4/L-5 param change submits OLD vs NEW | recommend approve / reject / neutral / insufficient |
+| A-C | Post-Mortem (`trading/post_mortem.py`) | Hourly — picks up un-analysed losses (≤ −$1) | tag + severity + evidence written to `positions.postmortem_*` |
+| A-D | Exec-Quality (`trading/exec_quality.py`) | On every fill — captures (intended_entry, actual_entry, direction) | 7d avg / median / max slippage_bps → daily report |
+| A-E | Cascade Predictor (`trading/cascade_predictor.py`) | Pre-order, side-aware | veto when risk ≥ 0.75 AND direction = side-at-risk |
+
+## Self-Learning Ladder (L-0 → L-5)
+
+| Code | Learner | Cadence | Gate |
+|---|---|---|---|
+| L-0 | `learned.py` + `learner_symbol.py` | 6 h | R-5 Bayesian posterior |
+| L-1 | Read-path accessors in `config.py` | — | learned_params lookup → constant fallback |
+| L-2 | `learner_time.py` (session / DoW / hour) | 6 h | R-5 |
+| L-3 | `learner_threshold.py` (consensus_min_score) | daily | R-5 + A-B |
+| L-4 | `learner_tpsl.py` (TP1 / SL ATR distance) | daily | R-5 + A-B |
+| L-5 | `learner_risk.py` (Kelly + max_notional + time-stop) | daily | R-5 + A-B + DD-pause |
+
+## Noise Detection (N-1 → N-4)
+
+| Code | Where | Rule |
+|---|---|---|
+| N-1 | `signal_consensus.evaluate` | abs(scanner_score − ai_score) > 2.5 → veto |
+| N-2 | `fdr_correction.py` | Benjamini-Hochberg helper for multiple-testing correction |
+| N-3 | `noise_gates.py` (in scanner Stage 3) | wick rejection −0.4 · ADX < 20 −0.3 · BB squeeze +0.2 boost |
+| N-4 | `vpin.py` (in `signal_consensus.evaluate`) | VPIN ≥ 0.70 → veto |
+
+See [`SELF_LEARNING.md`](SELF_LEARNING.md) for the full architecture.
