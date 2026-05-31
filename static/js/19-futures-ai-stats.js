@@ -385,6 +385,8 @@
       _renderNoiseGates(d.noise_gates || {});
       _renderReminders(d.reminders || []);
       _renderEdgeDecay(d.edge_decay || {});
+      _renderCostVsPnl(d.cost_vs_pnl || {});
+      _renderCacheStats(d.quick_score_cache || {});
     } catch (e) {
       console.warn('L-7 panels failed:', e);
     }
@@ -457,6 +459,82 @@
       return `<div>• <b>${_esc(r.title)}</b>: <span style="color:${tone}">${_esc(due)}</span>
         <span style="color:var(--muted);font-size:.85rem"> — ${_esc(r.note || '')}</span></div>`;
     }).join('');
+  }
+
+  function _renderCostVsPnl(c) {
+    const grid = _$('fais-cost-pnl');
+    const breakdown = _$('fais-cost-breakdown');
+    if (!grid) return;
+    if (!c || !c['24h']) {
+      grid.innerHTML = '<em>No cost data yet — waiting for first cycle.</em>';
+      if (breakdown) breakdown.innerHTML = '';
+      return;
+    }
+    const cards = [];
+    [['24h','24h'], ['7d','7d'], ['30d','30d']].forEach(([k, label]) => {
+      const w = c[k] || {};
+      const cost = w.api_cost_usd || 0;
+      const pnl  = w.realized_pnl || 0;
+      const net  = w.net || 0;
+      const ratio = w.ratio;
+      const netColor = net >= 0 ? '#28a745' : '#ff4444';
+      const ratioStr = ratio == null ? '—'
+                      : ratio >= 1.0 ? `<span style="color:#28a745">${ratio.toFixed(2)}×</span>`
+                      : `<span style="color:#ff4444">${ratio.toFixed(2)}×</span>`;
+      cards.push(`<div style="padding:10px;background:var(--bg-elev);border-radius:6px">
+        <div style="color:var(--muted);font-size:.75rem;text-transform:uppercase">${_esc(label)}</div>
+        <div style="font-size:.85rem;margin-top:4px">API cost: <b>$${cost.toFixed(2)}</b></div>
+        <div style="font-size:.85rem">Realised P&amp;L: <b>$${pnl.toFixed(2)}</b></div>
+        <div style="font-size:.95rem;margin-top:4px;color:${netColor}">Net: <b>$${net.toFixed(2)}</b></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:2px">
+          ${w.trades || 0} trades · WR ${w.wr_pct == null ? '—' : w.wr_pct + '%'} · P&amp;L ÷ cost: ${ratioStr}
+        </div>
+      </div>`);
+    });
+    grid.innerHTML = cards.join('');
+
+    if (breakdown) {
+      const be = c.break_even || {};
+      const eq = be.equity_now || 0;
+      const todayPct = be.today_daily_pct;
+      const trailPct = be.trailing_daily_pct;
+      const beToday = be.break_even_equity_today;
+      const beTrail = be.break_even_equity_trailing;
+      let html = '<div style="font-weight:600;color:var(--text);margin-bottom:4px">Break-even analysis</div>';
+      html += `<div>Equity today: <b>$${eq.toFixed(2)}</b> · Daily API spend: <b>$${(be.daily_api_cost_usd || 0).toFixed(2)}</b></div>`;
+      if (todayPct != null) {
+        html += `<div>Today's daily rate: <b>${todayPct >= 0 ? '+' : ''}${todayPct.toFixed(3)}%</b> → break-even equity at this pace: <b>${beToday == null ? 'never (negative rate)' : '$' + Math.round(beToday).toLocaleString()}</b></div>`;
+      }
+      if (trailPct != null) {
+        html += `<div>7d average daily rate: <b>${trailPct >= 0 ? '+' : ''}${trailPct.toFixed(3)}%</b> → break-even equity at this pace: <b>${beTrail == null ? 'never (negative rate)' : '$' + Math.round(beTrail).toLocaleString()}</b></div>`;
+      }
+      html += '<div style="margin-top:6px;font-size:.78rem;color:var(--muted)">Attributed modules: call_analyzer (Opus+Sonnet consensus), scanner_quick, live_trade, red_team_agent, post_mortem, setup_classifier. Manual-chain API spend not counted here.</div>';
+      breakdown.innerHTML = html;
+    }
+  }
+
+  function _renderCacheStats(s) {
+    const el = _$('fais-cache-stats');
+    if (!el) return;
+    if (!s || s.hits == null) { el.innerHTML = '<em>No cache data yet.</em>'; return; }
+    const total = (s.hits || 0) + (s.misses || 0);
+    const hitRate = s.hit_rate != null ? (s.hit_rate * 100).toFixed(1) + '%' : '—';
+    const items = [
+      ['Hit rate',     hitRate],
+      ['Hits',         s.hits || 0],
+      ['Misses',       s.misses || 0],
+      ['Writes',       s.writes || 0],
+      ['Evictions',    s.evictions || 0],
+      ['Cache size',   s.size || 0],
+      ['TTL (min)',    s.ttl_min || 0],
+      ['Total checks', total],
+    ];
+    el.innerHTML = items.map(([k, v]) =>
+      `<div style="padding:6px 10px;background:var(--bg-elev);border-radius:4px">
+        <div style="color:var(--muted);font-size:.7rem">${_esc(k)}</div>
+        <div style="font-weight:600">${_esc(String(v))}</div>
+      </div>`
+    ).join('');
   }
 
   function _renderEdgeDecay(d) {

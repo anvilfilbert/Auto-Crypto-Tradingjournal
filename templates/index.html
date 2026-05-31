@@ -1432,6 +1432,22 @@ select:focus,input:focus{border-color:var(--accent)}
         <div class="card-title">📉 Edge-decay watch (per-archetype CUSUM + Page-Hinkley)</div>
         <div id="fais-edge-decay" style="overflow-x:auto;font-size:.85rem"></div>
       </div>
+
+      <!-- L-7: Cost optimisation tile -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">💸 API cost vs realised P&amp;L · auto_ai chain only</div>
+        <div id="fais-cost-pnl"
+             style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:8px"></div>
+        <div id="fais-cost-breakdown"
+             style="margin-top:14px;font-size:.85rem;line-height:1.6;color:var(--muted)"></div>
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;color:var(--muted);font-size:.82rem">
+            Cache &amp; optimisation telemetry (click to expand)
+          </summary>
+          <div id="fais-cache-stats"
+               style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-size:.82rem"></div>
+        </details>
+      </div>
     </div>
 
     <div id="page-trades" class="page-view">
@@ -3492,7 +3508,7 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/16-settings.js?v=2.9"></script>
 <script src="/static/js/17-risk.js?v=2.4"></script>
 <script src="/static/js/18-futures-ai.js?v=7"></script>
-<script src="/static/js/19-futures-ai-stats.js?v=3"></script>
+<script src="/static/js/19-futures-ai-stats.js?v=4"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">
   <button class="bottom-nav-item" data-tab="trades">

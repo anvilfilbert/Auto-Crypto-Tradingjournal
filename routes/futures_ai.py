@@ -951,12 +951,91 @@ def l7_panels():
             except Exception:
                 quick_cache = {}
 
+            # 6. API-cost-vs-P&L profitability tile
+            # Auto_ai-attributable spend: modules whose work exists because
+            # the auto-trader chain exists. Manual chain shares the scanner
+            # feed but the scanner runs every 30min PRIMARILY for auto_ai —
+            # we attribute it fully here for honest accounting.
+            AUTO_AI_MODULES = (
+                "call_analyzer", "scanner_quick", "live_trade",
+                "red_team_agent", "post_mortem", "setup_classifier",
+            )
+            cost_pnl: dict = {}
+            try:
+                for window_label, days in (("24h", 1), ("7d", 7), ("30d", 30)):
+                    placeholders = ",".join("?" * len(AUTO_AI_MODULES))
+                    cost_row = conn.execute(
+                        f"""SELECT COALESCE(SUM(
+                              CASE
+                                WHEN model LIKE 'claude-opus%%'   THEN input_tokens*15.0/1e6 + cached_tokens*1.5/1e6 + output_tokens*75.0/1e6
+                                WHEN model LIKE 'claude-sonnet%%' THEN input_tokens*3.0/1e6  + cached_tokens*0.3/1e6 + output_tokens*15.0/1e6
+                                WHEN model LIKE 'claude-haiku%%'  THEN input_tokens*1.0/1e6  + cached_tokens*0.1/1e6 + output_tokens*5.0/1e6
+                                ELSE 0
+                              END), 0) AS usd
+                          FROM token_usage
+                          WHERE ts >= datetime('now', '-{int(days)} day')
+                          AND model NOT LIKE 'gemini%%'
+                          AND module IN ({placeholders})""",
+                        list(AUTO_AI_MODULES)
+                    ).fetchone()
+                    api_cost = float(cost_row[0] or 0.0)
+
+                    pnl_row = conn.execute(
+                        f"""SELECT COALESCE(SUM(realized_pnl), 0) AS pnl,
+                                   COUNT(*) AS trades,
+                                   SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) AS wins
+                            FROM positions
+                            WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0)
+                            AND close_time IS NOT NULL AND close_time != ''
+                            AND close_time >= datetime('now', '-{int(days)} day')"""
+                    ).fetchone()
+                    pnl = float(pnl_row[0] or 0.0)
+                    trades = int(pnl_row[1] or 0)
+                    wins = int(pnl_row[2] or 0)
+
+                    cost_pnl[window_label] = {
+                        "api_cost_usd":   round(api_cost, 2),
+                        "realized_pnl":   round(pnl, 2),
+                        "net":            round(pnl - api_cost, 2),
+                        "ratio":          round(pnl / api_cost, 3) if api_cost > 0 else None,
+                        "trades":         trades,
+                        "wins":           wins,
+                        "wr_pct":         round(100.0 * wins / trades, 1) if trades else None,
+                        "days":           days,
+                    }
+
+                # Break-even-equity calc: at current daily P&L rate, what equity
+                # would zero out the daily API spend?
+                eq_now = 0.0
+                try:
+                    from trading import kill_switch
+                    eq_now = float(kill_switch._equity_now(conn) or 0.0)
+                except Exception:
+                    pass
+                daily_pct_24h = (cost_pnl["24h"]["realized_pnl"] / eq_now) if eq_now else None
+                daily_pct_7d = (cost_pnl["7d"]["realized_pnl"] / 7 / eq_now) if eq_now else None
+                cost_pnl["break_even"] = {
+                    "equity_now":           round(eq_now, 2),
+                    "daily_api_cost_usd":   round(cost_pnl["24h"]["api_cost_usd"], 2),
+                    "today_daily_pct":      round(daily_pct_24h * 100, 3) if daily_pct_24h else None,
+                    "trailing_daily_pct":   round(daily_pct_7d * 100, 3) if daily_pct_7d else None,
+                    "break_even_equity_today":
+                        round(cost_pnl["24h"]["api_cost_usd"] / daily_pct_24h, 0)
+                        if daily_pct_24h and daily_pct_24h > 0 else None,
+                    "break_even_equity_trailing":
+                        round(cost_pnl["24h"]["api_cost_usd"] / daily_pct_7d, 0)
+                        if daily_pct_7d and daily_pct_7d > 0 else None,
+                }
+            except Exception:
+                traceback.print_exc()
+
             return _ok({
                 "learned_log": learned_log,
                 "noise_gates": noise_gates,
                 "reminders":   reminders,
                 "edge_decay":  edge,
                 "quick_score_cache": quick_cache,
+                "cost_vs_pnl": cost_pnl,
             })
     except Exception:
         traceback.print_exc()
