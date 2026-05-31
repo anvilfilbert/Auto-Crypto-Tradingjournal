@@ -107,7 +107,8 @@ def evaluate_setup(consensus_payload: dict, rulebook_summary: Optional[str] = No
         import ai_client
         import time as _t
         t0 = _t.time()
-        result = ai_client.send(
+        # ai_client.send returns (response_text, cached_tokens) tuple
+        text, _cached_tokens = ai_client.send(
             module="red_team_agent",
             model=_model_id(),
             messages=[
@@ -117,8 +118,7 @@ def evaluate_setup(consensus_payload: dict, rulebook_summary: Optional[str] = No
             system=_SYSTEM_PROMPT,
         )
         latency_ms = int((_t.time() - t0) * 1000)
-        text = result.get("content") or result.get("text") or ""
-        cost = float(result.get("cost_usd") or 0)
+        cost = 0.0  # Cost tracked via log_token_usage inside ai_client.send
     except Exception as e:
         _log.warning("red_team: ai_client.send failed: %s", e)
         return _empty_verdict(mode, error=str(e))

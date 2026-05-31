@@ -491,13 +491,12 @@ def start():
         while True:
             try:
                 from trading import vpin
-                from scanner_watchlist import get_watchlist
+                from scanner_watchlist import DEFAULT_WATCHLIST
                 from database import db_conn
-                wl = get_watchlist() or []
-                # Sample top 20 symbols by 24h volume — VPIN only makes sense
-                # for highly-traded names anyway (low-vol names lack enough
-                # aggTrades to compute meaningful buckets).
-                symbols = list(wl)[:20]
+                # Sample top 20 symbols by watchlist order — VPIN only makes
+                # sense for highly-traded names anyway (low-vol names lack
+                # enough aggTrades to compute meaningful buckets).
+                symbols = list(DEFAULT_WATCHLIST)[:20]
                 with db_conn() as _conn:
                     results = vpin.snapshot(_conn, symbols)
                 veto_n = sum(1 for r in results if r.get("vpin") and r["vpin"] >= 0.7)

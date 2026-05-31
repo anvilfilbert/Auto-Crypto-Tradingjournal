@@ -85,11 +85,15 @@ def _ensure_table(conn):
 
 def _candidates(conn, lookback_hours: int = 48) -> list[dict]:
     """Closed auto_ai losers in the last N hours that haven't been analyzed yet."""
+    # NB: positions table stores TPs in `tp_levels` JSON (no tp1_price column)
+    # and SL is on a Bitget plan order (no sl_price column). Fields we'd love
+    # to have (target levels at open) live in `tps_json` / `tp_levels` blobs;
+    # we pass the entry/close/PnL story and let the LLM reason from those.
     rows = conn.execute(
-        "SELECT id, symbol, direction, entry_price, sl_price, tp1_price, "
+        "SELECT id, symbol, direction, entry_price, close_price, tp_levels, "
         "       realized_pnl, close_reason, archetype_at_open, setup_type, "
         "       ai_score_at_open, bear_phase_at_open, close_time, "
-        "       leverage_actual, leverage_requested, open_time "
+        "       leverage, open_time "
         "FROM positions "
         "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0) "
         "AND close_time IS NOT NULL AND close_time != '' "
@@ -101,12 +105,12 @@ def _candidates(conn, lookback_hours: int = 48) -> list[dict]:
     out = []
     for r in rows:
         rec = dict(r) if hasattr(r, "keys") else {
-            "id": r[0], "symbol": r[1], "direction": r[2], "entry_price": r[3],
-            "sl_price": r[4], "tp1_price": r[5], "realized_pnl": r[6],
-            "close_reason": r[7], "archetype_at_open": r[8], "setup_type": r[9],
+            "id": r[0], "symbol": r[1], "direction": r[2],
+            "entry_price": r[3], "close_price": r[4], "tp_levels": r[5],
+            "realized_pnl": r[6], "close_reason": r[7],
+            "archetype_at_open": r[8], "setup_type": r[9],
             "ai_score_at_open": r[10], "bear_phase_at_open": r[11],
-            "close_time": r[12], "leverage_actual": r[13],
-            "leverage_requested": r[14], "open_time": r[15],
+            "close_time": r[12], "leverage": r[13], "open_time": r[14],
         }
         pnl = float(rec.get("realized_pnl") or 0)
         if pnl > LOSS_THRESHOLD_USD:
@@ -119,7 +123,8 @@ def _build_user_prompt(trade: dict) -> str:
     parts = [
         f"Symbol: {trade.get('symbol')}",
         f"Direction: {trade.get('direction')}",
-        f"Entry: {trade.get('entry_price')}  SL: {trade.get('sl_price')}  TP1: {trade.get('tp1_price')}",
+        f"Entry: {trade.get('entry_price')}  Close: {trade.get('close_price')}",
+        f"TP ladder (JSON, may include hit flags): {trade.get('tp_levels')}",
         f"Close reason: {trade.get('close_reason')}",
         f"Realized P&L: ${trade.get('realized_pnl')}",
         f"Open time: {trade.get('open_time')}  Close time: {trade.get('close_time')}",
@@ -127,7 +132,7 @@ def _build_user_prompt(trade: dict) -> str:
         f"Setup type: {trade.get('setup_type')}",
         f"AI score at open: {trade.get('ai_score_at_open')}",
         f"Bear phase at open: {trade.get('bear_phase_at_open')}",
-        f"Leverage (requested → actual): {trade.get('leverage_requested')} → {trade.get('leverage_actual')}",
+        f"Leverage: {trade.get('leverage')}",
         "",
         f"Allowed tags: {', '.join(ALLOWED_TAGS)}",
         "",
@@ -163,20 +168,21 @@ def analyze_one(conn, trade: dict) -> dict[str, Any]:
     """Run Haiku post-mortem for one trade, write result back to positions row."""
     _ensure_table(conn)
     prompt = _build_user_prompt(trade)
+    # ai_client.send signature: (module, model, messages, max_tokens, system=None, provider=None)
+    # Returns: (response_text, cached_tokens) tuple.
+    model_id = os.environ.get("FUTURES_AI_POSTMORTEM_MODEL", "claude-haiku-4-5-20251001")
     try:
-        result = _ai_send(
-            model=os.environ.get("FUTURES_AI_POSTMORTEM_MODEL", "haiku"),
+        raw_text, _cached_tokens = _ai_send(
             module="post_mortem",
-            system=_SYSTEM_PROMPT,
+            model=model_id,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=400,
-            temperature=0.2,
+            system=_SYSTEM_PROMPT,
         )
     except Exception as e:
         _log.warning("post_mortem: AI call failed for trade %s: %s", trade.get("id"), e)
         return {"trade_id": trade.get("id"), "ok": False, "error": str(e)}
 
-    raw_text = result.get("text") if isinstance(result, dict) else str(result)
     parsed = _parse_json_loose(raw_text or "")
     tag = (parsed.get("tag") or "unknown").strip()
     if tag not in ALLOWED_TAGS:
@@ -190,9 +196,9 @@ def analyze_one(conn, trade: dict) -> dict[str, Any]:
         evidence = [str(evidence)]
     evidence_csv = ", ".join(str(e)[:120] for e in evidence[:6])
 
+    # Token cost is logged inside ai_client.send via log_token_usage —
+    # we don't double-count here, just record 0 for the per-row tag.
     cost_usd = 0.0
-    if isinstance(result, dict):
-        cost_usd = float(result.get("cost_usd") or 0.0)
 
     conn.execute(
         "UPDATE positions SET postmortem_tag=?, postmortem_severity=?, "
