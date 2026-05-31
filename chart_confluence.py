@@ -516,24 +516,18 @@ def _stoch_weight(stoch: dict) -> float:
 
 def _smt_weight(inds: dict, symbol: str) -> float:
     """
-    Cross-exchange divergence check (SMT-inspired).
-    Returns +0.15 when Bitget vs Binance prices diverge >= 0.5%
-    (price dislocation at this level = potential SMT signal).
-    Returns 0.0 when prices agree or data unavailable.
+    DEPRECATED 2026-06-01 — returns 0.0 unconditionally.
+
+    Original behaviour: returned +0.15 when Bitget vs Binance prices diverged
+    >= 0.5%. Problem: the +0.15 was UNSIGNED — fired the same value on every
+    qualifying SMT symbol regardless of trade direction. This injected a Long
+    bias on BTC/ETH/SOL/BNB/XRP (the 5 most-scanned coins).
+
+    `_smt_direction_weight` (next function) is the signed replacement that
+    correctly returns ±0.15 based on directional divergence vs the correlated
+    pair. Function kept as no-op to avoid breaking 4 call sites.
     """
-    if symbol not in SMT_SYMBOLS:
-        return 0.0
-    bitget_price = (inds.get("ema") or {}).get("current_price")
-    if not bitget_price:
-        return 0.0
-    try:
-        binance_price = get_binance_price(symbol)
-    except Exception:
-        return 0.0
-    if binance_price is None:
-        return 0.0
-    delta_pct = abs(bitget_price - binance_price) / bitget_price
-    return 0.15 if delta_pct >= 0.005 else 0.0
+    return 0.0
 
 
 def _smt_direction_weight(inds: dict, symbol: str) -> float:
@@ -608,13 +602,21 @@ def _liquidation_weight(liq: dict, current_price: float) -> float:
 
 def _order_flow_weight(of: dict | None) -> float:
     """
-    +0.15 buying pressure (positive delta, no divergence).
-    -0.15 selling pressure OR divergence (bearish fade).
+    +0.15 buying pressure (positive delta).
+    -0.15 selling pressure.
+     0.0  divergence (direction-ambiguous — let signed signals carry weight).
+
+    Divergence-returns-neutral fix 2026-06-01: previously divergence returned
+    -0.15 unconditionally. That penalised Short setups with bearish-divergence
+    (which is a continuation confirmation for them), the same as Longs with
+    bullish-divergence (where divergence IS a Long fade). The weight cannot
+    tell trade direction from `of` alone, so divergence is now neutral; the
+    signed buying/selling-pressure signals still apply.
     """
     if not of:
         return 0.0
     if of.get("divergence"):
-        return -0.15
+        return 0.0
     sig = of.get("signal", "neutral")
     if sig == "buying_pressure":
         return 0.15
@@ -941,12 +943,20 @@ def confluence_score(symbol: str, timeframes: list = None, ctx: dict = None) -> 
     except Exception:
         pass
 
-    # Apply macro regime multiplier (VIX-based, cached 5 min)
+    # Apply macro regime multiplier (VIX-based, cached 5 min).
+    # Sign-aware fix 2026-06-01: when VIX > 30 the multiplier (~0.8) used to
+    # be applied to total_score regardless of sign. For negative scores
+    # (bearish setups) this SHRUNK the magnitude — exactly opposite of
+    # intent. High VIX is when Shorts are most valid. The multiplier should
+    # suppress speculative Longs only; leave Short signals alone.
     vix_mult = _get_vix_multiplier()
-    if vix_mult != 1.0:
+    if vix_mult != 1.0 and total_score > 0:
         total_score = round(total_score * vix_mult, 2)
 
-    smt_bonus  = 0.30 if symbol in SMT_SYMBOLS else 0.0
+    # SMT max budget reduced 2026-06-01 from 0.30 → 0.15: only
+    # _smt_direction_weight contributes now (±0.15). _smt_weight was deprecated
+    # to a no-op because it injected unsigned Long bias on the 5 SMT symbols.
+    smt_bonus  = 0.15 if symbol in SMT_SYMBOLS else 0.0
     # RSI Mastery additions (2026-05-23):
     #   failure swing  → ±0.4 max
     #   divergences    → ±0.4 max (capped)

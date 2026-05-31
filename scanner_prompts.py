@@ -107,7 +107,7 @@ def _detect_archetype(ctx: dict, direction: str, symbol: str = "") -> str:
     """
     Detect the most likely setup archetype from 4H indicators.
     Returns one of: "breakout" | "reversal" | "continuation" |
-                    "range_bound" | "low_conviction"
+                    "range_bound" | "low_conviction" | "unknown"
 
     Delegates to setup_classifier.classify_rules which uses:
       - multi-signal voting (each archetype gets a 0..N score)
@@ -116,23 +116,26 @@ def _detect_archetype(ctx: dict, direction: str, symbol: str = "") -> str:
       - 5-archetype taxonomy so 'continuation' stops being the
         dump-bucket for everything else
 
-    Falls back to 'continuation' on classifier failure to preserve
-    behaviour for downstream rubric selection.
+    Returns 'unknown' on classifier failure (logged at WARNING) instead of
+    silently defaulting to 'continuation'. The previous default falsely
+    labeled every classifier-failed setup as 'continuation', polluting
+    per-archetype analytics and masking real bugs.
     """
+    if not symbol:
+        return "unknown"
     try:
         from setup_classifier import classify_rules
         import chart_candles as _cc
-        # Try to re-use the candles the ctx fetcher already has. The ctx
-        # dict shape doesn't expose raw candles, so refetch — chart_candles
-        # has its own LRU cache so this is cheap.
-        # Symbol is required for the fetch; callers that don't have one
-        # can pass it explicitly via the new keyword arg.
-        if symbol:
-            df = _cc.get_candles(symbol, "4H", limit=200)
-            return classify_rules(symbol, direction, "", candles_df=df)["archetype"]
-    except Exception:
-        pass
-    return "continuation"
+        # Re-fetch candles via chart_candles' LRU cache — cheap.
+        df = _cc.get_candles(symbol, "4H", limit=200)
+        return classify_rules(symbol, direction, "", candles_df=df)["archetype"]
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(
+            "archetype classification failed for %s %s: %s — defaulting to 'unknown'",
+            symbol, direction, str(e)[:120]
+        )
+        return "unknown"
 
 
 def _archetype_rubric(archetype: str, direction: str, min_score: int) -> str:
@@ -169,24 +172,36 @@ def _archetype_rubric(archetype: str, direction: str, min_score: int) -> str:
         )
 
     # continuation (default)
-    rsi_zone = "45–68" if is_long else "32–55"
+    # RSI bands are mirror-symmetric around 50 (each 20 wide). Was 45-68 Long /
+    # 32-55 Short — shifted toward Long. Fixed 2026-06-01 to remove bias.
+    rsi_zone = "45–65" if is_long else "35–55"
+    pullback_phrase = "pullback to support" if is_long else "rally into resistance"
     return (
         f"SETUP ARCHETYPE — CONTINUATION / TREND FOLLOWING\n"
         f"Primary requirement: EMA stack aligned AND ADX ≥ 18 (trend must exist).\n"
         f"RSI sweet spot: {rsi_zone} — trend momentum WITHOUT exhaustion. RSI outside this range is a warning.\n"
         f"MACD: Aligned and ideally growing histogram = additional conviction.\n"
         f"Volume: Above average confirms institutional participation.\n"
-        f"Score 9-10: EMA stack + ADX ≥ 25 + MACD growing + RSI in sweet spot + volume above avg + clean pullback to S/R.\n"
+        f"Score 9-10: EMA stack + ADX ≥ 25 + MACD growing + RSI in sweet spot + volume above avg + clean {pullback_phrase}.\n"
         f"Score 7-8: EMA stack + MACD aligned + RSI in range + clear entry level.\n"
         f"Score 6: At least 2 of 3 primary signals (EMA stack/ADX/MACD) + valid entry and SL.\n"
-        f"PENALISE: RSI > 74 or < 26 (overextended — near exhaustion). ADX < 15 (no trend). EMA stack opposing direction."
+        f"PENALISE: RSI > 75 or < 25 (overextended — near exhaustion). ADX < 15 (no trend). EMA stack opposing direction."
     )
 
 
 def _build_macro_header(macro_ctx: dict) -> str:
-    """Short macro context header prepended to every scanner setup prompt."""
+    """Short macro context header prepended to every scanner setup prompt.
+
+    Format change 2026-06-01: removed "RISK ON / RISK OFF" labels and the
+    F&G "Extreme Fear" / "Greed" labels. Both were priming the model toward
+    Long thinking in current macro (low VIX + low F&G). Now shows only
+    structural numbers — the model reads the facts and infers regime.
+    F&G value still shown for context but with no interpretive label.
+    """
     if not macro_ctx:
         return ""
+    import os as _os
+    _fng_paused = _os.environ.get("FUTURES_AI_FNG_PAUSED", "1").strip() == "1"
     parts = []
 
     vix = macro_ctx.get("vix")
@@ -198,14 +213,13 @@ def _build_macro_header(macro_ctx: dict) -> str:
     meme_cap   = macro_ctx.get("meme_cap_usd")
 
     if vix:
-        regime = macro_ctx.get("regime", "").replace("_", " ").upper()
-        parts.append(f"VIX {vix:.0f} ({regime})")
+        parts.append(f"VIX {vix:.0f}")
     if es_chg is not None:
         arrow = "▲" if es_chg >= 0 else "▼"
         parts.append(f"ES1! {arrow}{abs(es_chg):.1f}%")
-    if fg is not None:
-        fg_label = "Extreme Fear" if fg < 25 else "Fear" if fg < 45 else "Neutral" if fg < 55 else "Greed" if fg < 75 else "Extreme Greed"
-        parts.append(f"F&G {fg}/100 ({fg_label})")
+    if fg is not None and not _fng_paused:
+        # Only included when F&G is enabled; no interpretive label.
+        parts.append(f"F&G {fg}/100")
     if btc_dom:
         parts.append(f"BTC.D {btc_dom:.1f}%")
     if usdt_dom:
@@ -319,11 +333,19 @@ REQUIREMENTS for any score ≥ {min_score}:
 - Take profits: at 4H or 1D resistance/support levels — name the structural zone for each TP
 - Detailed rationale for EVERY level: name the S/R zone, reference the indicator value, explain WHY
 
-RATIONALE DEPTH REQUIRED:
-  entry_rationale: "Price pulling back to 1H support at $X (4 touches on 1H, aligns with 4H EMA50 at $Y). 1H RSI cooled to 44 from 68 — momentum reset without breaking structure."
-  sl_rationale: "Below 1H swing low at $Z and 1H support cluster at $W. Distance $D = 1.5× 1H ATR ($A) — outside 1H noise, below 4H demand."
-  tp1_rationale: "4H resistance at $R1, high-volume rejection on [date]. R:R 1:2.3 from midpoint entry."
-  tp2_rationale: "1D resistance cluster and 1.618 Fibonacci extension from last major swing. R:R 1:4.1."
+RATIONALE DEPTH REQUIRED (use the example matching your trade direction):
+
+  LONG example:
+    entry_rationale: "Price pulling back to 1H support at $X (4 touches on 1H, aligns with 4H EMA50 at $Y). 1H RSI cooled to 44 from 68 — momentum reset without breaking structure."
+    sl_rationale: "Below 1H swing low at $Z and 1H support cluster at $W. Distance $D = 1.5× 1H ATR ($A) — outside 1H noise, below 4H demand."
+    tp1_rationale: "4H resistance at $R1, high-volume rejection on [date]. R:R 1:2.3 from midpoint entry."
+    tp2_rationale: "1D resistance cluster and 1.618 Fibonacci extension from last major swing. R:R 1:4.1."
+
+  SHORT example:
+    entry_rationale: "Price rallying into 1H resistance at $X (4 rejections on 1H, aligns with 4H EMA50 at $Y). 1H RSI heated to 62 from 38 — momentum extended without breaking structure."
+    sl_rationale: "Above 1H swing high at $Z and 1H resistance cluster at $W. Distance $D = 1.5× 1H ATR ($A) — outside 1H noise, above 4H supply."
+    tp1_rationale: "4H support at $R1, high-volume defence on [date]. R:R 1:2.3 from midpoint entry."
+    tp2_rationale: "1D support cluster and 1.618 Fibonacci extension from last major swing. R:R 1:4.1."
 
 If the setup scores below {min_score} (no valid entry level, SL inside ATR noise, or no logical TP):
 {{"setup_score": 0, "reason": "one sentence why this doesn't qualify"}}
@@ -413,9 +435,10 @@ BREAKOUT — Range escape with volume + momentum.
   Score boost: +1 if 1D context confirms (1D above EMA20 for long breakouts, below EMA20 for short breakouts).
   Score cap: 7 if entry is mid-range — wait for retest or confirmed close beyond level.
 
-CONTINUATION — Trend pullback to structural level.
-  Best when: 4H + 1D EMA stack agrees with direction, 1H pullback into 4H S/R, RSI reset to 40-55 (long) or 45-60 (short).
-  Score boost: +1 if pullback bounces with WaveTrend reset (rising from low for long, falling from high for short).
+CONTINUATION — Trend pullback (Long) or rally into resistance (Short).
+  Best when: 4H + 1D EMA stack agrees with direction, 1H pullback to 4H support (Long) or rally into 4H resistance (Short),
+  RSI reset to 45-65 (long) or 35-55 (short).
+  Score boost: +1 if entry coincides with WaveTrend reset (rising from low for long, falling from high for short).
   Score cap: 8 — this is the highest-conviction archetype when alignment is clean.
 
 COMMON DOWNGRADES (apply these against your initial score):

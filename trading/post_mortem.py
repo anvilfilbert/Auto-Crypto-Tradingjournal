@@ -42,7 +42,6 @@ from ai_client import send as _ai_send
 _log = logging.getLogger(__name__)
 
 LOSS_THRESHOLD_USD = -1.00
-MIN_LOSS_PCT_OF_EQUITY = 0.005   # also analyze if loss > 0.5% equity even when < $1
 
 ALLOWED_TAGS = [
     "sl_too_tight", "bad_entry_timing", "macro_flush", "regime_mismatch",
@@ -163,8 +162,36 @@ def _parse_json_loose(text: str) -> dict:
 
 
 def analyze_one(conn, trade: dict) -> dict[str, Any]:
-    """Run Haiku post-mortem for one trade, write result back to positions row."""
+    """Run Haiku post-mortem for one trade, write result back to positions row.
+
+    Two paths:
+    - DSPy mode (FUTURES_AI_POSTMORTEM_DSPY=1): uses dspy_modules.post_mortem
+      with optional compiled few-shot demos. Bypasses _SYSTEM_PROMPT.
+    - Default: original Haiku-via-ai_client.send path with _SYSTEM_PROMPT.
+    """
     _ensure_table(conn)
+
+    # DSPy path — opt in via env var. Falls back to default on import/runtime error.
+    if os.environ.get("FUTURES_AI_POSTMORTEM_DSPY", "0").strip() == "1":
+        try:
+            from dspy_modules.post_mortem import PostMortemClassifier
+            clf = PostMortemClassifier.load()
+            result = clf(trade)
+            if result.get("ok"):
+                parsed = {
+                    "tag":      result["tag"],
+                    "severity": result["severity"],
+                    "reason":   result["reason"],
+                    "evidence": result["evidence"],
+                }
+                # Skip the parse-from-text path entirely; jump to persistence.
+                return _persist_postmortem(conn, trade, parsed)
+            _log.warning("DSPy post_mortem returned not-ok for trade %s: %s",
+                          trade.get("id"), result.get("error"))
+        except Exception as e:
+            _log.warning("DSPy path failed (%s); falling back to plain Haiku",
+                          str(e)[:200])
+
     prompt = _build_user_prompt(trade)
     # ai_client.send signature: (module, model, messages, max_tokens, system=None, provider=None)
     # Returns: (response_text, cached_tokens) tuple.
@@ -182,6 +209,97 @@ def analyze_one(conn, trade: dict) -> dict[str, Any]:
         return {"trade_id": trade.get("id"), "ok": False, "error": str(e)}
 
     parsed = _parse_json_loose(raw_text or "")
+    # Estimate per-trade cost from text lengths. 4 chars ~= 1 token (Haiku).
+    # Exact counts are in token_usage; this column gives a fast per-trade
+    # signal without a join. Within ~10% of true cost.
+    cost_usd = _estimate_haiku_cost(
+        input_chars=len(_SYSTEM_PROMPT) + len(prompt),
+        output_chars=len(raw_text or ""),
+    )
+
+    # DSPy shadow path — opt-in via FUTURES_AI_POSTMORTEM_DSPY_SHADOW=1.
+    # Runs DSPy in background thread on the same trade, logs the comparison
+    # to shadow_responses (primary_module='post_mortem'). Never blocks.
+    if os.environ.get("FUTURES_AI_POSTMORTEM_DSPY_SHADOW", "0").strip() == "1":
+        _fire_dspy_shadow(trade, primary_text=raw_text or "", primary_parsed=parsed,
+                           primary_prompt_chars=len(_SYSTEM_PROMPT) + len(prompt))
+
+    return _persist_postmortem(conn, trade, parsed, cost_usd=cost_usd)
+
+
+def _fire_dspy_shadow(trade: dict, primary_text: str, primary_parsed: dict,
+                       primary_prompt_chars: int) -> None:
+    """Spawn a daemon thread that runs DSPy on the same trade and logs the
+    comparison to shadow_responses. Best-effort — never raises.
+    """
+    import threading
+    def _run():
+        import time as _t
+        import uuid
+        import json
+        try:
+            from dspy_modules.post_mortem import PostMortemClassifier
+            clf = PostMortemClassifier.load()
+            _t0 = _t.time()
+            result = clf(trade)
+            latency_ms = int((_t.time() - _t0) * 1000)
+
+            # Pack both outputs as compact JSON for side-by-side diff later.
+            primary_json = json.dumps(primary_parsed, default=str)[:8000]
+            shadow_json = json.dumps(result, default=str)[:8000]
+            shadow_err = None if result.get("ok") else (result.get("error") or "unknown")
+
+            from database import db_conn
+            with db_conn() as _conn:
+                _conn.execute(
+                    "INSERT INTO shadow_responses ("
+                    "primary_request_id, primary_module, primary_model, primary_text, "
+                    "primary_input_tokens, primary_output_tokens, primary_latency_ms, "
+                    "shadow_provider, shadow_model, shadow_text, shadow_latency_ms, "
+                    "shadow_input_tokens, shadow_output_tokens, shadow_cost_usd, shadow_error"
+                    ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (
+                        uuid.uuid4().hex, "post_mortem", "claude-haiku-4-5",
+                        primary_json,
+                        primary_prompt_chars // 4, len(primary_text) // 4, 0,
+                        "anthropic-dspy", "claude-haiku-4-5-20251001",
+                        shadow_json, latency_ms,
+                        0, 0, 0.0,  # token counts captured separately via LoggingLM
+                        shadow_err,
+                    )
+                )
+                _conn.commit()
+        except Exception as e:
+            _log.warning("DSPy shadow failed: %s", str(e)[:200])
+
+    threading.Thread(target=_run, daemon=True, name="dspy-shadow:post_mortem").start()
+
+
+_HAIKU_INPUT_PER_MTOK = 1.00
+_HAIKU_OUTPUT_PER_MTOK = 5.00
+
+
+def _estimate_haiku_cost(input_chars: int, output_chars: int) -> float:
+    """Char-based Haiku cost estimate. Returns USD."""
+    in_tok = input_chars // 4
+    out_tok = output_chars // 4
+    return round(
+        in_tok * _HAIKU_INPUT_PER_MTOK / 1e6 +
+        out_tok * _HAIKU_OUTPUT_PER_MTOK / 1e6,
+        6,
+    )
+
+
+def _persist_postmortem(conn, trade: dict, parsed: dict,
+                         cost_usd: float = 0.0) -> dict[str, Any]:
+    """Validate parsed fields, write back to positions, return public result.
+
+    Shared by the plain Haiku path and the DSPy path.
+
+    cost_usd: per-trade USD estimate. Plain Haiku path passes a char-based
+    estimate; DSPy path will pass the actual cost from the DSPy LM history
+    once Fix 7 lands. Zero is acceptable when the caller cannot estimate.
+    """
     tag = (parsed.get("tag") or "unknown").strip()
     if tag not in ALLOWED_TAGS:
         tag = "unknown"
@@ -193,10 +311,6 @@ def analyze_one(conn, trade: dict) -> dict[str, Any]:
     if not isinstance(evidence, list):
         evidence = [str(evidence)]
     evidence_csv = ", ".join(str(e)[:120] for e in evidence[:6])
-
-    # Token cost is logged inside ai_client.send via log_token_usage —
-    # we don't double-count here, just record 0 for the per-row tag.
-    cost_usd = 0.0
 
     conn.execute(
         "UPDATE positions SET postmortem_tag=?, postmortem_severity=?, "

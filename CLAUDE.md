@@ -25,6 +25,9 @@ Runs as a systemd service on a Raspberry Pi 5 (<Pi-IP>). Accessible from any bro
 - **Hindsight chain isolation:** `trade_hindsight.chain TEXT DEFAULT 'manual'` (migration 65, added 2026-05-25). Same schema gap as migration 64 — the table existed for months without a chain column despite the architecture claiming it. Backfill happens implicitly via `COALESCE(h.chain, p.chain, 'manual')` in `ai_hindsight.get_results`. Writer signature changed: `_save_result(..., chain='manual')` — derived from `p.chain` in the batch query. API: `GET /api/hindsight/results?chain=auto_ai` honours the param.
 - **Self-Learning columns (2026-05-31):** `positions.funding_paid_usd` (migration 68) and `liq_distance_atr` (migration 69) for R-3 backfill. ALTER-on-import idempotent columns: `mfe_atr_4h`/`mae_atr_4h` (L-4 TP/SL learner input), `intended_entry`/`slippage_bps` (A-D Exec-Quality), `postmortem_tag`/`severity`/`reason`/`evidence`/`done`/`cost_usd` (A-C Post-Mortem outputs).
 - **Self-Learning new tables:** `learned_params` (migration 70 — key/value with pin + revert + Bayesian CI metadata), `learner_log` (migration 71 — audit trail of every applied/skipped/rejected change), `vpin_snapshot` (created lazily by `trading/vpin._ensure_table()` — ts/symbol/vpin/n_buckets/bucket_volume).
+- **Cost tracker fix (2026-05-31):** `token_usage.cache_creation_tokens` (migration 72). Was silently dropped before; tracks the tokens written to prompt cache at 1.25× input price. Combined with Opus pricing correction ($15→$5/$75→$25 was the old Opus 4.0 from May 2025) and Haiku correction ($0.80→$1.00), this brings internal cost estimates in line with Anthropic billing. SQL aggregations updated in 3 places: `system_state._token_cost_breakdown`, `routes/futures_ai.py` L-7 panel, `routes/analytics.py` /api/token-usage.
+- **Shadow comparison table (2026-05-31):** `shadow_responses` (migration 73) + `idx_shadow_ts_module` index (migration 74). Side-by-side log of primary (Anthropic) vs shadow (OpenRouter cheaper-model) responses for sampled calls. Sampling controlled by `AI_SHADOW_RATE` env (0.20 = 20%). `shadow_runner.py` spawns daemon threads after every successful primary call (both Anthropic and cascade); never blocks. `/api/shadow-stats?days=N` returns comparison aggregates. Daily prune loop in `monitor_scheduler` (30d retention). Default shadow models: deepseek/deepseek-v3.2, meta-llama/llama-3.3-70b-instruct (paid), google/gemini-2.0-flash-001, qwen/qwen3.6-flash.
+- **SQLite busy_timeout (2026-05-31):** `PRAGMA busy_timeout=5000` set in `database.get_conn()`. Without this, shadow_runner daemon-thread writes could silently drop under contention with the 12 monitor_scheduler loops.
 
 ## Self-Learning architecture (2026-05-31, option-a ship, commit `1a76c00`)
 Compressed the 12-week master plan into a single-day ship. Three pillars:
@@ -47,6 +50,40 @@ Sharing a unified writer would force paper to carry columns it doesn't
 need, OR create a thin abstraction over two genuinely-different schemas.
 Neither is a win. Pattern: when fixing one, eyeball the other for an
 equivalent fix. This was reviewed 2026-05-26 and confirmed intentional.
+
+## F&G paused + Long-bias fixes (2026-06-01)
+Auto_ai was opening 100% Long trades (54 positions, 0 Shorts). Stage 3a Haiku
+funnel was passing 76% of Long candidates but only 1.9% of Shorts. Root causes
+fixed in 6 changes:
+
+1. **F&G paused as scoring input** — `FUTURES_AI_FNG_PAUSED=1` env var. Both
+   `bear_phase.classify_phase` and `agent_market_sentiment.run` check this and
+   skip F&G when paused. `bear_phase` gained a BTC-structure-only fallback:
+   BTC 24h ≤ -3% → decline; BTC 24h ≤ -1.5% + BTC.D > 58% → decline; BTC 24h
+   ≥ +3% → recovery. F&G data still fetched for telemetry, just not scored.
+
+2. **Logic inversion fix** — `agent_market_sentiment.py` previously had
+   `score -= 0.5` for Short in Greed zone (contrarian-bearish), which
+   penalised Shorts when it should have boosted them. Rewritten as signed
+   delta with mirror-symmetric magnitudes.
+
+3. **Mirror-symmetric RSI bands** — `scanner_prompts.py` continuation rubric
+   was "45-68 Long / 32-55 Short" (shifted toward Long). Now "45-65 / 35-55"
+   centered on 50. `SCANNER_PLAYBOOK` RSI numbers reconciled with rubric.
+
+4. **Direction-aware Sonnet rationale examples** — the consensus prompt now
+   includes both Long ("pullback to support") and Short ("rally into
+   resistance") rationale templates. Sonnet no longer reads only Long
+   geometry as the model of "good rationale."
+
+5. **Removed RISK ON/OFF macro framing** — `_build_macro_header` no longer
+   shows "VIX 15 (RISK ON)" label. Shows raw structural numbers only.
+
+6. **MARKET_CONTEXT_RULES restructured** — F&G boost rules removed; replaced
+   with BTC/BTC.D/OTHERS.D structural rules. "DEFER TO TREND" F&G escape
+   hatch removed too.
+
+To re-enable F&G: set `FUTURES_AI_FNG_PAUSED=0` in Pi `.env`, restart.
 
 ## Operator-behavior caps removed (2026-05-25)
 The personal-bad-hour cap (UTC 13/15/19/20 → score ≤ 5.5) and reversal-archetype
@@ -388,6 +425,29 @@ git commit -m "test: browser check clean — vX.Y.Z"
 ### Full scan (Phase 4 — one-time baseline or after major UI overhaul)
 After standard Phases 1–3 pass, run `phase4_full_scan` from the JSON.
 Use after: new tab added, major component redesign, or v2.x milestone.
+
+## DSPy post-mortem (`dspy_modules/`, 2026-06-01)
+Optional alternative to the plain Haiku post-mortem path. Three modes:
+
+- **Off** (default): `FUTURES_AI_POSTMORTEM_DSPY=0` and
+  `FUTURES_AI_POSTMORTEM_DSPY_SHADOW=0`. Plain Haiku runs as before.
+- **Shadow** (currently on): `FUTURES_AI_POSTMORTEM_DSPY_SHADOW=1`. Plain
+  Haiku still runs as primary. DSPy ALSO runs in a daemon thread on the
+  same trade; both outputs land in `shadow_responses` (primary_module=
+  'post_mortem') for side-by-side comparison. DSPy spend logged as
+  `module='post_mortem_dspy'` in `token_usage` via the `_LoggingLM`
+  subclass.
+- **Primary** (not yet active): `FUTURES_AI_POSTMORTEM_DSPY=1` and
+  `FUTURES_AI_POSTMORTEM_DSPY_SHADOW=0`. DSPy replaces plain Haiku.
+
+Taxonomy lives in `trading/post_mortem.ALLOWED_TAGS` — DSPy module imports
+from there to avoid drift. Optional compilation via
+`scripts/dspy_compile_post_mortem.py --dry-run` (needs ≥30 labeled trades).
+Compiled artifact at `dspy_modules/compiled/post_mortem_v1.json` loaded
+automatically when present.
+
+Review schedule: 2026-06-06/07 (first), 2026-06-13/14 (fallback). See
+operator memory `project_dspy_shadow_review.md`.
 
 ## Notes on naming / docs
 - `compute_cvd()` (chart_indicators.py + backtest_engine.py) is named "CVD" but

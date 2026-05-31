@@ -958,18 +958,24 @@ def l7_panels():
             # we attribute it fully here for honest accounting.
             AUTO_AI_MODULES = (
                 "call_analyzer", "scanner_quick", "live_trade",
-                "red_team_agent", "post_mortem", "setup_classifier",
+                "red_team_agent", "post_mortem", "post_mortem_dspy",
+                "setup_classifier",
             )
             cost_pnl: dict = {}
             try:
                 for window_label, days in (("24h", 1), ("7d", 7), ("30d", 30)):
                     placeholders = ",".join("?" * len(AUTO_AI_MODULES))
+                    # Pricing per 1M tokens (current as of 2026-05):
+                    #   Opus 4.6/4.7/4.8: $5 input / $0.50 cache_read / $6.25 cache_write / $25 output
+                    #     (was 3x overstated as $15/$75 — old Opus 4.0 prices)
+                    #   Sonnet 4.6: $3 / $0.30 / $3.75 / $15
+                    #   Haiku 4.5:  $1 / $0.10 / $1.25 / $5
                     cost_row = conn.execute(
                         f"""SELECT COALESCE(SUM(
                               CASE
-                                WHEN model LIKE 'claude-opus%%'   THEN input_tokens*15.0/1e6 + cached_tokens*1.5/1e6 + output_tokens*75.0/1e6
-                                WHEN model LIKE 'claude-sonnet%%' THEN input_tokens*3.0/1e6  + cached_tokens*0.3/1e6 + output_tokens*15.0/1e6
-                                WHEN model LIKE 'claude-haiku%%'  THEN input_tokens*1.0/1e6  + cached_tokens*0.1/1e6 + output_tokens*5.0/1e6
+                                WHEN model LIKE 'claude-opus%%'   THEN input_tokens*5.0/1e6 + cached_tokens*0.5/1e6 + cache_creation_tokens*6.25/1e6  + output_tokens*25.0/1e6
+                                WHEN model LIKE 'claude-sonnet%%' THEN input_tokens*3.0/1e6 + cached_tokens*0.3/1e6 + cache_creation_tokens*3.75/1e6  + output_tokens*15.0/1e6
+                                WHEN model LIKE 'claude-haiku%%'  THEN input_tokens*1.0/1e6 + cached_tokens*0.1/1e6 + cache_creation_tokens*1.25/1e6  + output_tokens*5.0/1e6
                                 ELSE 0
                               END), 0) AS usd
                           FROM token_usage

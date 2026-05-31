@@ -284,9 +284,15 @@ def _score_finalists_with_agents(finalists: list, conn,
                 # for 5min in chart_confluence so this is one HTTP every
                 # 5min, not per setup).
                 btc_24h = _get_ticker_change_cached("BTCUSDT")
+                # F&G pause: set fng=None when FUTURES_AI_FNG_PAUSED=1 (default
+                # ON since 2026-06-01). Forces bear_phase to classify using
+                # BTC 24h + BTC.D + VIX + HMM only — market structure, not
+                # sentiment. Set FUTURES_AI_FNG_PAUSED=0 to re-enable.
+                import os as _os
+                _fng_paused = _os.environ.get("FUTURES_AI_FNG_PAUSED", "1").strip() == "1"
                 bp = classify_phase(
                     btc_change_24h_pct=btc_24h,
-                    fng=macro.get("fear_greed"),
+                    fng=None if _fng_paused else macro.get("fear_greed"),
                     btc_dom_pct=macro.get("btc_dominance"),
                     vix=macro.get("vix"),
                     hmm_regime=macro.get("hmm_regime") or macro.get("regime"),

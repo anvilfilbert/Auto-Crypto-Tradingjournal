@@ -286,9 +286,10 @@ def api_token_usage():
             rows = [dict(r) for r in conn.execute("""
                 SELECT module, model,
                        COUNT(*) AS calls,
-                       SUM(input_tokens)  AS total_input,
-                       SUM(output_tokens) AS total_output,
-                       SUM(cached_tokens) AS total_cached
+                       SUM(input_tokens)           AS total_input,
+                       SUM(output_tokens)          AS total_output,
+                       SUM(cached_tokens)          AS total_cached,
+                       SUM(cache_creation_tokens)  AS total_cache_create
                 FROM token_usage
                 WHERE ts >= datetime('now', ? || ' days')
                 GROUP BY module, model
@@ -296,9 +297,10 @@ def api_token_usage():
             """, (f"-{days}",)).fetchall()]
 
             totals = dict(conn.execute("""
-                SELECT SUM(input_tokens) AS total_input,
-                       SUM(output_tokens) AS total_output,
-                       SUM(cached_tokens) AS total_cached,
+                SELECT SUM(input_tokens)           AS total_input,
+                       SUM(output_tokens)          AS total_output,
+                       SUM(cached_tokens)          AS total_cached,
+                       SUM(cache_creation_tokens)  AS total_cache_create,
                        COUNT(*) AS total_calls
                 FROM token_usage
                 WHERE ts >= datetime('now', ? || ' days')
@@ -311,15 +313,27 @@ def api_token_usage():
                 FROM token_usage
             """).fetchone() or {})
 
-        sonnet_in_cost  = 3.0 / 1_000_000   # $/token (input)
-        sonnet_out_cost = 15.0 / 1_000_000  # $/token (output)
-        haiku_in_cost   = 0.8 / 1_000_000
-        haiku_out_cost  = 4.0 / 1_000_000
+        # Pricing per 1M tokens (verified 2026-05-31 from claude-api skill):
+        #   (input, cache_read=0.1x, cache_write=1.25x, output)
+        # Previous hardcoded values were Sonnet 4.0/Haiku 3.5 + missed cache_write.
+        PRICING = {
+            "claude-opus":   (5.0,  0.50, 6.25,  25.0),
+            "claude-sonnet": (3.0,  0.30, 3.75,  15.0),
+            "claude-haiku":  (1.0,  0.10, 1.25,  5.0),
+        }
 
         def cost(row):
-            if "haiku" in row.get("model", "").lower():
-                return round(row["total_input"] * haiku_in_cost + row["total_output"] * haiku_out_cost, 4)
-            return round(row["total_input"] * sonnet_in_cost + row["total_output"] * sonnet_out_cost, 4)
+            model = (row.get("model") or "").lower()
+            for prefix, (in_p, cr_p, cw_p, out_p) in PRICING.items():
+                if model.startswith(prefix):
+                    return round(
+                        (row.get("total_input")        or 0) * in_p  / 1e6 +
+                        (row.get("total_cached")       or 0) * cr_p  / 1e6 +
+                        (row.get("total_cache_create") or 0) * cw_p  / 1e6 +
+                        (row.get("total_output")       or 0) * out_p / 1e6,
+                        4
+                    )
+            return 0.0  # non-Anthropic (cascade fallback) — free tier or separate accounting
 
         for r in rows:
             r["est_cost_usd"] = cost(r)
@@ -331,6 +345,72 @@ def api_token_usage():
             "totals": totals,
             "all_time": all_time,
             "est_cost_usd": round(total_cost, 4),
+        })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/shadow-stats")
+def api_shadow_stats():
+    """GET /api/shadow-stats?days=7 — model-by-model comparison vs primary.
+
+    For each shadow_model+module pair: success rate, mean latency, total cost,
+    text-similarity placeholder (Jaccard on tokens). Cheap aggregation; deeper
+    agreement analysis is offline.
+    """
+    try:
+        days = int(request.args.get("days", 7))
+        with db_conn() as conn:
+            # Per-(shadow_model, module) aggregates
+            rows = [dict(r) for r in conn.execute("""
+                SELECT primary_module, shadow_provider, shadow_model,
+                       COUNT(*)                                AS samples,
+                       SUM(CASE WHEN shadow_error IS NULL THEN 1 ELSE 0 END) AS successes,
+                       SUM(CASE WHEN shadow_error IS NOT NULL THEN 1 ELSE 0 END) AS errors,
+                       ROUND(AVG(shadow_latency_ms), 0)        AS mean_lat_ms,
+                       ROUND(AVG(primary_latency_ms), 0)       AS primary_mean_lat_ms,
+                       ROUND(SUM(shadow_cost_usd), 4)          AS total_cost_usd,
+                       SUM(shadow_input_tokens)                AS shadow_in_tok,
+                       SUM(shadow_output_tokens)               AS shadow_out_tok,
+                       SUM(primary_input_tokens)               AS primary_in_tok,
+                       SUM(primary_output_tokens)              AS primary_out_tok
+                FROM shadow_responses
+                WHERE ts >= datetime('now', ? || ' days')
+                GROUP BY primary_module, shadow_provider, shadow_model
+                ORDER BY samples DESC
+            """, (f"-{days}",)).fetchall()]
+
+            for r in rows:
+                # Compute success rate and cost-per-call delta vs primary (Haiku 4.5)
+                s = r["samples"] or 1
+                r["success_pct"] = round(100.0 * (r["successes"] or 0) / s, 1)
+                # Primary cost using current Haiku pricing
+                primary_cost = (
+                    (r["primary_in_tok"]  or 0) * 1.0 / 1e6 +
+                    (r["primary_out_tok"] or 0) * 5.0 / 1e6
+                )
+                r["primary_cost_usd"] = round(primary_cost, 4)
+                r["cost_ratio_vs_primary"] = (
+                    round((r["total_cost_usd"] or 0) / primary_cost, 3)
+                    if primary_cost > 0 else None
+                )
+
+            # Recent error sample (last 5 per model)
+            errors = [dict(r) for r in conn.execute("""
+                SELECT ts, shadow_model, shadow_error
+                FROM shadow_responses
+                WHERE shadow_error IS NOT NULL
+                  AND ts >= datetime('now', ? || ' days')
+                ORDER BY ts DESC
+                LIMIT 20
+            """, (f"-{days}",)).fetchall()]
+
+        return _ok({
+            "days":      days,
+            "by_model":  rows,
+            "errors":    errors,
+            "note":      "primary_cost_usd uses Haiku 4.5 pricing ($1/$5 per 1M)",
         })
     except Exception:
         traceback.print_exc()

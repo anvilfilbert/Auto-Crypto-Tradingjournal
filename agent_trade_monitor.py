@@ -174,7 +174,8 @@ def _build_prompt(position: dict, orig_prep: dict,
             "- Bullish momentum (rising RSI, price above EMAs, bullish MACD) = FAVORABLE — price moving toward TP\n"
             "- Bearish momentum = UNFAVORABLE — price moving toward SL\n"
             f"- SL MUST be BELOW entry ({entry}) — price falling below SL triggers the stop\n"
-            f"- TP is ABOVE entry ({entry}) — position profits as price rises"
+            f"- TP is ABOVE entry ({entry}) — position profits as price rises\n"
+            "- 'Price above all EMAs' = price moving in the profitable direction for this Long"
         )
     )
 

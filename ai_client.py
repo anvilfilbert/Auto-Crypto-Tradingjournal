@@ -120,36 +120,89 @@ def send(module: str, model: str, messages: list, max_tokens: int,
     if system:
         kwargs["system"] = system
 
-    try:
-        message = _client.messages.create(**kwargs)
-        text    = message.content[0].text
-        cached  = getattr(message.usage, "cache_read_input_tokens", 0) or 0
-        log_token_usage(module, model,
-                        message.usage.input_tokens,
-                        message.usage.output_tokens,
-                        cached)
-        return text, cached
+    # Track primary result so we can fire shadow once at the end, regardless
+    # of which provider (Anthropic or cascade) produced the response.
+    primary_text: str | None = None
+    primary_cached = 0
+    primary_in_tok = 0
+    primary_out_tok = 0
+    primary_latency_ms = 0
+    primary_model_used = model
 
+    try:
+        import time as _t
+        _t0 = _t.time()
+        message = _client.messages.create(**kwargs)
+        primary_latency_ms = int((_t.time() - _t0) * 1000)
+        primary_text = message.content[0].text
+        primary_cached = getattr(message.usage, "cache_read_input_tokens", 0) or 0
+        # cache_creation_input_tokens is billed at 1.25x input rate; was
+        # silently dropped before 2026-05-31 fix — caused ~35% cost underreport.
+        cache_create = getattr(message.usage, "cache_creation_input_tokens", 0) or 0
+        primary_in_tok = message.usage.input_tokens
+        primary_out_tok = message.usage.output_tokens
+        log_token_usage(module, model,
+                        primary_in_tok, primary_out_tok,
+                        primary_cached, cache_create)
     except anthropic.APIError as exc:
         _log.warning("Anthropic API error (%s) — walking provider cascade: %s",
                      type(exc).__name__, exc)
 
     # --- Production cascade: try ranked providers in order, skipping cooldowns ---
-    last_err: Exception | None = None
-    for prov, prov_model in _PROVIDER_CASCADE:
-        if not _provider_available(prov, prov_model):
-            continue
-        try:
-            return _call_via_provider(prov, module, prov_model or model,
-                                      messages, max_tokens, system,
-                                      fallback_tag=f"+{prov}")
-        except Exception as e:
-            last_err = e
-            _log.warning("Cascade step %s failed, trying next: %s", prov, e)
-            continue
-    raise RuntimeError(
-        f"All cascade providers exhausted for module={module}. Last error: {last_err}"
-    )
+    if primary_text is None:
+        last_err: Exception | None = None
+        import time as _t
+        for prov, prov_model in _PROVIDER_CASCADE:
+            if not _provider_available(prov, prov_model):
+                continue
+            try:
+                _t0 = _t.time()
+                primary_text, primary_cached = _call_via_provider(
+                    prov, module, prov_model or model,
+                    messages, max_tokens, system,
+                    fallback_tag=f"+{prov}"
+                )
+                primary_latency_ms = int((_t.time() - _t0) * 1000)
+                primary_model_used = f"{prov}-{prov_model or model}"
+                # Cascade providers don't return exact token counts — estimate
+                # from text length (4 chars ≈ 1 token).
+                _prompt_text = "".join(
+                    (b.get("text", "") if isinstance(b, dict) else str(b))
+                    for m in messages
+                    for b in (m.get("content", []) if isinstance(m.get("content"), list)
+                              else [{"text": m.get("content", "")}])
+                )
+                primary_in_tok = len(_prompt_text) // 4
+                primary_out_tok = len(primary_text or "") // 4
+                break
+            except Exception as e:
+                last_err = e
+                _log.warning("Cascade step %s failed, trying next: %s", prov, e)
+                continue
+        if primary_text is None:
+            raise RuntimeError(
+                f"All cascade providers exhausted for module={module}. "
+                f"Last error: {last_err}"
+            )
+
+    # --- Shadow dispatch (single point, fires for both Anthropic and cascade) ---
+    # Sampled fire-and-forget to alt-models for cost/quality comparison. Never
+    # blocks. Controlled by AI_SHADOW_RATE / AI_SHADOW_MODULES / AI_SHADOW_MODELS.
+    try:
+        import shadow_runner
+        if shadow_runner.is_shadow_enabled(module):
+            shadow_runner.fire_shadows(
+                module=module, primary_model=primary_model_used,
+                primary_text=primary_text,
+                primary_input_tokens=primary_in_tok,
+                primary_output_tokens=primary_out_tok,
+                primary_latency_ms=primary_latency_ms,
+                messages=messages, max_tokens=max_tokens, system=system,
+            )
+    except Exception as _shadow_exc:
+        _log.debug("shadow dispatch failed (non-fatal): %s", _shadow_exc)
+
+    return primary_text, primary_cached
 
 
 def _provider_available(provider: str, model: str | None) -> bool:

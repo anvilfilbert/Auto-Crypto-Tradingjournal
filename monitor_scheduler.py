@@ -573,3 +573,30 @@ def start():
     t11 = threading.Thread(target=_exec_quality_loop, name="exec-quality", daemon=True)
     t11.start()
     print("[ExecQuality] Background A-D snapshot loop started (hourly)", flush=True)
+
+    # ── Shadow responses pruner (daily, keeps 30d) ────────────────────────
+    # Without this, shadow_responses grows unbounded (~470 rows/day at 20%
+    # sample rate × 4 models = ~14k rows/month). Added with Fix 5 / 2026-05-31.
+    def _shadow_prune_loop():
+        import time as _t
+        _t.sleep(900)  # 15-min initial offset so it doesn't collide with boot
+        while True:
+            try:
+                from database import db_conn
+                with db_conn() as _conn:
+                    cur = _conn.execute(
+                        "DELETE FROM shadow_responses "
+                        "WHERE ts < datetime('now', '-30 days')"
+                    )
+                    _conn.commit()
+                    deleted = cur.rowcount or 0
+                if deleted > 0:
+                    print(f"[ShadowPrune] removed {deleted} rows older than 30d",
+                          flush=True)
+            except Exception as e:
+                print(f"[ShadowPrune] error: {e}", flush=True)
+            time.sleep(86400)  # daily
+
+    t12 = threading.Thread(target=_shadow_prune_loop, name="shadow-prune", daemon=True)
+    t12.start()
+    print("[ShadowPrune] Background shadow_responses prune loop started (daily)", flush=True)
