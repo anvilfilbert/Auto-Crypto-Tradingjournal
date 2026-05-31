@@ -37,12 +37,24 @@ _QUICK_SCORE_CACHE_MAX = 6000          # LRU evict at 6k entries (~12h watchlist
 _QUICK_SCORE_STATS = {"hits": 0, "misses": 0, "writes": 0, "evictions": 0}
 
 
-def _quick_score_cache_key(symbol: str, direction: str, mkt_str: str,
+def _quick_score_cache_key(symbol: str, direction: str,
                             pt_1d: str, pt_4h: str, pt_1h: str,
                             min_score: int) -> str:
-    """Deterministic SHA-256 of the inputs that determine the Haiku output."""
+    """Deterministic SHA-256 of the inputs that materially determine the
+    Haiku output.
+
+    Intentionally OMITS mkt_str (macro context — VIX/F&G/BTC.D). Those
+    values refresh every ~5 min while scans run every 30 min, so including
+    them in the cache key guaranteed 0% hit rate (every key was effectively
+    unique). The behavioural risk of caching across small macro nudges is
+    negligible: a VIX shift of ±0.3 between two 5-min windows does not
+    meaningfully flip Haiku's "is this setup worth >=6/10?" judgment for
+    the same candle state. The macro CAP (apply_macro_cap) is applied
+    AFTER the Haiku call anyway, so coarse-grained macro regime is still
+    respected — only the in-prompt nudges are cached across.
+    """
     h = hashlib.sha256()
-    for part in (symbol, direction, str(min_score), mkt_str or "",
+    for part in (symbol, direction, str(min_score),
                   pt_1d or "", pt_4h or "", pt_1h or ""):
         h.update(part.encode("utf-8", errors="replace"))
         h.update(b"|")
@@ -449,10 +461,13 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
 
     # Candle-hash cache check (#1 cost optimisation). pt_1d/4h/1h are
     # deterministic functions of OHLCV — same candles → same string → same
-    # Haiku output. mkt_str adds the macro context layer so we don't reuse
-    # a score made under a different VIX/F&G snapshot.
+    # Haiku output. mkt_str is intentionally NOT included in the key (see
+    # _quick_score_cache_key docstring): including it caused 0% hit rate
+    # because macro context refreshes every 5 min while scans run every
+    # 30 min. The macro CAP runs AFTER this cache, so coarse-grained macro
+    # is still respected.
     _cache_key = _quick_score_cache_key(
-        symbol, direction, mkt_str, pt_1d, pt_4h, pt_1h, min_score)
+        symbol, direction, pt_1d, pt_4h, pt_1h, min_score)
     _cached_value, _cache_hit = _quick_score_cache_get(_cache_key)
     if _cache_hit:
         return _cached_value
