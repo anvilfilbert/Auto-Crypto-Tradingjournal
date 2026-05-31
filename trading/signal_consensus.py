@@ -88,6 +88,23 @@ def evaluate(scanner_setup: dict, conn) -> dict:
         base["reason"] = f"scanner score {sc_score} < threshold {SCANNER_MIN_SCORE}"
         return base
 
+    # Pre-consensus dedup — if this symbol already has an open auto_ai position
+    # the executor would reject as real_dedup anyway. Skip the Opus call to
+    # save ~$0.05/dup. Fails open: any error reading positions = still call
+    # consensus so a transient Bitget hiccup never blocks a real entry.
+    try:
+        from trading import bitget_trader as _bt
+        open_syms = {p.get("symbol") for p in (_bt.get_open_positions() or [])
+                     if p.get("symbol")}
+        if sym in open_syms:
+            base["reason"] = f"dedup: {sym} already has open auto_ai position"
+            _log(conn, "consensus_skipped_dedup", sym, direction, sc_score,
+                 json.dumps({"sym": sym, "open_syms_count": len(open_syms)}))
+            return base
+    except Exception as _dedup_err:
+        # Never block on dedup-check errors
+        _log_err = str(_dedup_err)[:120]
+
     # Run AI second-opinion via the call_analyzer pipeline
     try:
         from ai_call import analyze_call as _analyze
@@ -222,6 +239,11 @@ def evaluate(scanner_setup: dict, conn) -> dict:
     # mode (after operator review at +14d): veto=True blocks the trade.
     try:
         from trading import red_team_agent as _rt
+        # Canonical scanner emits entry as entry_zone.low (a band); use the
+        # same fallback pattern as the Opus-override block below so the
+        # red-team agent doesn't falsely flag every setup as "missing entry".
+        _rt_entry = ((scanner_setup.get("entry_zone") or {}).get("low")
+                     or scanner_setup.get("entry_price"))
         verdict = _rt.evaluate_setup({
             "symbol":          sym,
             "direction":       direction,
@@ -229,9 +251,10 @@ def evaluate(scanner_setup: dict, conn) -> dict:
             "ai_score":        ai_score,
             "consensus_score": base["consensus_score"],
             "ai_summary":      ai_summary,
-            "entry_price":     scanner_setup.get("entry_price"),
+            "entry_price":     _rt_entry,
             "sl_price":        scanner_setup.get("sl_price"),
             "tp1_price":       scanner_setup.get("tp1_price"),
+            "tp2_price":       scanner_setup.get("tp2_price"),
         })
         base["red_team"] = verdict
         if verdict.get("veto") and verdict.get("mode") == "hard":
