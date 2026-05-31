@@ -32,7 +32,11 @@ _PROVIDER_CASCADE: list[tuple[str, str | None]] = [
     ("groq",       "meta-llama/llama-4-scout-17b-16e-instruct"),
     ("cerebras",   "qwen-3-235b-a22b-instruct-2507"),
     ("cerebras",   "llama3.1-8b"),
-    ("openrouter", "deepseek/deepseek-v4-flash:free"),
+    # Fallback when Anthropic 429s / quota-out: route the SAME Haiku model
+    # through OpenRouter's separate balance. Identical quality + same per-token
+    # price, just billed against OR credits instead of Anthropic credits.
+    # Solves "Anthropic funds depleted" outages without quality loss.
+    ("openrouter", "anthropic/claude-haiku-4-5"),
     ("gemini",     None),   # Gemini has its own internal model cascade
 ]
 
