@@ -150,7 +150,7 @@ def _evaluate_dim(conn, dim: str, key_base: str) -> dict[str, Any]:
         new_value = _clamp_delta(current, proposed)
         if abs(new_value - current) < 0.01:
             learned.log_skip(conn, key, LEARNER_NAME,
-                              f"no change after clamp",
+                              "no change after clamp",
                               sample_size=n)
             continue
 

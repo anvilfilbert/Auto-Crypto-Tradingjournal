@@ -25,7 +25,6 @@ Effect-size sidecar:
 """
 from __future__ import annotations
 
-from typing import Optional
 
 
 def benjamini_hochberg(p_values: list[float], alpha: float = 0.05) -> list[bool]:

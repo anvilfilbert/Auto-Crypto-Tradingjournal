@@ -33,8 +33,11 @@ Safety:
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from . import config as fa_config
 from . import bitget_trader

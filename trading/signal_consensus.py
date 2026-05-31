@@ -22,13 +22,10 @@ audit why the chain didn't act on a 7+ setup.
 """
 from __future__ import annotations
 
-import datetime as _dt
 import json
 import os
-from typing import Optional
 
 from constants import MODEL
-from helpers import strip_fence
 
 
 def _consensus_model() -> str:

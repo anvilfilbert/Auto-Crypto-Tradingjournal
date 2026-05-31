@@ -378,7 +378,7 @@ def start():
 
     t2 = threading.Thread(target=_daily_report_loop, name="daily-report", daemon=True)
     t2.start()
-    print(f"[DailyReport] Background daily-report scheduler started (sends at first cycle ≥ 09:00 UTC)", flush=True)
+    print("[DailyReport] Background daily-report scheduler started (sends at first cycle ≥ 09:00 UTC)", flush=True)
 
     # ── Hourly R-3 backfill (funding + liq_distance) ──────────────────────
     def _r3_backfill_loop():
@@ -396,7 +396,7 @@ def start():
 
     t3 = threading.Thread(target=_r3_backfill_loop, name="r3-backfill", daemon=True)
     t3.start()
-    print(f"[R-3] Background funding/liq backfill scheduler started (hourly)", flush=True)
+    print("[R-3] Background funding/liq backfill scheduler started (hourly)", flush=True)
 
     # ── Per-symbol learner (every 6h) ──────────────────────────────────────
     def _learner_symbol_loop():
@@ -417,7 +417,7 @@ def start():
 
     t4 = threading.Thread(target=_learner_symbol_loop, name="learner-symbol", daemon=True)
     t4.start()
-    print(f"[Learner-symbol] Background per-symbol learner started (every 6h, first run in 3min)", flush=True)
+    print("[Learner-symbol] Background per-symbol learner started (every 6h, first run in 3min)", flush=True)
 
     # ── L-2 time-bucket learner (session/DoW/hour, every 6h) ─────────────
     def _learner_time_loop():
@@ -438,7 +438,7 @@ def start():
 
     t5 = threading.Thread(target=_learner_time_loop, name="learner-time", daemon=True)
     t5.start()
-    print(f"[Learner-time] Background session/DoW/hour learner started (every 6h, first run in ~3.5min)", flush=True)
+    print("[Learner-time] Background session/DoW/hour learner started (every 6h, first run in ~3.5min)", flush=True)
 
     # ── L-3 threshold learner (consensus_min_score, once per day) ─────────
     def _learner_threshold_loop():
@@ -460,7 +460,7 @@ def start():
 
     t6 = threading.Thread(target=_learner_threshold_loop, name="learner-threshold", daemon=True)
     t6.start()
-    print(f"[Learner-threshold] Background threshold learner started (daily)", flush=True)
+    print("[Learner-threshold] Background threshold learner started (daily)", flush=True)
 
     # ── A-C Post-Mortem agent (hourly — picks up new closes) ──────────────
     def _post_mortem_loop():
@@ -482,7 +482,7 @@ def start():
 
     t7 = threading.Thread(target=_post_mortem_loop, name="post-mortem", daemon=True)
     t7.start()
-    print(f"[Post-mortem] Background post-mortem agent started (hourly)", flush=True)
+    print("[Post-mortem] Background post-mortem agent started (hourly)", flush=True)
 
     # ── N-4 VPIN snapshot loop (every 5min, top watchlist) ────────────────
     def _vpin_snapshot_loop():
@@ -508,7 +508,7 @@ def start():
 
     t8 = threading.Thread(target=_vpin_snapshot_loop, name="vpin", daemon=True)
     t8.start()
-    print(f"[VPIN] Background N-4 VPIN snapshot loop started (every 5min, top 20 by watchlist order)", flush=True)
+    print("[VPIN] Background N-4 VPIN snapshot loop started (every 5min, top 20 by watchlist order)", flush=True)
 
     # ── L-4 TP/SL distance learner (daily) ────────────────────────────────
     def _learner_tpsl_loop():
@@ -529,7 +529,7 @@ def start():
 
     t9 = threading.Thread(target=_learner_tpsl_loop, name="learner-tpsl", daemon=True)
     t9.start()
-    print(f"[Learner-TPSL] Background L-4 TP/SL learner started (daily)", flush=True)
+    print("[Learner-TPSL] Background L-4 TP/SL learner started (daily)", flush=True)
 
     # ── L-5 Risk-parameter learner (daily) ────────────────────────────────
     def _learner_risk_loop():
@@ -550,7 +550,7 @@ def start():
 
     t10 = threading.Thread(target=_learner_risk_loop, name="learner-risk", daemon=True)
     t10.start()
-    print(f"[Learner-Risk] Background L-5 risk learner started (daily)", flush=True)
+    print("[Learner-Risk] Background L-5 risk learner started (daily)", flush=True)
 
     # ── A-D Execution-quality snapshot (hourly) ───────────────────────────
     def _exec_quality_loop():
@@ -572,4 +572,4 @@ def start():
 
     t11 = threading.Thread(target=_exec_quality_loop, name="exec-quality", daemon=True)
     t11.start()
-    print(f"[ExecQuality] Background A-D snapshot loop started (hourly)", flush=True)
+    print("[ExecQuality] Background A-D snapshot loop started (hourly)", flush=True)

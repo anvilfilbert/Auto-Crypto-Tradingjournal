@@ -13,9 +13,7 @@ Public:
 from __future__ import annotations
 
 import datetime as _dt
-import json
 import logging
-from typing import Any
 
 _log = logging.getLogger(__name__)
 
@@ -60,7 +58,7 @@ def _reminders_section(conn) -> str:
     if rt_remaining > 0:
         lines.append(f"  • Red-Team soft→hard review in {rt_remaining}d")
     elif rt_remaining == 0:
-        lines.append(f"  • Red-Team soft→hard review TODAY — read A-A log + decide")
+        lines.append("  • Red-Team soft→hard review TODAY — read A-A log + decide")
     elif rt_remaining > -7:
         lines.append(f"  • Red-Team soft→hard review OVERDUE by {-rt_remaining}d")
     # Strategy Selector revisit at +30d
@@ -68,7 +66,7 @@ def _reminders_section(conn) -> str:
     if ss_remaining > 0:
         lines.append(f"  • Strategy Selector revisit in {ss_remaining}d (post L-3)")
     elif ss_remaining == 0:
-        lines.append(f"  • Strategy Selector revisit TODAY")
+        lines.append("  • Strategy Selector revisit TODAY")
     return "\n".join(lines) if lines else "  (none active)"
 
 

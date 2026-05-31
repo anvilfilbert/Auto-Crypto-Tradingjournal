@@ -15,7 +15,7 @@ import logging
 import time as _time
 
 from prompt_fragments import SCORING_SCALE, LEVEL_PROXIMITY_RULES, MARKET_CONTEXT_RULES, DRAW_ON_LIQUIDITY_RULES
-from constants import MODEL, FAST_MODEL, SCANNER_MIN_SCORE, PROMPT_CACHE_MIN_CHARS
+from constants import FAST_MODEL, SCANNER_MIN_SCORE
 from ai_client import send as ai_send
 from helpers import strip_fence, build_cached_messages
 from scanner_criteria import CRITERIA_DEFAULTS, _disabled_criteria_block

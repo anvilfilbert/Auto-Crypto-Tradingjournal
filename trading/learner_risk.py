@@ -23,7 +23,7 @@ import statistics
 from datetime import datetime
 from typing import Any
 
-from trading import backtest_validator, bayes, learned
+from trading import backtest_validator, learned
 
 _log = logging.getLogger(__name__)
 

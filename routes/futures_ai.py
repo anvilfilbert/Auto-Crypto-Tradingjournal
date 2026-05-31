@@ -544,7 +544,6 @@ def api_futures_ai_stats():
     """
     try:
         from statistics import mean, pstdev
-        from datetime import datetime, timezone
 
         window = (request.args.get("window") or "30d").lower()
         if window not in _WINDOW_HOURS:
