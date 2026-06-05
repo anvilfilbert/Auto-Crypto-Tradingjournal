@@ -1,0 +1,106 @@
+{
+  "slug": "55-vmc-unified-confluence",
+  "subtitle": "Twelve individual signals (8 from Cipher A, 4 from Cipher B, plus MTF EMA) is hard to read in real-time. A confluence stack collapses them into a single signed score in [−1.0, +1.0]. That score is what a trader actually acts on.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>You've now learned Cipher A's eight markers, Cipher B's WaveTrend / MFI / dots / divergences, and the MTF EMA verdict matrix. That's 13+ distinct inputs. Reading them all in real-time on every coin is impossible without a unified aggregation. This lesson teaches you the principles of stacking them into a single score.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The weighted-sum approach"
+    },
+    {
+      "type": "text",
+      "content": "<p>Assign each signal a SIGNED weight based on its empirical reliability and typical magnitude. Then sum the weights of active signals. Clamp the result to a range like [−1.0, +1.0]. The clamped score is your unified verdict.</p><p>A weight table that reflects real-world reliability:</p>"
+    },
+    {
+      "type": "table",
+      "headers": [
+        "Signal",
+        "Weight (signed)",
+        "Why"
+      ],
+      "rows": [
+        ["Yellow X (rare, strong reversal)", "+0.40", "Highest-conviction long entry"],
+        ["Blood Diamond (strong trend exhaustion)", "−0.35", "Highest-conviction short entry"],
+        ["Long EMA / Short EMA (trend flip)", "±0.20", "Confirmed regime change"],
+        ["Gold Buy / Gold Sell (WT cross at extreme)", "±0.20", "Standard mean-reversion trigger"],
+        ["Bull Div / Bear Div (pivot divergence)", "±0.15", "Confirmed but lagging by 2 bars"],
+        ["MTF EMA verdict (strong)", "±0.15", "Macro backdrop strongly aligned"],
+        ["Blue Triangle / Red Cross (early ribbon)", "±0.10", "Lots of false positives"],
+        ["Red Diamond (WT cross any zone)", "−0.05", "Common signal, weak alone"],
+        ["Bull Candle (momentum-continuation)", "+0.05", "Confirms strength but rarely actionable"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Score → label mapping"
+    },
+    {
+      "type": "text",
+      "content": "<p>Convert the summed score into a human-readable label:</p>"
+    },
+    {
+      "type": "table",
+      "headers": [
+        "Score range",
+        "Label",
+        "Action"
+      ],
+      "rows": [
+        ["≥ +0.50", "strong_long", "Conviction entry — full size"],
+        ["+0.20 to +0.50", "long", "Entry justified — standard size"],
+        ["−0.20 to +0.20", "neutral", "No directional edge — wait"],
+        ["−0.50 to −0.20", "short", "Short entry — standard size"],
+        ["≤ −0.50", "strong_short", "Conviction short — full size"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "Recency decay — F7"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Signals decay with age",
+      "content": "<p>A Gold Sell on the current bar = full weight (−0.20). A Gold Sell 1 bar ago = half weight (−0.10). A Gold Sell 2 bars ago = quarter weight (−0.05). 3+ bars ago = zero — too stale to act on.</p><p>Use a decay curve like (1.0, 0.5, 0.25) over the last 3 bars. This catches recent context without giving stale signals undue power.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "State signals vs event signals"
+    },
+    {
+      "type": "text",
+      "content": "<p>Two flavors of signals:</p><ul><li><strong>Event signals</strong> — fire on specific bars. Crosses, dots, divergences. They're booleans (\"did it fire? yes/no\"). Recency decay applies.</li><li><strong>State signals</strong> — describe an ongoing condition. WT2 zone (overbought / oversold), MTF verdict (trend_up / down). They're persistent. No decay — they contribute based on current state.</li></ul><p>A complete stack includes BOTH. Examples of state signals to include:</p><ul><li><strong>WT2 in deep overbought (&gt; +60)</strong> → −0.10 (state-based bearish)</li><li><strong>WT2 in alert overbought (+53 to +60)</strong> → −0.05</li><li><strong>WT2 in alert oversold (−60 to −53)</strong> → +0.05</li><li><strong>WT2 in deep oversold (&lt; −60)</strong> → +0.10</li></ul>"
+    },
+    {
+      "type": "heading",
+      "content": "Slope-at-extreme signals — F9"
+    },
+    {
+      "type": "text",
+      "content": "<p>Watching the WT2 SLOPE while it's at an extreme adds another nuance:</p><ul><li><strong>WT2 &gt; +40 AND falling sharply (Δ &lt; −3 over 2 bars)</strong> = \"rolling over from high\" — bearish (−0.10)</li><li><strong>WT2 &lt; −40 AND rising sharply (Δ &gt; +3 over 2 bars)</strong> = \"lifting off from low\" — bullish (+0.10)</li></ul><p>These catch cases where WT2 is at an extreme but momentum has already turned. The static zone signal alone misses this; the slope signal completes the picture.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Real example: HYPEUSDT bottom"
+    },
+    {
+      "type": "text",
+      "content": "<p>2026-05-28 ~08:00 UTC: HYPE had dropped from $62 to $58 over 24 hours. The unified VMC signal on 1H showed:</p><ul><li>WT2 = −52.5 (just past alert oversold threshold)</li><li>WT2 slope = +5 (rising sharply from −60) → <strong>wt2_lifting_off</strong> fires (+0.10)</li><li>MTF verdict: trend_up_confirmed slope +18.27%/7d → +0.15</li><li>No active Cipher A markers on the current bar</li></ul><p>Sum: +0.25 → label = <strong>long</strong>. First positive verdict in 12 hours of bleed. Within 3-4 bars, HYPE bounced from $58 to $60 — vindicating the signal stack at the local bottom.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "title": "The MTF macro filter is essential",
+      "content": "<p>Without the MTF EMA verdict in your stack, you'll keep fading strong trends. WaveTrend gold buys fire repeatedly during a sustained downtrend — and each one loses money because the macro is against you. The MTF verdict is the SANITY CHECK that says \"don't long here, the macro is still rolling down.\" Always include it.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "summary",
+      "title": "Bottom line",
+      "content": "<p>Combine event signals (decayed by recency), state signals (current zone / verdict), and slope-at-extreme signals into a weighted sum. Clamp to ±1.0. Map to label. You now have a single number that summarises 12+ underlying signals — actionable in real-time across dozens of coins. That's the engine of an automated scanner.</p>"
+    }
+  ]
+}

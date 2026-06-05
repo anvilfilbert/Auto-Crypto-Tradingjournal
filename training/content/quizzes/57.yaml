@@ -1,0 +1,127 @@
+id: '57'
+lesson_id: 57
+pass_threshold: 8
+questions:
+- id: q1
+  text: What's a 'risk-off cascade' in crypto markets?
+  type: mcq
+  choices:
+  - A type of waterfall.
+  - A single trigger (BTC dump, macro news, exchange issue) causing correlations across all alts to spike to 0.85-0.95. Every long position starts losing simultaneously.
+  - A bullish event.
+  - A trading bot.
+  correct: 1
+  topic_tag: cascade
+  explanation: Cascades are correlated mass selling. Normally alts have moderate correlation with BTC (0.5-0.7). When risk-off hits, correlation spikes near 1.0, meaning everything moves together. Your
+    'diversified' book of 5 alts becomes one trade with five names — all losing at once.
+- id: q2
+  text: In normal market conditions, what's the typical correlation between BTC and alts?
+  type: mcq
+  choices:
+  - 1.0 (always)
+  - 0.5-0.7
+  - 0.0 (independent)
+  - Negative correlation.
+  correct: 1
+  topic_tag: correlation
+  explanation: 'Normal conditions: BTC and alts are moderately correlated at 0.5-0.7. Different sectors (DeFi, gaming, AI, memes) can decorrelate. In a risk-off cascade, this jumps to 0.85-0.95 — meaning
+    the diversification benefit collapses precisely when you need it most.'
+- id: q3
+  text: Why do correlations spike during cascades?
+  type: mcq
+  choices:
+  - Random.
+  - 'Multiple reinforcing causes: margin call liquidations cascade across leveraged longs, institutional risk-off algos dump everything on key BTC breaks, retail panic-sells, stablecoin flight drains liquidity
+    from books.'
+  - Bitcoin tells alts to dump.
+  - Bots collude.
+  correct: 1
+  topic_tag: cascade
+  explanation: 'Four reinforcing mechanisms: (1) Margin calls force liquidations across leveraged longs of all coins. (2) Institutional algorithms dump risk-on positions when BTC breaks levels. (3) Retail
+    panic spreads (sell everything). (4) Money rotates to USDT/USDC, drawing liquidity out of all coin books. Each amplifies the others — feedback loop.'
+- id: q4
+  text: How do positions stop out during a cascade?
+  type: mcq
+  choices:
+  - All at the exact same moment.
+  - In SEQUENCE — tightest SL stops first, then next, then next. Roughly 30-90 minutes apart as the dump wave moves through the book.
+  - They don't — cascades skip SLs.
+  - Randomly.
+  correct: 1
+  topic_tag: cascade
+  explanation: 'Position with the tightest SL goes first. Then as the dump continues, the next-tightest position hits its SL, and so on. Real example timetable: FIL short (HEDGE WIN +$6.55 at 00:42), then
+    4 longs stopped within 3 hours (01:05, 02:51, 03:18, 04:12). Sequential, not simultaneous.'
+- id: q5
+  text: 'From the lesson''s real example: 5 alts stopped, 1 short hedge profited. What was the dollar impact?'
+  type: mcq
+  choices:
+  - −$1000 total.
+  - 5 longs lost −$192 collectively (WLD −$29, AR −$27, TAO −$50, CHZ −$46, plus). The 1 short hedge made +$6.55 (~3% mitigation, but directionally correct).
+  - +$500 net.
+  - Break even.
+  correct: 1
+  topic_tag: cascade
+  explanation: 'Real cascade from 2026-05-28: 5 longs hit SL in sequence over 3 hours (totaling −$192). The single short hedge (FIL) gained +$6.55. Hedge wasn''t enough to cover the longs, but it was directionally
+    correct and proved the framework. Going into the night without ANY short = worse outcome.'
+- id: q6
+  text: Why is 'holding 5 different alts' NOT really diversification in a cascade?
+  type: mcq
+  choices:
+  - 5 is too few.
+  - Without DIRECTION diversification (some longs + some shorts), 5 alt longs are just one big BTC long with extra steps. The cascade correlates them all in the same direction at once.
+  - Different alts always perform differently.
+  - They are well-diversified.
+  correct: 1
+  topic_tag: correlation
+  explanation: Diversification only protects you if components have low correlation. In a cascade, alt-alt correlation hits 0.95. To genuinely diversify against cascades, you need DIRECTION diversification
+    (some longs, some shorts) or ASSET CLASS diversification (crypto + non-crypto). 5 alt longs = 1 big BTC long during cascade.
+- id: q7
+  text: What's the BEST pre-cascade protection?
+  type: mcq
+  choices:
+  - Hope it doesn't happen.
+  - Hard SL on EVERY position (no 'I'll watch manually'), wick-safe placement (0.5-1.0× ATR_4H below recent low), sum your worst-case dollar loss and keep it < 5% equity, hold a small short hedge.
+  - Maximize position size.
+  - Trade more often.
+  correct: 1
+  topic_tag: hedging
+  explanation: 'Pre-cascade prep is a 4-item checklist: (1) Hard SL on every position. (2) Wick-safe SL placement. (3) Worst-case dollar loss < 5% equity. (4) Small short hedge in weakest coin. This combination
+    ensures even a full cascade caps total drawdown at survivable levels (< 5%) instead of catastrophic levels (15-20%+).'
+- id: q8
+  text: What's the WRONG move DURING a cascade (when 3 positions have already stopped)?
+  type: mcq
+  choices:
+  - Cut remaining positions.
+  - BUYING THE DIP on the 4th position. The cascade isn't over until correlation normalizes — adding longs into a falling cascade COMPOUNDS losses.
+  - Adding short hedge.
+  - Going to bed.
+  correct: 1
+  topic_tag: cascade
+  explanation: 'The retail instinct after 3 stops is ''surely we''re close to the bottom now — buy the dip.'' But cascades exhaust on their own schedule (margin calls, panic selling). Adding longs MID-cascade
+    puts capital directly into the dump. The two productive actions are: add to the SHORT hedge OR close remaining longs early. Never add longs.'
+- id: q9
+  text: Why do POST-cascade conditions often present the best counter-trend longs of the year?
+  type: mcq
+  choices:
+  - Random luck.
+  - WT2 is deeply oversold across most coins, RSI in 25-35, forced sellers (margin calls, panic) have cleared. The MTF EMA verdict might still say 'trend_up_aging' (macro thesis intact, just retraced).
+    Yellow X / Gold Buy setups appear cleanly.
+  - Markets are closed.
+  - Cascades don't end.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: Cascades create artificial oversold conditions across the board. Once the forced selling exhausts, fundamentals reassert. The clean Yellow X / Gold Buy / multiple-condition counter-trend
+    setups that appear in the 6-12 hours after a cascade are statistically among the highest-edge entries of the year. Be patient, wait for exhaustion, deploy fresh capital.
+- id: q10
+  text: 'Real risk during fast cascades: slippage. What''s the typical impact?'
+  type: mcq
+  choices:
+  - No slippage in crypto.
+  - '1-2% slip below trigger price due to thin liquidity. Real example: CHZ SL at $0.0345 → filled at $0.0339 (~$9 extra loss on $546 notional). Plan for this — your displayed worst-case should include
+    0.5-1% slippage buffer.'
+  - 10-20% slip always.
+  - Slippage works in your favor.
+  correct: 1
+  topic_tag: execution
+  explanation: 'During fast cascades, order books thin out, so your SL trigger price and your fill price diverge by 1-2%. Real example: CHZ SL at $0.0345 filled at $0.0339, ~1.7% slip = $9 extra loss on
+    the position. When calculating worst-case dollar loss for SL sizing, add 0.5-1% slippage buffer to be realistic. Hope is not a plan.'

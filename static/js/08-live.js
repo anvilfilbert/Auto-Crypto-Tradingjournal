@@ -236,6 +236,7 @@ function renderPositionCards(positions, waitingLimits) {
         <div class="pos-stat">
           <div class="pos-stat-label">Size</div>
           <div class="pos-stat-val">${fmtC(p.size_usdt)} USDT</div>
+          <div style="font-size:.7rem;color:var(--muted)">${_fmtCoins(p.total)} ${p.symbol ? p.symbol.replace(/USDT$/, '') : ''}</div>
         </div>
         <div class="pos-stat">
           <div class="pos-stat-label">Entry</div>

@@ -66,9 +66,23 @@ class TestModifyPositionSL:
             if path == "/api/v2/mix/market/contracts":
                 return [{"pricePlace": "2", "minTradeNum": "0.0001"}]
             return {"orderId": "fake"}
-        with patch("trading.bitget_trader._request", side_effect=fake_request), \
+        # _place_sl_with_verify calls get_pending_plan_orders to verify the
+        # new SL persisted. Return the OLD plan on the first call (cancel
+        # lookup) and the NEW SL on subsequent calls (verify step).
+        state = {"placed": False}
+        def fake_plans(symbol=None):
+            if state["placed"]:
+                return [{"symbol": "BTCUSDT", "plan_type": "loss_plan",
+                         "trigger_price": 75000.0, "direction": "Long",
+                         "size": 0.0001, "order_id": "new_plan_xyz"}]
+            return _mock_pending_plan()
+        def fake_place(method, path, **kwargs):
+            if path == "/api/v2/mix/order/place-tpsl-order":
+                state["placed"] = True
+            return fake_request(method, path, **kwargs)
+        with patch("trading.bitget_trader._request", side_effect=fake_place), \
              patch("trading.bitget_trader.get_pending_plan_orders",
-                   return_value=_mock_pending_plan()), \
+                   side_effect=fake_plans), \
              patch("trading.bitget_trader.get_open_positions",
                    return_value=_mock_get_open_positions()):
             result = bt.modify_position_sl("BTCUSDT", "long", 75000.0)
@@ -94,6 +108,41 @@ class TestModifyPositionSL:
             result = bt.modify_position_sl("BTCUSDT", "long", 70000.0)
         assert result["ok"] is False
         assert "size" in result["reason"].lower()
+
+    def test_rollback_when_new_sl_place_fails(self):
+        """When the new SL can't be placed, the OLD SL price is re-attached."""
+        from trading import bitget_trader as bt
+        calls = []
+        def fake_request(method, path, **kwargs):
+            calls.append((method, path, kwargs.get("body") or kwargs.get("params")))
+            if path == "/api/v2/mix/market/contracts":
+                return [{"pricePlace": "2", "minTradeNum": "0.0001"}]
+            return {"orderId": "fake"}
+        # Always return the OLD plan from get_pending_plan_orders — verify
+        # of the new placement never sees the new SL → place_with_verify
+        # returns False → rollback kicks in.
+        state = {"rb_done": False}
+        def fake_plans(symbol=None):
+            if state["rb_done"]:
+                # After rollback attempt, simulate old SL coming back
+                return _mock_pending_plan(sl_trigger=70000.0)
+            return _mock_pending_plan(sl_trigger=70000.0)
+        def fake_place(method, path, **kwargs):
+            if path == "/api/v2/mix/order/place-tpsl-order":
+                body = kwargs.get("body") or {}
+                # Rollback re-places at the old price; flag it
+                if str(body.get("triggerPrice")) == "70000.0":
+                    state["rb_done"] = True
+            return fake_request(method, path, **kwargs)
+        with patch("trading.bitget_trader._request", side_effect=fake_place), \
+             patch("trading.bitget_trader.get_pending_plan_orders",
+                   side_effect=fake_plans), \
+             patch("trading.bitget_trader.get_open_positions",
+                   return_value=_mock_get_open_positions()):
+            result = bt.modify_position_sl("BTCUSDT", "long", 75000.0)
+
+        assert result["ok"] is False
+        assert result.get("rollback_attempted") is True
 
 
 # ── close_position ─────────────────────────────────────────────────────────────

@@ -1,0 +1,122 @@
+id: '53'
+lesson_id: 53
+pass_threshold: 8
+questions:
+- id: q1
+  text: Where on the chart does VuManChu Cipher A draw?
+  type: mcq
+  choices:
+  - In a separate oscillator pane below price.
+  - Directly on the price chart as an overlay — the 8-line EMA ribbon and 8 markers all plot on top of candles.
+  - Only as a Telegram alert.
+  - In a 3D view.
+  correct: 1
+  topic_tag: vmc
+  explanation: Cipher A is the OVERLAY component (ribbon + markers on price). Cipher B is the SEPARATE PANE oscillator. Confusing the two is the most common Cipher mistake. A = on price, B = below price.
+- id: q2
+  text: What are the 8 EMA periods in the Cipher A ribbon?
+  type: mcq
+  choices:
+  - 20, 50, 100, 200
+  - 5, 11, 15, 18, 21, 24, 28, 34
+  - 10, 20, 30, 40, 50, 60, 70, 80
+  - 9, 21, 50
+  correct: 1
+  topic_tag: moving_averages
+  explanation: The 8-EMA ribbon uses 5, 11, 15, 18, 21, 24, 28, 34. The mixed Fibonacci-adjacent values are designed to fan out smoothly during trends and converge during ranges. When ribbon is wide and
+    spread, momentum is strong; when ribbon compresses, momentum is fading.
+- id: q3
+  text: Of the 8 Cipher A markers, which TWO are the highest-priority reversal signals?
+  type: mcq
+  choices:
+  - long_ema and short_ema
+  - Yellow X (bullish reversal) and Bull Candle (deep buy confluence)
+  - red_cross and blue_triangle
+  - All markers are equally important
+  correct: 1
+  topic_tag: vmc
+  explanation: Yellow X is the rare top-tier bullish reversal marker — fires when WT2 is at deep oversold AND multiple Cipher A conditions stack. Bull Candle is the deep buy confluence with similar high
+    reliability. The other 6 markers (long_ema, short_ema, red_cross, blue_triangle, red_diamond, blood_diamond) are still useful but lower-ranked.
+- id: q4
+  text: What does a Blood Diamond marker on the chart signify?
+  type: mcq
+  choices:
+  - A bullish entry — buy immediately.
+  - 'Trend exhaustion / bearish reversal — strong dump signal. Real example: HYPE 05-27 16:00 Blood Diamond predicted a -4% dump that materialised within hours.'
+  - Network connection lost.
+  - Random visual effect.
+  correct: 1
+  topic_tag: vmc
+  explanation: Blood Diamond is a major bearish exhaustion signal in the Cipher A marker hierarchy. When it fires after an extended pump, the trend reversal probability is high. The HYPE example confirmed
+    predictive value in real conditions.
+- id: q5
+  text: Which Cipher A marker condition combines a green candle + WT cross + price above ribbon?
+  type: mcq
+  choices:
+  - Red Cross
+  - Bull Candle
+  - Long EMA
+  - Yellow X
+  correct: 1
+  topic_tag: vmc
+  explanation: Bull Candle fires when a green bullish candle aligns with a WaveTrend bullish cross AND price is above the EMA ribbon. The three-factor stack makes it a high-conviction long signal — a 'go
+    signal' for entry.
+- id: q6
+  text: How should the Cipher A EMA ribbon's spread be interpreted?
+  type: mcq
+  choices:
+  - Wider is always bad.
+  - Wider spread = stronger directional momentum. Compressed/converging ribbon = momentum dying / chop incoming.
+  - It has no meaning.
+  - Narrower is always trending.
+  correct: 1
+  topic_tag: moving_averages
+  explanation: When the 8 EMAs fan out (wider), each timeframe agrees on direction and momentum is strong. When they compress and start crossing each other, momentum is decaying — often the warning before
+    a regime change.
+- id: q7
+  text: If Cipher A shows red_diamond + blood_diamond firing within the same 4H bar, what's the implication?
+  type: mcq
+  choices:
+  - Bullish confluence.
+  - Two confirmations of bearish exhaustion / trend reversal — very high conviction short or close-long signal.
+  - Cancel each other out.
+  - Indicator error.
+  correct: 1
+  topic_tag: vmc
+  explanation: Multiple bearish markers in the same bar STACK confluence. Red diamond + blood diamond = two independent confirmations that the trend is exhausting. Higher conviction than either alone.
+- id: q8
+  text: Why does the Cipher A's Yellow X marker rank above all others in importance?
+  type: mcq
+  choices:
+  - It's the prettiest.
+  - It only fires when WaveTrend WT2 is at deep oversold AND multiple lesser bullish conditions stack — the rare confluence makes it a high-edge signal worth trading off.
+  - It's the newest.
+  - It fires most frequently.
+  correct: 1
+  topic_tag: vmc
+  explanation: Rarity and confluence are what make Yellow X powerful. It requires deep oversold + lesser conditions to align before firing, so each occurrence carries multi-condition confirmation. Trading
+    just Yellow X with proper risk would be a viable strategy on its own.
+- id: q9
+  text: 'True or false: The 8 Cipher A markers are equally important and you should trade all of them?'
+  type: mcq
+  choices:
+  - True — trade every marker.
+  - False — they're tiered by reliability. Yellow X and Bull Candle are top-tier; long_ema and short_ema are baseline trend confirmations. Trade the high-conviction ones, use lower ones as supporting context.
+  - True — but only on weekends.
+  - There are 16 markers, not 8.
+  correct: 1
+  topic_tag: vmc
+  explanation: The markers are ranked by reliability. Top-tier (Yellow X, Bull Candle, Blood Diamond) are tradable on their own. Mid-tier (red_cross, blue_triangle, red_diamond) need supporting context.
+    Low-tier (long_ema, short_ema) are baseline trend confirmations only. Trading them all equally produces too many low-edge signals.
+- id: q10
+  text: Does Cipher A REPLACE chart structure reading, or COMPLEMENT it?
+  type: mcq
+  choices:
+  - Replaces it — Cipher A is enough.
+  - Complements — Cipher A markers gain power when they fire AT structural levels (S/R zones, trend lines). A Yellow X at a major support is far stronger than the same Yellow X in mid-range.
+  - Replaces it — but only for Bitcoin.
+  - Cipher A is fictional.
+  correct: 1
+  topic_tag: vmc
+  explanation: 'The recurring training theme: indicators amplify chart reading, never replace it. A Yellow X firing at a 25-touch support level is a textbook setup. The same Yellow X in dead chop has half
+    the win rate. ALWAYS check where on the chart the marker is firing relative to S/R.'

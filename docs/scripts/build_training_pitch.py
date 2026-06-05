@@ -338,7 +338,7 @@ HTML = f"""<!DOCTYPE html>
 
   <h1>Crypto Trading,<br>Taught Like It Matters.</h1>
   <p class="tagline">
-    A 51-lesson interactive course that takes a complete beginner from
+    A 58-lesson interactive course that takes a complete beginner from
     "what is a futures contract?" to a working personal trading system —
     with visual diagrams, scored quizzes, and a tone that respects your time.
   </p>
@@ -347,11 +347,11 @@ HTML = f"""<!DOCTYPE html>
 
   <div class="stats">
     <div class="stat">
-      <div class="stat-number">51</div>
+      <div class="stat-number">58</div>
       <div class="stat-label">Graded Units</div>
     </div>
     <div class="stat">
-      <div class="stat-number">~520</div>
+      <div class="stat-number">~590</div>
       <div class="stat-label">Quiz Questions</div>
     </div>
     <div class="stat">
@@ -374,7 +374,7 @@ HTML = f"""<!DOCTYPE html>
 <section class="page">
   <header class="brand">
     <div class="brand-logo">🎓 Trading Journal <span>— Training Module</span></div>
-    <div class="brand-meta">Six tiers · 51 graded units</div>
+    <div class="brand-meta">Six tiers · 58 graded units</div>
   </header>
 
   <h2>Structure: from survival math to professional discipline.</h2>

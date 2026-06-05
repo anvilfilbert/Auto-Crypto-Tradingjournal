@@ -1,0 +1,93 @@
+{
+  "slug": "54-vmc-cipher-b",
+  "subtitle": "Cipher B is the oscillator pane that goes BELOW your price chart. It plots WaveTrend, money flow, and signal dots. Read together with Cipher A (the on-chart overlay from the previous lesson), it's the most-used confluence stack in modern crypto trading.",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p>If Cipher A tells you WHAT'S happening on the price chart, Cipher B tells you HOW MUCH momentum is behind it. Three layers stack in one pane:</p><ul><li><strong>WaveTrend</strong> — dual blue wave showing momentum oscillation</li><li><strong>Money Flow Index (MFI)</strong> — green/red ribbon showing buying vs selling pressure</li><li><strong>VWAP</strong> — yellow signed area showing WT1 minus WT2 (the histogram)</li></ul><p>On top: green and red dots mark cross events at extremes.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "WaveTrend — the blue wave"
+    },
+    {
+      "type": "text",
+      "content": "<p>The dominant visual is the WaveTrend (WT) — two lines (WT1 fast, WT2 slow) with the area between them filled blue. The math:</p><ul><li>Take HLC3 (hi + lo + close ÷ 3)</li><li>Compute its EMA over 9 bars (channel length)</li><li>Compute the deviation of HLC3 from that EMA</li><li>Normalise → WT1</li><li>WT2 = SMA of WT1 over 3 bars</li></ul><p>The result is an oscillator that swings between roughly −80 and +80. The zones:</p>"
+    },
+    {
+      "type": "table",
+      "headers": [
+        "WT2 level",
+        "Zone",
+        "Meaning"
+      ],
+      "rows": [
+        ["> +60", "Deep overbought", "Strong upward momentum; mean reversion likely"],
+        ["+53 to +60", "Alert overbought", "Approaching exhaustion"],
+        ["−53 to +53", "Neutral", "No directional extreme"],
+        ["−60 to −53", "Alert oversold", "Approaching capitulation"],
+        ["< −60", "Deep oversold", "Strong downward momentum; bounce likely"]
+      ]
+    },
+    {
+      "type": "heading",
+      "content": "The MFI ribbon (green/red)"
+    },
+    {
+      "type": "text",
+      "content": "<p>The MFI in VMC Cipher B is NOT the standard Money Flow Index. It's a custom per-bar buy/sell pressure metric:</p><p><code>raw = (close − open) / (high − low) × 150</code></p><p><code>MFI = SMA(raw, 60) − 2.5</code></p><p>This gives you a value typically in the ±10 range. Positive = buying pressure has dominated the last 60 bars. Negative = selling pressure has dominated. Coloured green when positive, red when negative.</p><p>Watch for <strong>MFI flipping sign</strong> — when a long-standing negative MFI turns positive, it's often early evidence that the bearish momentum is exhausting.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "VWAP — the yellow signed area"
+    },
+    {
+      "type": "text",
+      "content": "<p>Mathematically <code>VWAP = WT1 − WT2</code>. It's the gap between the two WaveTrend lines. When VWAP is positive (yellow above zero), WT1 is leading higher — momentum is building up. When negative (yellow below zero), WT1 is leading lower — momentum building down.</p><p>The VWAP series is essentially a histogram of WaveTrend's micro-momentum. Use it as a leading indicator of the next WT2 direction change.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "The signal dots"
+    },
+    {
+      "type": "callout",
+      "kind": "key",
+      "title": "Gold Buy (green dot) and Gold Sell (red dot)",
+      "content": "<p>The dots fire on WaveTrend cross events at the extremity zones:</p><ul><li><strong>Gold Buy (green dot)</strong> — WT1 crosses ABOVE WT2 while WT2 < −53. Marks the bottom of a bearish exhaustion.</li><li><strong>Gold Sell (red dot)</strong> — WT1 crosses BELOW WT2 while WT2 > +53. Marks the top of a bullish exhaustion.</li></ul><p>These are the standard \"crossover at extreme\" mean-reversion signals. Historically the highest single-signal accuracy in the Cipher stack.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Divergences (bull / bear)"
+    },
+    {
+      "type": "text",
+      "content": "<p>Cipher B v6 includes pivot-based divergence detection:</p><ul><li><strong>Bull Divergence</strong> — price prints a LOWER low BUT WT2 prints a HIGHER low. Momentum is improving even as price still falls. Often precedes a reversal up.</li><li><strong>Bear Divergence</strong> — price prints a HIGHER high BUT WT2 prints a LOWER high. Momentum is fading even as price still rises. Often precedes a reversal down.</li></ul><p>The detection uses 2-bar-left / 2-bar-right pivot confirmation, meaning the divergence is only confirmed 2 bars AFTER the pivot — by design, to avoid false positives.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "tip",
+      "title": "Stack confluence with Cipher A",
+      "content": "<p>The highest-edge setups are when Cipher A and Cipher B AGREE on the same bar:</p><ul><li><strong>Cipher A Yellow X + Cipher B Gold Buy + Bull Divergence</strong> = textbook bottom (very rare, very strong long)</li><li><strong>Cipher A Blood Diamond + Cipher B Gold Sell + Bear Divergence</strong> = textbook top (very strong short)</li></ul><p>When these alignments happen, you'll find the actual best trade entries of the year for any liquid coin.</p>"
+    },
+    {
+      "type": "heading",
+      "content": "Real example: FILUSDT short"
+    },
+    {
+      "type": "text",
+      "content": "<p>On 2026-05-27 around 22:50 UTC, FIL printed: WT2 = +74.3 (deep overbought zone), Gold Sell dot fired on the 4H bar, and the MTF EMA verdict was \"trend_up_aging\" (slope had decayed to +0.13%/7d — losing momentum). Three confluent bearish signals.</p><p>A short opened at $1.0453 with SL $1.08 (above 10-touch resistance) and TP $0.95 (25-touch support). 4 hours later, the position closed at $1.0407 for a profit. Single best trade of the night when the rest of the book was being crushed by a broad risk-off move.</p><p>That's Cipher B working as designed: deep extremity + crossover signal + macro context = high-edge entry.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "warning",
+      "title": "Don't fight strong trends",
+      "content": "<p>Gold Buy at WT2 = −55 doesn't help you if the MTF EMA verdict is \"trend_down_confirmed\" with a slope of −5%/week. You're fading a falling knife. The cross-at-extreme works as MEAN REVERSION, which requires that the surrounding regime supports mean reversion (range or aging trend). In a strong sustained trend, the dots fire but the bounce is small and quickly overwhelmed.</p>"
+    },
+    {
+      "type": "callout",
+      "kind": "summary",
+      "title": "Bottom line",
+      "content": "<p>Cipher B's WaveTrend tells you WHERE momentum sits (overbought / oversold / neutral). The MFI ribbon tells you which side has been winning. The VWAP histogram tells you the micro-momentum direction. The gold dots mark crossover-at-extreme events. Use them STACKED with Cipher A and the macro filter — never standalone.</p>"
+    }
+  ]
+}

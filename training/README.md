@@ -1,8 +1,8 @@
 # Trading Journal — Training Module
 
-Interactive crypto-trading curriculum. 51 graded units across 6 tiers
+Interactive crypto-trading curriculum. 58 graded units across 6 tiers
 (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution
-→ Capstone). ~520 quiz questions. 24 visual diagrams.
+→ Capstone). ~590 quiz questions. 24 visual diagrams.
 
 Runs in two modes from the same code:
 - **Mounted** inside the trading-journal app at `/training`
@@ -56,7 +56,7 @@ python3 -m training --port 5050     # cwd is the parent of training/
 ```
 
 That's it. On first request, `training.db` is created automatically next to
-the cwd and seeded with the 51-lesson catalog. ~2 MB tarball, ~5 seconds to
+the cwd and seeded with the 58-lesson catalog. ~2 MB tarball, ~5 seconds to
 unpack + boot.
 
 ## Command-line options
@@ -75,10 +75,10 @@ python3 -m training [--port 5050] [--host 0.0.0.0] [--db ./training.db] [--debug
 ## Verify it's working
 
 ```bash
-# Health check — should report 51 lessons
+# Health check — should report 58 lessons
 curl -s http://localhost:5050/api/status
 
-# Should print: {"data":{"lessons_passed":0,"lessons_total":51,"lessons_with_content":51,"unlock_mode":"open"},"ok":true}
+# Should print: {"data":{"lessons_passed":0,"lessons_total":58,"lessons_with_content":58,"unlock_mode":"open"},"ok":true}
 ```
 
 ## Configuration
@@ -127,7 +127,7 @@ training/
 ├── __init__.py / __main__.py / app.py / blueprint.py / routes.py / db.py
 ├── config.py / config.yaml          ← runtime settings (unlock_mode etc.)
 ├── content/                          ← all curriculum (markdown-like JSON + YAML quizzes)
-│   ├── catalog.json                  ← 51-lesson index
+│   ├── catalog.json                  ← 58-lesson index
 │   ├── lessons/                      ← one JSON per lesson
 │   └── quizzes/                      ← one YAML per quiz
 ├── static/

@@ -629,3 +629,22 @@ Every trade outcome recorded → DB: positions.realized_pnl
 | Trade grade | — | 700 | 100 | Haiku |
 | Advisor | ~1,200 | ~2,800 | 1,500 | Sonnet |
 | Rulebook regen | — | 3,000 | 800 | Sonnet |
+
+---
+
+## Self-Learning Architecture (2026-05-31)
+
+The auto_ai chain now ships a 14-loop self-learning system with five
+specialised agents (A-A → A-E), six learners (L-0 → L-5), and four noise
+gates (N-1 → N-4). See [`SELF_LEARNING.md`](SELF_LEARNING.md) for the
+full reference.
+
+| Layer | Modules | Daily output |
+|---|---|---|
+| Specialised agents | `red_team_agent.py`, `backtest_validator.py`, `post_mortem.py`, `exec_quality.py`, `cascade_predictor.py` | Red-Team verdicts, post-mortem tags, slippage stats, cascade-veto flags |
+| Self-learners | `learned.py`, `learner_symbol.py`, `learner_time.py`, `learner_threshold.py`, `learner_tpsl.py`, `learner_risk.py` | New rows in `learner_log` / `learned_params` |
+| Noise gates | `noise_gates.py`, `fdr_correction.py`, `persistence_gate.py`, `vpin.py` | Reject events in `futures_ai_log` |
+| Telemetry | `daily_report.py`, `edge_decay.py` | 7-section Telegram digest @ 09:00 UTC |
+
+Every parameter write gates through the **R-5 Bayesian posterior**
+(`bayes.py`) + **A-B backtest validator** before landing in `learned_params`.

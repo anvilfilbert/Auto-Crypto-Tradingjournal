@@ -121,7 +121,28 @@ def classify_phase(btc_change_24h_pct: Optional[float],
                 phase = "unknown"
                 label = f"neutral chop (F&G {fng_v}, no clear direction)"
 
-    # 2. HMM regime refinement — overrides only if it strongly disagrees
+    # 2. BTC-structure-only fallback when F&G is unavailable or paused.
+    # Added 2026-06-01: operator paused F&G as scoring input via
+    # FUTURES_AI_FNG_PAUSED=1; classifier needs to still classify in clear
+    # regimes using BTC 24h price action alone. Without this branch the
+    # classifier returned 'unknown' for almost every cycle, removing all
+    # directional bias modifiers (which was OK as a stopgap, but loses real
+    # signal during sustained trends).
+    if phase == "unknown" and btc_v is not None:
+        if btc_v <= -3.0:
+            # Strong decline — favor Short
+            phase = "decline"
+            label = f"decline (BTC {btc_v:+.1f}% 24h, structural)"
+        elif btc_v <= -1.5 and btc_d is not None and btc_d > 58:
+            # Moderate BTC drop + BTC.D rising → risk-off + alt bleed
+            phase = "decline"
+            label = f"decline (BTC {btc_v:+.1f}% + BTC.D {btc_d:.1f}% — flight to BTC)"
+        elif btc_v >= 3.0:
+            # Strong bounce/uptrend — favor Long
+            phase = "recovery"
+            label = f"recovery (BTC {btc_v:+.1f}% 24h, structural)"
+
+    # 3. HMM regime refinement — overrides only if it strongly disagrees
     if hmm_regime:
         rl = str(hmm_regime).lower()
         if "trending_down" in rl and phase in ("recovery", "unknown"):
@@ -131,7 +152,7 @@ def classify_phase(btc_change_24h_pct: Optional[float],
             phase = "recovery"
             label += " | HMM: trending_up"
 
-    # 3. High BTC dominance (>60%) signals risk-off — slight tilt to decline
+    # 4. High BTC dominance (>62%) signals risk-off — final fallback
     if btc_d is not None and btc_d > 62 and phase == "unknown":
         phase = "decline"
         label = f"decline (BTC.D {btc_d:.1f}% — flight to BTC, alts bleeding)"

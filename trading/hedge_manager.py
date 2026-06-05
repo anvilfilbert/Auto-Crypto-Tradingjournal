@@ -98,42 +98,74 @@ def _basket_long_metrics(conn) -> dict:
     """Returns {n_long, n_short, long_notional, short_notional, unreal_total,
     long_share} for currently open auto_ai non-hedge positions.
 
-    Reads notional + unrealised from the live Bitget trader response so
-    figures reflect mark-price, not stale DB values."""
+    1:1 parity across modes: real reads from Bitget trader (mark price
+    embedded in the response); paper reads `paper_positions` and computes
+    unrealised from a mark-price lookup. Same triggers fire in both modes."""
     out = {"n_long": 0, "n_short": 0, "long_notional": 0.0,
             "short_notional": 0.0, "unreal_total": 0.0, "long_share": 0.0}
-    try:
-        from . import bitget_trader
-        live = bitget_trader.get_open_positions() or []
-    except Exception as e:
-        _log.warning("[hedge] live position fetch failed: %s", e)
-        return out
 
-    # Reconcile against DB so we exclude any existing hedge positions
-    db_hedges = set()
-    try:
-        rows = conn.execute(
-            "SELECT symbol FROM positions "
-            "WHERE chain='auto_ai' AND is_hedge=1 "
-            "AND (close_time IS NULL OR close_time='')"
-        ).fetchall()
-        db_hedges = {r[0] for r in rows}
-    except Exception:
-        pass
-
-    for p in live:
-        sym = p.get("symbol")
-        if sym in db_hedges:
-            continue   # skip our own hedges from the basket calc
-        notional = float(p.get("notional_usdt") or 0)
-        unreal   = float(p.get("unrealized_pnl") or 0)
-        out["unreal_total"] += unreal
-        if (p.get("direction") or "").lower() == "long":
-            out["n_long"] += 1
-            out["long_notional"] += notional
-        else:
-            out["n_short"] += 1
-            out["short_notional"] += notional
+    if config.is_real_mode():
+        try:
+            from . import bitget_trader
+            live = bitget_trader.get_open_positions() or []
+        except Exception as e:
+            _log.warning("[hedge] live position fetch failed: %s", e)
+            return out
+        db_hedges = set()
+        try:
+            rows = conn.execute(
+                "SELECT symbol FROM positions "
+                "WHERE chain='auto_ai' AND is_hedge=1 "
+                "AND (close_time IS NULL OR close_time='')"
+            ).fetchall()
+            db_hedges = {r[0] for r in rows}
+        except Exception:
+            pass
+        for p in live:
+            sym = p.get("symbol")
+            if sym in db_hedges:
+                continue
+            notional = float(p.get("notional_usdt") or 0)
+            unreal   = float(p.get("unrealized_pnl") or 0)
+            out["unreal_total"] += unreal
+            if (p.get("direction") or "").lower() == "long":
+                out["n_long"] += 1
+                out["long_notional"] += notional
+            else:
+                out["n_short"] += 1
+                out["short_notional"] += notional
+    else:
+        # Paper mode — compute unrealised from a batched mark-price lookup.
+        try:
+            rows = conn.execute(
+                "SELECT symbol, direction, entry_price, notional_usdt "
+                "FROM paper_positions WHERE status='open' "
+                "AND (is_hedge IS NULL OR is_hedge=0)"
+            ).fetchall()
+        except Exception as e:
+            _log.warning("[hedge] paper basket fetch failed: %s", e)
+            return out
+        if not rows:
+            return out
+        try:
+            import bitget_client
+            mp = bitget_client.get_mark_prices([r[0] for r in rows]) or {}
+        except Exception:
+            mp = {}
+        for sym, direction, entry, notional in rows:
+            entry    = float(entry or 0)
+            notional = float(notional or 0)
+            mark     = float(mp.get(sym) or mp.get((sym or "").upper()) or 0)
+            is_long  = (direction or "").lower() == "long"
+            sign     = 1 if is_long else -1
+            unreal   = (notional * (mark - entry) / entry * sign) if (entry and mark) else 0.0
+            out["unreal_total"] += unreal
+            if is_long:
+                out["n_long"] += 1
+                out["long_notional"] += notional
+            else:
+                out["n_short"] += 1
+                out["short_notional"] += notional
 
     total_notional = out["long_notional"] + out["short_notional"]
     if total_notional > 0:
@@ -180,8 +212,6 @@ def check_and_open_hedge(conn) -> dict | None:
     None when skipped."""
     if not config.HEDGE_ENABLED:
         return None
-    if not config.is_real_mode():
-        return None
     if _hedge_state(conn):
         return None   # already hedged
     if config.get_state(conn) != "active":
@@ -220,59 +250,94 @@ def check_and_open_hedge(conn) -> dict | None:
                     "long_notional": metrics["long_notional"]})
         return None
 
-    try:
-        from . import bitget_trader
-        from .kill_switch import _equity_now as _eq
-        result = bitget_trader.place_market_order(
-            symbol=HEDGE_SYMBOL,
-            side="short",
-            size_usdt=hedge_notional,
-            leverage=config.HEDGE_LEVERAGE,
-            sl_price=None,     # no SL — hedges ride the storm
-            tp1_price=None,
-            tp2_price=None,
-            client_oid=f"hedge-{int(time.time())}",
-        )
-    except Exception as e:
-        _log.warning("[hedge] place_market_order failed: %s", e)
-        _log_event(conn, "hedge_open_failed", {"error": str(e)[:200]})
-        return None
-
-    if not result or not result.get("order_id"):
-        _log_event(conn, "hedge_open_failed", {"error": "no order_id returned"})
-        return None
-
-    # Persist hedge position to DB with is_hedge=1
+    # ── Place the hedge (mode-aware) ───────────────────────────────────────
+    # Real: Bitget market order. Paper: synthetic fill at current BTC mark.
+    # Same triggers, same notional, same leverage, same direction in both.
     open_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    btc_at_open = float(result.get("mark_at_entry") or 0)
+    if config.is_real_mode():
+        try:
+            from . import bitget_trader
+            result = bitget_trader.place_market_order(
+                symbol=HEDGE_SYMBOL,
+                side="short",
+                size_usdt=hedge_notional,
+                leverage=config.HEDGE_LEVERAGE,
+                sl_price=None,     # no SL — hedges ride the storm
+                tp1_price=None,
+                tp2_price=None,
+                client_oid=f"hedge-{int(time.time())}",
+            )
+        except Exception as e:
+            _log.warning("[hedge] place_market_order failed: %s", e)
+            _log_event(conn, "hedge_open_failed", {"error": str(e)[:200]})
+            return None
+        if not result or not result.get("order_id"):
+            _log_event(conn, "hedge_open_failed", {"error": "no order_id returned"})
+            return None
+        btc_at_open      = float(result.get("mark_at_entry") or 0)
+        order_id         = result.get("order_id")
+        size_contracts   = float(result.get("size_contracts") or 0)
+        leverage_actual  = int(result.get("leverage_actual") or config.HEDGE_LEVERAGE)
+    else:
+        # Paper hedge — fill at current BTC mark.
+        try:
+            import bitget_client
+            mp = bitget_client.get_mark_prices([HEDGE_SYMBOL]) or {}
+            btc_at_open = float(mp.get(HEDGE_SYMBOL) or 0)
+        except Exception as e:
+            _log.warning("[hedge] paper BTC mark fetch failed: %s", e)
+            _log_event(conn, "hedge_open_failed", {"error": str(e)[:200]})
+            return None
+        if btc_at_open <= 0:
+            _log_event(conn, "hedge_open_failed", {"error": "no BTC mark"})
+            return None
+        order_id        = f"paper-hedge-{int(time.time())}"
+        size_contracts  = hedge_notional / btc_at_open
+        leverage_actual = config.HEDGE_LEVERAGE
+        result = {"order_id": order_id, "mark_at_entry": btc_at_open,
+                  "size_contracts": size_contracts,
+                  "leverage_actual": leverage_actual}
+
     state = {
-        "order_id":         result.get("order_id"),
-        "opened_at":        open_time,
-        "btc_at_open":      btc_at_open,
-        "notional_usdt":    hedge_notional,
-        "leverage_actual":  result.get("leverage_actual"),
-        "long_notional_at_open":  metrics["long_notional"],
-        "unreal_at_open":         metrics["unreal_total"],
-        "reasons":          triggered_reasons,
+        "order_id":              order_id,
+        "opened_at":             open_time,
+        "btc_at_open":           btc_at_open,
+        "notional_usdt":         hedge_notional,
+        "leverage_actual":       leverage_actual,
+        "long_notional_at_open": metrics["long_notional"],
+        "unreal_at_open":        metrics["unreal_total"],
+        "reasons":               triggered_reasons,
     }
 
+    # Persist to the correct table (positions for real, paper_positions for paper)
     try:
-        conn.execute("""
-            INSERT INTO positions
-                (chain, is_hedge, symbol, direction, entry_price, size_contracts,
-                 leverage, notional_usdt, open_time, bitget_order_id, setup_type,
-                 exchange)
-            VALUES ('auto_ai', 1, ?, 'Short', ?, ?, ?, ?, ?, ?, 'catastrophe_hedge',
-                    'bitget_trader')
-        """, (
-            HEDGE_SYMBOL,
-            btc_at_open,
-            float(result.get("size_contracts") or 0),
-            int(result.get("leverage_actual") or config.HEDGE_LEVERAGE),
-            hedge_notional,
-            open_time,
-            result.get("order_id"),
-        ))
+        if config.is_real_mode():
+            conn.execute("""
+                INSERT INTO positions
+                    (chain, is_hedge, symbol, direction, entry_price, size_contracts,
+                     leverage, notional_usdt, open_time, bitget_order_id, setup_type,
+                     exchange)
+                VALUES ('auto_ai', 1, ?, 'Short', ?, ?, ?, ?, ?, ?, 'catastrophe_hedge',
+                        'bitget_trader')
+            """, (
+                HEDGE_SYMBOL, btc_at_open,
+                size_contracts, leverage_actual, hedge_notional,
+                open_time, order_id,
+            ))
+        else:
+            conn.execute("""
+                INSERT INTO paper_positions
+                    (symbol, direction, archetype, entry_price, sl_price,
+                     notional_usdt, leverage, current_sl, is_hedge,
+                     opened_at, status)
+                VALUES (?, 'Short', 'catastrophe_hedge', ?, 0,
+                        ?, ?, 0, 1,
+                        ?, 'open')
+            """, (
+                HEDGE_SYMBOL, btc_at_open,
+                hedge_notional, leverage_actual,
+                open_time,
+            ))
         conn.commit()
     except Exception as e:
         _log.warning("[hedge] DB insert failed: %s", e)
@@ -327,31 +392,52 @@ def manage_active_hedge(conn) -> dict | None:
     if not unwind_reason:
         return None   # keep the hedge open
 
-    # ── Close the hedge ─────────────────────────────────────────────────
-    try:
-        from . import bitget_trader
-        close_result = bitget_trader.close_position(
-            symbol=HEDGE_SYMBOL, side="short", percentage=100)
-    except Exception as e:
-        _log.warning("[hedge] close_position failed: %s", e)
-        _log_event(conn, "hedge_close_failed", {"error": str(e)[:200]})
-        return None
-
-    # Update DB row
+    # ── Close the hedge (mode-aware) ───────────────────────────────────
     close_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    realized = float(close_result.get("realized_pnl") or 0)
-    try:
-        conn.execute("""
-            UPDATE positions SET close_time=?, close_price=?, realized_pnl=?,
-                                  close_reason='hedge_unwind'
-            WHERE bitget_order_id=? AND is_hedge=1
-        """, (
-            close_time, float(close_result.get("close_price") or 0), realized,
-            state.get("order_id"),
-        ))
-        conn.commit()
-    except Exception as e:
-        _log.warning("[hedge] DB update failed: %s", e)
+    if config.is_real_mode():
+        try:
+            from . import bitget_trader
+            close_result = bitget_trader.close_position(
+                symbol=HEDGE_SYMBOL, side="short", percentage=100)
+        except Exception as e:
+            _log.warning("[hedge] close_position failed: %s", e)
+            _log_event(conn, "hedge_close_failed", {"error": str(e)[:200]})
+            return None
+        close_price = float(close_result.get("close_price") or 0)
+        realized    = float(close_result.get("realized_pnl") or 0)
+        try:
+            conn.execute("""
+                UPDATE positions SET close_time=?, close_price=?, realized_pnl=?,
+                                      close_reason='hedge_unwind'
+                WHERE bitget_order_id=? AND is_hedge=1
+            """, (close_time, close_price, realized, state.get("order_id")))
+            conn.commit()
+        except Exception as e:
+            _log.warning("[hedge] DB update failed: %s", e)
+    else:
+        # Paper: close at current BTC mark, compute realised from entry diff.
+        try:
+            import bitget_client
+            mp = bitget_client.get_mark_prices([HEDGE_SYMBOL]) or {}
+            close_price = float(mp.get(HEDGE_SYMBOL) or 0)
+        except Exception:
+            close_price = 0.0
+        # Short hedge: realised = (entry - close) * size_contracts
+        # = notional * (entry - close) / entry
+        notional = float(state.get("notional_usdt") or 0)
+        entry    = float(state.get("btc_at_open") or 0)
+        realized = (notional * (entry - close_price) / entry) if (entry and close_price) else 0.0
+        realized = round(realized, 4)
+        try:
+            conn.execute("""
+                UPDATE paper_positions SET status='closed', closed_at=?,
+                                            close_reason='hedge_unwind',
+                                            realized_pnl=?
+                WHERE is_hedge=1 AND status='open' AND symbol=?
+            """, (close_time, realized, HEDGE_SYMBOL))
+            conn.commit()
+        except Exception as e:
+            _log.warning("[hedge] paper DB update failed: %s", e)
 
     payload = {
         "order_id":      state.get("order_id"),

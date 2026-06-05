@@ -118,6 +118,17 @@ def _momentum(conf: dict) -> str:
 
 def _prompt_text(symbol: str, by_tf: dict, conf: dict, sr: list) -> str:
     parts = [f"[{symbol}]"]
+    # Discover current price for context + S/R proximity filtering. Without
+    # this Sonnet was being fed bare support levels (e.g. "support@4.902")
+    # with no anchor to know they were 15% below live — it anchored entries
+    # to stale supports and Path 3 rejected every fill (2026-05-27 audit).
+    current_price = None
+    for tf, data in by_tf.items():
+        if data:
+            cp = (data.get("ema") or {}).get("current_price")
+            if cp:
+                current_price = float(cp); break
+
     for tf, data in by_tf.items():
         if not data:
             continue
@@ -130,8 +141,38 @@ def _prompt_text(symbol: str, by_tf: dict, conf: dict, sr: list) -> str:
         parts.append(f"{tf}: RSI {rsi_v} | EMA {ema_b} | ADX {adx_v} | MACD {macd_s}")
     if conf:
         parts.append(f"Confluence {conf.get('label','?')} ({conf.get('score',0):.1f}/{conf.get('max',0):.1f})")
+
+    # Always surface current price so downstream can sanity-check S/R levels.
+    if current_price:
+        parts.append(f"PRICE: {current_price:.6g}")
+
     if sr:
-        near = sr[:3]
-        sr_str = " ".join(f"{s.get('type','?')}@{s.get('price','?')}" for s in near)
-        parts.append(f"S/R: {sr_str}")
+        if current_price:
+            # Filter S/R to within ±15% of current — anything further is a
+            # stale chart level the market has left behind and shouldn't be
+            # used as an entry anchor. Then pick balanced near-supports +
+            # near-resistances so Sonnet has both entry and TP candidates.
+            close = [s for s in sr
+                     if s.get("price") and
+                     abs(float(s["price"]) - current_price) / current_price <= 0.15]
+            sups = sorted(
+                [s for s in close if s.get("type") == "support"
+                 and float(s["price"]) < current_price],
+                key=lambda s: current_price - float(s["price"]))[:2]
+            ress = sorted(
+                [s for s in close if s.get("type") == "resistance"
+                 and float(s["price"]) > current_price],
+                key=lambda s: float(s["price"]) - current_price)[:2]
+            near = sups + ress
+            if not near:
+                # No tradeable S/R inside ±15% — tell Sonnet explicitly so
+                # the entry-validity rule in trade_prep triggers a wait/skip.
+                parts.append("S/R: none within ±15% of current — wait for retrace required")
+            else:
+                sr_str = " ".join(f"{s.get('type','?')}@{s.get('price','?')}" for s in near)
+                parts.append(f"S/R: {sr_str}")
+        else:
+            near = sr[:3]
+            sr_str = " ".join(f"{s.get('type','?')}@{s.get('price','?')}" for s in near)
+            parts.append(f"S/R: {sr_str}")
     return " | ".join(parts)[:500]

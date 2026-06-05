@@ -321,12 +321,13 @@ def build_context(
             ls      = cz.get("long_short", {})
             parts   = []
             if oi.get("oi_coins"):
-                parts.append(f"OI: {oi['oi_coins']:,.0f} coins (all exchanges)")
-            if liqs.get("liq_total_usd"):
+                n = oi.get("exchange_count", 1)
+                parts.append(f"OI: {oi['oi_coins']:,.0f} coins ({n}-venue aggregate)")
+            if liqs.get("liq_total_coins"):
                 parts.append(
-                    f"Liqs 1h: ${liqs['liq_total_usd'] / 1e6:.1f}M "
-                    f"(L:${liqs.get('liq_long_usd', 0) / 1e6:.1f}M "
-                    f"S:${liqs.get('liq_short_usd', 0) / 1e6:.1f}M)"
+                    f"Liqs 1h: {liqs['liq_total_coins']:.2f} coins "
+                    f"(L:{liqs.get('liq_long_coins', 0):.2f} "
+                    f"S:{liqs.get('liq_short_coins', 0):.2f})"
                 )
             if funding.get("rate") is not None:
                 parts.append(
@@ -340,12 +341,13 @@ def build_context(
                     f"({ls.get('longs_pct', 50):.0f}% long / "
                     f"{ls.get('shorts_pct', 50):.0f}% short)"
                 )
-            # Per-exchange funding spread
+            # Per-exchange funding spread (now spans up to 11 major venues)
             fbe = cz.get("funding_by_exchange", {})
             if fbe.get("spread_pct") is not None and abs(fbe["spread_pct"]) > 0:
                 exch_parts = [
-                    f"{ex.capitalize()}: {fbe[ex] * 100:.4f}%"
-                    for ex in ("binance", "bybit", "okx") if ex in fbe
+                    f"{ex.capitalize()}: {rate * 100:.4f}%"
+                    for ex, rate in fbe.items()
+                    if ex != "spread_pct" and isinstance(rate, (int, float))
                 ]
                 parts.append(
                     f"Funding spread: {fbe['spread_pct']:.4f}% "
@@ -353,15 +355,16 @@ def build_context(
                 )
             # Liquidation 24h trend
             lt = cz.get("liquidation_trend", {})
-            if lt.get("total_24h_usd"):
+            if lt.get("total_24h_coins"):
                 dom = lt.get("dominant_side", "equal")
                 trend = lt.get("trend", "stable")
+                n = lt.get("exchange_count", 1)
                 parts.append(
-                    f"Liqs 24h: ${lt['total_24h_usd'] / 1e6:.1f}M "
-                    f"— {trend}, dominant: {dom}"
+                    f"Liqs 24h: {lt['total_24h_coins']:.2f} coins "
+                    f"({n}-venue) — {trend}, dominant: {dom}"
                 )
             if parts:
-                block = "COINALYZE (multi-exchange):\n  " + "\n  ".join(parts)
+                block = "COINALYZE (multi-exchange aggregate):\n  " + "\n  ".join(parts)
                 if len(block) <= remaining:
                     sections.append(block)
                     remaining -= len(block)

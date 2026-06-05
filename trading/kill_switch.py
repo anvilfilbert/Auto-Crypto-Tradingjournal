@@ -97,6 +97,66 @@ def _daily_pnl_pct(conn, *, since_reset: bool = False) -> float:
         return 0.0
 
 
+def _winrate_window(conn, hours: int) -> tuple[int, int, float]:
+    """Auto-trader winrate over the last `hours`. Returns (wins, total, pct).
+
+    A "win" is realized_pnl > 0. BE / 0-PnL closes count toward total but
+    not as wins (conservative). Hedge positions excluded. Returns 0/0/0
+    if no closes in the window.
+    """
+    try:
+        if config.is_real_mode():
+            rows = conn.execute(
+                "SELECT realized_pnl FROM positions "
+                "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0) "
+                "AND close_time IS NOT NULL AND close_time != '' "
+                "AND close_time >= datetime('now', ?)",
+                (f"-{int(hours)} hours",),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT realized_pnl FROM paper_positions "
+                "WHERE status='closed' AND closed_at >= datetime('now', ?)",
+                (f"-{int(hours)} hours",),
+            ).fetchall()
+        total = len(rows)
+        if total == 0:
+            return 0, 0, 0.0
+        wins = sum(1 for r in rows if (r[0] or 0) > 0)
+        return wins, total, (wins / total) * 100.0
+    except Exception:
+        return 0, 0, 0.0
+
+
+def _pnl_window_usd_pct(conn, hours: int) -> tuple[float, float]:
+    """Auto-trader realized P&L over the last `hours` window — for DISPLAY
+    only (no breaker reset honoring). Returns (usd, pct_of_starting_equity).
+
+    Mirrors `_daily_pnl_pct` but parameterized by window and returns both
+    the raw USD and the percent so the UI can show "+$12.34 (+1.23%)".
+    Excludes hedge positions from the sum.
+    """
+    try:
+        if config.is_real_mode():
+            r = conn.execute(
+                "SELECT COALESCE(SUM(realized_pnl),0) FROM positions "
+                "WHERE chain='auto_ai' AND (is_hedge IS NULL OR is_hedge=0) "
+                "AND close_time >= datetime('now', ?)",
+                (f"-{int(hours)} hours",),
+            ).fetchone()
+        else:
+            r = conn.execute(
+                "SELECT COALESCE(SUM(realized_pnl),0) FROM paper_positions "
+                "WHERE status='closed' AND closed_at >= datetime('now', ?)",
+                (f"-{int(hours)} hours",),
+            ).fetchone()
+        pnl = float(r[0] or 0)
+        pct = pnl / max(config.starting_equity(), 1) * 100.0
+        return pnl, pct
+    except Exception:
+        return 0.0, 0.0
+
+
 def _consecutive_losses(conn, *, since_reset: bool = False) -> int:
     """Count of consecutive auto-trader losers up to the most recent close.
 
@@ -353,6 +413,10 @@ def evaluate(conn) -> dict:
     dd_day_raw   = _daily_pnl_pct(conn)
     dd_day_reset = _daily_pnl_pct(conn, since_reset=True)
     dd_total     = (eq - config.starting_equity()) / max(config.starting_equity(), 1)
+    pnl_7d_usd,  pnl_7d_pct  = _pnl_window_usd_pct(conn, hours=7  * 24)
+    pnl_30d_usd, pnl_30d_pct = _pnl_window_usd_pct(conn, hours=30 * 24)
+    wr_7d_wins,  wr_7d_total,  wr_7d_pct  = _winrate_window(conn, hours=7  * 24)
+    wr_30d_wins, wr_30d_total, wr_30d_pct = _winrate_window(conn, hours=30 * 24)
     n_losses_raw   = _consecutive_losses(conn)
     n_losses_reset = _consecutive_losses(conn, since_reset=True)
     n_open = _open_position_count(conn)
@@ -383,6 +447,16 @@ def evaluate(conn) -> dict:
         "daily_pnl_pct":               round(dd_day_raw * 100, 2),
         "daily_pnl_pct_since_reset":   round(dd_day_reset * 100, 2),
         "total_pnl_pct":               round(dd_total * 100, 2),
+        "pnl_7d_usd":                  round(pnl_7d_usd, 2),
+        "pnl_7d_pct":                  round(pnl_7d_pct, 2),
+        "pnl_30d_usd":                 round(pnl_30d_usd, 2),
+        "pnl_30d_pct":                 round(pnl_30d_pct, 2),
+        "winrate_7d_wins":             wr_7d_wins,
+        "winrate_7d_total":            wr_7d_total,
+        "winrate_7d_pct":              round(wr_7d_pct, 1),
+        "winrate_30d_wins":            wr_30d_wins,
+        "winrate_30d_total":           wr_30d_total,
+        "winrate_30d_pct":             round(wr_30d_pct, 1),
         "consecutive_losses":          n_losses_raw,
         "consecutive_losses_since_reset": n_losses_reset,
         "consecutive_wins_since_reset": wins,

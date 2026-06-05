@@ -22,13 +22,10 @@ audit why the chain didn't act on a 7+ setup.
 """
 from __future__ import annotations
 
-import datetime as _dt
 import json
 import os
-from typing import Optional
 
 from constants import MODEL
-from helpers import strip_fence
 
 
 def _consensus_model() -> str:
@@ -88,6 +85,23 @@ def evaluate(scanner_setup: dict, conn) -> dict:
         base["reason"] = f"scanner score {sc_score} < threshold {SCANNER_MIN_SCORE}"
         return base
 
+    # Pre-consensus dedup — if this symbol already has an open auto_ai position
+    # the executor would reject as real_dedup anyway. Skip the Opus call to
+    # save ~$0.05/dup. Fails open: any error reading positions = still call
+    # consensus so a transient Bitget hiccup never blocks a real entry.
+    try:
+        from trading import bitget_trader as _bt
+        open_syms = {p.get("symbol") for p in (_bt.get_open_positions() or [])
+                     if p.get("symbol")}
+        if sym in open_syms:
+            base["reason"] = f"dedup: {sym} already has open auto_ai position"
+            _log(conn, "consensus_skipped_dedup", sym, direction, sc_score,
+                 json.dumps({"sym": sym, "open_syms_count": len(open_syms)}))
+            return base
+    except Exception as _dedup_err:
+        # Never block on dedup-check errors
+        _log_err = str(_dedup_err)[:120]
+
     # Run AI second-opinion via the call_analyzer pipeline
     try:
         from ai_call import analyze_call as _analyze
@@ -133,11 +147,72 @@ def evaluate(scanner_setup: dict, conn) -> dict:
     # rationale (summary + warnings) so the operator can see WHY Sonnet
     # disagreed — not just that it did. Without this the decision log
     # tells you a setup was killed but gives no learnable signal.
-    if ai_score < SCANNER_MIN_SCORE:
-        base["reason"] = f"AI scored {ai_score} (below {SCANNER_MIN_SCORE} threshold)"
+    #
+    # BUG-006 fix (2026-05-26): AI approval threshold uses CONSENSUS_MIN_SCORE
+    # (env-driven, default 5) instead of SCANNER_MIN_SCORE (6). The half-tier
+    # sizing path in risk_budget.size_trade triggers at opus_score==5 — but it
+    # was unreachable while consensus rejected at AI<6, making the half-tier
+    # dead code. CONSENSUS_MIN_SCORE is the threshold the half-tier was
+    # designed to work with; downstream Path 3 R:R viability + pre-flight
+    # drift check still apply as safety nets.
+    from trading import config as fa_config
+    if ai_score < fa_config.CONSENSUS_MIN_SCORE:
+        base["reason"] = f"AI scored {ai_score} (below {fa_config.CONSENSUS_MIN_SCORE} threshold)"
         _log(conn, "consensus_rejected", sym, direction, sc_score,
              json.dumps({**snap, "reject_kind": "low_score", "reason": base["reason"]}))
         return base
+
+    # N-1 (Master plan Noise §2.6) — consensus variance gate. Two voters
+    # (Sonnet scanner + Opus consensus) shouldn't disagree by more than
+    # 2.5 score points; if they do, the setup is ambiguous and the noise-
+    # free decision is to skip. Tunable via env FUTURES_AI_MAX_SCORE_GAP.
+    try:
+        import os as _os
+        max_gap = float(_os.environ.get("FUTURES_AI_MAX_SCORE_GAP", "2.5"))
+    except Exception:
+        max_gap = 2.5
+    score_gap = abs(int(sc_score) - int(ai_score))
+    if score_gap > max_gap:
+        base["reason"] = (f"voters disagree: scanner={sc_score}, AI={ai_score}, "
+                          f"gap {score_gap} > max_gap {max_gap}")
+        _log(conn, "rejected_consensus_variance", sym, direction, sc_score,
+             json.dumps({**snap, "reject_kind": "consensus_variance",
+                         "reason": base["reason"], "gap": score_gap,
+                         "max_gap": max_gap}))
+        return base
+
+    # N-4 (Master plan Noise §2.9) — VPIN toxicity gate. When VPIN >= 0.7
+    # the microstructure is informed-trader dominated → high cascade risk in
+    # the next 30-60min. Veto new entries until the toxicity normalises.
+    # Reads from the latest vpin_snapshot row (scheduler polls every 5min).
+    try:
+        from trading import vpin as _vpin
+        veto, vpin_reason, vpin_val = _vpin.vpin_veto(conn, sym)
+        if veto:
+            base["reason"] = f"VPIN veto: {vpin_reason}"
+            _log(conn, "rejected_vpin_toxicity", sym, direction, sc_score,
+                 json.dumps({**snap, "reject_kind": "vpin_toxicity",
+                             "vpin": vpin_val, "reason": vpin_reason}))
+            return base
+    except Exception:
+        pass  # never block on VPIN module errors
+
+    # A-E (Master plan Week 11) — Cascade Predictor. Fuses VPIN +
+    # funding spread + OI divergence into a single risk score and vetoes
+    # the side that's at risk of being squeezed. Direction-aware: only
+    # blocks the trade if the cascade pressure builds against this side.
+    try:
+        from trading import cascade_predictor
+        cascade_veto, cascade_reason, cascade_result = cascade_predictor.veto_check(
+            conn, sym, direction)
+        if cascade_veto:
+            base["reason"] = f"Cascade veto: {cascade_reason}"
+            _log(conn, "rejected_cascade_risk", sym, direction, sc_score,
+                 json.dumps({**snap, "reject_kind": "cascade_risk",
+                             "result": cascade_result, "reason": cascade_reason}))
+            return base
+    except Exception:
+        pass  # never block on cascade module errors
 
     if ai_dir and direction and ai_dir.lower() != direction.lower():
         base["reason"] = f"direction mismatch (scanner={direction}, AI={ai_dir})"
@@ -155,6 +230,43 @@ def evaluate(scanner_setup: dict, conn) -> dict:
     base["approved"]        = True
     base["consensus_score"] = min(sc_score, ai_score)
     base["reason"]          = "ok"
+
+    # A-A (Master plan): Red-Team agent — adversarial second opinion.
+    # Soft mode (default): logs penalty for audit, does not block. Hard
+    # mode (after operator review at +14d): veto=True blocks the trade.
+    try:
+        from trading import red_team_agent as _rt
+        # Canonical scanner emits entry as entry_zone.low (a band); use the
+        # same fallback pattern as the Opus-override block below so the
+        # red-team agent doesn't falsely flag every setup as "missing entry".
+        _rt_entry = ((scanner_setup.get("entry_zone") or {}).get("low")
+                     or scanner_setup.get("entry_price"))
+        verdict = _rt.evaluate_setup({
+            "symbol":          sym,
+            "direction":       direction,
+            "scanner_score":   sc_score,
+            "ai_score":        ai_score,
+            "consensus_score": base["consensus_score"],
+            "ai_summary":      ai_summary,
+            "entry_price":     _rt_entry,
+            "sl_price":        scanner_setup.get("sl_price"),
+            "tp1_price":       scanner_setup.get("tp1_price"),
+            "tp2_price":       scanner_setup.get("tp2_price"),
+        })
+        base["red_team"] = verdict
+        if verdict.get("veto") and verdict.get("mode") == "hard":
+            base["approved"] = False
+            base["reason"]   = f"red_team_veto: {verdict.get('summary', '')[:120]}"
+            _log(conn, "red_team_veto_hard", sym, direction, base["consensus_score"],
+                 json.dumps({**snap, "verdict": verdict}))
+            return base
+        if verdict.get("score_penalty", 0) > 0 or verdict.get("veto_raw"):
+            event = "red_team_penalty" if verdict.get("score_penalty", 0) > 0 else "red_team_passthrough"
+            _log(conn, event, sym, direction, base["consensus_score"],
+                 json.dumps({**snap, "verdict": verdict}))
+    except Exception as _rt_err:
+        # Never block trading because the red-team agent had an issue
+        base["red_team"] = {"error": str(_rt_err), "mode": "skipped"}
 
     # Opus override path: when the consensus model produces its own
     # entry/SL/TP ladder, merge them into the scanner setup so the executor
@@ -190,7 +302,12 @@ def _build_overrides(scanner_setup: dict, ai_result: dict) -> dict:
 
     ai_entry = ai_result.get("entry_price") or 0
     ai_sl    = ai_result.get("sl_price") or 0
-    ai_tps   = ai_result.get("tp_prices") or []
+    # BUG-007 fix (2026-05-26): filter None out of ai_tps before comparing.
+    # Opus occasionally emits a sparse ladder (e.g. [1.0, None, 2.0]) which
+    # crashed the monotonicity check with "'>' not supported between float
+    # and NoneType" — observed on VIRTUALUSDT during a quick_score_only call.
+    ai_tps_raw = ai_result.get("tp_prices") or []
+    ai_tps = [float(t) for t in ai_tps_raw if t is not None]
     # Backfill ai_tps from tp1/tp2 if Opus didn't emit a ladder
     if not ai_tps:
         for v in (ai_result.get("tp1_price"), ai_result.get("tp2_price")):
@@ -203,6 +320,14 @@ def _build_overrides(scanner_setup: dict, ai_result: dict) -> dict:
         if drift_pct < 2.0:
             out["entry"] = float(ai_entry)
         # else: too far — likely a hallucination, ignore
+
+    # BUG-007 fix (2026-05-26): when scanner setup is quick_score_only it has
+    # no entry/sl prices. Use Opus's values directly — there's nothing to
+    # override against, but the trade still needs an entry/sl to fire.
+    if not sc_entry and ai_entry:
+        out["entry"] = float(ai_entry)
+    if not sc_sl and ai_sl:
+        out["sl"] = float(ai_sl)
 
     # SL override — ONLY accept tighter (closer to entry). Loosening is unsafe.
     entry_for_sl = ai_entry or sc_entry
@@ -223,11 +348,16 @@ def _build_overrides(scanner_setup: dict, ai_result: dict) -> dict:
             ok = all(ai_tps[i+1] > ai_tps[i] for i in range(len(ai_tps)-1))
         else:
             ok = all(ai_tps[i+1] < ai_tps[i] for i in range(len(ai_tps)-1))
-        # And first TP on the right side of entry
-        first_tp_ok = (ai_tps[0] > (out.get("entry") or sc_entry)) if direction == "long" \
-                       else (ai_tps[0] < (out.get("entry") or sc_entry))
-        if ok and first_tp_ok:
-            out["tp_prices"] = ai_tps[:7]
+        # And first TP on the right side of entry. BUG-007 fix (2026-05-26):
+        # guard against None entry_ref — quick_score_only setups have no
+        # scanner entry, and if Opus didn't supply one either we can't
+        # validate the TP ladder side.
+        entry_ref = out.get("entry") or sc_entry
+        if entry_ref:
+            first_tp_ok = (ai_tps[0] > entry_ref) if direction == "long" \
+                           else (ai_tps[0] < entry_ref)
+            if ok and first_tp_ok:
+                out["tp_prices"] = ai_tps[:7]
 
     return out
 

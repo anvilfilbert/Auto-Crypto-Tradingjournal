@@ -30,7 +30,10 @@
   {"id": 27, "tier": 3, "order_in_tier": 6, "slug": "27-adx-stochastic",          "title": "ADX & Stochastic — trend strength and extremes-within-trend", "topic_tags": ["indicators","adx","stoch"]},
   {"id": 28, "tier": 3, "order_in_tier": 7, "slug": "28-fibonacci",               "title": "Fibonacci retracements + extensions",                 "topic_tags": ["indicators","fibonacci"]},
   {"id": 29, "tier": 3, "order_in_tier": 8, "slug": "29-atr-stop-sizing",         "title": "ATR — measuring volatility, sizing SLs by ATR",       "topic_tags": ["indicators","atr","volatility"]},
-  {"id": 30, "tier": 3, "order_in_tier": 9, "slug": "30-t3-final",                "title": "Tier 3 Final",                                        "topic_tags": ["final"], "is_final": true},
+  {"id": 52, "tier": 3, "order_in_tier": 9,  "slug": "52-mtf-ema-average",        "title": "Multi-Timeframe EMA Average + slope verdict",         "topic_tags": ["indicators","moving_averages","multi_tf","macro_filter"]},
+  {"id": 53, "tier": 3, "order_in_tier": 10, "slug": "53-vmc-cipher-a",           "title": "VuManChu Cipher A — on-chart overlay & 8 markers",    "topic_tags": ["indicators","vmc","cipher_a","wavetrend"]},
+  {"id": 54, "tier": 3, "order_in_tier": 11, "slug": "54-vmc-cipher-b",           "title": "VuManChu Cipher B — oscillator pane & gold dots",     "topic_tags": ["indicators","vmc","cipher_b","wavetrend","divergence"]},
+  {"id": 30, "tier": 3, "order_in_tier": 12, "slug": "30-t3-final",               "title": "Tier 3 Final",                                        "topic_tags": ["final"], "is_final": true},
 
   {"id": 31, "tier": 4, "order_in_tier": 1, "slug": "31-order-flow-cvd",          "title": "Order flow basics — CVD, delta, why aggression matters", "topic_tags": ["advanced","order_flow"]},
   {"id": 32, "tier": 4, "order_in_tier": 2, "slug": "32-liquidation-maps",        "title": "Liquidation maps — stop hunts, why retail SLs cluster", "topic_tags": ["advanced","liquidations"]},
@@ -40,19 +43,23 @@
   {"id": 36, "tier": 4, "order_in_tier": 6, "slug": "36-smc-overview",            "title": "Smart Money Concepts overview",                       "topic_tags": ["advanced","smc"]},
   {"id": 37, "tier": 4, "order_in_tier": 7, "slug": "37-smt-divergence",          "title": "Multi-exchange divergence (SMT)",                     "topic_tags": ["advanced","smt"]},
   {"id": 38, "tier": 4, "order_in_tier": 8, "slug": "38-funding-rate-sentiment",  "title": "Funding rate as a sentiment indicator",               "topic_tags": ["advanced","funding","sentiment"]},
-  {"id": 39, "tier": 4, "order_in_tier": 9, "slug": "39-t4-final",                "title": "Tier 4 Final",                                        "topic_tags": ["final"], "is_final": true},
+  {"id": 55, "tier": 4, "order_in_tier": 9,  "slug": "55-vmc-unified-confluence", "title": "VMC unified signal — confluence stacking ±1.0 score", "topic_tags": ["advanced","vmc","confluence","scoring"]},
+  {"id": 56, "tier": 4, "order_in_tier": 10, "slug": "56-counter-trend-extremes", "title": "Counter-trend trading at extremes — when to fade",    "topic_tags": ["advanced","counter_trend","mean_reversion"]},
+  {"id": 39, "tier": 4, "order_in_tier": 11, "slug": "39-t4-final",               "title": "Tier 4 Final",                                        "topic_tags": ["final"], "is_final": true},
 
   {"id": 40, "tier": 5, "order_in_tier": 1, "slug": "40-macro-stack",             "title": "The macro stack — DXY, VIX, S&P 500 futures",         "topic_tags": ["macro","dxy","vix"]},
   {"id": 41, "tier": 5, "order_in_tier": 2, "slug": "41-btc-dominance-alt-seasons","title": "BTC dominance & altcoin seasons",                    "topic_tags": ["macro","btc_dominance"]},
   {"id": 42, "tier": 5, "order_in_tier": 3, "slug": "42-fear-greed-contrarian",   "title": "Fear & Greed index — contrarian reading",             "topic_tags": ["macro","sentiment","contrarian"]},
   {"id": 43, "tier": 5, "order_in_tier": 4, "slug": "43-news-events",             "title": "News-event trading: FOMC, CPI, NFP",                  "topic_tags": ["macro","news_events"]},
   {"id": 44, "tier": 5, "order_in_tier": 5, "slug": "44-correlation-regimes",     "title": "Correlation regimes — when crypto decouples",         "topic_tags": ["macro","correlation"]},
-  {"id": 45, "tier": 5, "order_in_tier": 6, "slug": "45-t5-final",                "title": "Tier 5 Final",                                        "topic_tags": ["final"], "is_final": true},
+  {"id": 57, "tier": 5, "order_in_tier": 6, "slug": "57-risk-off-cascade",        "title": "Risk-off cascade dynamics — when alts crash together","topic_tags": ["macro","correlation","cascade","hedging"]},
+  {"id": 45, "tier": 5, "order_in_tier": 7, "slug": "45-t5-final",                "title": "Tier 5 Final",                                        "topic_tags": ["final"], "is_final": true},
 
   {"id": 46, "tier": 6, "order_in_tier": 1, "slug": "46-trade-apgar",             "title": "Pre-trade Trade Apgar — 5-question scorecard",        "topic_tags": ["execution","trade_apgar"]},
   {"id": 47, "tier": 6, "order_in_tier": 2, "slug": "47-pre-session-readiness",   "title": "Pre-session readiness",                               "topic_tags": ["execution","readiness"]},
   {"id": 48, "tier": 6, "order_in_tier": 3, "slug": "48-trade-journaling",        "title": "Trade journaling — what to record",                   "topic_tags": ["execution","journaling"]},
   {"id": 49, "tier": 6, "order_in_tier": 4, "slug": "49-trade-review",            "title": "Reviewing your trades",                               "topic_tags": ["execution","review"]},
   {"id": 50, "tier": 6, "order_in_tier": 5, "slug": "50-build-your-system",       "title": "Building your own system",                            "topic_tags": ["execution","system_building"]},
-  {"id": 51, "tier": 6, "order_in_tier": 6, "slug": "51-capstone",                "title": "Capstone + Personalized Final Exam",                  "topic_tags": ["capstone"], "is_capstone": true}
+  {"id": 58, "tier": 6, "order_in_tier": 6, "slug": "58-underwater-no-dca",       "title": "Underwater positions — when NOT to DCA",              "topic_tags": ["execution","risk","psychology","dca"]},
+  {"id": 51, "tier": 6, "order_in_tier": 7, "slug": "51-capstone",                "title": "Capstone + Personalized Final Exam",                  "topic_tags": ["capstone"], "is_capstone": true}
 ]

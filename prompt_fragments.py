@@ -26,8 +26,11 @@ MARKET_CONTEXT_RULES = """MARKET CONTEXT WEIGHTING:
 - Funding rate > 0.05% in trade direction → reduce score by 1 (crowd on-side, squeeze risk)
 - Funding rate > 0.1% in trade direction → reduce score by 2 (extremely crowded)
 - Funding rate opposite direction → slight tailwind, can note as positive factor
-- Fear & Greed < 20 (Extreme Fear): long bias gets +0.5; short bias gets −0.5
-- Fear & Greed > 80 (Extreme Greed): long bias gets −0.5; short bias gets +0.5""".strip()
+- BTC 24h direction matters: BTC down >2% AND BTC.D rising → broad risk-off, favor Short on alts
+- BTC 24h direction matters: BTC up >2% AND OTHERS.D rising → alt rotation, favor Long on alts
+- Read VIX, BTC.D, OTHERS.D, ES1! as raw structural facts — they describe the regime; do not invent
+  a "risk-on" or "buy the dip" narrative from any single indicator.
+- Fear & Greed is shown for context but is NOT a scoring input (paused 2026-06-01).""".strip()
 
 DRAW_ON_LIQUIDITY_RULES = """TAKE-PROFIT TARGETING:
 Prefer TP targets that coincide with visible liquidity pools — equal highs/lows,

@@ -42,7 +42,7 @@ _BITGET_WATCHLIST = [
     "RENDERUSDT",  # T2  $143M
     "INJUSDT",     # T2  $142M
     "ADAUSDT",     # T2  $129M
-    "FETUSDT",     # T2  $111M
+    # "FETUSDT",   # T2  $111M — excluded 2026-05-30 (operator request after orphan-SL incident)
     "TRXUSDT",     # T2  $110M
     "GRASSUSDT",   # T2  $106M
     # ── Tier 3 — Narrative / momentum (40) ──────────────────────────────────

@@ -1,0 +1,125 @@
+id: '55'
+lesson_id: 55
+pass_threshold: 8
+questions:
+- id: q1
+  text: What does the VMC Unified Signal output?
+  type: mcq
+  choices:
+  - Just a buy or sell label.
+  - A single weighted score clamped to [-1.0, +1.0] that aggregates ~15 VMC + chart signals into one directional confidence number.
+  - Random number.
+  - A price target only.
+  correct: 1
+  topic_tag: confluence
+  explanation: The unified signal collapses multiple VMC indicators (Cipher A markers, Cipher B states, WT zones, MFI flips, divergences) into ONE number on [-1, +1]. -1.0 = max bearish confluence, +1.0
+    = max bullish confluence, near 0 = neutral. This makes confluence interpretation a single read instead of mentally aggregating 15 signals.
+- id: q2
+  text: How are individual signals combined into the unified score?
+  type: mcq
+  choices:
+  - Average of all signals.
+  - WEIGHTED SUM — each signal type has a predefined weight (e.g., gold buy = +0.30, Yellow X = +0.40, ribbon spread = +0.10) reflecting its historical reliability. The sum is then clamped to [-1, +1].
+  - Maximum value only.
+  - Random selection.
+  correct: 1
+  topic_tag: scoring
+  explanation: Different signals have different historical reliability, so they get different weights. Top-tier markers (Yellow X, Blood Diamond) carry higher weights than baseline trend confirmations (long_ema).
+    Summing weighted contributions captures the actual confluence intensity, not just the count of firing signals.
+- id: q3
+  text: What score range maps to 'strong_long' label?
+  type: mcq
+  choices:
+  - 0.0 to +0.20
+  - ≥ +0.50
+  - -0.50 to -0.20
+  - ≤ -0.50
+  correct: 1
+  topic_tag: scoring
+  explanation: 'Score-to-label mapping: ≥+0.50 = strong_long, +0.20 to +0.50 = long, -0.20 to +0.20 = neutral, -0.50 to -0.20 = short, ≤-0.50 = strong_short. strong_long means multiple high-weight bullish
+    signals have stacked. Used for go/no-go decisions on entries AND for DCA triage on existing positions.'
+- id: q4
+  text: What does recency decay (F7) do?
+  type: mcq
+  choices:
+  - Adds randomness.
+  - Discounts older signals so the score reflects RECENT confluence. The decay weights are (1.0, 0.5, 0.25) — current bar contributes 100%, previous bar 50%, 2 bars ago 25%.
+  - Increases weight of older signals.
+  - Ignores all old data.
+  correct: 1
+  topic_tag: scoring
+  explanation: A Yellow X 3 bars ago shouldn't dominate the current signal — the market has moved on. Recency decay (1.0, 0.5, 0.25) means signals fade exponentially. The unified score is anchored in the
+    present, with diminishing influence from the recent past. Older signals beyond 2 bars carry no weight.
+- id: q5
+  text: What's the difference between a STATE signal and an EVENT signal?
+  type: mcq
+  choices:
+  - States are predictions, events are facts.
+  - STATE = ongoing condition (e.g., WT2 in deep oversold zone for 3+ bars). EVENT = discrete trigger (e.g., gold buy fired NOW, Yellow X just printed). States accumulate over bars; events are bar-specific
+    instants.
+  - There's no difference.
+  - Events are paid, states are free.
+  correct: 1
+  topic_tag: confluence
+  explanation: Distinguishing state vs event matters for confluence. A state (WT2 < -53 for 5 bars) provides ongoing bullish bias. An event (gold buy print right now) provides timing precision. The unified
+    score weights events higher because they mark THE moment to act, while states reward patient setups.
+- id: q6
+  text: What does F9 (slope at extreme) measure?
+  type: mcq
+  choices:
+  - The speed of the internet.
+  - Whether WT2 is at deep oversold (-53 or below) AND its slope is positive (lifting off). When BOTH true → adds +0.10 to score because lifting-off-from-deep means the reversal is mechanically beginning.
+  - RSI value.
+  - Volume slope.
+  correct: 1
+  topic_tag: scoring
+  explanation: 'F9 captures the moment when oversold has BOTTOMED and started reversing. WT2 = -65 AND slope > +3 = oversold is exhausting, the bounce is mechanically forming. The HYPE 1H bottom example
+    showed this: ''wt2_lifting_off'' fired and a sustained bounce followed. Mirror: deep overbought with falling slope = top reversal.'
+- id: q7
+  text: If the unified signal is +0.45 (long), what does that imply for action?
+  type: mcq
+  choices:
+  - Immediately maximize position size.
+  - Long bias confirmed but not extreme — hold existing longs, consider new entries only with additional confirmation (S/R alignment + clean R:R). DON'T DCA based on this alone.
+  - Close all positions.
+  - Random — has no meaning.
+  correct: 1
+  topic_tag: confluence
+  explanation: +0.45 falls in the 'long' bucket (+0.20 to +0.50), not 'strong_long' (≥+0.50). The signal is constructive but not overwhelming. Hold longs, consider new entries with confluence (e.g., entry
+    at clean support level), but don't aggressive DCA — wait for strong_long (≥+0.50) before that conviction.
+- id: q8
+  text: How does the unified signal help with DCA decisions on existing underwater positions?
+  type: mcq
+  choices:
+  - It doesn't — DCA decisions are independent.
+  - Run unified on each underwater position. If verdict is strong_long (≥+0.50) → DCA justified (your thesis is intact and improving). If verdict is short/strong_short → CUT, don't DCA (your thesis is broken).
+  - Always DCA regardless.
+  - Never DCA.
+  correct: 1
+  topic_tag: scoring
+  explanation: The unified signal is the OBJECTIVE DCA filter. When your gut wants to lower your average on every losing trade, running unified separates 'thesis still valid' (DCA OK) from 'thesis broken'
+    (CUT). This single discipline rule prevents 80% of bad DCAs.
+- id: q9
+  text: What was the real-world example demonstrating F9 (slope at extreme)?
+  type: mcq
+  choices:
+  - Bitcoin halving.
+  - HYPE bottom on the 1H chart — wt2_lifting_off fired (deep oversold + positive slope) and was followed by a sustained bounce.
+  - Stock market crash.
+  - Nothing — F9 is theoretical.
+  correct: 1
+  topic_tag: vmc
+  explanation: 'The HYPE 1H bottom showed F9 working in real conditions: WT2 was deeply oversold AND its slope had just turned positive. The unified signal jumped, marking the bottom. The trader who acted
+    on the lifting-off signal caught the move; the trader who waited for explicit ''long'' label might have missed the entry timing.'
+- id: q10
+  text: What's the main advantage of using the unified score vs reading 15 individual signals?
+  type: mcq
+  choices:
+  - No advantage — both are equally good.
+  - Single number = single decision. Eliminates cognitive bias (you can't cherry-pick favorable signals because the weighted sum is computed mechanically). Forces honest reading of total confluence.
+  - Unified is colorful.
+  - Unified is faster to type.
+  correct: 1
+  topic_tag: confluence
+  explanation: When manually reading 15 signals, traders unconsciously weight the ones supporting their existing bias and discount conflicting ones (confirmation bias). The unified score is computed mechanically
+    by predefined weights, so it can't be cherry-picked. The number is the number — face it honestly. This single discipline filter prevents the most expensive cognitive errors.

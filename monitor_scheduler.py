@@ -12,6 +12,7 @@ On risk_rating >= 7 or action != "Hold":
 import os
 import threading
 import time
+from datetime import datetime, timezone
 
 import bitget_client
 import telegram_notify
@@ -27,6 +28,14 @@ from database import db_conn
 _exposure_alerted: set[tuple] = set()
 
 FIRST_DELAY = int(os.environ.get("MONITOR_FIRST_DELAY", "120"))   # 2 min
+
+# ── Scanner-silence watchdog ───────────────────────────────────────────
+# When no decisions land in futures_ai_log for a while, something is wrong
+# (AI providers exhausted, scanner thread crashed, auto-trader paused).
+# Catch it BEFORE the operator notices via eyeballing the manual book.
+SILENCE_THRESHOLD_HOURS  = float(os.environ.get("SCANNER_SILENCE_THRESHOLD_H", "4"))
+SILENCE_ALERT_COOLDOWN_H = float(os.environ.get("SCANNER_SILENCE_COOLDOWN_H", "6"))
+_last_silence_alert: datetime | None = None
 
 
 def _passes_filter(position: dict) -> bool:
@@ -185,6 +194,55 @@ def _run_once():
             print(f"[Monitor] Error for {symbol}: {e}", flush=True)
 
 
+def _check_scanner_silence() -> None:
+    """Alert if no futures_ai_log activity for SILENCE_THRESHOLD_HOURS.
+
+    Detected silent states: AI provider quota exhausted, scanner thread dead,
+    auto-trader paused without operator awareness. Skips when:
+      - no log entries exist at all (fresh DB)
+      - auto-trader pause flag is set (silence is expected)
+      - we already alerted within the cooldown window
+    """
+    global _last_silence_alert
+    if not _monitor_alerts_enabled():
+        return
+    try:
+        with db_conn() as conn:
+            row = conn.execute(
+                "SELECT ts FROM futures_ai_log ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+            paused_row = conn.execute(
+                "SELECT value FROM settings WHERE key='futures_ai_state'"
+            ).fetchone()
+        if row is None:
+            return
+        if paused_row and paused_row[0] in ("pause_now", "pause_after_close", "circuit_breaker"):
+            return  # operator explicitly paused — silence is expected
+        last_ts = datetime.fromisoformat(row[0].replace(" ", "T"))
+        if last_ts.tzinfo is None:
+            last_ts = last_ts.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        silence_h = (now - last_ts).total_seconds() / 3600.0
+        if silence_h < SILENCE_THRESHOLD_HOURS:
+            return
+        # Cooldown: don't spam — once per SILENCE_ALERT_COOLDOWN_H
+        if _last_silence_alert is not None:
+            since_last = (now - _last_silence_alert).total_seconds() / 3600.0
+            if since_last < SILENCE_ALERT_COOLDOWN_H:
+                return
+        msg = (
+            f"⚠️ Scanner SILENT for {silence_h:.1f}h\n"
+            f"Last futures_ai_log entry: {row[0]}\n"
+            f"Likely cause: AI quota out, scanner crashed, or paused.\n"
+            f"Check `journalctl -u trading-journal -f` to diagnose."
+        )
+        telegram_notify.send_message(msg)
+        _last_silence_alert = now
+        print(f"[Monitor] silence alert sent ({silence_h:.1f}h of inactivity)", flush=True)
+    except Exception as e:
+        print(f"[Monitor] silence check failed: {e}", flush=True)
+
+
 def _monitor_alerts_enabled() -> bool:
     """Check whether position monitor Telegram alerts are enabled (default on)."""
     try:
@@ -283,6 +341,9 @@ def start():
                     print("[Monitor] paused — skipping monitor cycle", flush=True)
                 else:
                     _run_once()
+                # Scanner-silence watchdog runs every cycle regardless of
+                # journal_paused (we WANT to be told when scanner is quiet).
+                _check_scanner_silence()
             except Exception as e:
                 print(f"[Monitor] Unexpected error in monitor loop: {e}", flush=True)
             time.sleep(MONITOR_INTERVAL)
@@ -291,3 +352,251 @@ def start():
     t.start()
     print(f"[Monitor] Background monitor started (every {MONITOR_INTERVAL}s, "
           f"first run in {FIRST_DELAY}s)", flush=True)
+
+    # ── Daily Telegram report (09:00 UTC) ──────────────────────────────────
+    def _daily_report_loop():
+        import datetime
+        last_sent = None
+        while True:
+            try:
+                now = datetime.datetime.utcnow()
+                today = now.date()
+                # Fire at first cycle ≥ 09:00 UTC each day (next chance the loop runs after 09:00)
+                if now.hour >= 9 and last_sent != today:
+                    try:
+                        from trading import daily_report
+                        from database import db_conn
+                        with db_conn() as _conn:
+                            ok = daily_report.send_daily_report(_conn)
+                        print(f"[DailyReport] sent={ok} at {now.isoformat()}", flush=True)
+                    except Exception as e:
+                        print(f"[DailyReport] failed: {e}", flush=True)
+                    last_sent = today
+            except Exception as e:
+                print(f"[DailyReport] outer error: {e}", flush=True)
+            time.sleep(300)  # check every 5 min — once-per-day gating done by last_sent
+
+    t2 = threading.Thread(target=_daily_report_loop, name="daily-report", daemon=True)
+    t2.start()
+    print("[DailyReport] Background daily-report scheduler started (sends at first cycle ≥ 09:00 UTC)", flush=True)
+
+    # ── Hourly R-3 backfill (funding + liq_distance) ──────────────────────
+    def _r3_backfill_loop():
+        while True:
+            try:
+                from trading import r3_funding_liq
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = r3_funding_liq.run_all(_conn)
+                if summary.get("liq", {}).get("updated", 0) > 0 or summary.get("funding", {}).get("updated", 0) > 0:
+                    print(f"[R-3] backfilled: {summary}", flush=True)
+            except Exception as e:
+                print(f"[R-3] backfill error: {e}", flush=True)
+            time.sleep(3600)  # every 1h
+
+    t3 = threading.Thread(target=_r3_backfill_loop, name="r3-backfill", daemon=True)
+    t3.start()
+    print("[R-3] Background funding/liq backfill scheduler started (hourly)", flush=True)
+
+    # ── Per-symbol learner (every 6h) ──────────────────────────────────────
+    def _learner_symbol_loop():
+        import time as _t
+        _t.sleep(180)  # initial 3min delay so other inits finish first
+        while True:
+            try:
+                from trading import learner_symbol
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_symbol.evaluate_and_update(_conn)
+                applied = len(summary.get("applied", []))
+                if applied > 0:
+                    print(f"[Learner-symbol] applied {applied} change(s): {summary['applied']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-symbol] error: {e}", flush=True)
+            time.sleep(6 * 3600)  # every 6h
+
+    t4 = threading.Thread(target=_learner_symbol_loop, name="learner-symbol", daemon=True)
+    t4.start()
+    print("[Learner-symbol] Background per-symbol learner started (every 6h, first run in 3min)", flush=True)
+
+    # ── L-2 time-bucket learner (session/DoW/hour, every 6h) ─────────────
+    def _learner_time_loop():
+        import time as _t
+        _t.sleep(210)  # offset 30s after symbol-learner
+        while True:
+            try:
+                from trading import learner_time
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_time.run_all(_conn)
+                total_applied = sum(len(d.get("applied", [])) for d in summary.values())
+                if total_applied > 0:
+                    print(f"[Learner-time] applied {total_applied} change(s): {summary}", flush=True)
+            except Exception as e:
+                print(f"[Learner-time] error: {e}", flush=True)
+            time.sleep(6 * 3600)  # every 6h
+
+    t5 = threading.Thread(target=_learner_time_loop, name="learner-time", daemon=True)
+    t5.start()
+    print("[Learner-time] Background session/DoW/hour learner started (every 6h, first run in ~3.5min)", flush=True)
+
+    # ── L-3 threshold learner (consensus_min_score, once per day) ─────────
+    def _learner_threshold_loop():
+        import time as _t
+        _t.sleep(240)  # 4min initial offset
+        while True:
+            try:
+                from trading import learner_threshold
+                from database import db_conn
+                with db_conn() as _conn:
+                    result = learner_threshold.evaluate_and_update(_conn)
+                if result.get("action") == "applied":
+                    print(f"[Learner-threshold] applied {result['old']}→{result['new']}: {result['reason']}", flush=True)
+                elif result.get("action") == "rejected_by_validator":
+                    print(f"[Learner-threshold] proposal rejected by A-B: {result['reason']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-threshold] error: {e}", flush=True)
+            time.sleep(24 * 3600)  # daily
+
+    t6 = threading.Thread(target=_learner_threshold_loop, name="learner-threshold", daemon=True)
+    t6.start()
+    print("[Learner-threshold] Background threshold learner started (daily)", flush=True)
+
+    # ── A-C Post-Mortem agent (hourly — picks up new closes) ──────────────
+    def _post_mortem_loop():
+        import time as _t
+        _t.sleep(300)  # 5min initial offset
+        while True:
+            try:
+                from trading import post_mortem
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = post_mortem.run_pending(_conn, max_per_cycle=5)
+                if summary.get("analyzed", 0) > 0:
+                    print(f"[Post-mortem] analyzed {summary['analyzed']} loss(es), "
+                          f"cost=${summary['total_cost_usd']:.4f}: {summary['results']}",
+                          flush=True)
+            except Exception as e:
+                print(f"[Post-mortem] error: {e}", flush=True)
+            time.sleep(3600)  # hourly
+
+    t7 = threading.Thread(target=_post_mortem_loop, name="post-mortem", daemon=True)
+    t7.start()
+    print("[Post-mortem] Background post-mortem agent started (hourly)", flush=True)
+
+    # ── N-4 VPIN snapshot loop (every 5min, top watchlist) ────────────────
+    def _vpin_snapshot_loop():
+        import time as _t
+        _t.sleep(330)  # offset 5.5min so initial bursts don't collide
+        while True:
+            try:
+                from trading import vpin
+                from scanner_watchlist import DEFAULT_WATCHLIST
+                from database import db_conn
+                # Sample top 20 symbols by watchlist order — VPIN only makes
+                # sense for highly-traded names anyway (low-vol names lack
+                # enough aggTrades to compute meaningful buckets).
+                symbols = list(DEFAULT_WATCHLIST)[:20]
+                with db_conn() as _conn:
+                    results = vpin.snapshot(_conn, symbols)
+                veto_n = sum(1 for r in results if r.get("vpin") and r["vpin"] >= 0.7)
+                print(f"[VPIN] sampled {len(results)}/{len(symbols)} symbols, "
+                      f"{veto_n} in veto zone (≥0.70)", flush=True)
+            except Exception as e:
+                print(f"[VPIN] error: {e}", flush=True)
+            time.sleep(5 * 60)  # every 5 min
+
+    t8 = threading.Thread(target=_vpin_snapshot_loop, name="vpin", daemon=True)
+    t8.start()
+    print("[VPIN] Background N-4 VPIN snapshot loop started (every 5min, top 20 by watchlist order)", flush=True)
+
+    # ── L-4 TP/SL distance learner (daily) ────────────────────────────────
+    def _learner_tpsl_loop():
+        import time as _t
+        _t.sleep(360)  # 6min initial offset
+        while True:
+            try:
+                from trading import learner_tpsl
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_tpsl.evaluate_and_update(_conn)
+                if summary.get("applied"):
+                    print(f"[Learner-TPSL] applied {len(summary['applied'])} change(s): "
+                          f"{summary['applied']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-TPSL] error: {e}", flush=True)
+            time.sleep(24 * 3600)
+
+    t9 = threading.Thread(target=_learner_tpsl_loop, name="learner-tpsl", daemon=True)
+    t9.start()
+    print("[Learner-TPSL] Background L-4 TP/SL learner started (daily)", flush=True)
+
+    # ── L-5 Risk-parameter learner (daily) ────────────────────────────────
+    def _learner_risk_loop():
+        import time as _t
+        _t.sleep(390)
+        while True:
+            try:
+                from trading import learner_risk
+                from database import db_conn
+                with db_conn() as _conn:
+                    summary = learner_risk.evaluate_and_update(_conn)
+                if summary.get("applied"):
+                    print(f"[Learner-Risk] applied {len(summary['applied'])} change(s) "
+                          f"(dd_pause={summary.get('dd_pause')}): {summary['applied']}", flush=True)
+            except Exception as e:
+                print(f"[Learner-Risk] error: {e}", flush=True)
+            time.sleep(24 * 3600)
+
+    t10 = threading.Thread(target=_learner_risk_loop, name="learner-risk", daemon=True)
+    t10.start()
+    print("[Learner-Risk] Background L-5 risk learner started (daily)", flush=True)
+
+    # ── A-D Execution-quality snapshot (hourly) ───────────────────────────
+    def _exec_quality_loop():
+        import time as _t
+        _t.sleep(420)
+        while True:
+            try:
+                from trading import exec_quality
+                from database import db_conn
+                with db_conn() as _conn:
+                    agg = exec_quality.snapshot_to_settings(_conn)
+                if agg.get("alert"):
+                    print(f"[ExecQuality] 🚨 ALERT avg_bps={agg['avg_bps']}", flush=True)
+                elif agg.get("warn"):
+                    print(f"[ExecQuality] ⚠ WARN avg_bps={agg['avg_bps']}", flush=True)
+            except Exception as e:
+                print(f"[ExecQuality] error: {e}", flush=True)
+            time.sleep(3600)
+
+    t11 = threading.Thread(target=_exec_quality_loop, name="exec-quality", daemon=True)
+    t11.start()
+    print("[ExecQuality] Background A-D snapshot loop started (hourly)", flush=True)
+
+    # ── Shadow responses pruner (daily, keeps 30d) ────────────────────────
+    # Without this, shadow_responses grows unbounded (~470 rows/day at 20%
+    # sample rate × 4 models = ~14k rows/month). Added with Fix 5 / 2026-05-31.
+    def _shadow_prune_loop():
+        import time as _t
+        _t.sleep(900)  # 15-min initial offset so it doesn't collide with boot
+        while True:
+            try:
+                from database import db_conn
+                with db_conn() as _conn:
+                    cur = _conn.execute(
+                        "DELETE FROM shadow_responses "
+                        "WHERE ts < datetime('now', '-30 days')"
+                    )
+                    _conn.commit()
+                    deleted = cur.rowcount or 0
+                if deleted > 0:
+                    print(f"[ShadowPrune] removed {deleted} rows older than 30d",
+                          flush=True)
+            except Exception as e:
+                print(f"[ShadowPrune] error: {e}", flush=True)
+            time.sleep(86400)  # daily
+
+    t12 = threading.Thread(target=_shadow_prune_loop, name="shadow-prune", daemon=True)
+    t12.start()
+    print("[ShadowPrune] Background shadow_responses prune loop started (daily)", flush=True)

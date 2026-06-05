@@ -95,24 +95,29 @@ def get_upcoming_events(hours_ahead: int = 48) -> dict:
         next_event = None
         hours_until = None
 
+        # Skip events that have already occurred. Finnhub's calendar returns
+        # the whole day (midnight UTC start) so a query mid-day can include
+        # this-morning events that are already 6-20h in the past. Without
+        # this filter, macro_risk stayed True for ~20h after every event.
         for ev in events:
             name_lower = ev["event"].lower()
-            if any(kw in name_lower for kw in _HIGH_IMPACT):
-                macro_risk = True
-                if next_event is None:
-                    next_event = ev["event"][:80]
-                    # Try to compute hours until event
-                    try:
-                        # Finnhub time format: "2026-05-15 14:00:00" (UTC)
-                        ev_dt = datetime.fromisoformat(
-                            ev["time"].replace(" ", "T").replace("Z", "+00:00")
-                        )
-                        if ev_dt.tzinfo is None:
-                            ev_dt = ev_dt.replace(tzinfo=timezone.utc)
-                        hours_until = round((ev_dt - now).total_seconds() / 3600, 1)
-                    except Exception:
-                        pass
-                break
+            if not any(kw in name_lower for kw in _HIGH_IMPACT):
+                continue
+            try:
+                ev_dt = datetime.fromisoformat(
+                    ev["time"].replace(" ", "T").replace("Z", "+00:00")
+                )
+                if ev_dt.tzinfo is None:
+                    ev_dt = ev_dt.replace(tzinfo=timezone.utc)
+                hrs = round((ev_dt - now).total_seconds() / 3600, 1)
+            except Exception:
+                continue
+            if hrs < 0:
+                continue   # event already passed
+            macro_risk = True
+            next_event = ev["event"][:80]
+            hours_until = hrs
+            break
 
         return {
             "events":      events[:5],  # cap at 5 events

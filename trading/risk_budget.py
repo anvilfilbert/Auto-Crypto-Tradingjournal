@@ -195,6 +195,48 @@ def _vol_dampener(symbol: str) -> tuple[float, str]:
     )
 
 
+def _size_by_vol_target(equity_usdt: float, symbol: str,
+                         target_daily_vol_pct: Optional[float] = None) -> tuple[Optional[float], str]:
+    """
+    R-2 (Master plan Week 1): Volatility-targeting position sizer.
+
+    Computes a notional such that a 1-ATR move on the 4H chart equals
+    `target_daily_vol_pct` of equity. This makes positions in low-vol
+    coins LARGER (more capital) and high-vol coins SMALLER (less),
+    yielding similar dollar P&L variance across symbols.
+
+      target_daily_vol_usd = target_daily_vol_pct / 100 × equity
+      notional_usdt        = target_daily_vol_usd / (atr_pct / 100)
+
+    Default target is 0.5% of equity per trade — chosen so 5 concurrent
+    positions sum to ~2.5% portfolio daily vol, matching the existing
+    risk envelope.
+
+    SHIPPED 2026-05-31 as an audit-log-only sidecar. Master plan L-5
+    (Week 9) will wire it as the live sizer if A-B Backtest Validator
+    confirms it improves Sharpe vs the current Kelly-score approach.
+
+    Returns (notional_usdt or None, reason).
+    """
+    target = target_daily_vol_pct
+    if target is None:
+        try:
+            target = float(__import__('os').environ.get("FUTURES_AI_TARGET_DAILY_VOL_PCT", "0.5"))
+        except Exception:
+            target = 0.5
+    if equity_usdt <= 0 or target <= 0:
+        return None, "vol_target: invalid equity or target"
+    atr_pct = _get_asset_atr_pct(symbol)
+    if atr_pct is None or atr_pct <= 0:
+        return None, "vol_target: ATR unavailable"
+    target_usd = (target / 100.0) * equity_usdt
+    notional = target_usd / (atr_pct / 100.0)
+    return round(notional, 2), (
+        f"vol_target: ATR% {atr_pct:.2f}, target {target:.2f}% × equity ${equity_usdt:.2f} "
+        f"→ ${target_usd:.2f} daily-vol contribution → notional ${notional:.2f}"
+    )
+
+
 def _drawdown_dampener(equity_usdt: float) -> tuple[float, str]:
     """
     Graduated drawdown response (Bear Market Strategy Ch 8).
@@ -307,6 +349,10 @@ def size_trade(score: int, entry: float, sl: float,
     # but the pre-placed SL fires well before liquidation.
     lev = config.MAX_LEVERAGE
 
+    # R-2 (Master plan): compute vol-target notional ALONGSIDE the live
+    # sizer so we can compare in audit logs. Not live yet — see L-5 Week 9.
+    vol_target_notional, vol_target_reason = _size_by_vol_target(eq, symbol or "")
+
     return {
         "notional_usdt":      round(notional, 2),
         "leverage":           lev,
@@ -323,4 +369,7 @@ def size_trade(score: int, entry: float, sl: float,
         "capped":             notional_raw > cap,
         "sizing_tier":        sizing_tier,
         "opus_score":         opus_score,
+        # R-2 sidecar — not yet wired to live sizing
+        "vol_target_notional_usdt": vol_target_notional,
+        "vol_target_reason":        vol_target_reason,
     }

@@ -257,11 +257,13 @@ def _collect_stats(conn, chain: str = "manual") -> dict:
     naturally return empty for the manual chain — correct, since manual
     trades carry no skill provenance."""
     _validate_chain(chain)
-    # Chain filter fragment — safe to interpolate because validated above.
-    CF = f"chain='{chain}'"
+    # Chain filter fragment — placeholder so the value travels as a parameter,
+    # never as inline SQL. Each query below has exactly one {CF} occurrence,
+    # so the default params=(chain,) below matches the placeholder count.
+    CF = "chain=?"
 
-    def rows(sql):
-        return [dict(r) for r in conn.execute(sql).fetchall()]
+    def rows(sql, params=(chain,)):
+        return [dict(r) for r in conn.execute(sql, params).fetchall()]
 
     # Recent-30d slices alongside lifetime — exposes regime shifts. A rule
     # that held over 6 months may be irrelevant in the last month if the
@@ -378,13 +380,13 @@ def _collect_stats(conn, chain: str = "manual") -> dict:
                ROUND(AVG(CASE WHEN realized_pnl>0 THEN realized_pnl END),2) AS avg_win,
                ROUND(AVG(CASE WHEN realized_pnl<0 THEN realized_pnl END),2) AS avg_loss
         FROM positions WHERE {CF}
-    """).fetchone())
+    """, (chain,)).fetchone())
     recent = dict(conn.execute(f"""
         SELECT COUNT(*) AS n,
                ROUND(100.0*SUM(CASE WHEN realized_pnl>0 THEN 1 ELSE 0 END)/COUNT(*),1) AS win_rate,
                ROUND(SUM(realized_pnl),2) AS total_pnl
         FROM (SELECT realized_pnl FROM positions WHERE {CF} ORDER BY close_time DESC LIMIT 20)
-    """).fetchone())
+    """, (chain,)).fetchone())
 
     # ── Skill-provenance slices (added 2026-05-24) ──────────────────────────
     # Six dimensions populated at trade-open by the auto-trader chain.

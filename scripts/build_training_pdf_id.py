@@ -503,7 +503,7 @@ def render_cover() -> str:
     return """<section class="cover">
       <div class="brand">Crypto Trading Academy</div>
       <div class="title">Pelatihan Lengkap Trading Crypto Futures</div>
-      <div class="subtitle">Dari pemula sampai mahir — 51 lesson terbagi dalam 6 tier.
+      <div class="subtitle">Dari pemula sampai mahir — 58 lesson terbagi dalam 6 tier.
         Foundations, Chart Reading, Indicators, Advanced (Wyckoff/SMC),
         Macro &amp; Context, Execution &amp; Journaling.</div>
       <div class="meta">Versi Bahasa Indonesia · Tanpa kuis · Untuk dibaca offline</div>

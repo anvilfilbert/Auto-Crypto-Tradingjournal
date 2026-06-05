@@ -1,0 +1,124 @@
+id: '56'
+lesson_id: 56
+pass_threshold: 8
+questions:
+- id: q1
+  text: What's a counter-trend trade?
+  type: mcq
+  choices:
+  - A trade that follows the dominant trend.
+  - A trade that deliberately fades an extended move — going LONG against a strong dump (catching the reversal) or SHORT against a strong pump.
+  - A trade made on Tuesday.
+  - A trade on stocks not crypto.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: Counter-trend = mean reversion. You're betting an overextended move will reverse toward a mean. Done with proper confluence at proper extremes, has very high R:R because SLs are wide and
+    TPs are well-defined. Done lazy or in strong trends, it's how accounts die.
+- id: q2
+  text: What are the 5 conditions for a clean counter-trend LONG setup?
+  type: mcq
+  choices:
+  - RSI above 70; MACD positive; high volume; Bitcoin pumping; green candle.
+  - WT2 below -60 OR Gold Buy at -53; RSI below 30; MFI flipping positive; MTF EMA bias still LONG or trend_up_aging; NO active Blood Diamond on recent bars.
+  - Just buy oversold.
+  - Just chart structure.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: 'The 5-condition template: WT extreme + RSI extreme + MFI flip + MTF bias agreement + no opposing recent markers. When 4 of 5 align = textbook. When 5/5 = trade of the month. Skipping any
+    condition turns the high-edge setup into a coin-flip gamble.'
+- id: q3
+  text: Why does mean reversion FAIL during strong sustained trends?
+  type: mcq
+  choices:
+  - The market is broken.
+  - Every fade gets steamrolled. Strong trends can stay 'overbought' or 'oversold' for weeks (RSI above 70 in a bull, RSI below 30 in a bear) — the trend continues longer than your SL allows.
+  - Mean reversion always works.
+  - There are no trends in crypto.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: 'Strong trends invalidate mean reversion: RSI above 70 doesn''t mean reversal — it means strong trend. Fading that costs money repeatedly until you blow up. The MTF EMA filter (trend_up_aging
+    or ''trend stalling'' regime) is the gate that says ''mean reversion conditions are now ACTIVE.'' Without that gate, don''t try.'
+- id: q4
+  text: What's the minimum R:R required for a counter-trend setup?
+  type: mcq
+  choices:
+  - Any R:R is fine.
+  - ≥ 2× — because counter-trend has ~40-50% win rate even when done well, and wide SLs (you're fading an extreme that can extend) make individual losses larger. R:R below 2 doesn't work mathematically.
+  - Exactly 1×.
+  - 10× minimum.
+  correct: 1
+  topic_tag: risk
+  explanation: 'Math: with 45% win rate and 2× R:R, you net positive: 0.45 × 2R - 0.55 × 1R = +0.35R per trade. With R:R below 2× (say 1×), 0.45 × 1R - 0.55 × 1R = -0.10R per trade (negative). The R:R IS
+    the saving grace for counter-trend''s lower win rate. R:R < 2 = skip.'
+- id: q5
+  text: What's the recommended sizing for a counter-trend trade?
+  type: mcq
+  choices:
+  - 2× normal size.
+  - HALF your normal size — wide SLs + lower win rate require smaller per-trade risk. 3 losers at half size = 3-4% drawdown. 3 losers at full size = 6-8% drawdown.
+  - 10× normal size.
+  - Same as normal.
+  correct: 1
+  topic_tag: position_sizing
+  explanation: Half-size is the default for counter-trend specifically because of the asymmetric loss potential. The trade WIN gives you +2-3% on half size (decent). The trade LOSS at full SL is capped
+    at standard risk levels. Stack a losing streak and the book damage is much less.
+- id: q6
+  text: 'Real example FIL short: WT2 = +74, Gold Sell fired, MTF trend_up_aging, R:R = 2.75×. Result?'
+  type: mcq
+  choices:
+  - Lost everything.
+  - Won +$6.55 within 4 hours — textbook counter-trend with all 5 conditions checked AND R:R above 2.
+  - Stopped at SL immediately.
+  - Closed unchanged.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: 'FIL had: WT2 +74 (deep overbought ✓), Gold Sell ✓, MTF aging (mean reversion regime ✓), heavy supports below ✓, R:R 2.75×. All template conditions stacked. The win confirmed the setup methodology.'
+- id: q7
+  text: 'Real example WLD long: same evening, all conditions checked, R:R 4.4×. What happened?'
+  type: mcq
+  choices:
+  - Won easily.
+  - 'STOPPED OUT at SL (−$29). Macro forces (BTC dumping cascade) overrode the local oversold setup. Lesson: even a textbook setup can lose when broader risk-off plays out.'
+  - Sideways forever.
+  - Was never opened.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: WLD ticked all 5 boxes. The cascade still killed it because the macro decision (entire crypto selling off) overrode local oversold. This is WHY counter-trend has 40-50% win rate even with
+    perfect setups — sometimes the market just keeps going. Accept losses, move on. Don't add.
+- id: q8
+  text: What's the FORBIDDEN action on a losing counter-trend trade?
+  type: mcq
+  choices:
+  - Hold to SL.
+  - AVERAGING DOWN. The thesis was 'this is the extreme.' If price extends further, the thesis is WRONG — adding more just compounds a bad call. Stop at SL, accept, move on.
+  - Take screenshots.
+  - Tell friends.
+  correct: 1
+  topic_tag: dca
+  explanation: Counter-trend trades are tactical bets at extremes. They either work or they don't. There's no 'better entry' to DCA into when the extreme keeps extending — the extreme could go 2x further
+    before reversing. Adding more turns a 1R loss into a 3R loss. Always cut at SL, never DCA counter-trend losers.
+- id: q9
+  text: When does mean reversion / counter-trend trading WORK?
+  type: mcq
+  choices:
+  - Always.
+  - Range markets, aging trends (slope decelerating), and capitulation phases (extreme selloffs with oversold + divergence). The MTF EMA verdict is the gate.
+  - Only on FOMC days.
+  - Never.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: 'Counter-trend works in 3 specific regimes: (1) Range markets — price oscillates between defined bounds. (2) Aging trends — momentum decelerating, mean-reversion likely. (3) Capitulation
+    — extreme selloff with sellers exhausted. Outside these regimes, fade trades get steamrolled by trend continuation.'
+- id: q10
+  text: What's the bottom-line discipline for counter-trend success?
+  type: mcq
+  choices:
+  - Trade more frequently.
+  - Require 4+ of 5 template conditions, R:R ≥ 2×, half size, MTF EMA regime supports mean reversion, never DCA losers. When 4+ conditions align in the right regime, it's the highest-EV setup in crypto.
+    When less, skip.
+  - Use leverage 100x.
+  - Only trade weekends.
+  correct: 1
+  topic_tag: counter_trend
+  explanation: 'Five rules: (1) 4+ template conditions, (2) R:R ≥ 2×, (3) half size, (4) MTF regime supports mean reversion, (5) never DCA losers. Following all 5 strictly turns counter-trend into your
+    highest-EV strategy. Skipping any one of them drops the EV below break-even and slowly bleeds the account.'

@@ -164,7 +164,15 @@ let _volSeries = null;
 let _tlSeries  = [];
 let _srLines   = [];
 let _fibLines  = [];
-let _layers    = { vol: true, wt: true, sr: true, tl: true, fib: true, legend: true };
+// 2026-05-30: VWAP / Volume Profile / Supertrend overlays
+let _vwapLines = [];   // 5 LineSeries: vwap + ±1σ/±2σ
+let _stLine    = null; // single Supertrend LineSeries (color = direction)
+let _vpData    = null; // {bins_data, poc, vah, val} for canvas histogram
+let _layers    = {
+  vol: true,  wt: true,  legend: true,
+  vwap: true, st: true,
+  sr: false,  tl: false, fib: false, vp: false,
+};
 
 function renderLayerBtns() {
   const bar  = document.getElementById('layer-btns');
@@ -174,6 +182,9 @@ function renderLayerBtns() {
     { key: 'sr',     label: 'S/R' },
     { key: 'tl',     label: 'Trendlines' },
     { key: 'fib',    label: 'Fibonacci' },
+    { key: 'vwap',   label: 'VWAP' },
+    { key: 'vp',     label: 'VP' },
+    { key: 'st',     label: 'ST' },
     { key: 'legend', label: 'Legend' },
   ];
   bar.textContent = '';
@@ -197,6 +208,9 @@ function toggleLayer(name) {
   if (name === 'sr')  _srLines.forEach(pl => pl.applyOptions({ color: on ? pl.__col : 'rgba(0,0,0,0)', axisLabelVisible: on }));
   if (name === 'tl')  _tlSeries.forEach(s => s.applyOptions({ visible: on }));
   if (name === 'fib') _fibLines.forEach(pl => pl.applyOptions({ color: on ? pl.__col : 'rgba(0,0,0,0)', axisLabelVisible: on }));
+  if (name === 'vwap') _vwapLines.forEach(s => s.applyOptions({ visible: on }));
+  if (name === 'st' && _stLine) _stLine.applyOptions({ visible: on });
+  // VP is canvas-rendered — flag picked up by the draw loop
   if (name === 'legend') {
     const l = document.getElementById('sr-legend');
     if (l) l.style.display = on ? '' : 'none';
@@ -256,7 +270,7 @@ function _mergeSrLevels(levels, pct = 0.003) {
 }
 
 // ── Canvas overlay: S/R boxes + liquidation dashed lines ──────────────────────
-function _startOverlay(wrap, series, mergedLvls, htf_levels, liquidations, atr) {
+function _startOverlay(wrap, series, mergedLvls, htf_levels, liquidations, atr, current_price) {
   // Remove any previous overlay canvas
   const old = wrap.querySelector('.sr-canvas');
   if (old) old.remove();
@@ -342,9 +356,133 @@ function _startOverlay(wrap, series, mergedLvls, htf_levels, liquidations, atr) 
       ctx.fillText(`${liq.label} LIQ  ${liq.price}`, 8, y - 5);
     });
 
+    // ── Volume Profile right-side histogram (2026-05-30) ─────────────────────
+    _drawVolumeProfile(ctx, series, w, h);
+
     requestAnimationFrame(draw);
   }
   requestAnimationFrame(draw);
+}
+
+// ── 2026-05-30: VWAP / Supertrend / Volume Profile overlays ─────────────────
+async function _loadOverlays(symbol, tf, series) {
+  // Reset previous overlay state
+  _vwapLines.forEach(s => { try { _chart.removeSeries(s); } catch(e){} });
+  _vwapLines = [];
+  if (_stLine) { try { _chart.removeSeries(_stLine); } catch(e){} _stLine = null; }
+  _vpData = null;
+
+  // Fetch all three in parallel — each fail-soft, missing one doesn't break the others
+  const [vwapRes, vpRes, stRes] = await Promise.allSettled([
+    fetch(`/api/chart/vwap/${symbol}?timeframe=${tf}&limit=200`).then(r => r.json()),
+    fetch(`/api/chart/volume_profile/${symbol}?timeframe=${tf}&limit=200`).then(r => r.json()),
+    fetch(`/api/chart/supertrend/${symbol}?timeframe=${tf}&limit=200`).then(r => r.json()),
+  ]);
+
+  // ── VWAP: 5 lines (vwap thick, ±1σ medium, ±2σ thin) ──────────────────────
+  if (vwapRes.status === 'fulfilled' && vwapRes.value?.ok) {
+    const seriesData = vwapRes.value.data?.series || [];
+    if (seriesData.length > 0) {
+      const styles = [
+        { key: 'vwap',    color: 'rgba(186,104,200,0.95)', w: 2, dash: 0 },
+        { key: 'upper_1', color: 'rgba(186,104,200,0.55)', w: 1, dash: 2 },
+        { key: 'lower_1', color: 'rgba(186,104,200,0.55)', w: 1, dash: 2 },
+        { key: 'upper_2', color: 'rgba(186,104,200,0.30)', w: 1, dash: 1 },
+        { key: 'lower_2', color: 'rgba(186,104,200,0.30)', w: 1, dash: 1 },
+      ];
+      styles.forEach(({ key, color, w, dash }) => {
+        const s = _chart.addLineSeries({
+          color, lineWidth: w, lineStyle: dash,
+          priceLineVisible: false, lastValueVisible: false,
+          visible: _layers.vwap,
+        });
+        s.setData(seriesData.map(p => ({ time: p.time, value: p[key] })));
+        _vwapLines.push(s);
+      });
+    }
+  }
+
+  // ── Supertrend: 1 line, color = direction ────────────────────────────────
+  if (stRes.status === 'fulfilled' && stRes.value?.ok) {
+    const stSeries = stRes.value.data?.series || [];
+    if (stSeries.length > 0) {
+      // LightweightCharts requires consistent color per series; we color
+      // by the most-recent direction (the meaningful state for entries).
+      const finalDir = stSeries[stSeries.length - 1]?.direction || 0;
+      const color = finalDir > 0
+        ? 'rgba(38,217,107,0.90)'    // green for uptrend
+        : 'rgba(239,83,80,0.90)';    // red for downtrend
+      _stLine = _chart.addLineSeries({
+        color, lineWidth: 2, lineStyle: 0,
+        priceLineVisible: false, lastValueVisible: false,
+        visible: _layers.st,
+      });
+      _stLine.setData(stSeries.map(p => ({ time: p.time, value: p.value })));
+    }
+  }
+
+  // ── Volume Profile: cache for canvas overlay draw loop ──────────────────
+  if (vpRes.status === 'fulfilled' && vpRes.value?.ok) {
+    _vpData = vpRes.value.data || null;
+  }
+}
+
+// Draws Volume Profile right-side histogram onto an existing canvas context.
+// Bars grow leftward from the right edge of the chart area; bin width is
+// scaled to volume_pct. POC bar gets a brighter color; VAH/VAL boundaries
+// are drawn as thin horizontal lines.
+function _drawVolumeProfile(ctx, series, w, h) {
+  if (!_layers.vp || !_vpData || !_vpData.bins_data) return;
+  const bins   = _vpData.bins_data;
+  const maxBin = Math.max(...bins.map(b => b.volume));
+  if (maxBin <= 0) return;
+
+  const histWidth = 110;                  // px reserved for histogram
+  const chartW    = w - 65;               // existing convention
+  const histRight = chartW;
+  const histLeft  = histRight - histWidth;
+
+  // ── Each bin as a horizontal bar ──────────────────────────────────────────
+  bins.forEach(b => {
+    const yT = series.priceToCoordinate(b.price_high);
+    const yB = series.priceToCoordinate(b.price_low);
+    if (yT === null || yB === null) return;
+    const bw = (b.volume / maxBin) * histWidth;
+    const top = Math.min(yT, yB);
+    const ht  = Math.max(Math.abs(yB - yT) - 1, 1);
+    const isPoc = Math.abs((b.price_low + b.price_high) / 2 - _vpData.poc) <
+                   ((b.price_high - b.price_low) / 2 + 1e-9);
+    ctx.fillStyle = isPoc
+      ? 'rgba(255,193,60,0.80)'   // POC: amber, brighter
+      : 'rgba(123,158,255,0.40)'; // other bins: blue-purple, dim
+    ctx.fillRect(histRight - bw, top, bw, ht);
+  });
+
+  // ── VAH / VAL horizontal lines across the chart ─────────────────────────
+  ['vah', 'val'].forEach(k => {
+    const y = series.priceToCoordinate(_vpData[k]);
+    if (y === null) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,193,60,0.55)';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(chartW, y);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,193,60,0.85)';
+    ctx.font      = 'bold 10px "Segoe UI",sans-serif';
+    ctx.fillText(k.toUpperCase() + ' ' + _fmtP(_vpData[k]), histLeft - 80, y - 3);
+  });
+
+  // ── POC label ───────────────────────────────────────────────────────────
+  const yPoc = series.priceToCoordinate(_vpData.poc);
+  if (yPoc !== null) {
+    ctx.fillStyle = 'rgba(255,213,60,0.95)';
+    ctx.font      = 'bold 11px "Segoe UI",sans-serif';
+    ctx.fillText('POC ' + _fmtP(_vpData.poc), histLeft - 80, yPoc + 4);
+  }
 }
 
 // ── TF buttons ────────────────────────────────────────────────────────────────
@@ -367,7 +505,10 @@ async function loadChart() {
   document.getElementById('status').style.display = 'flex';
   document.getElementById('sr-legend').innerHTML  = '';
   _volSeries = null; _tlSeries = []; _srLines = []; _fibLines = [];
-  _layers = { vol: true, wt: true, sr: true, tl: true, fib: true, legend: true };
+  _vwapLines = []; _stLine = null; _vpData = null;
+  _layers = { vol: true,  wt: true,  legend: true,
+              vwap: true, st: true,
+              sr: false,  tl: false, fib: false, vp: false };
   if (_chart)   { _chart.remove();   _chart   = null; }
   if (_wtChart) { _wtChart.remove(); _wtChart = null; }
   const old = wrap.querySelector('.sr-canvas');
@@ -432,16 +573,21 @@ async function loadChart() {
     color: c.close >= c.open ? 'rgba(38,217,107,0.30)' : 'rgba(239,83,80,0.30)',
   })));
 
+  // Skip priceLine labels for levels >10% away from current price — keeps the
+  // axis readable. Levels still render as canvas zones via _startOverlay.
+  const _farFromPrice = (p) =>
+    current_price && Math.abs(p - current_price) / current_price > 0.10;
+
   // Axis labels for S/R — stored for toggle
   mergedLevels.forEach(lvl => {
+    if (_farFromPrice(lvl.price)) return;
     const isS  = lvl.type === 'support';
     const col  = isS ? 'rgba(38,217,107,0.20)' : 'rgba(239,83,80,0.20)';
     const axisCol = isS ? 'rgba(38,217,107,0.30)' : 'rgba(239,83,80,0.30)';
-    const conf = lvl.isConfluence ? ` ×${lvl.count}` : '';
     const pl = series.createPriceLine({
       price: lvl.price, lineWidth: 1, lineStyle: 0, color: col,
       axisLabelVisible: true, axisLabelColor: axisCol,
-      title: `${isS ? 'S' : 'R'} ${_fmtP(lvl.price)} ×${lvl.touches}${conf}`,
+      title: `${isS ? 'S' : 'R'} ${_fmtP(lvl.price)}`,
     });
     pl.__col = col;
     _srLines.push(pl);
@@ -559,10 +705,11 @@ async function loadChart() {
                : 1;
       const ls = _LS[fib.dash] != null ? _LS[fib.dash]
                : (fib.extension ? _LS.dashed : _LS.dotted);
+      if (_farFromPrice(fib.price)) return;
       const pl = series.createPriceLine({
         price: fib.price, lineWidth: lw, lineStyle: ls,
         color: col, axisLabelVisible: true,
-        title: `Fib ${fib.label}`,
+        title: `${fib.label}`,
       });
       pl.__col = col;
       _fibLines.push(pl);
@@ -571,9 +718,10 @@ async function loadChart() {
 
   // Weekly S/R axis labels — stored with S/R lines for toggle
   (htf_levels || []).forEach(lvl => {
+    if (_farFromPrice(lvl.price)) return;
     const isS = lvl.type === 'support';
     const col = 'rgba(255,193,60,0.3)';
-    const pl = series.createPriceLine({ price: lvl.price, lineWidth: 1, lineStyle: 0, color: col, axisLabelVisible: true, title: `1W ${isS ? 'S' : 'R'} ${lvl.touches}×` });
+    const pl = series.createPriceLine({ price: lvl.price, lineWidth: 1, lineStyle: 0, color: col, axisLabelVisible: true, title: `1W ${isS ? 'S' : 'R'}` });
     pl.__col = col;
     _srLines.push(pl);
   });
@@ -581,8 +729,12 @@ async function loadChart() {
   // VMC Cipher B — WaveTrend oscillator pane
   _buildWtPane(document.getElementById('wt-wrap'), wavetrend || [], _chart);
 
-  // Start canvas overlay (S/R boxes + liquidation lines)
-  _startOverlay(wrap, series, mergedLevels, htf_levels, _liquidations, _atr);
+  // Start canvas overlay (S/R boxes + liquidation lines + VP histogram)
+  _startOverlay(wrap, series, mergedLevels, htf_levels, _liquidations, _atr, current_price);
+
+  // 2026-05-30: fetch + draw VWAP / Supertrend / Volume Profile overlays.
+  // Non-blocking, fail-soft — main chart already rendered above.
+  _loadOverlays(symbol, tf, series).catch(e => console.warn('overlays:', e));
 
   // ── Legend ──────────────────────────────────────────────────────────────────
   const leg   = document.getElementById('sr-legend');

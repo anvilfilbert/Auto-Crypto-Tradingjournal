@@ -172,12 +172,18 @@ def send_text(prompt: str, system: str = None,
     }
     payload = json.dumps(body).encode()
 
-    candidates = [model] if model else list(_CASCADE)
-    for mdl in candidates:
-        if not mdl:
-            continue
-        if not model and _COOLDOWN.get(mdl, 0) > time.time():
-            continue
+    # BUG-015 fix (2026-05-27): two-pass cascade — first try all available
+    # models; if all are in cooldown, sleep for the soonest cooldown to
+    # expire, then retry that one model. Previously the scanner Stage 3a
+    # would fire 30 calls in 5s, exhaust all cooldowns, and every subsequent
+    # call returned None for the next ~60s — scanner produced 0 setups.
+    # With this wait-and-retry, callers naturally throttle to the rate
+    # limit instead of failing fast.
+    def _try_model_once(mdl: str) -> tuple[str | None, bool, int | None]:
+        """
+        Returns (text_or_None, cooldown_set, retry_seconds_or_None).
+        cooldown_set=True means the call set a 429/503 cooldown.
+        """
         url = f"{GEMINI_BASE}/{mdl}:generateContent?key={GEMINI_API_KEY}"
         req = urllib.request.Request(url, data=payload)
         req.add_header("Content-Type", "application/json")
@@ -189,23 +195,60 @@ def send_text(prompt: str, system: str = None,
             if not parts:
                 finish = cand.get("finishReason", "?")
                 print(f"[Gemini fallback] Empty response on {mdl} (finishReason={finish})", flush=True)
-                continue  # try next model — empty parts likely thinking-exhaustion
-            return parts[0].get("text")
+                return None, False, None
+            return parts[0].get("text"), False, None
         except urllib.error.HTTPError as exc:
             if exc.code in (429, 503):
                 retry = _parse_retry_seconds(exc) or (60 if exc.code == 429 else 15)
                 _mark_cooldown(mdl, retry)
-                print(f"[Gemini fallback] {exc.code} on {mdl} — cooldown {retry}s, trying next model", flush=True)
-                continue
+                print(f"[Gemini fallback] {exc.code} on {mdl} — cooldown {retry}s", flush=True)
+                return None, True, retry
             print(f"[Gemini fallback] HTTP error ({mdl}): {exc}", flush=True)
-            return None
+            return None, False, None
         except (urllib.error.URLError, KeyError, IndexError, json.JSONDecodeError) as exc:
             print(f"[Gemini fallback] {type(exc).__name__} ({mdl}): {exc}", flush=True)
-            return None
+            return None, False, None
         except Exception as exc:
             print(f"[Gemini fallback] Unexpected error ({mdl}): {exc}", flush=True)
-            return None
-    print("[Gemini fallback] All cascade models exhausted (cooldown)", flush=True)
+            return None, False, None
+
+    candidates = [model] if model else list(_CASCADE)
+
+    # First pass — try models that are NOT currently in cooldown
+    for mdl in candidates:
+        if not mdl:
+            continue
+        if not model and _COOLDOWN.get(mdl, 0) > time.time():
+            continue
+        text, _cd, _r = _try_model_once(mdl)
+        if text is not None:
+            return text
+
+    # Second pass — all models were either in cooldown or just got rate-limited.
+    # Wait for the soonest cooldown to expire, then retry that model once.
+    # Caps the wait at 65s to keep scanner timeouts reasonable.
+    now = time.time()
+    pending = [(mdl, _COOLDOWN.get(mdl, 0)) for mdl in candidates
+               if mdl and _COOLDOWN.get(mdl, 0) > now]
+    if pending:
+        soonest_mdl, soonest_t = min(pending, key=lambda x: x[1])
+        wait = min(65.0, max(0.5, soonest_t - now + 0.5))
+        print(f"[Gemini fallback] All cooldowns active — sleeping {wait:.1f}s "
+              f"for {soonest_mdl} then retrying", flush=True)
+        time.sleep(wait)
+        text, _cd, _r = _try_model_once(soonest_mdl)
+        if text is not None:
+            return text
+        # Soonest model still failed — try other available models one more time
+        for mdl in candidates:
+            if not mdl or mdl == soonest_mdl:
+                continue
+            if not model and _COOLDOWN.get(mdl, 0) > time.time():
+                continue
+            text, _cd, _r = _try_model_once(mdl)
+            if text is not None:
+                return text
+    print("[Gemini fallback] All cascade models exhausted after retry", flush=True)
     return None
 
 

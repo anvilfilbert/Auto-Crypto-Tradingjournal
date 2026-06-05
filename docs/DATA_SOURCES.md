@@ -216,3 +216,16 @@ already in production.
 | Mempool | 5 min cache | rarely actionable short-term |
 | CoinMetrics on-chain | 1 hour cache | daily-resolution data |
 | ccxt candles | request-time (chart_candles 5 min internal cache) | per-page freshness |
+
+---
+
+## Layer 5 — Microstructure (added 2026-05-31)
+
+| Source | Provider | Data | Auth | Cache / cadence |
+|---|---|---|---|---|
+| Binance @aggTrades | Binance Futures REST `/fapi/v1/aggTrades` | last 60 min of trades (1000-trade window) | none | snapshot every 5 min for top-20 watchlist symbols → `vpin_snapshot` table |
+| Cascade fusion | derived: VPIN + funding spread + OI history | risk ∈ [0,1] with side-at-risk tag | n/a | on-demand at pre-order veto check |
+
+VPIN (Easley/Lopez de Prado/O'Hara 2012) tags each trade buy/sell-initiated via the Lee-Ready tick rule, accumulates into volume buckets sized to give ~50 buckets in the window, and reports `mean(|buy_vol − sell_vol| / V)` over the last 50 buckets. A reading ≥ 0.70 historically precedes liquidation cascades and is used as a hard veto in `signal_consensus.evaluate`.
+
+See [`SELF_LEARNING.md`](SELF_LEARNING.md) for the full data flow into A-E Cascade Predictor.

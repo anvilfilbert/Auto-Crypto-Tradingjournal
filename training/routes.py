@@ -3,6 +3,7 @@
 All routes are registered on `bp` (imported here from blueprint.py).
 """
 import json
+import re
 from pathlib import Path
 import yaml
 from flask import current_app, render_template, request, jsonify, abort
@@ -19,22 +20,42 @@ def _db_path() -> Path:
     return Path(current_app.config["TRAINING_DB_PATH"])
 
 
+_SAFE_SLUG_RE = re.compile(r"\A[A-Za-z0-9_-]{1,64}\Z")
+
+
 def _content_dir() -> Path:
     return Path(__file__).parent / "content"
 
 
-def _load_lesson_content(slug: str) -> dict:
-    path = _content_dir() / "lessons" / f"{slug}.json"
-    if not path.exists():
+def _find_content_file(subdir: str, name: str, suffix: str):
+    # Path-injection-safe lookup: enumerate the trusted content directory
+    # and match by stem + suffix. The user-supplied `name` is only ever used
+    # in a string equality check, never in filesystem path construction,
+    # so a malicious `../etc/passwd` cannot escape — there is no path
+    # arithmetic that could be subverted.
+    if not _SAFE_SLUG_RE.fullmatch(name or ""):
         return None
-    return json.loads(path.read_text())
+    subdir_path = _content_dir() / subdir
+    if not subdir_path.is_dir():
+        return None
+    for entry in subdir_path.iterdir():
+        if entry.is_file() and entry.suffix == suffix and entry.stem == name:
+            return entry
+    return None
+
+
+def _load_lesson_content(slug: str) -> dict:
+    entry = _find_content_file("lessons", slug, ".json")
+    if entry is None:
+        return None
+    return json.loads(entry.read_text())
 
 
 def _load_quiz(quiz_id: str) -> dict:
-    path = _content_dir() / "quizzes" / f"{quiz_id}.yaml"
-    if not path.exists():
+    entry = _find_content_file("quizzes", quiz_id, ".yaml")
+    if entry is None:
         return None
-    return yaml.safe_load(path.read_text())
+    return yaml.safe_load(entry.read_text())
 
 
 # ── Views ───────────────────────────────────────────────────────────────────
@@ -68,6 +89,7 @@ def path_view():
     passed = sum(1 for l in lessons if l["status"] == "passed")
     return render_template("path.html", tiers=tiers, tier_meta=tier_meta,
                            total=total, passed=passed,
+                           lessons_total=len(lessons),
                            unlock_mode=unlock_mode)
 
 

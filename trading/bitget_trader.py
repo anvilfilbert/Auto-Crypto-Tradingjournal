@@ -239,10 +239,21 @@ def get_open_positions() -> list:
                               if p["symbol"] == sym
                               and p["direction"] == direction
                               and p["plan_type"] == "loss_plan"), None)
-            tp_plan   = next((p for p in plans
-                              if p["symbol"] == sym
-                              and p["direction"] == direction
-                              and p["plan_type"] == "profit_plan"), None)
+            tp_plans  = [p for p in plans
+                         if p["symbol"] == sym
+                         and p["direction"] == direction
+                         and p["plan_type"] == "profit_plan"]
+            # BUG-013 fix (2026-05-27): include the FULL list of pending TP
+            # trigger prices, not just the first one. The Phase-2 TP-fill
+            # detector (`executor._detect_tp_fills`) reads `live.tp_levels`
+            # to compare against the originally-placed ladder — without this
+            # field it sees an empty list, then marks EVERY tier as "filled"
+            # (because no DB price is found in the empty set). That cascaded
+            # into the BE-move → SL-orphan loop observed on AZTEC/INJ/TIA.
+            tp_levels = [{"price": p["trigger_price"], "size": p.get("size")}
+                         for p in tp_plans]
+            sl_price  = sl_plan["trigger_price"] if sl_plan else None
+            tp1_price = tp_plans[0]["trigger_price"] if tp_plans else None
             out.append({
                 "symbol":         sym,
                 "direction":      direction,
@@ -252,8 +263,22 @@ def get_open_positions() -> list:
                 "notional_usdt":  total * mark if mark else 0,
                 "leverage":       int(float(r.get("leverage") or 1)),
                 "unrealized_pnl": float(r.get("unrealizedPL") or 0),
-                "preset_sl":      sl_plan["trigger_price"] if sl_plan else None,
-                "preset_tp":      tp_plan["trigger_price"] if tp_plan else None,
+                # Realised P&L on partial-close fills so far. Bitget
+                # exposes it as `achievedProfits` (camelCase) on the
+                # position record; surfacing it lets the open-positions
+                # table show booked TP1 partials live.
+                "achieved_profits": float(r.get("achievedProfits") or 0),
+                # Two field-name styles for SL/TP — the Bitget-flavoured
+                # `preset_*` (matches main-account client) and the short
+                # `sl`/`tp1` aliases that downstream consumers expect.
+                # Without the aliases, `p.get("sl")` always returned None
+                # even when the plan-order was live on Bitget (2026-05-29
+                # diagnostic, repeated in `restore_orphan_sls.py`).
+                "preset_sl":      sl_price,
+                "preset_tp":      tp1_price,
+                "sl":             sl_price,
+                "tp1":            tp1_price,
+                "tp_levels":      tp_levels,   # BUG-013 fix
                 "liquidation":    float(r.get("liquidationPrice") or 0) or None,
                 "break_even":     float(r.get("breakEvenPrice") or 0) or None,
             })
@@ -512,12 +537,23 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
     # stopLoss and takeProfit came back empty even though we passed them.
     # Fix: attach SL/TP as SEPARATE plan orders via place-tpsl-order
     # immediately after the entry fills.
+    #
+    # 2026-05-27 — SL ordering + verify-and-retry (BUG-011 workaround):
+    # AZTECUSDT position 132 opened with attached_sl=true but NO actual
+    # loss_plan on Bitget. _try_place_tpsl returned True (Bitget echoed an
+    # orderId) but the order never persisted. Hypothesis: Bitget V2 has a
+    # brief settling window after a market fill — SL placed inside that
+    # window gets ack'd but silently dropped. TPs placed ~50ms later
+    # consistently succeed because state has caught up.
+    # Fix has two layers:
+    #   (1) place SL AFTER all TPs so Bitget state is settled
+    #   (2) verify the SL appears in pending plans; retry once on miss
+    # Layer (2) is a workaround for the underlying race; layer (1) reduces
+    # how often the race triggers. The deeper root cause needs a controlled
+    # experiment — see project_review_2026_05_28.md.
     attached_sl  = False
     attached_tp1 = False
     tp_attach_results: list = []   # [{idx, price, pct, size, ok}] per tier
-    if sl_price:
-        attached_sl = _try_place_tpsl(symbol, side, sl_price,
-                                       size_contracts, plan_type="loss_plan")
 
     # ── Multi-TP plan-order placement (Phase 2) ────────────────────────────
     # When tp_levels is provided (list of {idx, price, pct, ...}), place ONE
@@ -569,6 +605,19 @@ def place_market_order(symbol: str, side: str, size_usdt: float,
         # Legacy single-TP path — preserved for backward compat
         attached_tp1 = _try_place_tpsl(symbol, side, tp1_price,
                                         size_contracts, plan_type="profit_plan")
+
+    # ── SL placement (AFTER TPs, with verify+retry — BUG-011 workaround) ───
+    # Place SL after the TP burst so Bitget's position-state settling window
+    # is past. Then verify the SL actually persists; retry once on miss.
+    if sl_price:
+        attached_sl = _place_sl_with_verify(symbol, side, sl_price,
+                                             size_contracts)
+        if not attached_sl:
+            _log.warning(
+                "[bitget_trader] SL failed to persist on %s @ %s after retry — "
+                "position is OPEN WITHOUT STOP-LOSS. Operator must place manually.",
+                symbol, sl_price
+            )
 
     # Query the actual leverage Bitget recorded on the position so the
     # caller knows whether set-leverage worked or fell back. Best-effort
@@ -643,6 +692,75 @@ def _try_place_tpsl(symbol: str, side: str, trigger_price: float,
             plan_type, symbol, trigger_price, str(e)[:200]
         )
         return False
+
+
+def _place_sl_with_verify(symbol: str, side: str, sl_price: float,
+                            size_contracts: float,
+                            max_retries: int = 2,
+                            settle_delay_sec: float = 0.6,
+                            extended_wait_sec: float = 2.0) -> bool:
+    """
+    Place a stop-loss plan order and verify it actually persisted on Bitget.
+
+    BUG-011 (AZTECUSDT pos 132, 2026-05-27): /place-tpsl-order returned a
+    successful orderId but the SL never appeared in pending-plan listings.
+    Hypothesis: Bitget V2 has a brief window after a market fill where SL
+    placements are ack'd but silently dropped. TPs that fire ~50ms later
+    succeed because position state has caught up by then.
+
+    Hardening 2026-05-30:
+      - max_retries bumped 1→2 (up to 3 placement attempts)
+      - two-phase verify: 0.6s quick check, then another 2.0s wait if missing
+        before declaring silent-drop. Eliminates false-positive retries that
+        were only delayed propagation, not actual drops — those caused
+        duplicate SL plans on Bitget.
+      - exponential backoff between attempts (1× → 2× → 4× of settle delay)
+
+    Returns True only when the loss_plan is verified live on Bitget.
+    """
+    import time, logging
+    _log = logging.getLogger(__name__)
+
+    def _sl_visible():
+        try:
+            plans = get_pending_plan_orders(symbol)
+        except Exception as e:
+            _log.warning("[bitget_trader] SL verify query failed for %s: %s",
+                         symbol, str(e)[:120])
+            return False
+        for p in plans:
+            if (p.get("plan_type") == "loss_plan"
+                and p.get("trigger_price") is not None
+                and abs(float(p["trigger_price"]) - sl_price) / max(sl_price, 1e-9) < 0.001):
+                return True
+        return False
+
+    for attempt in range(max_retries + 1):
+        ok = _try_place_tpsl(symbol, side, sl_price,
+                              size_contracts, plan_type="loss_plan")
+        if not ok:
+            # Bitget refused outright; back off and try again.
+            if attempt < max_retries:
+                time.sleep(settle_delay_sec * (2 ** attempt))
+                continue
+            return False
+        # Quick check (covers normal propagation)
+        time.sleep(settle_delay_sec)
+        if _sl_visible():
+            return True
+        # Extended wait before declaring silent-drop. Eliminates the duplicate-
+        # SL hazard from retrying too eagerly when Bitget's listing was just slow.
+        time.sleep(extended_wait_sec)
+        if _sl_visible():
+            return True
+        if attempt < max_retries:
+            _log.warning(
+                "[bitget_trader] SL ack'd but invisible after %.1fs for %s @ %s "
+                "(attempt %d/%d) — retrying placement",
+                settle_delay_sec + extended_wait_sec,
+                symbol, sl_price, attempt + 1, max_retries + 1,
+            )
+    return False
 
 
 def attach_sl_tp_to_existing(symbol: str, side: str,
@@ -740,28 +858,53 @@ def modify_position_sl(symbol: str, side: str, new_sl_price: float) -> dict:
     except Exception:
         pass
 
+    # BUG-012 fix (2026-05-27): validate new SL is on the correct side of
+    # current mark BEFORE cancelling the existing SL. Without this, a BE
+    # move triggered when TP1 was incorrectly marked hit would cancel the
+    # protective SL and then fail to place the new one (Bitget rejects SL
+    # placed past mark with error 40834), leaving the position completely
+    # unprotected for the next 10 minutes until the monitor retries
+    # (and fails again the same way). Observed today: AZTEC/TIA/INJ all
+    # lost their SLs through this cancel+fail+retry loop.
+    try:
+        mark = get_mark_price(symbol)
+        if mark > 0:
+            is_long = (side == "long")
+            new_sl_invalid = ((is_long and new_sl_price >= mark)
+                              or (not is_long and new_sl_price <= mark))
+            if new_sl_invalid:
+                return {
+                    "ok": False,
+                    "reason": (f"refusing to move SL — new_sl={new_sl_price} "
+                               f"is on wrong side of mark={mark} for {side} "
+                               f"position. Existing SL preserved."),
+                }
+    except Exception:
+        # Mark fetch failed — better to bail than risk a cancel+orphan.
+        return {"ok": False, "reason": "could not fetch mark for SL validation"}
+
     # Find the existing loss_plan for this side
     plans  = get_pending_plan_orders(symbol)
     existing = next((p for p in plans
                      if p["plan_type"] == "loss_plan"
                      and (p.get("direction") or "").lower() == side),
                     None)
+    old_sl_price = float(existing.get("trigger_price") or 0) if existing else 0.0
 
-    # Resolve size — from the existing plan if present, otherwise from
-    # the live position record
-    size = 0.0
-    if existing:
-        size = float(existing.get("size") or 0)
+    # Resolve size from the LIVE position — not from the stale plan order.
+    # BUG fix 2026-05-29: after a TP1 partial close, the old loss_plan still
+    # encodes the pre-TP1 full size. Placing a new SL with that stale size
+    # was rejected by Bitget code 43023 ("Insufficient position") and the
+    # cancel had already succeeded → positions silently orphaned without SL.
+    # Observed on XPL/MMT/TIA/AZTEC/DEXE 2026-05-24..05-29.
+    positions = get_open_positions()
+    match = next((p for p in positions
+                  if p["symbol"] == symbol
+                  and (p.get("direction") or "").lower() == side),
+                 None)
+    size = float(match.get("size_contracts") or 0) if match else 0.0
     if not size:
-        positions = get_open_positions()
-        match = next((p for p in positions
-                      if p["symbol"] == symbol
-                      and (p.get("direction") or "").lower() == side),
-                     None)
-        if match:
-            size = float(match.get("size_contracts") or 0)
-    if not size:
-        return {"ok": False, "reason": f"could not resolve size for {symbol} {side}"}
+        return {"ok": False, "reason": f"could not resolve live size for {symbol} {side}"}
 
     # Cancel the existing loss_plan, if any (best-effort)
     if existing:
@@ -774,17 +917,37 @@ def modify_position_sl(symbol: str, side: str, new_sl_price: float) -> dict:
                 "orderIdList": [{"orderId": existing["order_id"], "clientOid": ""}],
             })
         except TraderAPIError as e:
-            # Non-fatal — keep going; the new place call may still succeed
-            # and Bitget will end up with two SLs (we'll log this)
+            # Cancel failed — don't try to place new (Bitget will reject a
+            # second loss_plan); leave the existing SL in place.
             return {"ok": False, "reason": f"cancel old SL failed: {str(e)[:100]}"}
 
-    # Place a fresh loss_plan at the new price
-    placed = _try_place_tpsl(symbol, side, new_sl_price, size,
-                              plan_type="loss_plan")
-    if not placed:
-        return {"ok": False, "reason": "place new loss_plan failed"}
-    return {"ok": True, "action": "cancel+replace", "new_sl": new_sl_price,
-            "cancelled_old": bool(existing)}
+    # Place the new loss_plan; verify+retry to defeat the BUG-011 race.
+    placed = _place_sl_with_verify(symbol, side, new_sl_price, size)
+    if placed:
+        return {"ok": True, "action": "cancel+replace", "new_sl": new_sl_price,
+                "cancelled_old": bool(existing)}
+
+    # Rollback: new SL failed to place. Re-attach the OLD SL price (best
+    # effort) so the position isn't left orphaned. This protects against
+    # transient Bitget rejections (size mismatch race, tick-snap, etc.).
+    if old_sl_price > 0:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "modify_position_sl: new SL %s failed on %s — rolling back to old SL %s",
+            new_sl_price, symbol, old_sl_price,
+        )
+        try:
+            rb = _snap_price(old_sl_price, spec["price_place"])
+        except Exception:
+            rb = old_sl_price
+        rollback_ok = _place_sl_with_verify(symbol, side, rb, size)
+        return {"ok": False, "reason": "place new loss_plan failed",
+                "rollback_attempted": True,
+                "rollback_ok": bool(rollback_ok),
+                "rolled_back_to": rb if rollback_ok else None}
+
+    return {"ok": False, "reason": "place new loss_plan failed",
+            "rollback_attempted": False}
 
 
 def close_position(symbol: str, side: str,

@@ -33,11 +33,35 @@ Safety:
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from typing import Optional
 
+logger = logging.getLogger(__name__)
+
 from . import config as fa_config
 from . import bitget_trader
+
+
+def _compute_lag_minutes(scan_completed_at) -> Optional[int]:
+    """Time between scan completion and now, in minutes. Returns None when
+    the input is missing/unparseable so the DB column stays NULL.
+    Used to populate positions.execution_lag_minutes for auto_ai trades —
+    feeds the alpha-decay panel in the risk dashboard."""
+    if scan_completed_at is None or scan_completed_at == "":
+        return None
+    try:
+        import time as _t
+        ts = float(scan_completed_at)
+        if ts <= 0:
+            return None
+        delta_min = (_t.time() - ts) / 60.0
+        # Sanity: cap absurd values (e.g. clock skew) at +/- 1 day.
+        if abs(delta_min) > 1440:
+            return None
+        return max(0, int(delta_min))
+    except (TypeError, ValueError):
+        return None
 
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
@@ -92,7 +116,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             chain, setup_type, setup_score, signal_price, tp_levels,
             consensus_model_used, bear_phase_at_open, archetype_at_open,
             po3_total, opus_had_overrides, tp_levels_count,
-            ai_score_at_open, sizing_tier
+            ai_score_at_open, sizing_tier, execution_lag_minutes,
+            sl_price
         ) VALUES (
             ?, ?, ?,
             'isolated', datetime('now'), '',
@@ -104,7 +129,8 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
             'auto_ai', ?, ?, ?, ?,
             ?, ?, ?,
             ?, ?, ?,
-            ?, ?
+            ?, ?, ?,
+            ?
         )
     """, (
         sym,
@@ -132,6 +158,14 @@ def _insert_open_position(conn, signal: dict, sizing: dict,
          else None) or signal.get("ai_score"),
         # Sizing tier (2026-05-26): "full" (Opus≥6) or "half" (Opus=5).
         (sizing.get("sizing_tier") or "full"),
+        # Execution lag in minutes (2026-05-26): time between the scan that
+        # produced this setup and the actual fill. Useful for the risk
+        # dashboard's alpha-decay analysis. Computed at insert time.
+        _compute_lag_minutes(signal.get("_scan_completed_at")),
+        # Initial SL price (migration 67, 2026-05-31) — defines 1R for the
+        # stats-page realized-R computation. Snapshotted once at open and
+        # never updated even if SL is moved (BE / trail) during the trade.
+        signal.get("sl_price"),
     ))
     conn.commit()
     return cur.lastrowid
@@ -326,28 +360,75 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
     except Exception:
         live_mark = 0.0
 
+    # ── Pre-flight viability check (Path 3, 2026-05-26) ─────────────────────
+    # Old gate: "is fill within 2% of planned entry?" — that blocked every
+    # setup where price moved meaningfully (the XAN/TIA pumping-alts pattern).
+    # The right question isn't "did price drift" but "does the trade still
+    # have favorable math at the live price?". Compute R:R using live mark
+    # and the unchanged TP1/SL. If R:R is still ≥ MIN_RR_AT_FILL the trade
+    # is still tradeable at market — allow it. If R:R has flipped against
+    # us (TP1 already passed, or reward < 1× the risk) reject.
+    sl_px_pre  = float(signal.get("sl_price")  or 0)
+    tp1_px_pre = float(signal.get("tp1_price") or 0)
+    inside_zone_pre = False
+    if zone_low_pre > 0 and zone_high_pre > 0 and live_mark > 0:
+        zone_mid_pre = (zone_low_pre + zone_high_pre) / 2.0
+        pad_pre = zone_mid_pre * 0.0025
+        inside_zone_pre = (zone_low_pre - pad_pre) <= live_mark <= (zone_high_pre + pad_pre)
+
     if live_mark > 0 and intended_entry_pre > 0:
         drift_pre = abs(live_mark - intended_entry_pre) / intended_entry_pre
-        inside_zone_pre = False
-        if zone_low_pre > 0 and zone_high_pre > 0:
-            zone_mid_pre = (zone_low_pre + zone_high_pre) / 2.0
-            pad_pre = zone_mid_pre * 0.0025
-            inside_zone_pre = (zone_low_pre - pad_pre) <= live_mark <= (zone_high_pre + pad_pre)
 
-        if (drift_pre > fa_config.MAX_ENTRY_DRIFT_PCT and not inside_zone_pre
-                and fa_config.MAX_ENTRY_DRIFT_PCT > 0):
-            _log(conn, "rejected_drift_pre_order", None, {
-                "symbol":         sym,
-                "direction":      dir_,
-                "intended_entry": intended_entry_pre,
-                "live_mark":      live_mark,
-                "drift_pct":      round(drift_pre * 100, 3),
-                "tolerance_pct":  fa_config.MAX_ENTRY_DRIFT_PCT * 100,
-                "zone_low":       zone_low_pre or None,
-                "zone_high":      zone_high_pre or None,
-                "reason":         "entry premise stale before order — price moved too far from planned entry",
+        # If fill is INSIDE the scanner's entry_zone OR within tolerance,
+        # the original analysis still holds → skip the R:R check entirely.
+        if inside_zone_pre or drift_pre <= fa_config.MAX_ENTRY_DRIFT_PCT:
+            pass  # original behaviour — allow trade
+
+        else:
+            # Outside zone AND outside tolerance — compute R:R at live mark.
+            # MIN_RR_AT_FILL: minimum reward/risk ratio for a "rescued" entry
+            # to still be worth taking. Default 1.5 (reward must be ≥1.5× the
+            # risk). Env-tunable via FUTURES_AI_MIN_RR_AT_FILL.
+            import os as _os
+            MIN_RR_AT_FILL = float(_os.environ.get("FUTURES_AI_MIN_RR_AT_FILL", "1.5"))
+            is_long = dir_.lower() == "long"
+            if is_long:
+                reward = tp1_px_pre - live_mark
+                risk   = live_mark - sl_px_pre
+            else:  # Short
+                reward = live_mark - tp1_px_pre
+                risk   = sl_px_pre - live_mark
+
+            new_rr = (reward / risk) if (reward > 0 and risk > 0) else None
+            viable_at_live = (new_rr is not None and new_rr >= MIN_RR_AT_FILL)
+
+            if not viable_at_live:
+                # Either TP1 already passed (reward ≤ 0) or SL already passed
+                # (risk ≤ 0) or new R:R < threshold. The trade premise died.
+                _log(conn, "rejected_drift_pre_order", None, {
+                    "symbol":         sym,
+                    "direction":      dir_,
+                    "intended_entry": intended_entry_pre,
+                    "live_mark":      live_mark,
+                    "drift_pct":      round(drift_pre * 100, 3),
+                    "sl_price":       sl_px_pre,
+                    "tp1_price":      tp1_px_pre,
+                    "new_rr":         round(new_rr, 2) if new_rr is not None else None,
+                    "min_rr_required": MIN_RR_AT_FILL,
+                    "zone_low":       zone_low_pre or None,
+                    "zone_high":      zone_high_pre or None,
+                    "reason":         "R:R math no longer favourable at live mark — TP1 passed or reward < 1.5× risk",
+                })
+                return None
+            # Otherwise: drift is large but R:R still works → allow trade
+            # at market. Log this for visibility — it's a "rescued" entry.
+            _log(conn, "drift_allowed_rr_viable", None, {
+                "symbol":   sym, "direction": dir_,
+                "drift_pct": round(drift_pre * 100, 3),
+                "new_rr":    round(new_rr, 2),
+                "live_mark": live_mark, "intended_entry": intended_entry_pre,
+                "reason": "drift > tolerance but R:R still ≥ 1.5 — trade still viable",
             })
-            return None
 
     try:
         client_oid = f"fa-{uuid.uuid4().hex[:16]}"
@@ -440,6 +521,23 @@ def open_real_trade(conn, signal: dict, sizing: dict) -> Optional[int]:
         return None
 
     pos_id = _insert_open_position(conn, signal, sizing, result)
+
+    # A-D (Master plan Week 11) — record slippage on every fill so the
+    # Execution Quality Monitor can spot deteriorating fills before they
+    # erode the edge.
+    try:
+        from trading import exec_quality
+        actual_fill = float(result.get("mark_at_entry") or 0)
+        if intended_entry and actual_fill:
+            exec_quality.record_slippage(
+                conn, pos_id,
+                intended_entry=intended_entry,
+                actual_entry=actual_fill,
+                direction=dir_,
+            )
+    except Exception as _eq_err:
+        logger.debug("A-D slippage record failed for pos %s: %s", pos_id, _eq_err)
+
     _log(conn, "real_open", pos_id, {
         "symbol":         sym,
         "direction":      dir_,
@@ -609,10 +707,23 @@ def _detect_tp_fills(conn, db_pos: dict, live: dict) -> list[dict]:
         # the existing /position-history path handles their close.
         return []
 
-    # Build a set of currently-pending TP prices (snapped to micro-precision
-    # so tick-rounding differences don't cause a false-positive "fill").
+    # BUG-014 fix (2026-05-27): use a TOLERANCE-based match between DB and
+    # live TP prices. Exact rounding to 6 decimals caused a false-positive
+    # on INJUSDT: DB tier prices were stored at 4 decimals (5.9157, 6.1724,
+    # 6.4291) but Bitget snapped them to its 3-decimal tick grid (5.916,
+    # 6.172, 6.429). Exact comparison treated all 3 as "not in pending"
+    # and marked them hit. AZTEC + TIA happened to have matching precision
+    # so they weren't affected. Tolerance-match (0.05%) covers any normal
+    # tick-rounding difference while still detecting real fills (which
+    # always move price by orders of magnitude more).
     live_tps = live.get("tp_levels") or []
-    pending_prices = {round(float(t.get("price") or 0), 6) for t in live_tps}
+    live_prices = [float(t.get("price") or 0) for t in live_tps if t.get("price")]
+
+    def _has_pending_match(target: float) -> bool:
+        """True if any live TP price is within 0.05% of target."""
+        if target <= 0:
+            return False
+        return any(abs(lp - target) / target < 0.0005 for lp in live_prices)
 
     newly_filled: list[dict] = []
     for tp in db_tps:
@@ -627,10 +738,10 @@ def _detect_tp_fills(conn, db_pos: dict, live: dict) -> list[dict]:
         if not tp.get("attached"):
             continue
         try:
-            price_key = round(float(tp.get("price") or 0), 6)
+            target_price = float(tp.get("price") or 0)
         except (TypeError, ValueError):
             continue
-        if price_key and price_key not in pending_prices:
+        if target_price and not _has_pending_match(target_price):
             tp["hit"]    = True
             tp["hit_at"] = _utc_iso_now()
             newly_filled.append(tp)
@@ -808,7 +919,21 @@ def _apply_lifecycle_rules(conn, db_pos: dict, live: dict) -> list[str]:
             bitget_trader.close_position(live["symbol"],
                                           live["direction"].lower(),
                                           percentage=100.0)
-            _mark_closed(conn, db_pos["id"], mark, realized_pnl=0.0,
+            # Compute gross realized P&L from price diff × size × direction.
+            # Fees (~0.12% round-trip) are NOT subtracted here — the next
+            # reconcile cycle pulls the fee-adjusted net from Bitget's
+            # position history and overwrites. But this gross approximation
+            # is right to within ~1% and ends the "$0 reported for every
+            # MAE_cut close" bug.
+            # BUG 2026-05-31: get_open_positions() normalises the field as
+            # `size_contracts`, NOT `total`. Reading the wrong key gave 0
+            # and produced gross_pnl=0 — every MAE_cut close logged as $0
+            # P&L (MMT, GRASS, etc.). Fall through both names for safety.
+            size = float(live.get("size_contracts")
+                          or live.get("total")
+                          or 0)
+            gross_pnl = (mark - entry) * size * sign
+            _mark_closed(conn, db_pos["id"], mark, realized_pnl=gross_pnl,
                           reason="MAE breach auto-cut")
             actions.append("mae_cut")
         except Exception as e:

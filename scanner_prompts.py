@@ -9,23 +9,105 @@ Provides:
 - _quick_score(): Haiku pass-1 cheap pre-filter.
 """
 
+import hashlib
 import json
 import logging
+import time as _time
 
 from prompt_fragments import SCORING_SCALE, LEVEL_PROXIMITY_RULES, MARKET_CONTEXT_RULES, DRAW_ON_LIQUIDITY_RULES
-from constants import MODEL, FAST_MODEL, SCANNER_MIN_SCORE, PROMPT_CACHE_MIN_CHARS
+from constants import FAST_MODEL, SCANNER_MIN_SCORE
 from ai_client import send as ai_send
 from helpers import strip_fence, build_cached_messages
 from scanner_criteria import CRITERIA_DEFAULTS, _disabled_criteria_block
 
 logger = logging.getLogger(__name__)
 
+# ── scanner_quick result cache (#1 cost optimisation) ───────────────────────
+# Scanner runs every 30 min but 4H candles only close every 4h → 87% of
+# consecutive scans have IDENTICAL OHLCV data for each symbol, so the Haiku
+# quick-score returns the same answer. Hash the deterministic inputs (candle
+# prompt_text + macro context + symbol/direction/threshold), cache the parsed
+# return value with a TTL just under the scanner cadence. Only successful
+# Haiku returns are cached — exceptions skip the cache so the next call
+# retries. Negative results (score < threshold) ARE cached: those are the
+# majority of the volume and the biggest single source of waste.
+_QUICK_SCORE_CACHE: dict[str, tuple[float, dict | None]] = {}
+_QUICK_SCORE_CACHE_TTL = 28 * 60       # 28 min — fires just before next scan
+_QUICK_SCORE_CACHE_MAX = 6000          # LRU evict at 6k entries (~12h watchlist × 4 dirs)
+_QUICK_SCORE_STATS = {"hits": 0, "misses": 0, "writes": 0, "evictions": 0}
+
+
+def _quick_score_cache_key(symbol: str, direction: str,
+                            pt_1d: str, pt_4h: str, pt_1h: str,
+                            min_score: int) -> str:
+    """Deterministic SHA-256 of the inputs that materially determine the
+    Haiku output.
+
+    Intentionally OMITS mkt_str (macro context — VIX/F&G/BTC.D). Those
+    values refresh every ~5 min while scans run every 30 min, so including
+    them in the cache key guaranteed 0% hit rate (every key was effectively
+    unique). The behavioural risk of caching across small macro nudges is
+    negligible: a VIX shift of ±0.3 between two 5-min windows does not
+    meaningfully flip Haiku's "is this setup worth >=6/10?" judgment for
+    the same candle state. The macro CAP (apply_macro_cap) is applied
+    AFTER the Haiku call anyway, so coarse-grained macro regime is still
+    respected — only the in-prompt nudges are cached across.
+    """
+    h = hashlib.sha256()
+    for part in (symbol, direction, str(min_score),
+                  pt_1d or "", pt_4h or "", pt_1h or ""):
+        h.update(part.encode("utf-8", errors="replace"))
+        h.update(b"|")
+    return h.hexdigest()
+
+
+def _quick_score_cache_get(key: str):
+    """Returns (value, hit). value may legitimately be None when a previous
+    call returned None (score below threshold) — that's still a cache hit.
+    """
+    ent = _QUICK_SCORE_CACHE.get(key)
+    if not ent:
+        _QUICK_SCORE_STATS["misses"] += 1
+        return None, False
+    ts, value = ent
+    if _time.time() - ts > _QUICK_SCORE_CACHE_TTL:
+        _QUICK_SCORE_CACHE.pop(key, None)
+        _QUICK_SCORE_STATS["misses"] += 1
+        return None, False
+    _QUICK_SCORE_STATS["hits"] += 1
+    return value, True
+
+
+def _quick_score_cache_set(key: str, value):
+    if len(_QUICK_SCORE_CACHE) >= _QUICK_SCORE_CACHE_MAX:
+        # Cheap-and-correct LRU: drop the oldest entry by timestamp.
+        oldest = min(_QUICK_SCORE_CACHE, key=lambda k: _QUICK_SCORE_CACHE[k][0])
+        _QUICK_SCORE_CACHE.pop(oldest, None)
+        _QUICK_SCORE_STATS["evictions"] += 1
+    _QUICK_SCORE_CACHE[key] = (_time.time(), value)
+    _QUICK_SCORE_STATS["writes"] += 1
+
+
+def quick_score_cache_stats() -> dict:
+    """Snapshot for monitoring / UI surfaces."""
+    total = _QUICK_SCORE_STATS["hits"] + _QUICK_SCORE_STATS["misses"]
+    hit_rate = (_QUICK_SCORE_STATS["hits"] / total) if total else 0.0
+    return {
+        "hits":      _QUICK_SCORE_STATS["hits"],
+        "misses":    _QUICK_SCORE_STATS["misses"],
+        "writes":    _QUICK_SCORE_STATS["writes"],
+        "evictions": _QUICK_SCORE_STATS["evictions"],
+        "size":      len(_QUICK_SCORE_CACHE),
+        "ttl_min":   _QUICK_SCORE_CACHE_TTL // 60,
+        "hit_rate":  round(hit_rate, 3),
+    }
+
 
 def _detect_archetype(ctx: dict, direction: str, symbol: str = "") -> str:
     """
     Detect the most likely setup archetype from 4H indicators.
     Returns one of: "breakout" | "reversal" | "continuation" |
-                    "range_bound" | "low_conviction"
+                    "range_bound" | "low_conviction" | "unknown"
 
     Delegates to setup_classifier.classify_rules which uses:
       - multi-signal voting (each archetype gets a 0..N score)
@@ -34,23 +116,26 @@ def _detect_archetype(ctx: dict, direction: str, symbol: str = "") -> str:
       - 5-archetype taxonomy so 'continuation' stops being the
         dump-bucket for everything else
 
-    Falls back to 'continuation' on classifier failure to preserve
-    behaviour for downstream rubric selection.
+    Returns 'unknown' on classifier failure (logged at WARNING) instead of
+    silently defaulting to 'continuation'. The previous default falsely
+    labeled every classifier-failed setup as 'continuation', polluting
+    per-archetype analytics and masking real bugs.
     """
+    if not symbol:
+        return "unknown"
     try:
         from setup_classifier import classify_rules
         import chart_candles as _cc
-        # Try to re-use the candles the ctx fetcher already has. The ctx
-        # dict shape doesn't expose raw candles, so refetch — chart_candles
-        # has its own LRU cache so this is cheap.
-        # Symbol is required for the fetch; callers that don't have one
-        # can pass it explicitly via the new keyword arg.
-        if symbol:
-            df = _cc.get_candles(symbol, "4H", limit=200)
-            return classify_rules(symbol, direction, "", candles_df=df)["archetype"]
-    except Exception:
-        pass
-    return "continuation"
+        # Re-fetch candles via chart_candles' LRU cache — cheap.
+        df = _cc.get_candles(symbol, "4H", limit=200)
+        return classify_rules(symbol, direction, "", candles_df=df)["archetype"]
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(
+            "archetype classification failed for %s %s: %s — defaulting to 'unknown'",
+            symbol, direction, str(e)[:120]
+        )
+        return "unknown"
 
 
 def _archetype_rubric(archetype: str, direction: str, min_score: int) -> str:
@@ -87,24 +172,36 @@ def _archetype_rubric(archetype: str, direction: str, min_score: int) -> str:
         )
 
     # continuation (default)
-    rsi_zone = "45–68" if is_long else "32–55"
+    # RSI bands are mirror-symmetric around 50 (each 20 wide). Was 45-68 Long /
+    # 32-55 Short — shifted toward Long. Fixed 2026-06-01 to remove bias.
+    rsi_zone = "45–65" if is_long else "35–55"
+    pullback_phrase = "pullback to support" if is_long else "rally into resistance"
     return (
         f"SETUP ARCHETYPE — CONTINUATION / TREND FOLLOWING\n"
         f"Primary requirement: EMA stack aligned AND ADX ≥ 18 (trend must exist).\n"
         f"RSI sweet spot: {rsi_zone} — trend momentum WITHOUT exhaustion. RSI outside this range is a warning.\n"
         f"MACD: Aligned and ideally growing histogram = additional conviction.\n"
         f"Volume: Above average confirms institutional participation.\n"
-        f"Score 9-10: EMA stack + ADX ≥ 25 + MACD growing + RSI in sweet spot + volume above avg + clean pullback to S/R.\n"
+        f"Score 9-10: EMA stack + ADX ≥ 25 + MACD growing + RSI in sweet spot + volume above avg + clean {pullback_phrase}.\n"
         f"Score 7-8: EMA stack + MACD aligned + RSI in range + clear entry level.\n"
         f"Score 6: At least 2 of 3 primary signals (EMA stack/ADX/MACD) + valid entry and SL.\n"
-        f"PENALISE: RSI > 74 or < 26 (overextended — near exhaustion). ADX < 15 (no trend). EMA stack opposing direction."
+        f"PENALISE: RSI > 75 or < 25 (overextended — near exhaustion). ADX < 15 (no trend). EMA stack opposing direction."
     )
 
 
 def _build_macro_header(macro_ctx: dict) -> str:
-    """Short macro context header prepended to every scanner setup prompt."""
+    """Short macro context header prepended to every scanner setup prompt.
+
+    Format change 2026-06-01: removed "RISK ON / RISK OFF" labels and the
+    F&G "Extreme Fear" / "Greed" labels. Both were priming the model toward
+    Long thinking in current macro (low VIX + low F&G). Now shows only
+    structural numbers — the model reads the facts and infers regime.
+    F&G value still shown for context but with no interpretive label.
+    """
     if not macro_ctx:
         return ""
+    import os as _os
+    _fng_paused = _os.environ.get("FUTURES_AI_FNG_PAUSED", "1").strip() == "1"
     parts = []
 
     vix = macro_ctx.get("vix")
@@ -116,14 +213,13 @@ def _build_macro_header(macro_ctx: dict) -> str:
     meme_cap   = macro_ctx.get("meme_cap_usd")
 
     if vix:
-        regime = macro_ctx.get("regime", "").replace("_", " ").upper()
-        parts.append(f"VIX {vix:.0f} ({regime})")
+        parts.append(f"VIX {vix:.0f}")
     if es_chg is not None:
         arrow = "▲" if es_chg >= 0 else "▼"
         parts.append(f"ES1! {arrow}{abs(es_chg):.1f}%")
-    if fg is not None:
-        fg_label = "Extreme Fear" if fg < 25 else "Fear" if fg < 45 else "Neutral" if fg < 55 else "Greed" if fg < 75 else "Extreme Greed"
-        parts.append(f"F&G {fg}/100 ({fg_label})")
+    if fg is not None and not _fng_paused:
+        # Only included when F&G is enabled; no interpretive label.
+        parts.append(f"F&G {fg}/100")
     if btc_dom:
         parts.append(f"BTC.D {btc_dom:.1f}%")
     if usdt_dom:
@@ -237,11 +333,19 @@ REQUIREMENTS for any score ≥ {min_score}:
 - Take profits: at 4H or 1D resistance/support levels — name the structural zone for each TP
 - Detailed rationale for EVERY level: name the S/R zone, reference the indicator value, explain WHY
 
-RATIONALE DEPTH REQUIRED:
-  entry_rationale: "Price pulling back to 1H support at $X (4 touches on 1H, aligns with 4H EMA50 at $Y). 1H RSI cooled to 44 from 68 — momentum reset without breaking structure."
-  sl_rationale: "Below 1H swing low at $Z and 1H support cluster at $W. Distance $D = 1.5× 1H ATR ($A) — outside 1H noise, below 4H demand."
-  tp1_rationale: "4H resistance at $R1, high-volume rejection on [date]. R:R 1:2.3 from midpoint entry."
-  tp2_rationale: "1D resistance cluster and 1.618 Fibonacci extension from last major swing. R:R 1:4.1."
+RATIONALE DEPTH REQUIRED (use the example matching your trade direction):
+
+  LONG example:
+    entry_rationale: "Price pulling back to 1H support at $X (4 touches on 1H, aligns with 4H EMA50 at $Y). 1H RSI cooled to 44 from 68 — momentum reset without breaking structure."
+    sl_rationale: "Below 1H swing low at $Z and 1H support cluster at $W. Distance $D = 1.5× 1H ATR ($A) — outside 1H noise, below 4H demand."
+    tp1_rationale: "4H resistance at $R1, high-volume rejection on [date]. R:R 1:2.3 from midpoint entry."
+    tp2_rationale: "1D resistance cluster and 1.618 Fibonacci extension from last major swing. R:R 1:4.1."
+
+  SHORT example:
+    entry_rationale: "Price rallying into 1H resistance at $X (4 rejections on 1H, aligns with 4H EMA50 at $Y). 1H RSI heated to 62 from 38 — momentum extended without breaking structure."
+    sl_rationale: "Above 1H swing high at $Z and 1H resistance cluster at $W. Distance $D = 1.5× 1H ATR ($A) — outside 1H noise, above 4H supply."
+    tp1_rationale: "4H support at $R1, high-volume defence on [date]. R:R 1:2.3 from midpoint entry."
+    tp2_rationale: "1D support cluster and 1.618 Fibonacci extension from last major swing. R:R 1:4.1."
 
 If the setup scores below {min_score} (no valid entry level, SL inside ATR noise, or no logical TP):
 {{"setup_score": 0, "reason": "one sentence why this doesn't qualify"}}
@@ -328,12 +432,13 @@ REVERSAL — WaveTrend crossover at RSI extreme (oversold-bounce or overbought-f
 
 BREAKOUT — Range escape with volume + momentum.
   Best when: volume ratio >1.8x, ADX rising past 18-20, price closing above prior swing high (long) or below low (short).
-  Score boost: +1 if 1D context confirms (1D above EMA20 for long breakouts).
+  Score boost: +1 if 1D context confirms (1D above EMA20 for long breakouts, below EMA20 for short breakouts).
   Score cap: 7 if entry is mid-range — wait for retest or confirmed close beyond level.
 
-CONTINUATION — Trend pullback to structural level.
-  Best when: 4H + 1D EMA stack agrees with direction, 1H pullback into 4H S/R, RSI reset to 40-55 (long) or 45-60 (short).
-  Score boost: +1 if pullback bounces with WaveTrend reset (rising from low for long).
+CONTINUATION — Trend pullback (Long) or rally into resistance (Short).
+  Best when: 4H + 1D EMA stack agrees with direction, 1H pullback to 4H support (Long) or rally into 4H resistance (Short),
+  RSI reset to 45-65 (long) or 35-55 (short).
+  Score boost: +1 if entry coincides with WaveTrend reset (rising from low for long, falling from high for short).
   Score cap: 8 — this is the highest-conviction archetype when alignment is clean.
 
 COMMON DOWNGRADES (apply these against your initial score):
@@ -343,6 +448,19 @@ COMMON DOWNGRADES (apply these against your initial score):
 - RSI > 75 (long) or < 25 (short): -1 (already extended, late entry)
 - 4H + 1H disagree on direction: -1 (TF conflict)
 - Price within ATR×0.5 of major resistance (long) or support (short): -1 (no room to TP)
+
+ENTRY VALIDITY — HARD RULE (added 2026-05-26):
+The entry price you emit MUST be reachable from the current chart, not a memory
+of where support used to be. Specifically:
+- Entry must be within ±5% of the current price OR within the last 24h range.
+- If the only valid structural entry is further than that, the setup is NOT
+  currently tradeable — score it ≤ 5 and put "wait for retrace to <level>" in
+  the rationale. Do NOT emit an entry the market hasn't recently visited.
+- If you're emitting a Long entry below the current price by more than 5%,
+  OR a Short entry above the current price by more than 5%, you are picking
+  a structural level the market has already left behind. Either find a level
+  closer to current price (e.g. nearest recent S/R within ±5%) or admit no
+  current entry is available.
 
 QUALITY OVER QUANTITY: a 5 with one strong factor beats a 7 you can't justify. If you can't name 3 concrete factors driving the score in one sentence, score it ≤5.
 """
@@ -363,6 +481,20 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
     pt_4h = ctx.get("4H", {}).get("prompt_text", "")
     pt_1h = ctx.get("1H", {}).get("prompt_text", "")
     pt_1d = ctx.get("1D", {}).get("prompt_text", "")
+
+    # Candle-hash cache check (#1 cost optimisation). pt_1d/4h/1h are
+    # deterministic functions of OHLCV — same candles → same string → same
+    # Haiku output. mkt_str is intentionally NOT included in the key (see
+    # _quick_score_cache_key docstring): including it caused 0% hit rate
+    # because macro context refreshes every 5 min while scans run every
+    # 30 min. The macro CAP runs AFTER this cache, so coarse-grained macro
+    # is still respected.
+    _cache_key = _quick_score_cache_key(
+        symbol, direction, pt_1d, pt_4h, pt_1h, min_score)
+    _cached_value, _cache_hit = _quick_score_cache_get(_cache_key)
+    if _cache_hit:
+        return _cached_value
+
     conf_line = f"{conf['label']} ({conf['bullish']}↑/{conf['bearish']}↓)"
 
     inds_4h = ctx.get("4H", {}).get("indicators", {})
@@ -379,6 +511,16 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
     ) or "none"
     pt_1h_block = f"\n{pt_1h}" if pt_1h else ""
 
+    # BUG-005 fix (2026-05-26): example reason is now direction-aware. The
+    # previous bullish-only example ("4H EMA stack bullish, RSI reset to 52")
+    # anchored Haiku toward bullish criteria, dropping 100% of Shorts that
+    # survived Stage 2 (observed funnel: 19 Shorts → 0 final on 2026-05-26).
+    is_long = direction.lower() == "long"
+    example_reason = (
+        "4H EMA stack bullish, RSI reset to 52, clean S/R entry zone"
+        if is_long else
+        "4H EMA stack bearish, RSI rejected at 62, clean S/R rejection zone"
+    )
     variable = (
         f"Score this {direction.upper()} setup for {symbol} — return score 0-10 "
         f"and one short sentence explaining the key factor behind the score.\n\n"
@@ -386,7 +528,7 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
         f"Confluence: {conf_line}\n4H S/R: {sr_compact}\n1H S/R: {sr_1h_compact}\n\n"
         f'If score < {min_score}: {{"score":0}}\n'
         f'If score >= {min_score}: {{"score":7,"direction":"{direction}",'
-        f'"reason":"one sentence — main factor (e.g. \'4H EMA stack bullish, RSI reset to 52, clean S/R entry zone\')"}}\n'
+        f'"reason":"one sentence — main factor (e.g. \'{example_reason}\')"}}\n'
         "Respond with ONLY valid JSON — no extras."
     )
 
@@ -418,16 +560,22 @@ def _quick_score(symbol: str, ctx: dict, conf: dict, direction: str,
             # Final fallback: tighten quotes + trim trailing commas
             cleaned = obj_str.replace("“", '"').replace("”", '"').replace(",}", "}").replace(",]", "]")
             r = json.loads(cleaned)
+        # Both branches below get cached — score-below-threshold is the
+        # dominant case and the biggest cost saving from this cache.
         if r.get("score", 0) < min_score:
+            _quick_score_cache_set(_cache_key, None)
             return None
-        return {
+        _result = {
             "score":     r["score"],
             "direction": r.get("direction", direction),
             "reason":    r.get("reason", ""),
         }
+        _quick_score_cache_set(_cache_key, _result)
+        return _result
     except Exception as e:
         # Log first 160 chars of raw response so we can see what the model
         # actually returned. Truncation/extra-data are the dominant modes.
+        # NB: do NOT cache exceptions — next call must retry.
         snippet = (msg_text[:160] if 'msg_text' in dir() else '<no response>').replace("\n", " ")
         logger.warning("quick-score failed for %s: %s | raw: %s", symbol, e, snippet)
         return None

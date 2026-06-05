@@ -72,6 +72,27 @@ function _renderFuturesAI(d) {
     pn.style.color = pct >= 0 ? 'var(--accent3)' : 'var(--red)';
   }
 
+  // 7d + 30d realized P&L — dollar + percent (matches Unrealized pill format).
+  // % is of starting_equity (parallel to 24h pill's denominator).
+  const _fmtWindowPnl = (usd, pct) => {
+    const sign = usd >= 0 ? '+' : '';
+    return `${sign}$${usd.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
+  };
+  const p7 = document.getElementById('fai-pnl-7d');
+  if (p7) {
+    const usd = rt.pnl_7d_usd ?? 0;
+    const pct = rt.pnl_7d_pct ?? 0;
+    p7.textContent = _fmtWindowPnl(usd, pct);
+    p7.style.color = usd >= 0 ? 'var(--accent3)' : 'var(--red)';
+  }
+  const p30 = document.getElementById('fai-pnl-30d');
+  if (p30) {
+    const usd = rt.pnl_30d_usd ?? 0;
+    const pct = rt.pnl_30d_pct ?? 0;
+    p30.textContent = _fmtWindowPnl(usd, pct);
+    p30.style.color = usd >= 0 ? 'var(--accent3)' : 'var(--red)';
+  }
+
   // Headline one-liner — combines state + equity + breaker + hedge + streak
   // into a single read-at-a-glance summary. Color-coded against state.
   const headline = document.getElementById('fai-headline');
@@ -122,6 +143,25 @@ function _renderFuturesAI(d) {
       spans.push([' · ', null, null]);
       spans.push([`${losses} loss streak`, 'var(--red)', 600]);
     }
+
+    // 7d + 30d winrate (only show if any closes in window)
+    const wr7Total  = rt.winrate_7d_total  ?? 0;
+    const wr30Total = rt.winrate_30d_total ?? 0;
+    if (wr7Total > 0) {
+      const wr  = rt.winrate_7d_pct ?? 0;
+      const wins = rt.winrate_7d_wins ?? 0;
+      spans.push([' · ', null, null]);
+      spans.push([`7d WR ${wr.toFixed(0)}% (${wins}/${wr7Total})`,
+                  wr >= 50 ? 'var(--accent3)' : 'var(--red)', 600]);
+    }
+    if (wr30Total > 0) {
+      const wr  = rt.winrate_30d_pct ?? 0;
+      const wins = rt.winrate_30d_wins ?? 0;
+      spans.push([' · ', null, null]);
+      spans.push([`30d WR ${wr.toFixed(0)}% (${wins}/${wr30Total})`,
+                  wr >= 50 ? 'var(--accent3)' : 'var(--red)', 600]);
+    }
+
     if (hedge) {
       spans.push([' · ', null, null]);
       spans.push([`🛡 hedge active`, 'var(--yellow,#ffb300)', 700]);
@@ -245,6 +285,7 @@ async function _loadFuturesAIPositions() {
     const source = d.source;   // 'real' or 'paper'
     const openRows = d.open || [];
     const closedRows = d.recent_closed || [];
+    const equityNow  = parseFloat(d.equity_usdt) || 0;
 
     // Header counts
     const openCount = document.getElementById('fai-open-count');
@@ -271,7 +312,7 @@ async function _loadFuturesAIPositions() {
     if (!closedRows.length) {
       closedEl.textContent = 'No closed auto-trader trades yet.';
     } else {
-      closedEl.appendChild(_buildClosedPositionsTable(closedRows, source));
+      closedEl.appendChild(_buildClosedPositionsTable(closedRows, source, equityNow));
     }
   } catch (e) {
     openEl.textContent = 'Failed: ' + e.message;
@@ -289,17 +330,33 @@ function _formatTpLevels(p) {
     return _num(p.preset_tp) || '—';
   }
   // Stack one per line inside the cell. Active (not-yet-hit) levels in
-  // brighter text; hit levels dimmed + struck through.
+  // brighter text; hit levels dimmed + struck through + "· hit MM-DD HH:MM"
+  // appended in non-struck-through trailing span so the hit time is readable.
   const frag = document.createDocumentFragment();
   levels.forEach((lvl, i) => {
     const line = document.createElement('div');
     const idx = lvl.idx ?? (i + 1);
     const price = _num(lvl.price) || '?';
     const pct = lvl.pct != null ? `(${Math.round(lvl.pct)}%)` : '';
-    line.textContent = `TP${idx}  ${price}  ${pct}`.trim();
-    line.style.cssText = lvl.hit
-      ? 'opacity:.45;text-decoration:line-through;font-size:.74rem;line-height:1.4'
-      : 'font-size:.74rem;line-height:1.4';
+
+    if (lvl.hit) {
+      // Struck-through "TPn price (pct%)" + plain "· hit MM-DD HH:MM"
+      const struck = document.createElement('span');
+      struck.textContent = `TP${idx}  ${price}  ${pct}`.trim();
+      struck.style.cssText = 'text-decoration:line-through;opacity:.55';
+      line.appendChild(struck);
+      const ts = (lvl.hit_at || '').replace('T', ' ').slice(5, 16);
+      if (ts) {
+        const tag = document.createElement('span');
+        tag.textContent = `  · hit ${ts}`;
+        tag.style.cssText = 'opacity:.75;color:var(--accent3)';
+        line.appendChild(tag);
+      }
+      line.style.cssText = 'font-size:.74rem;line-height:1.4';
+    } else {
+      line.textContent = `TP${idx}  ${price}  ${pct}`.trim();
+      line.style.cssText = 'font-size:.74rem;line-height:1.4';
+    }
     frag.appendChild(line);
   });
   return frag;
@@ -311,10 +368,10 @@ function _buildOpenPositionsTable(rows, source) {
   tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.8rem';
   const thead = tbl.createTHead();
   const hrow = thead.insertRow();
-  // Different columns for real (live data from Bitget) vs paper (DB)
-  const headers = source === 'real'
-    ? ['Symbol','Dir','Entry','Mark','% Move','Unrl P&L','Size','Lev','SL','TPs']
-    : ['Symbol','Dir','Score','Archetype','Entry','SL','TPs','Notional','Lev'];
+  // Paper = Live (1:1). Paper mode now ships the same enriched fields
+  // (mark_price, unrealized_pnl, achieved_profits, size_contracts, …)
+  // from the API, so one column set + one render path serves both.
+  const headers = ['Symbol','Dir','Entered','Entry','Mark','% Move','Unrl P&L','Realised P&L','Size','Notional','Lev','SL','TPs'];
   headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h;
@@ -324,49 +381,47 @@ function _buildOpenPositionsTable(rows, source) {
   const tb = tbl.createTBody();
   rows.forEach(p => {
     const tr = tb.insertRow();
-    // For paper rows, build a synthetic tp_levels from tp1/tp2 so the
-    // shared formatter renders something coherent
-    if (source !== 'real' && (!p.tp_levels || !p.tp_levels.length)) {
-      const synth = [];
-      if (p.tp1_price) synth.push({idx: 1, price: p.tp1_price, pct: 60, hit: !!p.tp1_hit});
-      if (p.tp2_price) synth.push({idx: 2, price: p.tp2_price, pct: 40, hit: false});
-      p = Object.assign({}, p, {tp_levels: synth});
-    }
-    const cells = source === 'real' ? [
+    const _enteredStr = (rec) => {
+      const t = rec.open_time || rec.opened_at || '';
+      return t ? t.replace('T', ' ').slice(5, 16) : '—';
+    };
+
+    // Realised on an OPEN position = partial-close profits already
+    // booked (e.g. TP1 partial close on a multi-tier ladder). Bitget
+    // calls this achieved_profits; defaults to 0 when no partial fired.
+    const _ach = parseFloat(p.achieved_profits || 0) || 0;
+    const cells = [
       p.symbol,
       p.direction,
+      _enteredStr(p),
       _num(p.entry_price),
       _num(p.mark_price),
       ((p.unrealized_pct >= 0 ? '+' : '') + (p.unrealized_pct ?? 0).toFixed(2) + '%'),
       ((p.unrealized_pnl >= 0 ? '+' : '') + '$' + (p.unrealized_pnl ?? 0).toFixed(2)),
+      (_ach === 0 ? '$0.00' : (_ach > 0 ? '+' : '') + '$' + _ach.toFixed(2)),
       _num(p.size_contracts),
+      '$' + (p.notional_usdt ?? 0).toFixed(2),
       p.leverage + 'x',
       _num(p.preset_sl) || '—',
       _formatTpLevels(p),
-    ] : [
-      p.symbol,
-      p.direction,
-      p.score_consensus + '/10',
-      p.archetype || '—',
-      _num(p.entry_price),
-      _num(p.current_sl),
-      _formatTpLevels(p),
-      '$' + (p.notional_usdt ?? 0).toFixed(2),
-      p.leverage + 'x',
     ];
     cells.forEach((v, i) => {
       const td = tr.insertCell();
-      // Allow DocumentFragment for the TPs cell so multi-line stacking works
       if (v instanceof DocumentFragment) td.appendChild(v);
       else td.textContent = v;
-      // Multi-line TP cell needs top-aligned padding so other cells line up
-      const isTpCell = (source === 'real' && i === 9) || (source !== 'real' && i === 6);
+      const isTpCell = i === 12;
       let cls = 'padding:4px 8px;border-bottom:1px solid var(--border);color:var(--muted)';
       if (isTpCell) cls += ';vertical-align:top';
-      // Color the %-move and P&L cells
-      if (source === 'real' && (i === 4 || i === 5)) {
-        const val = i === 4 ? (p.unrealized_pct || 0) : (p.unrealized_pnl || 0);
-        cls += ';color:' + (val >= 0 ? 'var(--accent3)' : 'var(--red)');
+      // Color the % Move / Unrl P&L / Realised P&L cells.
+      if (i === 5 || i === 6 || i === 7) {
+        let val;
+        if (i === 5)      val = p.unrealized_pct || 0;
+        else if (i === 6) val = p.unrealized_pnl || 0;
+        else              val = _ach;
+        // Muted neutral for zero realised — don't paint green/red on no data.
+        if (!(val === 0 && i === 7)) {
+          cls += ';color:' + (val >= 0 ? 'var(--accent3)' : 'var(--red)');
+        }
       }
       td.style.cssText = cls;
     });
@@ -404,19 +459,23 @@ function _formatCloseReason(raw, source) {
 }
 
 
-function _buildClosedPositionsTable(rows, source) {
+function _buildClosedPositionsTable(rows, source, equityNow) {
   const tbl = document.createElement('table');
   tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.78rem;table-layout:fixed';
   const thead = tbl.createTHead();
   const hrow = thead.insertRow();
   // Explicit column widths so the Reason column has room to wrap legibly
   // when a hedge unwind or other longer string lands there.
+  // 'Trade%'  — return on the margin used for this trade (PnL ÷ margin).
+  // 'Port%'   — impact on total portfolio (PnL ÷ equity_now).
   const headerSpec = [
     ['Symbol',  '95px'],
     ['Dir',     '50px'],
     ['Entry',   '85px'],
     ['Close',   '85px'],
     ['P&L',     '80px'],
+    ['Trade%',  '70px'],
+    ['Port%',   '65px'],
     ['Reason',  'auto'],
     ['Opened',  '95px'],
     ['Closed',  '95px'],
@@ -435,12 +494,31 @@ function _buildClosedPositionsTable(rows, source) {
     const closePrice = source === 'real' ? p.close_price : p.tp2_price;
     const isHedge = !!p.is_hedge;
     const symbolLabel = isHedge ? `${p.symbol} 🛡` : p.symbol;
+
+    // Trade% — return on margin invested. margin = notional / leverage.
+    // Falls back to '—' when we can't reconstruct margin (legacy rows).
+    const notional = parseFloat(p.size_usdt ?? p.notional_usdt) || 0;
+    const lev      = parseFloat(p.leverage) || 0;
+    const margin   = (notional > 0 && lev > 0) ? (notional / lev) : 0;
+    const tradePct = margin > 0 ? (pnl / margin) * 100 : null;
+    const tradeCell = tradePct == null
+      ? '—'
+      : ((tradePct >= 0 ? '+' : '') + tradePct.toFixed(2) + '%');
+
+    // Port% — impact on total portfolio.
+    const portPct = (equityNow && equityNow > 0) ? (pnl / equityNow) * 100 : null;
+    const portCell = portPct == null
+      ? '—'
+      : ((portPct >= 0 ? '+' : '') + portPct.toFixed(2) + '%');
+
     const cells = [
       symbolLabel,
       p.direction,
       _num(p.entry_price),
       _num(closePrice),
       ((pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2)),
+      tradeCell,
+      portCell,
       _formatCloseReason(p.close_reason, source),
       (p.opened_at || p.open_time || '').slice(5, 16),
       (p.closed_at || p.close_time || '').slice(5, 16),
@@ -451,10 +529,18 @@ function _buildClosedPositionsTable(rows, source) {
       const td = tr.insertCell();
       td.textContent = v;
       let cls = baseStyle;
-      if (i === 4) {   // P&L column
+      if (i === 4) {        // P&L column
         cls += ';color:' + (pnl >= 0 ? 'var(--accent3)' : 'var(--red)');
         cls += ';white-space:nowrap';
-      } else if (i === 5) {   // Reason column — wrap long strings
+      } else if (i === 5) { // Trade%
+        cls += ';color:' + (tradePct == null ? 'var(--muted)'
+                            : tradePct >= 0 ? 'var(--accent3)' : 'var(--red)');
+        cls += ';white-space:nowrap';
+      } else if (i === 6) { // Port%
+        cls += ';color:' + (portPct == null ? 'var(--muted)'
+                            : portPct >= 0 ? 'var(--accent3)' : 'var(--red)');
+        cls += ';white-space:nowrap';
+      } else if (i === 7) { // Reason column — wrap long strings
         cls += ';white-space:normal;word-break:break-word';
       } else {
         cls += ';white-space:nowrap';

@@ -1,4 +1,5 @@
 """routes/risk.py -- Risk analytics endpoints (free Binance data + local DB)."""
+import time
 import traceback
 
 from flask import Blueprint, request
@@ -8,8 +9,16 @@ import blofin_client
 
 bp = Blueprint("risk", __name__)
 
+# Cache live-positions for 30s so VaR + correlation endpoints don't double-fetch
+# during a single dashboard render. Bitget API can be slow; this prevents the
+# UI from timing out when the user navigates the Risk tab.
+_live_positions_cache: dict = {"ts": 0.0, "positions": [], "equity": 0.0}
+_LIVE_POSITIONS_TTL = 30
+
 
 def _get_live_positions() -> tuple:
+    if time.time() - _live_positions_cache["ts"] < _LIVE_POSITIONS_TTL:
+        return _live_positions_cache["positions"], _live_positions_cache["equity"]
     positions, equity = [], 0.0
     try:
         positions = bitget_client.get_open_positions()
@@ -24,6 +33,9 @@ def _get_live_positions() -> tuple:
             equity += float(bl_eq.get("equity") or 0)
     except Exception:
         pass
+    _live_positions_cache["ts"] = time.time()
+    _live_positions_cache["positions"] = positions
+    _live_positions_cache["equity"] = equity
     return positions, equity
 
 
@@ -53,13 +65,20 @@ def api_risk_correlation():
 
 @bp.route("/api/risk/attribution")
 def api_risk_attribution():
-    """GET /api/risk/attribution?days=90 -- Alpha vs Beta P&L attribution."""
+    """GET /api/risk/attribution?days=90&chain=auto_ai|manual -- Alpha vs Beta P&L.
+
+    Defaults to chain=auto_ai (the algo book) since manual chain has
+    corrupt size_usdt in some legacy rows.
+    """
     try:
         from risk_analytics import compute_pnl_attribution
         from database import db_conn
         days = min(int(request.args.get("days", 90)), 365)
+        chain = (request.args.get("chain") or "auto_ai").strip().lower()
+        if chain not in ("auto_ai", "manual"):
+            chain = "auto_ai"
         with db_conn() as conn:
-            return _ok(compute_pnl_attribution(conn, lookback_days=days))
+            return _ok(compute_pnl_attribution(conn, lookback_days=days, chain=chain))
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)

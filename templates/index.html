@@ -404,6 +404,12 @@ select:focus,input:focus{border-color:var(--accent)}
       <span class="nav-icon">🤖</span><span>Futures-AI</span>
       <span id="nav-futuresai-badge" style="margin-left:auto;font-size:.6rem;padding:1px 5px;border-radius:8px;background:rgba(108,99,255,.15);color:var(--accent);display:none">…</span>
     </div>
+    <div class="nav-item" onclick="showPage('faistats')" id="nav-faistats" data-section-of="ai-trade">
+      <span class="nav-icon">📊</span><span>Futures-AI Stats</span>
+    </div>
+    <div class="nav-item" onclick="showPage('faimodels')" id="nav-faimodels" data-section-of="ai-trade">
+      <span class="nav-icon">🤖</span><span>Model Comparison</span>
+    </div>
     <div class="nav-sep" data-section="manual-trade"><span class="nav-caret">▾</span>Manual-Trade</div>
     <div class="nav-item" onclick="showPage('trades')" id="nav-trades" data-section-of="manual-trade">
       <span class="nav-icon">⚡</span><span>Live Trades</span>
@@ -455,6 +461,9 @@ select:focus,input:focus{border-color:var(--accent)}
     </div>
     <div class="nav-item" onclick="showPage('scanner-pipeline')" id="nav-scanner-pipeline" data-section-of="docs">
       <span class="nav-icon">🪜</span><span>Scanner Pipeline</span>
+    </div>
+    <div class="nav-item" onclick="showPage('self-learning')" id="nav-self-learning" data-section-of="docs">
+      <span class="nav-icon">🤖</span><span>Self-Learning</span>
     </div>
     <div class="nav-sep" data-section="training"><span class="nav-caret">▾</span>Training</div>
     <a class="nav-item" href="/training/" id="nav-training" data-section-of="training" style="text-decoration:none;color:inherit">
@@ -1265,6 +1274,14 @@ select:focus,input:focus{border-color:var(--accent)}
           <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Unrealized</div>
           <div id="fai-unrealized" style="font-size:1.05rem;font-weight:700">—</div>
         </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">7d P&L</div>
+          <div id="fai-pnl-7d" style="font-size:1.05rem;font-weight:700">—</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">30d P&L</div>
+          <div id="fai-pnl-30d" style="font-size:1.05rem;font-weight:700">—</div>
+        </div>
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="loadFuturesAI()">↻ Refresh</button>
           <button class="btn btn-sm" style="background:rgba(38,217,107,.12);color:var(--accent3);border:1px solid rgba(38,217,107,.3)"
@@ -1309,6 +1326,180 @@ select:focus,input:focus{border-color:var(--accent)}
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px">
         <div style="font-weight:600;font-size:.78rem;color:var(--text);margin-bottom:10px">Recent decisions</div>
         <div id="fai-decisions" style="font-size:.85rem;line-height:1.5;color:var(--muted)">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ═══ Futures-AI Stats page ═══ -->
+    <div id="page-faistats" class="page-view">
+      <div class="page-title">📊 Futures-AI Statistics</div>
+      <div style="display:flex;align-items:center;gap:14px;margin:8px 0 18px">
+        <span style="color:var(--muted);font-size:.85rem">Window:</span>
+        <div id="fais-window-tabs" style="display:flex;gap:4px"></div>
+        <span id="fais-summary" style="margin-left:auto;color:var(--muted);font-size:.85rem">Loading…</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadFuturesAIStats()">↻ Refresh</button>
+      </div>
+
+      <!-- ── tile row: 8 KPI tiles ── -->
+      <div id="fais-tiles" class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-grid" id="fais-tiles-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px"></div>
+      </div>
+
+      <!-- ── R-1: Advanced KPIs (quantstats: PSR, K-Ratio, Ulcer, Omega, Tail, GPR…) ── -->
+      <div id="fais-advkpi" class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">Advanced KPIs <span style="font-weight:400;color:var(--muted);font-size:.75rem">— hover for tooltip</span></div>
+        <div id="fais-advkpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px"></div>
+      </div>
+
+      <!-- ── equity curve + daily P&L bars ── -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div class="card-title">Equity curve (cumulative realized P&L)</div>
+          <div id="fais-equity-curve" style="height:280px;position:relative"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="card-title">Daily P&L</div>
+          <div id="fais-daily-bars" style="height:280px;position:relative"></div>
+        </div>
+      </div>
+
+      <!-- ── R-multiple + hold time ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div class="card-title">R-multiple distribution</div>
+          <div id="fais-r-hist"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="card-title">Hold time</div>
+          <div id="fais-hold"></div>
+        </div>
+      </div>
+
+      <!-- ── classification breakdowns ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div class="card-title">By setup_type (AI classifier)</div>
+          <div id="fais-by-setup-type"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="card-title">By archetype_at_open (entry-time snapshot)</div>
+          <div id="fais-by-archetype-open"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card" style="padding:14px">
+          <div class="card-title">By Trade Grade</div>
+          <div id="fais-by-trade-grade"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="card-title">By setup score</div>
+          <div id="fais-by-score"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="card-title">By session (UTC)</div>
+          <div id="fais-by-session"></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">By day-of-week</div>
+        <div id="fais-by-dow"></div>
+      </div>
+
+      <!-- ── last 20 trades table ── -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">Last 20 closed trades</div>
+        <div id="fais-last20" style="overflow-x:auto"></div>
+      </div>
+
+      <!-- L-7: Recent auto-adjustments (learned_params) -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">🔄 Recent auto-adjustments (last 20 from learners)</div>
+        <div id="fais-learned-log" style="overflow-x:auto;font-size:.85rem"></div>
+      </div>
+
+      <!-- L-7: Noise gates (24h rejection counters) -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">🚫 Noise gates — 24h rejections</div>
+        <div id="fais-noise-gates" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:8px"></div>
+      </div>
+
+      <!-- L-7: Reminders / countdowns -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">⏰ Reminders &amp; countdowns</div>
+        <div id="fais-reminders" style="font-size:.9rem;line-height:1.7;margin-top:6px"></div>
+      </div>
+
+      <!-- L-7: Edge-decay watch -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">📉 Edge-decay watch (per-archetype CUSUM + Page-Hinkley)</div>
+        <div id="fais-edge-decay" style="overflow-x:auto;font-size:.85rem"></div>
+      </div>
+
+      <!-- L-7: Cost optimisation tile -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">💸 API cost vs realised P&amp;L · auto_ai chain only</div>
+        <div id="fais-cost-pnl"
+             style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:8px"></div>
+        <div id="fais-cost-breakdown"
+             style="margin-top:14px;font-size:.85rem;line-height:1.6;color:var(--muted)"></div>
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;color:var(--muted);font-size:.82rem">
+            Cache &amp; optimisation telemetry (click to expand)
+          </summary>
+          <div id="fais-cache-stats"
+               style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-size:.82rem"></div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ═══ Model Comparison page ═══ -->
+    <div id="page-faimodels" class="page-view">
+      <div class="page-title">🤖 Model Comparison — Shadow-LLM Analytics</div>
+      <div style="display:flex;align-items:center;gap:14px;margin:8px 0 18px;flex-wrap:wrap">
+        <span style="color:var(--muted);font-size:.85rem">Window:</span>
+        <div id="faim-window-tabs" style="display:flex;gap:4px"></div>
+        <span style="color:var(--muted);font-size:.85rem;margin-left:14px">Open-threshold:</span>
+        <select id="faim-threshold" style="background:var(--card);color:var(--text);border:1px solid var(--border);padding:3px 8px;border-radius:4px;font-size:.85rem">
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6" selected>6 (default)</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+        </select>
+        <span id="faim-summary" style="margin-left:auto;color:var(--muted);font-size:.85rem">Loading…</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadFaiModels()">↻ Refresh</button>
+      </div>
+
+      <!-- Insights panel -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">💡 Insights <span style="font-weight:400;color:var(--muted);font-size:.75rem">— rule-based summaries</span></div>
+        <div id="faim-insights" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:.86rem"></div>
+      </div>
+
+      <!-- Cost vs P&L summary -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">💰 Cost vs P&L <span style="font-weight:400;color:var(--muted);font-size:.75rem">— is the LLM spend earning its keep?</span></div>
+        <div id="faim-cost-summary"
+             style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;font-size:.85rem"></div>
+      </div>
+
+      <!-- Per-model comparison table -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">Per-model aggregates <span style="font-weight:400;color:var(--muted);font-size:.75rem">— last <span id="faim-window-label">24h</span></span></div>
+        <div id="faim-models-table" style="overflow-x:auto;margin-top:10px"></div>
+      </div>
+
+      <!-- Score distribution chart -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">Score distribution <span style="font-weight:400;color:var(--muted);font-size:.75rem">— histogram per model (0–10)</span></div>
+        <div id="faim-score-hist" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px"></div>
+      </div>
+
+      <!-- Per-trade detail -->
+      <div class="card" style="padding:14px;margin-bottom:14px">
+        <div class="card-title">Per-trade detail <span style="font-weight:400;color:var(--muted);font-size:.75rem">— shadow scores at the moment each trade opened</span></div>
+        <div id="faim-trades-table" style="overflow-x:auto;margin-top:10px"></div>
       </div>
     </div>
 
@@ -1897,6 +2088,54 @@ select:focus,input:focus{border-color:var(--accent)}
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- LAYER 5 — MICROSTRUCTURE  (added Master plan Week 8 — option-a ship) -->
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#26d96b"></div>
+          <div class="src-layer-title">Layer 5 — Microstructure</div>
+          <div class="src-layer-sub">Order-flow toxicity &amp; cascade-risk signals · sub-minute resolution</div>
+        </div>
+        <div class="src-grid">
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr">
+              <div class="src-icon">🌪️</div>
+              <div><div class="src-name">VPIN — Volume-synced toxicity</div><div class="src-provider">Binance Futures @aggTrades (REST poll)</div></div>
+              <span class="src-auth auth-free">FREE</span>
+            </div>
+            <div class="src-row"><span class="src-row-label">Input</span><span class="src-row-val">Per-symbol 60min trade tape, 1000-trade window</span></div>
+            <div class="src-row"><span class="src-row-label">Returns</span><span class="src-row-val">VPIN ∈ [0, 1] — mean |buy − sell| / V over last 50 volume buckets</span></div>
+            <div class="src-row"><span class="src-row-label">Cadence</span><span class="src-row-val">Background loop every 5 min, top 20 watchlist symbols</span></div>
+            <div class="src-row"><span class="src-row-label">Persisted</span><span class="src-row-val"><code>vpin_snapshot</code> table — kept fresh for ≤30 min lookback</span></div>
+            <div class="src-row"><span class="src-row-label">Used in</span>
+              <span class="src-row-val">
+                <span class="src-tag used">N-4 soft veto in consensus (≥0.70 blocks entry)</span>
+                <span class="src-tag used">A-E Cascade Predictor (weight 0.50)</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr">
+              <div class="src-icon">📊</div>
+              <div><div class="src-name">Cascade fusion (A-E)</div><div class="src-provider">VPIN × funding-spread × OI-divergence</div></div>
+              <span class="src-auth auth-free">FREE</span>
+            </div>
+            <div class="src-row"><span class="src-row-label">Components</span><span class="src-row-val">VPIN (0.50) + |Funding Δ across venues| (0.30) + OI vs price divergence (0.20)</span></div>
+            <div class="src-row"><span class="src-row-label">Returns</span><span class="src-row-val">risk ∈ [0, 1] + side-at-risk tag (long/short)</span></div>
+            <div class="src-row"><span class="src-row-label">Veto rule</span><span class="src-row-val">risk ≥ 0.75 AND direction = side-at-risk → block entry</span></div>
+            <div class="src-row"><span class="src-row-label">Used in</span>
+              <span class="src-row-val">
+                <span class="src-tag used">Pre-order gate in consensus pipeline</span>
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
       <!-- PIPELINE MAP                                                         -->
       <!-- ═══════════════════════════════════════════════════════════════════ -->
       <div class="src-layer">
@@ -2154,15 +2393,164 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
       </div>
 
+      <!-- ── Self-Learning architecture (option-a, shipped 2026-05-31) ───────── -->
+      <div class="src-layer" style="margin-top:36px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#6c63ff"></div>
+          <div class="src-layer-title">Specialized Agents (A-A → A-E)</div>
+          <div class="src-layer-sub">Adversarial reviewers + validators that wrap the consensus call</div>
+        </div>
+        <div class="src-grid">
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">😈</div><div><div class="src-name">A-A · Red-Team Agent</div><div class="src-provider">Haiku · adversarial second opinion</div></div></div>
+            <div class="src-row"><span class="src-row-label">When</span><span class="src-row-val">After consensus approves, before order placement</span></div>
+            <div class="src-row"><span class="src-row-label">Mode</span><span class="src-row-val">SOFT (default 14d) — penalty only · HARD — veto blocks trade</span></div>
+            <div class="src-row"><span class="src-row-label">Output</span><span class="src-row-val">veto, severity, score_penalty (high=−0.5 / med=−0.25), reasons[]</span></div>
+            <div class="src-row"><span class="src-row-label">Code</span><span class="src-row-val"><code>trading/red_team_agent.py</code></span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🔬</div><div><div class="src-name">A-B · Backtest Validator</div><div class="src-provider">Heuristic — replay engine staged for follow-on</div></div></div>
+            <div class="src-row"><span class="src-row-label">When</span><span class="src-row-val">Every L-3/L-4/L-5 param change submits OLD vs NEW for validation</span></div>
+            <div class="src-row"><span class="src-row-label">Stage 0</span><span class="src-row-val">Bucket-vs-baseline expectancy + bootstrap CI</span></div>
+            <div class="src-row"><span class="src-row-label">Recommends</span><span class="src-row-val">approve / reject / neutral / insufficient</span></div>
+            <div class="src-row"><span class="src-row-label">Code</span><span class="src-row-val"><code>trading/backtest_validator.py</code></span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🔍</div><div><div class="src-name">A-C · Post-Mortem Agent</div><div class="src-provider">Haiku · classifies losing trades</div></div></div>
+            <div class="src-row"><span class="src-row-label">When</span><span class="src-row-val">Hourly — picks up un-analysed losses (≤ −$1)</span></div>
+            <div class="src-row"><span class="src-row-label">Output</span><span class="src-row-val">tag (10-class taxonomy) + severity + evidence</span></div>
+            <div class="src-row"><span class="src-row-label">Reads</span><span class="src-row-val">positions row + close_reason + setup metadata</span></div>
+            <div class="src-row"><span class="src-row-label">Code</span><span class="src-row-val"><code>trading/post_mortem.py</code></span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">⚡</div><div><div class="src-name">A-D · Exec-Quality Monitor</div><div class="src-provider">Slippage tracker · settings-cached</div></div></div>
+            <div class="src-row"><span class="src-row-label">When</span><span class="src-row-val">On every fill — captures (intended_entry, actual_entry, direction)</span></div>
+            <div class="src-row"><span class="src-row-label">Aggregates</span><span class="src-row-val">7d avg / median / max slippage_bps (signed)</span></div>
+            <div class="src-row"><span class="src-row-label">Alerts</span><span class="src-row-val">warn ≥ 8 bps · alert ≥ 15 bps → daily Telegram report</span></div>
+            <div class="src-row"><span class="src-row-label">Code</span><span class="src-row-val"><code>trading/exec_quality.py</code></span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🌊</div><div><div class="src-name">A-E · Cascade Predictor</div><div class="src-provider">Fuses VPIN + funding spread + OI divergence</div></div></div>
+            <div class="src-row"><span class="src-row-label">Fusion</span><span class="src-row-val">0.50 × VPIN + 0.30 × |funding Δ| + 0.20 × OI divergence</span></div>
+            <div class="src-row"><span class="src-row-label">Output</span><span class="src-row-val">risk ∈ [0, 1] + side-at-risk tag</span></div>
+            <div class="src-row"><span class="src-row-label">Veto</span><span class="src-row-val">risk ≥ 0.75 AND trade-side = at-risk side</span></div>
+            <div class="src-row"><span class="src-row-label">Code</span><span class="src-row-val"><code>trading/cascade_predictor.py</code></span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Learning Layer (L-0 → L-5) ────────────────────────────────────────── -->
+      <div class="src-layer" style="margin-top:24px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#ffb300"></div>
+          <div class="src-layer-title">Self-Learning Ladder (L-0 → L-5)</div>
+          <div class="src-layer-sub">Every learner gates writes through Bayesian CI (R-5) + A-B validator</div>
+        </div>
+        <div class="src-grid">
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🗄️</div><div><div class="src-name">L-0 · learned_params accessor + smallest-proof per-symbol</div></div></div>
+            <div class="src-row"><span class="src-row-label">Stores</span><span class="src-row-val">learned_params + learner_log tables (migrations 70/71)</span></div>
+            <div class="src-row"><span class="src-row-label">First user</span><span class="src-row-val">symbol_modifier_v1 — penalises Bayesian-confident losers</span></div>
+            <div class="src-row"><span class="src-row-label">Cadence</span><span class="src-row-val">Every 6h</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🔗</div><div><div class="src-name">L-1 · Read-path accessor layer</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">config.get_consensus_min_score() / get_symbol_modifier(…) / get_session_modifier(…)</span></div>
+            <div class="src-row"><span class="src-row-label">Fallback</span><span class="src-row-val">If learned_params lookup fails → existing constant default</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">⏰</div><div><div class="src-name">L-2 · Session / DoW / Hour learners</div></div></div>
+            <div class="src-row"><span class="src-row-label">Buckets</span><span class="src-row-val">Asia/London/NY-AM/NY-Overlap/NY-PM/Off-hours · Mon..Sun · h00..h23</span></div>
+            <div class="src-row"><span class="src-row-label">Gate</span><span class="src-row-val">≥20 trades/bucket + R-5 posterior + 2% equity threshold</span></div>
+            <div class="src-row"><span class="src-row-label">Cadence</span><span class="src-row-val">Every 6h (offset 30s from per-symbol)</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🎚️</div><div><div class="src-name">L-3 · Consensus-threshold learner</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">Reads Opus-calibration buckets; raises threshold if at/above is loss-making</span></div>
+            <div class="src-row"><span class="src-row-label">Gate</span><span class="src-row-val">R-5 posterior + A-B validator must not reject</span></div>
+            <div class="src-row"><span class="src-row-label">Bounds</span><span class="src-row-val">5 ≤ min_score ≤ 10 · max Δ 1 per cycle · daily</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🎯</div><div><div class="src-name">L-4 · TP / SL distance learner</div></div></div>
+            <div class="src-row"><span class="src-row-label">TP target</span><span class="src-row-val">median MFE of winners × 0.85 (per archetype)</span></div>
+            <div class="src-row"><span class="src-row-label">SL buffer</span><span class="src-row-val">p90 MAE of winners × 1.05 — never average loser-MAE</span></div>
+            <div class="src-row"><span class="src-row-label">Bounds</span><span class="src-row-val">0.5 ≤ ATR multiple ≤ 4.0 · daily · A-B gated</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">💰</div><div><div class="src-name">L-5 · Risk-param learner (Kelly + time-stop)</div></div></div>
+            <div class="src-row"><span class="src-row-label">Risk %</span><span class="src-row-val">Quarter-Kelly from observed WR + payoff ratio</span></div>
+            <div class="src-row"><span class="src-row-label">Notional</span><span class="src-row-val">max(25, equity × 10%) — scales with growth</span></div>
+            <div class="src-row"><span class="src-row-label">Time stop</span><span class="src-row-val">win_p75 × 1.2 when loss_med &gt; win_p75 × 1.4</span></div>
+            <div class="src-row"><span class="src-row-label">DD-pause</span><span class="src-row-val">Below −8% window DD → refuses loosening</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Noise Detection Layer (N-1 → N-4) ─────────────────────────────────── -->
+      <div class="src-layer" style="margin-top:24px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#26d96b"></div>
+          <div class="src-layer-title">Noise Detection (N-1 → N-4)</div>
+          <div class="src-layer-sub">Statistical gates that drop low-signal-to-noise setups before risk capital touches them</div>
+        </div>
+        <div class="src-grid">
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">🤝</div><div><div class="src-name">N-1 · Consensus-variance gate</div></div></div>
+            <div class="src-row"><span class="src-row-label">Rule</span><span class="src-row-val">|scanner_score − ai_score| &gt; FUTURES_AI_MAX_SCORE_GAP (default 2.5) → veto</span></div>
+            <div class="src-row"><span class="src-row-label">Also</span><span class="src-row-val">persistence helper — N-bar window for confluence signals</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">📐</div><div><div class="src-name">N-2 · Benjamini-Hochberg FDR</div></div></div>
+            <div class="src-row"><span class="src-row-label">Use</span><span class="src-row-val">Multiple-testing correction for confluence/cohort claims</span></div>
+            <div class="src-row"><span class="src-row-label">Output</span><span class="src-row-val">significant[] flag + effect-size filter helper</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">🚫</div><div><div class="src-name">N-3 · Structural noise gates</div></div></div>
+            <div class="src-row"><span class="src-row-label">Wick</span><span class="src-row-val">Long upper wick ≥ 1.5× body on Long entry → −0.4 score</span></div>
+            <div class="src-row"><span class="src-row-label">ADX</span><span class="src-row-val">&lt; 20 → −0.3 (or hard-veto with FUTURES_AI_ADX_HARD_GATE=1)</span></div>
+            <div class="src-row"><span class="src-row-label">BB squeeze</span><span class="src-row-val">Width bottom decile + breakout archetype → +0.2 boost</span></div>
+            <div class="src-row"><span class="src-row-label">Wired</span><span class="src-row-val">Scanner Stage 3 modifier stack, after HMM/CPR/IB/VMC</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">🌪️</div><div><div class="src-name">N-4 · VPIN toxicity gate</div></div></div>
+            <div class="src-row"><span class="src-row-label">Veto</span><span class="src-row-val">VPIN ≥ 0.70 → block entry — informed flow dominant</span></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">vpin_snapshot table (5-min poll loop, top-20 watchlist)</span></div>
+            <div class="src-row"><span class="src-row-label">Stale</span><span class="src-row-val">Falls open if snapshot &gt; 30 min old (won't block on missing data)</span></div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- Cross-link back to the other doc pages -->
       <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
         <a href="#" onclick="showPage('sources');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
           <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🗂️ Data Sources →</div>
-          <div style="font-size:.75rem;color:var(--muted)">All external inputs · 4 layers · who reads what</div>
+          <div style="font-size:.75rem;color:var(--muted)">All external inputs · 5 layers · who reads what</div>
         </a>
         <a href="#" onclick="showPage('scanner-pipeline');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #4fc3f7;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
           <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🪜 Scanner Pipeline →</div>
           <div style="font-size:.75rem;color:var(--muted)">7-stage funnel · main + backup paths · modifiers + caps</div>
+        </a>
+        <a href="#" onclick="showPage('self-learning');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #6c63ff;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🤖 Self-Learning →</div>
+          <div style="font-size:.75rem;color:var(--muted)">11 background loops · daily report · params history</div>
         </a>
       </div>
 
@@ -2284,18 +2672,244 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
       </div>
 
+      <!-- ── N-3 Noise gates (option-a addition) ───────────────────────────────── -->
+      <div class="src-layer" style="margin-top:24px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#26d96b"></div>
+          <div class="src-layer-title">Stage 3 — N-3 Noise gates (added 2026-05-31)</div>
+          <div class="src-layer-sub">Three structural checks run AFTER all directional modifiers, BEFORE the min_score filter</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+          <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+            <thead><tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--border)">
+              <th style="padding:6px 8px">Gate</th>
+              <th style="padding:6px 8px">Fires when</th>
+              <th style="padding:6px 8px">Effect on score</th>
+              <th style="padding:6px 8px">Env knob</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:6px 8px;font-weight:600">Wick rejection</td>
+                <td style="padding:6px 8px;color:var(--muted)">4H upper wick ≥ 1.5× body on Long (or lower wick ≥ 1.5× body on Short) AND body ≥ 30% of range</td>
+                <td style="padding:6px 8px">−0.4</td>
+                <td style="padding:6px 8px;font-family:ui-monospace,monospace;font-size:.72rem">FUTURES_AI_WICK_REJECT_RATIO</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:6px 8px;font-weight:600">ADX low-trend</td>
+                <td style="padding:6px 8px;color:var(--muted)">4H ADX &lt; 20 — no clear trend on the entry timeframe</td>
+                <td style="padding:6px 8px">−0.3 (or hard veto)</td>
+                <td style="padding:6px 8px;font-family:ui-monospace,monospace;font-size:.72rem">FUTURES_AI_ADX_HARD_GATE=1</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px;font-weight:600">BB squeeze</td>
+                <td style="padding:6px 8px;color:var(--muted)">Band width rank in bottom 15% AND archetype is breakout / trend_continuation / po3_expansion</td>
+                <td style="padding:6px 8px;color:#26d96b">+0.2 boost</td>
+                <td style="padding:6px 8px;font-family:ui-monospace,monospace;font-size:.72rem">FUTURES_AI_BB_SQUEEZE_DECILE</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Post-consensus pipeline (after Opus approval) ─────────────────────── -->
+      <div class="src-layer" style="margin-top:24px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#ef5350"></div>
+          <div class="src-layer-title">After Stage-3 score: post-consensus veto chain</div>
+          <div class="src-layer-sub">Setup passed min_score AND Opus approval — now five microstructure / adversarial gates run before order placement</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+          <ol style="margin:0;padding-left:20px;font-size:.85rem;line-height:1.75;color:var(--text)">
+            <li><b>N-1 — Consensus variance gate</b> · |scanner_score − ai_score| ≤ FUTURES_AI_MAX_SCORE_GAP (2.5); larger gap rejected as ambiguous → <code>rejected_consensus_variance</code></li>
+            <li><b>N-4 — VPIN toxicity</b> · latest vpin_snapshot for symbol; ≥ 0.70 vetoes the entry → <code>rejected_vpin_toxicity</code></li>
+            <li><b>A-E — Cascade Predictor</b> · fused risk ≥ 0.75 AND direction = side-at-risk → <code>rejected_cascade_risk</code></li>
+            <li><b>A-A — Red-Team Agent</b> · Haiku adversarial review; SOFT mode adds score_penalty (logged), HARD mode emits <code>red_team_veto_hard</code></li>
+            <li><b>Direction sanity</b> · ai_dir vs scanner direction mismatch → <code>consensus_rejected</code></li>
+          </ol>
+          <div style="margin-top:14px;color:var(--muted);font-size:.78rem;line-height:1.6">
+            Every rejection is logged to <code>futures_ai_log</code> with the full snapshot — surfaced in the Futures-AI Statistics page (Noise gates panel) and in the daily Telegram report (24h rejections).
+          </div>
+        </div>
+      </div>
+
       <!-- Cross-link back to the other doc pages -->
       <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
         <a href="#" onclick="showPage('sources');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
           <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🗂️ Data Sources →</div>
-          <div style="font-size:.75rem;color:var(--muted)">All external inputs · 4 layers · who reads what</div>
+          <div style="font-size:.75rem;color:var(--muted)">All external inputs · 5 layers · who reads what</div>
         </a>
         <a href="#" onclick="showPage('ai-architecture');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ffb300;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
           <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🧠 AI Architecture →</div>
-          <div style="font-size:.75rem;color:var(--muted)">7-agent pipeline · 5-provider cascade · model routing</div>
+          <div style="font-size:.75rem;color:var(--muted)">7-agent pipeline · specialised agents · learning ladder · noise gates</div>
+        </a>
+        <a href="#" onclick="showPage('self-learning');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #6c63ff;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🤖 Self-Learning →</div>
+          <div style="font-size:.75rem;color:var(--muted)">11 background loops · daily Telegram report · params history</div>
         </a>
       </div>
 
+    </div>
+
+    <!-- ── Self-Learning Architecture (added 2026-05-31, option-a ship) ────────── -->
+    <div id="page-self-learning" class="page-view">
+      <div class="page-title">🤖 Self-Learning Architecture</div>
+      <div class="page-subtitle">11 background loops · 5 specialised agents · 6 learners · 4 noise gates · daily Telegram report · all auto_ai only</div>
+
+      <!-- ─── Shipped status banner ──────────────────────────────────────────── -->
+      <div class="src-grid" style="margin-bottom:24px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+        <div class="src-card" style="border-left-color:#26d96b">
+          <div class="src-card-hdr"><div class="src-icon">✓</div><div><div class="src-name">Ship date</div><div class="src-provider">2026-05-31 (option-a)</div></div></div>
+          <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val" style="color:#26d96b">All weeks 1-11 deployed</span></div>
+          <div class="src-row"><span class="src-row-label">Deferred</span><span class="src-row-val">DSPy active prompts (2026-06-01)</span></div>
+        </div>
+        <div class="src-card" style="border-left-color:#ffb300">
+          <div class="src-card-hdr"><div class="src-icon">📊</div><div><div class="src-name">Bayesian foundation</div><div class="src-provider">R-5 gates every learner</div></div></div>
+          <div class="src-row"><span class="src-row-label">WR</span><span class="src-row-val">Beta-Binomial posterior · uniform prior</span></div>
+          <div class="src-row"><span class="src-row-label">P&amp;L</span><span class="src-row-val">Gaussian-conjugate + bootstrap CI</span></div>
+        </div>
+        <div class="src-card" style="border-left-color:#6c63ff">
+          <div class="src-card-hdr"><div class="src-icon">🛡️</div><div><div class="src-name">Safety</div><div class="src-provider">Three-layer write barrier</div></div></div>
+          <div class="src-row"><span class="src-row-label">1</span><span class="src-row-val">R-5 posterior gate (statistical confidence)</span></div>
+          <div class="src-row"><span class="src-row-label">2</span><span class="src-row-val">A-B backtest validator (historical sanity)</span></div>
+          <div class="src-row"><span class="src-row-label">3</span><span class="src-row-val">Operator pin/unpin/revert via learned_params</span></div>
+        </div>
+      </div>
+
+      <!-- ─── Background loops table ─────────────────────────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#4fc3f7"></div>
+          <div class="src-layer-title">Background loops on Pi 21</div>
+          <div class="src-layer-sub">All 11 are daemon threads spawned by <code>monitor_scheduler.py</code></div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden">
+          <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+            <thead><tr style="text-align:left;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border)">
+              <th style="padding:8px 10px">#</th>
+              <th style="padding:8px 10px">Thread</th>
+              <th style="padding:8px 10px">Cadence</th>
+              <th style="padding:8px 10px">What it does</th>
+              <th style="padding:8px 10px">Writes</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">1</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">sync</td><td style="padding:6px 10px;color:var(--muted)">5 min</td><td style="padding:6px 10px">Bitget auto-sync (manual chain)</td><td style="padding:6px 10px;color:var(--muted)">positions, wallet_snapshots</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">2</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">blofin-sync</td><td style="padding:6px 10px;color:var(--muted)">5 min</td><td style="padding:6px 10px">Blofin sync (manual chain)</td><td style="padding:6px 10px;color:var(--muted)">positions</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">3</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">monitor</td><td style="padding:6px 10px;color:var(--muted)">10 min</td><td style="padding:6px 10px">Live trade monitor + hedge_manager</td><td style="padding:6px 10px;color:var(--muted)">futures_ai_log, settings</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">4</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">daily-report</td><td style="padding:6px 10px;color:var(--muted)">first cycle ≥ 09:00 UTC</td><td style="padding:6px 10px">Generates &amp; sends daily Telegram digest</td><td style="padding:6px 10px;color:var(--muted)">Telegram</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">5</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">r3-backfill</td><td style="padding:6px 10px;color:var(--muted)">1 h</td><td style="padding:6px 10px">Backfills funding_paid_usd and liq_distance_atr</td><td style="padding:6px 10px;color:var(--muted)">positions</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">6</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">learner-symbol</td><td style="padding:6px 10px;color:var(--muted)">6 h</td><td style="padding:6px 10px">L-0 per-symbol modifier learner</td><td style="padding:6px 10px;color:var(--muted)">learned_params</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">7</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">learner-time</td><td style="padding:6px 10px;color:var(--muted)">6 h</td><td style="padding:6px 10px">L-2 session / DoW / hour learners</td><td style="padding:6px 10px;color:var(--muted)">learned_params</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">8</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">learner-threshold</td><td style="padding:6px 10px;color:var(--muted)">daily</td><td style="padding:6px 10px">L-3 consensus_min_score (A-B gated)</td><td style="padding:6px 10px;color:var(--muted)">learned_params</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">9</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">post-mortem</td><td style="padding:6px 10px;color:var(--muted)">1 h</td><td style="padding:6px 10px">A-C Haiku failure-mode classifier on new losses</td><td style="padding:6px 10px;color:var(--muted)">positions.postmortem_*</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">10</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">vpin</td><td style="padding:6px 10px;color:var(--muted)">5 min</td><td style="padding:6px 10px">N-4 VPIN snapshot, top 20 watchlist symbols</td><td style="padding:6px 10px;color:var(--muted)">vpin_snapshot</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">11</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">learner-tpsl</td><td style="padding:6px 10px;color:var(--muted)">daily</td><td style="padding:6px 10px">L-4 TP / SL distance from MFE / MAE</td><td style="padding:6px 10px;color:var(--muted)">learned_params</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">12</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">learner-risk</td><td style="padding:6px 10px;color:var(--muted)">daily</td><td style="padding:6px 10px">L-5 Kelly risk_per_trade + max_notional + time_stop_hours</td><td style="padding:6px 10px;color:var(--muted)">learned_params</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">13</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">exec-quality</td><td style="padding:6px 10px;color:var(--muted)">1 h</td><td style="padding:6px 10px">A-D slippage aggregate (7d avg / median / max bps)</td><td style="padding:6px 10px;color:var(--muted)">settings.exec_quality_summary</td></tr>
+              <tr><td style="padding:6px 10px">14</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">self-review</td><td style="padding:6px 10px;color:var(--muted)">24 h</td><td style="padding:6px 10px">Architecture self-audit (legacy)</td><td style="padding:6px 10px;color:var(--muted)">settings</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── Daily Telegram report sections ───────────────────────────────────── -->
+      <div class="src-layer" style="margin-top:24px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#ffb300"></div>
+          <div class="src-layer-title">Daily Telegram report — 7 sections</div>
+          <div class="src-layer-sub">Fires at the first monitor cycle ≥ 09:00 UTC each day · sent via Hermes-style bot</div>
+        </div>
+        <div class="src-grid">
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">📊</div><div><div class="src-name">Performance</div></div></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">kill_switch.evaluate() — 24h, 7d, 30d realised P&amp;L + WR</span></div>
+          </div>
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">⏰</div><div><div class="src-name">Reminders</div></div></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">Red-Team review (+14d) · Strategy Selector revisit (+30d) · DSPy follow-on</span></div>
+          </div>
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🔄</div><div><div class="src-name">Learner activity (24h)</div></div></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">learner_log — last 24h applied / skipped / rejected entries</span></div>
+          </div>
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🚫</div><div><div class="src-name">Noise gates (24h rejections)</div></div></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">futures_ai_log — rejected_* events grouped</span></div>
+          </div>
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">📉</div><div><div class="src-name">Edge-decay watch</div></div></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">edge_decay.alerts_only — CUSUM + Page-Hinkley per archetype</span></div>
+          </div>
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">🔍</div><div><div class="src-name">Top loss patterns (7d)</div></div></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">post_mortem.top_recurring_tags — 10-class taxonomy</span></div>
+          </div>
+          <div class="src-card" style="border-left-color:#ffb300">
+            <div class="src-card-hdr"><div class="src-icon">⚡</div><div><div class="src-name">Execution quality (7d)</div></div></div>
+            <div class="src-row"><span class="src-row-label">Source</span><span class="src-row-val">exec_quality.daily_report_line — slippage avg / median / max bps</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Schema additions today ───────────────────────────────────────────── -->
+      <div class="src-layer" style="margin-top:24px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#6c63ff"></div>
+          <div class="src-layer-title">Schema additions — 2026-05-31</div>
+          <div class="src-layer-sub">All idempotent ALTER TABLE; old rows stay NULL and are skipped by gates</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+          <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+            <thead><tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--border)">
+              <th style="padding:6px 10px">Migration</th>
+              <th style="padding:6px 10px">Table / column</th>
+              <th style="padding:6px 10px">Purpose</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">68</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">positions.funding_paid_usd</td><td style="padding:6px 10px;color:var(--muted)">R-3 funding-cost backfill</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">69</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">positions.liq_distance_atr</td><td style="padding:6px 10px;color:var(--muted)">R-3 — skipped under cross margin</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">70</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">learned_params (new)</td><td style="padding:6px 10px;color:var(--muted)">L-0 key/value store with pin + revert</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">71</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">learner_log (new)</td><td style="padding:6px 10px;color:var(--muted)">Audit trail of every applied / skipped / rejected change</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">A-C</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">positions.postmortem_*</td><td style="padding:6px 10px;color:var(--muted)">tag / severity / reason / evidence / done / cost_usd</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">L-4</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">positions.mfe_atr_4h, mae_atr_4h</td><td style="padding:6px 10px;color:var(--muted)">MFE/MAE in ATR units — TP/SL learner input</td></tr>
+              <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px">A-D</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">positions.intended_entry, slippage_bps</td><td style="padding:6px 10px;color:var(--muted)">Exec-Quality Monitor input</td></tr>
+              <tr><td style="padding:6px 10px">N-4</td><td style="padding:6px 10px;font-family:ui-monospace,monospace">vpin_snapshot (new)</td><td style="padding:6px 10px;color:var(--muted)">ts, symbol, vpin, n_buckets, bucket_volume…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── Reading the system live ──────────────────────────────────────────── -->
+      <div class="src-layer" style="margin-top:24px">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#26d96b"></div>
+          <div class="src-layer-title">Reading the system live</div>
+          <div class="src-layer-sub">Where to look for what</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;font-size:.85rem;line-height:1.8">
+          <div>• <b>Futures-AI Statistics</b> page → bottom panels surface every learner write, every noise-gate rejection, every edge-decay alert.</div>
+          <div>• <b>Daily Telegram digest</b> → 09:00 UTC condensed summary of all of the above.</div>
+          <div>• <code>GET /api/futures-ai/l7-panels</code> → JSON of learned_log + noise_gates + reminders + edge_decay (5s cache, &lt;200ms).</div>
+          <div>• <code>GET /api/futures-ai/learned-params</code> → full key/value snapshot for operator review.</div>
+          <div>• <code>POST /api/futures-ai/learner/symbol</code> → manual trigger for the per-symbol learner.</div>
+          <div>• <code>POST /api/futures-ai/r3-backfill</code> → manual trigger for funding/liq backfill.</div>
+        </div>
+      </div>
+
+      <!-- Cross-link back to the other doc pages -->
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+        <a href="#" onclick="showPage('sources');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ef5350;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🗂️ Data Sources →</div>
+          <div style="font-size:.75rem;color:var(--muted)">VPIN is in Layer 5 — Microstructure</div>
+        </a>
+        <a href="#" onclick="showPage('ai-architecture');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #ffb300;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🧠 AI Architecture →</div>
+          <div style="font-size:.75rem;color:var(--muted)">Specialised agents, learning ladder, noise gates</div>
+        </a>
+        <a href="#" onclick="showPage('scanner-pipeline');return false" style="flex:1;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid #4fc3f7;border-radius:var(--radius);padding:14px 16px;text-decoration:none;color:var(--text)">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:4px">🪜 Scanner Pipeline →</div>
+          <div style="font-size:.75rem;color:var(--muted)">N-3 modifiers in Stage 3 · post-consensus veto chain</div>
+        </a>
+      </div>
     </div>
 
     <!-- ── Acki Nacki / DODEX Integration (preparation, no app code wired in) ───── -->
@@ -2478,6 +3092,76 @@ select:focus,input:focus{border-color:var(--accent)}
         </div>
       </div>
 
+      <!-- ─── GOSH.AI ecosystem update (added 2026-05-31) ──────────────────────── -->
+      <div class="src-layer">
+        <div class="src-layer-hdr">
+          <div class="src-layer-dot" style="background:#6c63ff"></div>
+          <div class="src-layer-title">GOSH.AI — adjacent on-chain AI runtime (research note 2026-05-31)</div>
+          <div class="src-layer-sub">Same team (Mitja Goroshevsky · GOSH Technology Ltd) · separate org from gosh-sh</div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:8px">What it is</div>
+          <div style="font-size:.82rem;line-height:1.7;color:var(--muted)">
+            GOSH.AI is a <b>hybrid intelligence layer</b> (their tagline: "infinite context, any model, any scale · built around data, not models") that produces on-chain code via a DAO-governed workflow. It is <b>not</b> a self-trading on-chain agent — the agent runtime itself is off-chain (Rust), but it WRITES code that lives on the Acki Nacki / GOSH chain and gets reviewed + voted on by a DAO before being merged.
+            <br><br>
+            Workflow: upload <code>Spec.md</code> → bot creates a DAO + repository on chain → LLM proposes file changes as DAO proposals → DAO votes → accepted changes persist as immutable, timestamped on-chain commits. Currently supports <b>asynchronous Solidity only</b>.
+          </div>
+        </div>
+
+        <div class="src-grid">
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🌐</div><div><div class="src-name">gosh.ai (Runtime)</div><div class="src-provider">github.com/gosh-dot-ai/gosh.ai</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">"Gosh Runtime" — the orchestration layer</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">11 · last update Apr 3, 2026</span></div>
+            <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val">Developer preview</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🤖</div><div><div class="src-name">gosh.agent</div><div class="src-provider">Rust · MIT (Goroshevsky/GOSH Tech)</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">Off-chain task executor · MCP interface to LLM + memory</span></div>
+            <div class="src-row"><span class="src-row-label">Tools</span><span class="src-row-val"><code>agent_start</code> · <code>agent_status</code> · <code>agent_create_task</code></span></div>
+            <div class="src-row"><span class="src-row-label">Run</span><span class="src-row-val"><code>cargo build --release</code> → port 8767 default</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">13 · last update May 2, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🧠</div><div><div class="src-name">gosh.memory</div><div class="src-provider">Python · kNN context store</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">Persistent memory backend for the agent (MCP)</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">15 · last update Apr 5, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🛠️</div><div><div class="src-name">gosh.cli</div><div class="src-provider">Rust client</div></div></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">14 · last update May 2, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🚀</div><div><div class="src-name">gosh.startrek</div><div class="src-provider">Python · Community Edition</div></div></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">"GOSH.AI Community Edition" — free-tier deployment</span></div>
+            <div class="src-row"><span class="src-row-label">Stars</span><span class="src-row-val">0 · last update May 2, 2026</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">📦</div><div><div class="src-name">gosh.common</div><div class="src-provider">Shared library</div></div></div>
+            <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val">Most-recently updated repo — last commit May 29, 2026</span></div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:14px">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:8px">Relevance to our DODEX integration</div>
+          <div style="font-size:.82rem;line-height:1.7;color:var(--muted)">
+            GOSH.AI does <b>not</b> change our integration plan. Our DODEX wiring is a Python client to the TVM-SDK Node sidecar reading DEX state and submitting orders — no AI code-generation step needed. However:
+            <ul style="margin:8px 0 0 18px;padding:0">
+              <li>If we ever want to deploy <b>custom on-chain trading logic</b> (e.g. a Solidity contract that manages multi-leg orders, hedging splits, or programmable take-profits on chain), GOSH.AI is the path that comes with DAO-governed review baked in.</li>
+              <li>The <code>gosh.agent</code> + <code>gosh.memory</code> stack is structurally similar to our own auto_ai self-learning ladder (off-chain agent + persistent memory + LLM orchestrator) — worth watching as a reference design.</li>
+              <li>Same team as the chain itself = closer alignment with Acki Nacki's Solidity dialect and execution model than third-party Solidity tooling would offer.</li>
+            </ul>
+            <b>Action:</b> none required. Watch for <code>gosh.common</code> activity (the most-active repo) as a signal that the runtime is preparing GA. Re-evaluate after DODEX Phase-2 ships if we need on-chain trade-logic surface area.
+          </div>
+        </div>
+      </div>
+
       <!-- ─── External references ────────────────────────────────────────────── -->
       <div class="src-layer">
         <div class="src-layer-hdr">
@@ -2509,6 +3193,22 @@ select:focus,input:focus{border-color:var(--accent)}
             <div class="src-row"><span class="src-row-label">Version</span><span class="src-row-val">v2.24.21 (2026-05-21)</span></div>
             <div class="src-row"><span class="src-row-label">npm</span><span class="src-row-val"><code>@tvmsdk/core</code> · <code>@tvmsdk/lib-node</code></span></div>
             <div class="src-row"><span class="src-row-label">Python binding</span><span class="src-row-val" style="color:var(--muted)">None official — using Node sidecar</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#6c63ff">
+            <div class="src-card-hdr"><div class="src-icon">🤖</div><div><div class="src-name">GOSH.AI</div><div class="src-provider">Adjacent AI runtime — research watch</div></div></div>
+            <div class="src-row"><span class="src-row-label">Landing</span><span class="src-row-val"><a href="https://gosh.ai/" target="_blank" rel="noopener" style="color:var(--accent)">gosh.ai</a></span></div>
+            <div class="src-row"><span class="src-row-label">GitHub</span><span class="src-row-val"><a href="https://github.com/gosh-dot-ai" target="_blank" rel="noopener" style="color:var(--accent)">gosh-dot-ai</a> (8 repos)</span></div>
+            <div class="src-row"><span class="src-row-label">Docs</span><span class="src-row-val"><a href="https://docs.gosh.sh/working-with-gosh/gosh-ai/" target="_blank" rel="noopener" style="color:var(--accent)">docs.gosh.sh/.../gosh-ai</a></span></div>
+            <div class="src-row"><span class="src-row-label">Top repo</span><span class="src-row-val"><code>gosh.memory</code> 15★ · <code>gosh.cli</code> 14★ · <code>gosh.agent</code> 13★</span></div>
+          </div>
+
+          <div class="src-card" style="border-left-color:#26d96b">
+            <div class="src-card-hdr"><div class="src-icon">📁</div><div><div class="src-name">goshai (LLM repo)</div><div class="src-provider">gosh-sh/goshai — distinct from GOSH.AI runtime</div></div></div>
+            <div class="src-row"><span class="src-row-label">Repo</span><span class="src-row-val"><a href="https://github.com/gosh-sh/goshai" target="_blank" rel="noopener" style="color:var(--accent)">gosh-sh/goshai</a></span></div>
+            <div class="src-row"><span class="src-row-label">What</span><span class="src-row-val">"LLM with knn-memory for code generation"</span></div>
+            <div class="src-row"><span class="src-row-label">Status</span><span class="src-row-val" style="color:var(--muted)">Stub repo · 1 commit · no README · no release</span></div>
+            <div class="src-row"><span class="src-row-label">Note</span><span class="src-row-val" style="color:var(--muted)">Likely an experimental sandbox — production work is in <code>gosh-dot-ai</code> org</span></div>
           </div>
         </div>
       </div>
@@ -2845,12 +3545,12 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/01-utils.js?v=3.6"></script>
 <script src="/static/js/02-dashboard.js?v=2.8"></script>
 <script src="/static/js/03-journal.js?v=2.9"></script>
-<script src="/static/js/04-deep-edge.js?v=3.3"></script>
+<script src="/static/js/04-deep-edge.js?v=3.4"></script>
 <script src="/static/js/05-advisor.js?v=2.8"></script>
 <script src="/static/js/06-import.js?v=2.8"></script>
 <script src="/static/js/07-calls.js?v=3.0"></script>
-<script src="/static/js/08-live.js?v=3.7"></script>
-<script src="/static/js/08b-live-calls.js?v=3.4"></script>
+<script src="/static/js/08-live.js?v=4"></script>
+<script src="/static/js/08b-live-calls.js?v=4"></script>
 <script src="/static/js/09-analysis.js?v=4.0"></script>
 <script src="/static/js/10-pending.js?v=3.7"></script>
 <script src="/static/js/11-sync.js?v=2.8"></script>
@@ -2859,8 +3559,10 @@ select:focus,input:focus{border-color:var(--accent)}
 <script src="/static/js/14-scanner.js?v=4.2"></script>
 <script src="/static/js/15-hindsight.js?v=3.1"></script>
 <script src="/static/js/16-settings.js?v=2.9"></script>
-<script src="/static/js/17-risk.js?v=2.2"></script>
-<script src="/static/js/18-futures-ai.js?v=1.7"></script>
+<script src="/static/js/17-risk.js?v=2.4"></script>
+<script src="/static/js/18-futures-ai.js?v=8"></script>
+<script src="/static/js/19-futures-ai-stats.js?v=4"></script>
+<script src="/static/js/20-futures-ai-models.js?v=1"></script>
 
 <nav class="bottom-nav" style="display:none" id="bottom-nav">
   <button class="bottom-nav-item" data-tab="trades">

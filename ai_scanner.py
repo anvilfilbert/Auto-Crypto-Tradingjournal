@@ -284,9 +284,15 @@ def _score_finalists_with_agents(finalists: list, conn,
                 # for 5min in chart_confluence so this is one HTTP every
                 # 5min, not per setup).
                 btc_24h = _get_ticker_change_cached("BTCUSDT")
+                # F&G pause: set fng=None when FUTURES_AI_FNG_PAUSED=1 (default
+                # ON since 2026-06-01). Forces bear_phase to classify using
+                # BTC 24h + BTC.D + VIX + HMM only — market structure, not
+                # sentiment. Set FUTURES_AI_FNG_PAUSED=0 to re-enable.
+                import os as _os
+                _fng_paused = _os.environ.get("FUTURES_AI_FNG_PAUSED", "1").strip() == "1"
                 bp = classify_phase(
                     btc_change_24h_pct=btc_24h,
-                    fng=macro.get("fear_greed"),
+                    fng=None if _fng_paused else macro.get("fear_greed"),
                     btc_dom_pct=macro.get("btc_dominance"),
                     vix=macro.get("vix"),
                     hmm_regime=macro.get("hmm_regime") or macro.get("regime"),
@@ -379,7 +385,93 @@ def _score_finalists_with_agents(finalists: list, conn,
             except Exception as e:
                 logger.debug("IB modifier error on %s: %s", sym, e)
 
+            # ── VuManChu unified signal modifier (added 2026-05-27) ────────
+            # Combines Cipher A markers (EMA ribbon + yellow_x / blood_diamond /
+            # long_ema / short_ema / red_cross / blue_triangle / red_diamond /
+            # bull_candle) + Cipher B dots/divergences into a single score in
+            # [-1.0, +1.0]. Maps direction-aware to setup_score: bullish VMC
+            # boosts Longs / penalises Shorts (and vice versa). Cap ±0.4.
+            #
+            # MTF EMA bias is intentionally SKIPPED here (include_mtf=False) —
+            # it would force 6 extra candle fetches per setup. The MTF bias
+            # remains available via /api/chart/vmc-signal for manual study.
+            # Gated on FUTURES_AI_VMC_ENABLED (default ON).
+            vmc_label = ""
+            try:
+                import os as _os_v
+                if int(_os_v.environ.get("FUTURES_AI_VMC_ENABLED", "1")):
+                    import chart_vmc_signals
+                    # Use the 4H candle df already fetched for this symbol
+                    df_4h = ((ctx.get("4H") or {}).get("candles_df")
+                             or (ctx.get("4H") or {}).get("df"))
+                    if df_4h is None:
+                        # Fallback: refetch (chart_candles is LRU-cached so usually free)
+                        from chart_candles import get_candles as _gc_v
+                        df_4h = _gc_v(sym, "4H", limit=200)
+                    if df_4h is not None and not df_4h.empty:
+                        vmc = chart_vmc_signals.compute_unified_signal(
+                            sym, df_4h, include_mtf=False)
+                        v_score = float(vmc.get("score") or 0.0)
+                        # Direction-aware: bullish VMC helps Longs, hurts Shorts
+                        sign = 1 if (direction or "").lower() == "long" else -1
+                        vmc_w = round(v_score * sign * 0.4, 3)
+                        if vmc_w != 0:
+                            score = max(0.0, min(10.0, score + vmc_w))
+                            # Concise label: list active signals with their weights
+                            actives = vmc.get("active_signals") or {}
+                            top = sorted(actives.items(),
+                                         key=lambda kv: abs(kv[1]), reverse=True)[:3]
+                            sigs_str = ", ".join(f"{k}({v:+.2f})" for k, v in top)
+                            vmc_label = (f"VMC {vmc.get('label')} "
+                                         f"score={v_score:+.2f} → {vmc_w:+.2f} "
+                                         f"({sigs_str or 'no active'})")
+                            logger.info("VMC mod applied to %s: %s", sym, vmc_label)
+            except Exception as e:
+                logger.debug("VMC modifier error on %s: %s", sym, e)
+
             # (Operator-behavior bad-hour re-apply removed 2026-05-25 — see note above.)
+
+            # ── N-3 noise gates (added — Master plan Week 7) ──────────────
+            # Wick rejection + ADX <20 + BB squeeze. Modifier-only by default;
+            # ADX hard-veto opt-in via FUTURES_AI_ADX_HARD_GATE=1.
+            n3_label = ""
+            try:
+                from trading import noise_gates
+                ctx_4h     = ctx.get("4H") or {}
+                ind_4h     = ctx_4h.get("indicators") or {}
+                adx_value  = (ind_4h.get("adx") or {}).get("value")
+                bb_info    = ind_4h.get("bollinger") or {}
+                current_bw = bb_info.get("band_width")
+                bw_history = ctx_4h.get("bb_widths_history") or []
+                last_candle = None
+                df_4h_for_n3 = ctx_4h.get("candles_df")
+                try:
+                    if df_4h_for_n3 is not None and len(df_4h_for_n3) >= 1:
+                        last = df_4h_for_n3.iloc[-1]
+                        last_candle = {"open": float(last["open"]),
+                                        "high": float(last["high"]),
+                                        "low": float(last["low"]),
+                                        "close": float(last["close"])}
+                except Exception:
+                    last_candle = None
+                arch_hint = (prep.get("archetype") or prep.get("setup_type") or "")
+                n3 = noise_gates.evaluate_all(
+                    last_candle=last_candle,
+                    adx_4h=adx_value,
+                    bb_widths_history=bw_history,
+                    bb_current_width=current_bw,
+                    direction=direction,
+                    archetype=arch_hint,
+                )
+                if n3.get("veto"):
+                    logger.info("N-3 hard veto on %s: %s", sym, "; ".join(n3["reasons"]))
+                    continue
+                if n3["total_delta"] != 0:
+                    score = max(0.0, min(10.0, score + n3["total_delta"]))
+                    n3_label = "; ".join(n3["reasons"])
+                    logger.info("N-3 mod applied to %s: %+.2f (%s)", sym, n3["total_delta"], n3_label)
+            except Exception as e:
+                logger.debug("N-3 modifier error on %s: %s", sym, e)
 
             if score < min_score:
                 continue
@@ -481,6 +573,7 @@ def _score_finalists_with_agents(finalists: list, conn,
             if hmm_label:   _po3_bits.append(hmm_label.replace("HMM: ", "hmm:"))
             if cpr_label:   _po3_bits.append(cpr_label.replace("CPR: ", "cpr:"))
             if ib_label:    _po3_bits.append(ib_label.replace("IB: ", "ib:"))
+            if vmc_label:   _po3_bits.append(vmc_label.split(" (")[0].replace("VMC ", "vmc:"))
             _po3_summary = f"PO3 [{' · '.join(_po3_bits)}]" if _po3_bits else ""
 
             base_summary = " · ".join(prep.get("key_conditions", [])[:2])
@@ -508,6 +601,8 @@ def _score_finalists_with_agents(finalists: list, conn,
                 "_hmm_regime":    hmm_label,
                 "_cpr":           cpr_label,
                 "_ib":            ib_label,
+                "_vmc":           vmc_label,
+                "_n3_noise":      n3_label,
                 "rr_ratio":       prep.get("rr_ratio", 0),
                 "key_conditions": prep.get("key_conditions", []),
                 "chart_png_b64":  prep.get("chart_png_b64", ""),
@@ -663,7 +758,19 @@ def _scan_thread(symbols: list, min_score: int = SCANNER_MIN_SCORE, criteria: di
         else:
             remaining_finalists = []
 
-        with ThreadPoolExecutor(max_workers=10) as ex:
+        # BUG-015 fix (2026-05-27): concurrency reduced 10 → 2 to stay under
+        # free-tier per-minute rate limits when Anthropic is exhausted and
+        # the cascade falls to Gemini. With 10 parallel workers all 4 Gemini
+        # models cooldown simultaneously ("All cascade providers exhausted")
+        # and every symbol returns None → 0/30 Stage 3a pass rate.
+        # 2 workers + the natural ~1-2s call latency = ~30-60 calls/min
+        # which fits within Gemini free-tier limits (4 models × 15 RPM).
+        # Trade-off: Stage 3a takes ~30s instead of ~5s. Acceptable for
+        # zero-cost AI. When user adds paid Gemini or new Anthropic credit,
+        # this can go back up to 10 without harm (env-tunable).
+        import os as _os_qs
+        _qs_workers = int(_os_qs.environ.get("SCANNER_QUICK_WORKERS", "2"))
+        with ThreadPoolExecutor(max_workers=_qs_workers) as ex:
             fq = {
                 ex.submit(_quick_score, sym, ctx, conf, dir_,
                           stable_prefix, mkt_str, quick_threshold): (sym, ctx, conf, dir_)
@@ -686,6 +793,21 @@ def _scan_thread(symbols: list, min_score: int = SCANNER_MIN_SCORE, criteria: di
 
         if _check_cancel(): return
 
+        # BUG-005 diagnostic (2026-05-26): Stage 3 funnel by direction. If
+        # Stage 2 had Shorts but Stage 3 has none, this surfaces WHERE they
+        # were lost — Haiku quick-score in current implementation.
+        s3_dirs = {"Long": 0, "Short": 0}
+        for _, _, _, dir_, _, _ in quick_results:
+            s3_dirs[dir_] = s3_dirs.get(dir_, 0) + 1
+        # Compare to Stage 2 input (finalists in this scope)
+        s2_dirs = {"Long": 0, "Short": 0}
+        for _, _, _, dir_ in finalists:
+            s2_dirs[dir_] = s2_dirs.get(dir_, 0) + 1
+        logger.info("[scanner] Stage3a (Haiku) funnel: %d/%d passed | Long %d/%d Short %d/%d",
+                    len(quick_results), len(finalists),
+                    s3_dirs["Long"], s2_dirs["Long"],
+                    s3_dirs["Short"], s2_dirs["Short"])
+
         # Sort by quick score, take top N for expensive full-detail pass
         quick_results.sort(key=lambda x: -x[4])
         top_finalists  = quick_results[:SCANNER_FULL_DETAIL_TOP_N]
@@ -702,18 +824,29 @@ def _scan_thread(symbols: list, min_score: int = SCANNER_MIN_SCORE, criteria: di
                                                   macro_ctx=macro_ctx)
         _update(stage_progress=100)
 
-        # Add non-top-N setups with Haiku score + one-sentence rationale
+        # Add non-top-N setups with Haiku score + one-sentence rationale.
+        # BUG-003 fix (2026-05-26): also run the rule-based archetype classifier
+        # — it's free (no AI calls, just rules on already-fetched candles), so
+        # there's no reason these setups should have trade_type=None while the
+        # top-3 do. Without this, the orchestrator's `low_conviction` archetype
+        # gate effectively only applies to top-3 setups.
+        from scanner_prompts import _detect_archetype as _det_arch
         for sym, ctx, conf, direction, score, reason in rest_finalists:
             inds  = ctx.get("4H", {}).get("indicators", {})
             price = inds.get("ema", {}).get("current_price")
             urg   = ("Now" if score >= 9 else
                      "1-4h" if score >= 8 else
                      "Today" if score >= 7 else "1-3 days")
+            try:
+                arch_rest = _det_arch(ctx, direction, symbol=sym)
+            except Exception:
+                arch_rest = ""
             setups.append({
                 "symbol":            sym,
                 "direction":         direction,
                 "setup_score":       score,
                 "setup_label":       "Quick score only",
+                "trade_type":        arch_rest,
                 "why_this_score":    reason or "No rationale (Haiku quick-score pass)",
                 "quick_score_only":  True,
                 "confluence":        conf.get("label", ""),

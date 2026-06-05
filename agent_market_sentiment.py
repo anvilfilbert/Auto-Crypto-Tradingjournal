@@ -5,6 +5,8 @@ Pure function — reads only from CollectorResult. No AI, no DB, no network.
 Interprets funding, L/S ratio, Fear & Greed, and Grok into a structured
 sentiment verdict with a contra_signal flag.
 """
+import os
+
 from agent_types import SentimentInput, SentimentResult
 
 
@@ -21,18 +23,37 @@ def run(inp: SentimentInput) -> SentimentResult:
     key_factors = []
 
     # ── Fear & Greed ────────────────────────────────────────────────────────
+    # Two fixes shipped 2026-06-01:
+    # 1. Logic inversion: the Greed branch previously penalised Shorts (line
+    #    was `score -= 0.5` for Short in Greed zone). Contrarian-bearish at
+    #    Greed should BOOST Shorts, not penalise them.
+    # 2. Magnitude asymmetry: Long and Short used different magnitudes (Long
+    #    ±1.5/±0.5, Short ±1.0/±0.3). Now mirror-symmetric using a signed delta.
+    # F&G pause switch: FUTURES_AI_FNG_PAUSED=1 (default ON) bypasses the F&G
+    # block entirely. Per operator decision 2026-06-01: F&G is no longer
+    # trusted as scoring input; market structure replaces it. Set to 0 to
+    # re-enable.
     fg_val = fg.get("value")
     fg_cls = fg.get("classification", "")
-    if fg_val is not None:
+    fng_paused = os.environ.get("FUTURES_AI_FNG_PAUSED", "1").strip() == "1"
+    if fg_val is not None and not fng_paused:
         key_factors.append(f"F&G {fg_val} — {fg_cls}")
-        if fg_val <= 25:   # Extreme Fear — contrarian bullish
-            score += 1.5 if direction == "Long" else -1.0
-        elif fg_val <= 45:  # Fear
-            score += 0.5 if direction == "Long" else -0.3
-        elif fg_val >= 75:  # Extreme Greed — contrarian bearish
-            score -= 1.5 if direction == "Long" else -1.0
-        elif fg_val >= 55:  # Greed
-            score -= 0.3 if direction == "Long" else 0.5
+        # Signed delta: positive for Long in fear zones, negative for Long in
+        # greed zones; Short is the mirror image.
+        if fg_val <= 25:        # Extreme Fear — contrarian bullish
+            delta = 1.5 if direction == "Long" else -1.5
+        elif fg_val <= 45:      # Fear
+            delta = 0.5 if direction == "Long" else -0.5
+        elif fg_val >= 75:      # Extreme Greed — contrarian bearish
+            delta = -1.5 if direction == "Long" else 1.5
+        elif fg_val >= 55:      # Greed
+            delta = -0.5 if direction == "Long" else 0.5
+        else:                    # Neutral 45-55
+            delta = 0
+        score += delta
+    elif fg_val is not None and fng_paused:
+        # Still surface F&G in key_factors for telemetry/UI, but as info only.
+        key_factors.append(f"F&G {fg_val} — {fg_cls} (paused: not scored)")
 
     # ── Funding rate ────────────────────────────────────────────────────────
     fr_rate = fr.get("rate")

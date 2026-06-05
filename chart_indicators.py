@@ -244,29 +244,125 @@ def compute_wavetrend(df: pd.DataFrame,
 
 
 def compute_stochrsi(df: pd.DataFrame) -> dict | None:
-    """Stochastic RSI(14). Returns {"k","d","signal"} or None."""
+    """Stochastic RSI(14). Enriched 2026-05-30 — adds:
+      - k_prev / d_prev: previous-bar values for slope detection
+      - crossover: 'bullish' / 'bearish' / 'none' (K vs D within last bar)
+      - regime: 'above_50' / 'below_50' — directional bias
+      - failure_swing: 'bullish' / 'bearish' / None — same rejected-at-extreme
+        pattern as chart_rsi.detect_failure_swing but with 20/80 thresholds
+      - signal: enriched human label combining all of the above
+
+    Returns dict or None. Existing fields (k, d, signal) preserved for
+    backward compatibility; new fields are additive.
+    """
     if len(df) < 30:
         return None
     stochrsi = ta.stochrsi(df["close"], length=14, rsi_length=14, k=3, d=3)
     if stochrsi is None or stochrsi.empty:
         return None
-    k_col = [c for c in stochrsi.columns if "STOCHRSIk" in c]
-    d_col = [c for c in stochrsi.columns if "STOCHRSId" in c]
+    k_col = next((c for c in stochrsi.columns if "STOCHRSIk" in c), None)
+    d_col = next((c for c in stochrsi.columns if "STOCHRSId" in c), None)
     if not (k_col and d_col):
         return None
-    k_v = stochrsi[k_col[0]].iloc[-1]
-    d_v = stochrsi[d_col[0]].iloc[-1]
-    if pd.isna(k_v) or pd.isna(d_v):
+    k_series = stochrsi[k_col].dropna()
+    d_series = stochrsi[d_col].dropna()
+    if len(k_series) < 5 or len(d_series) < 5:
         return None
-    k, d = round(float(k_v), 1), round(float(d_v), 1)
+
+    k_v = float(k_series.iloc[-1])
+    d_v = float(d_series.iloc[-1])
+    k_prev = float(k_series.iloc[-2])
+    d_prev = float(d_series.iloc[-2])
+    if any(pd.isna(x) for x in (k_v, d_v, k_prev, d_prev)):
+        return None
+
+    k, d = round(k_v, 1), round(d_v, 1)
+
+    # Crossover within last bar
+    if k_prev <= d_prev and k_v > d_v:
+        crossover = "bullish"
+    elif k_prev >= d_prev and k_v < d_v:
+        crossover = "bearish"
+    else:
+        crossover = "none"
+
+    regime = "above_50" if k_v > 50 else "below_50"
+
+    failure_swing = _detect_stochrsi_failure_swing(k_series.tail(30))
+
+    zone = (
+        "overbought (K>80)" if k > 80 else
+        "oversold (K<20)"   if k < 20 else
+        "neutral"
+    )
+    parts = [zone]
+    if crossover != "none":
+        parts.append(f"{crossover} cross")
+    if failure_swing:
+        parts.append(f"{failure_swing} failure swing")
+
     return {
         "k": k, "d": d,
-        "signal": (
-            "overbought (K>80)" if k > 80 else
-            "oversold (K<20)"   if k < 20 else
-            "neutral"
-        ),
+        "k_prev": round(k_prev, 1),
+        "d_prev": round(d_prev, 1),
+        "signal": ", ".join(parts),
+        "crossover": crossover,
+        "regime": regime,
+        "failure_swing": failure_swing,
     }
+
+
+def _detect_stochrsi_failure_swing(k_series) -> str | None:
+    """Stoch RSI failure swing — mirrors chart_rsi.detect_failure_swing
+    pattern but with 20/80 thresholds (Stoch RSI's "extreme" boundaries).
+
+    Bullish: K dips below 20 → recovers above 20 → next local low stays
+             above the first low (rejected at oversold). Age ≤ 5 bars.
+    Bearish: mirror with 80.
+
+    Returns 'bullish' / 'bearish' / None.
+    """
+    try:
+        vals = k_series.dropna().values
+        if len(vals) < 8:
+            return None
+
+        # Bullish: two oversold attempts, second higher
+        below20 = [i for i, v in enumerate(vals) if v < 20]
+        if below20:
+            first_low_idx = below20[0]
+            first_low_val = float(vals[first_low_idx])
+            cross_back = next((i for i in range(first_low_idx + 1, len(vals))
+                               if vals[i] > 20), None)
+            if cross_back is not None:
+                after = vals[cross_back:]
+                if len(after) >= 3:
+                    second_low_val = float(after.min())
+                    second_low_off = int(after.argmin()) + cross_back
+                    if second_low_val > first_low_val and second_low_val < 50:
+                        age = len(vals) - 1 - second_low_off
+                        if age <= 5:
+                            return "bullish"
+
+        # Bearish: two overbought attempts, second lower
+        above80 = [i for i, v in enumerate(vals) if v > 80]
+        if above80:
+            first_high_idx = above80[0]
+            first_high_val = float(vals[first_high_idx])
+            cross_back = next((i for i in range(first_high_idx + 1, len(vals))
+                               if vals[i] < 80), None)
+            if cross_back is not None:
+                after = vals[cross_back:]
+                if len(after) >= 3:
+                    second_high_val = float(after.max())
+                    second_high_off = int(after.argmax()) + cross_back
+                    if second_high_val < first_high_val and second_high_val > 50:
+                        age = len(vals) - 1 - second_high_off
+                        if age <= 5:
+                            return "bearish"
+        return None
+    except Exception:
+        return None
 
 
 def compute_stochastic(df: pd.DataFrame, k_period: int = 14,
@@ -534,6 +630,128 @@ def compute_atr(df: pd.DataFrame, period: int = 14) -> dict | None:
         "value":   atr_val,
         "pct":     atr_pct,
         "comment": f"typical candle range {atr_pct}% of price — useful for SL sizing",
+    }
+
+
+def compute_supertrend_series(df: pd.DataFrame, period: int = 10,
+                               multiplier: float = 3.0) -> list[dict] | None:
+    """Per-bar Supertrend series for chart overlays.
+
+    Returns chronological list:
+      [{"time": int, "value": float, "direction": +1|-1}, ...]
+    `time` is unix seconds (LightweightCharts native format).
+    Frontend colors the line by direction sign (green=up, red=down).
+    Returns None on insufficient data.
+
+    Accepts either chart_candles convention (RangeIndex + 'timestamp' col
+    in ms) or a DatetimeIndex — matches the chart_vmc_cipher pattern.
+    """
+    if len(df) < period + 5:
+        return None
+    try:
+        st = ta.supertrend(df["high"], df["low"], df["close"],
+                            length=period, multiplier=multiplier)
+    except Exception:
+        return None
+    if st is None or st.empty:
+        return None
+    value_col = next((c for c in st.columns if c.startswith("SUPERT_")), None)
+    dir_col = next((c for c in st.columns if c.startswith("SUPERTd_")), None)
+    if not (value_col and dir_col):
+        return None
+
+    # Extract unix-second timestamps the same way chart_vmc_cipher does
+    if "timestamp" in df.columns:
+        ts_s = (df["timestamp"].astype("int64") // 1000).values
+    elif isinstance(df.index, pd.DatetimeIndex):
+        idx = df.index.tz_convert("UTC") if df.index.tz is not None else df.index
+        ts_s = (idx.asi8 // 1_000_000_000)
+    else:
+        return None
+
+    series = []
+    for i in range(len(df)):
+        v = st[value_col].iloc[i]
+        d = st[dir_col].iloc[i]
+        if pd.isna(v) or pd.isna(d):
+            continue
+        series.append({
+            "time":      int(ts_s[i]),
+            "value":     round(float(v), 6),
+            "direction": int(d),
+        })
+    return series if series else None
+
+
+def compute_supertrend(df: pd.DataFrame, period: int = 10,
+                        multiplier: float = 3.0) -> dict | None:
+    """Supertrend trend-flip indicator (ATR-based).
+
+    Added 2026-05-30 — fills the "fast trend flip" gap surfaced by external
+    research (Phantom Flow scalping survey). Distinct from MACD/EMA cross:
+    Supertrend is a *binary* state (+1 trend up / -1 trend down) computed
+    from price vs the ATR-banded mid-line, so it gives clean discrete flips
+    you can use as confluence votes or trailing stops.
+
+    Args:
+      df: OHLCV DataFrame.
+      period: ATR period (default 10).
+      multiplier: ATR multiplier for band width (default 3.0).
+
+    Returns:
+      {
+        "direction":         +1 (up) | -1 (down),
+        "supertrend_value":  float — current line value,
+        "flip_bars_ago":     int — bars since last direction change (0 if just flipped),
+        "signal":            "uptrend" | "downtrend" | "flip_bullish" | "flip_bearish",
+      }
+      or None on insufficient data.
+    """
+    if len(df) < period + 5:
+        return None
+    try:
+        st = ta.supertrend(df["high"], df["low"], df["close"],
+                            length=period, multiplier=multiplier)
+    except Exception:
+        return None
+    if st is None or st.empty:
+        return None
+
+    # pandas-ta columns: SUPERT_{period}_{multiplier}, SUPERTd_{period}_{multiplier}
+    value_col = next((c for c in st.columns if c.startswith("SUPERT_")), None)
+    dir_col = next((c for c in st.columns if c.startswith("SUPERTd_")), None)
+    if not (value_col and dir_col):
+        return None
+
+    dir_series = st[dir_col].dropna()
+    val_series = st[value_col].dropna()
+    if dir_series.empty or val_series.empty:
+        return None
+
+    cur_dir = int(dir_series.iloc[-1])
+    cur_val = float(val_series.iloc[-1])
+    if pd.isna(cur_val):
+        return None
+
+    # Count bars since last flip
+    flip_bars_ago = 0
+    for i in range(2, min(len(dir_series), 200)):
+        if int(dir_series.iloc[-i]) != cur_dir:
+            flip_bars_ago = i - 1
+            break
+    else:
+        flip_bars_ago = len(dir_series) - 1
+
+    if flip_bars_ago == 0:
+        signal = "flip_bullish" if cur_dir > 0 else "flip_bearish"
+    else:
+        signal = "uptrend" if cur_dir > 0 else "downtrend"
+
+    return {
+        "direction":        cur_dir,
+        "supertrend_value": round(cur_val, 6),
+        "flip_bars_ago":    int(flip_bars_ago),
+        "signal":           signal,
     }
 
 

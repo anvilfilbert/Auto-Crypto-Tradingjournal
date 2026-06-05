@@ -23,6 +23,23 @@ Runs as a systemd service on a Raspberry Pi 5 (<Pi-IP>). Accessible from any bro
 - **Opus calibration score:** `positions.ai_score_at_open REAL` (migration 58, added 2026-05-24). Captures the ai_score that Opus consensus assigned at entry — separate from `setup_score` (scanner score) and `consensus_model_used` (which model graded it). Used by `ai_calibration.compute_calibration()` to bucket outcomes by entry-time confidence. Populated by `trading/executor.py::_insert_open_position` from the orchestrator's signal dict. **2026-05-25 fix**: previously read from `signal.get("ai_score")` but consensus emits it as `signal["ai"]["score"]` — name mismatch left every value NULL. Now reads from the nested path with a flat-key fallback.
 - **Rulebook chain isolation:** `trader_rulebook.chain TEXT DEFAULT 'manual'` (migration 64, added 2026-05-25). Existing rules were back-tagged 'manual'. `ai_rulebook.get_rulebook(conn, chain=...)`, `update_rulebook(conn, force, chain=...)`, and `get_rulebook_for_prompt(conn, chain=...)` now filter by chain. Settings keys are per-chain: `manual` uses legacy `rulebook_updated_at`/`rulebook_trade_count`; other chains use `rulebook_updated_at_<chain>`/`rulebook_trade_count_<chain>`. API: `GET /api/rulebook?chain=auto_ai` and `POST /api/rulebook/update {"chain": "auto_ai"}` both honour the parameter.
 - **Hindsight chain isolation:** `trade_hindsight.chain TEXT DEFAULT 'manual'` (migration 65, added 2026-05-25). Same schema gap as migration 64 — the table existed for months without a chain column despite the architecture claiming it. Backfill happens implicitly via `COALESCE(h.chain, p.chain, 'manual')` in `ai_hindsight.get_results`. Writer signature changed: `_save_result(..., chain='manual')` — derived from `p.chain` in the batch query. API: `GET /api/hindsight/results?chain=auto_ai` honours the param.
+- **Self-Learning columns (2026-05-31):** `positions.funding_paid_usd` (migration 68) and `liq_distance_atr` (migration 69) for R-3 backfill. ALTER-on-import idempotent columns: `mfe_atr_4h`/`mae_atr_4h` (L-4 TP/SL learner input), `intended_entry`/`slippage_bps` (A-D Exec-Quality), `postmortem_tag`/`severity`/`reason`/`evidence`/`done`/`cost_usd` (A-C Post-Mortem outputs).
+- **Self-Learning new tables:** `learned_params` (migration 70 — key/value with pin + revert + Bayesian CI metadata), `learner_log` (migration 71 — audit trail of every applied/skipped/rejected change), `vpin_snapshot` (created lazily by `trading/vpin._ensure_table()` — ts/symbol/vpin/n_buckets/bucket_volume).
+- **Cost tracker fix (2026-05-31):** `token_usage.cache_creation_tokens` (migration 72). Was silently dropped before; tracks the tokens written to prompt cache at 1.25× input price. Combined with Opus pricing correction ($15→$5/$75→$25 was the old Opus 4.0 from May 2025) and Haiku correction ($0.80→$1.00), this brings internal cost estimates in line with Anthropic billing. SQL aggregations updated in 3 places: `system_state._token_cost_breakdown`, `routes/futures_ai.py` L-7 panel, `routes/analytics.py` /api/token-usage.
+- **Shadow comparison table (2026-05-31):** `shadow_responses` (migration 73) + `idx_shadow_ts_module` index (migration 74). Side-by-side log of primary (Anthropic) vs shadow (OpenRouter cheaper-model) responses for sampled calls. Sampling controlled by `AI_SHADOW_RATE` env (0.20 = 20%). `shadow_runner.py` spawns daemon threads after every successful primary call (both Anthropic and cascade); never blocks. `/api/shadow-stats?days=N` returns comparison aggregates. Daily prune loop in `monitor_scheduler` (30d retention). Default shadow models: deepseek/deepseek-v3.2, meta-llama/llama-3.3-70b-instruct (paid), google/gemini-2.0-flash-001, qwen/qwen3.6-flash.
+- **SQLite busy_timeout (2026-05-31):** `PRAGMA busy_timeout=5000` set in `database.get_conn()`. Without this, shadow_runner daemon-thread writes could silently drop under contention with the 12 monitor_scheduler loops.
+
+## Self-Learning architecture (2026-05-31, option-a ship, commit `1a76c00`)
+Compressed the 12-week master plan into a single-day ship. Three pillars:
+- **5 specialised agents** in `trading/`: `red_team_agent.py` (A-A, Haiku adversarial review, soft mode for 14d), `backtest_validator.py` (A-B, Stage-0 heuristic gate; replay engine staged), `post_mortem.py` (A-C, Haiku failure-mode classifier, 10-class taxonomy), `exec_quality.py` (A-D, signed slippage in bps with 7d aggregate), `cascade_predictor.py` (A-E, VPIN × funding × OI side-aware veto).
+- **6 self-learners** L-0 → L-5: `learned.py` + `learner_symbol.py`, `learner_time.py` (session/DoW/hour), `learner_threshold.py` (consensus_min_score, A-B gated), `learner_tpsl.py` (TP1 + SL ATR distance from MFE/MAE of winners), `learner_risk.py` (Quarter-Kelly risk_per_trade, dynamic max_notional, time-stop). Every learner writes through R-5 Bayesian posterior (`bayes.py`) + A-B validator + operator pin/unpin via learned_params rows. L-1 read-path layer is in `trading/config.py` — `get_consensus_min_score(archetype)`, `get_symbol_modifier(symbol)`, `get_session_modifier(session, direction)` etc. fall back to constants if learned_params is silent.
+- **4 noise gates** N-1 → N-4: `signal_consensus.py` carries the consensus-variance gate (N-1), `fdr_correction.py` provides Benjamini-Hochberg helper (N-2), `noise_gates.py` adds wick/ADX/BB-squeeze Stage-3 modifiers (N-3), `vpin.py` runs the VPIN snapshot loop and veto (N-4, Binance @aggTrades REST poll, 5-min cadence on top-20 watchlist).
+- **11 background loops** in `monitor_scheduler.py` spawn at app start; check the `[…]` prefix in journalctl to see who fired. New: `daily-report`, `r3-backfill`, `learner-symbol`, `learner-time`, `learner-threshold`, `post-mortem`, `vpin`, `learner-tpsl`, `learner-risk`, `exec-quality`.
+- **Daily Telegram digest** built by `trading/daily_report.py` — 7 sections: Performance · Reminders · Learner activity · Noise gates · Edge-decay watch (R-4 CUSUM + Page-Hinkley from `edge_decay.py`) · Top loss patterns (A-C) · Execution quality (A-D). Fires at the first cycle ≥ 09:00 UTC each day.
+- **UI surface:** Futures-AI Statistics page has 4 new bottom panels backed by `GET /api/futures-ai/l7-panels` — Recent auto-adjustments (live `learner_log`), 24h noise-gate counters, Reminders & countdowns, Edge-decay watch. Docs nav added 🤖 **Self-Learning** page (`page-self-learning`) covering all 14 background loops, daily-report sections, schema additions, and the live-introspection API surface.
+- **Order of vetos in `signal_consensus.evaluate`** (do not reorder without thinking — earlier vetos save downstream cost): low_score → N-1 consensus-variance → N-4 VPIN → A-E Cascade → AI direction mismatch → AI critical warning → approval → A-A Red-Team (last because it spends Haiku tokens).
+- **Operator overrides:** `learned_params.pinned=1` row freezes the value against any further learner write. `revert_count` + `last_revert_at` track auto-reverts (the validator can flip back to the prior value if a metric tanks after a change).
+- **Deferred:** DSPy active-prompt tuning (slated 2026-06-01); A-B Stage-1 backtest replay engine (when scanner replay scaffolding lands).
 
 ## executor.py vs paper.py — intentional duplication
 Both write a position record at trade-open. They look duplicated but write
@@ -33,6 +50,40 @@ Sharing a unified writer would force paper to carry columns it doesn't
 need, OR create a thin abstraction over two genuinely-different schemas.
 Neither is a win. Pattern: when fixing one, eyeball the other for an
 equivalent fix. This was reviewed 2026-05-26 and confirmed intentional.
+
+## F&G paused + Long-bias fixes (2026-06-01)
+Auto_ai was opening 100% Long trades (54 positions, 0 Shorts). Stage 3a Haiku
+funnel was passing 76% of Long candidates but only 1.9% of Shorts. Root causes
+fixed in 6 changes:
+
+1. **F&G paused as scoring input** — `FUTURES_AI_FNG_PAUSED=1` env var. Both
+   `bear_phase.classify_phase` and `agent_market_sentiment.run` check this and
+   skip F&G when paused. `bear_phase` gained a BTC-structure-only fallback:
+   BTC 24h ≤ -3% → decline; BTC 24h ≤ -1.5% + BTC.D > 58% → decline; BTC 24h
+   ≥ +3% → recovery. F&G data still fetched for telemetry, just not scored.
+
+2. **Logic inversion fix** — `agent_market_sentiment.py` previously had
+   `score -= 0.5` for Short in Greed zone (contrarian-bearish), which
+   penalised Shorts when it should have boosted them. Rewritten as signed
+   delta with mirror-symmetric magnitudes.
+
+3. **Mirror-symmetric RSI bands** — `scanner_prompts.py` continuation rubric
+   was "45-68 Long / 32-55 Short" (shifted toward Long). Now "45-65 / 35-55"
+   centered on 50. `SCANNER_PLAYBOOK` RSI numbers reconciled with rubric.
+
+4. **Direction-aware Sonnet rationale examples** — the consensus prompt now
+   includes both Long ("pullback to support") and Short ("rally into
+   resistance") rationale templates. Sonnet no longer reads only Long
+   geometry as the model of "good rationale."
+
+5. **Removed RISK ON/OFF macro framing** — `_build_macro_header` no longer
+   shows "VIX 15 (RISK ON)" label. Shows raw structural numbers only.
+
+6. **MARKET_CONTEXT_RULES restructured** — F&G boost rules removed; replaced
+   with BTC/BTC.D/OTHERS.D structural rules. "DEFER TO TREND" F&G escape
+   hatch removed too.
+
+To re-enable F&G: set `FUTURES_AI_FNG_PAUSED=0` in Pi `.env`, restart.
 
 ## Operator-behavior caps removed (2026-05-25)
 The personal-bad-hour cap (UTC 13/15/19/20 → score ≤ 5.5) and reversal-archetype
@@ -127,7 +178,9 @@ See Tools → Data Sources page in the UI for the full interactive reference.
 - get_category_caps() in coingecko_client.py: calls /coins/categories → meme_cap_usd (MEME.C), stable_cap_usd, stable_dominance_pct (STABLE.C.D)
 
 ## Confluence Signals (chart_confluence.py)
-15 signals total → max_per_tf = 6.35 (non-SMT) / 6.65 (SMT):
+16+ signals total → max_per_tf = 6.35 (non-SMT) / 6.65 (SMT).
+Phase-2 additions beyond the listing below: bb_squeeze ±0.2, wyckoff_trap ±0.3,
+wyckoff_multibar, sot, wave_ratio, climactic_volume ±0.2, composite_divergence.
 TF-level: RSI (regime-aware via `chart_rsi.summarize_rsi`),
           MACD (grouped momentum cap ±1.5), EMA, ADX,
           WaveTrend, MFI (grouped oscillator cap ±1.0),
@@ -201,10 +254,11 @@ were skipped — we don't hold spot):
   recovery, unknown} with a Long/Short bias.
     - distribution / decline   → favor Shorts
     - capitulation / recovery  → favor Longs
-  Setup direction agreeing with phase bias = +0.3 score modifier; fighting
-  it = -0.3. Applied in scanner Stage 3 alongside the PO3 modifiers.
-  Surfaced in setup `_bear_phase` field and the `summary` line Sonnet
-  consensus reads.
+  Setup direction agreeing with phase bias = **+0.15** score modifier; fighting
+  it = **-0.15** (lowered from ±0.3 on 2026-05-26 to reduce phase-driven
+  amplification noise). Applied in scanner Stage 3 alongside the PO3
+  modifiers. Surfaced in setup `_bear_phase` field and the `summary` line
+  Sonnet consensus reads.
 
 ## Profit Compounding Strategy (`trading/risk_budget.py`, 2026-05-23)
 Streak-based progressive risk + dynamic notional cap from the trader research
@@ -371,6 +425,40 @@ git commit -m "test: browser check clean — vX.Y.Z"
 ### Full scan (Phase 4 — one-time baseline or after major UI overhaul)
 After standard Phases 1–3 pass, run `phase4_full_scan` from the JSON.
 Use after: new tab added, major component redesign, or v2.x milestone.
+
+## DSPy post-mortem (`dspy_modules/`, 2026-06-01)
+Optional alternative to the plain Haiku post-mortem path. Three modes:
+
+- **Off** (default): `FUTURES_AI_POSTMORTEM_DSPY=0` and
+  `FUTURES_AI_POSTMORTEM_DSPY_SHADOW=0`. Plain Haiku runs as before.
+- **Shadow** (currently on): `FUTURES_AI_POSTMORTEM_DSPY_SHADOW=1`. Plain
+  Haiku still runs as primary. DSPy ALSO runs in a daemon thread on the
+  same trade; both outputs land in `shadow_responses` (primary_module=
+  'post_mortem') for side-by-side comparison. DSPy spend logged as
+  `module='post_mortem_dspy'` in `token_usage` via the `_LoggingLM`
+  subclass.
+- **Primary** (not yet active): `FUTURES_AI_POSTMORTEM_DSPY=1` and
+  `FUTURES_AI_POSTMORTEM_DSPY_SHADOW=0`. DSPy replaces plain Haiku.
+
+Taxonomy lives in `trading/post_mortem.ALLOWED_TAGS` — DSPy module imports
+from there to avoid drift. Optional compilation via
+`scripts/dspy_compile_post_mortem.py --dry-run` (needs ≥30 labeled trades).
+Compiled artifact at `dspy_modules/compiled/post_mortem_v1.json` loaded
+automatically when present.
+
+Review schedule: 2026-06-06/07 (first), 2026-06-13/14 (fallback). See
+operator memory `project_dspy_shadow_review.md`.
+
+## Notes on naming / docs
+- `compute_cvd()` (chart_indicators.py + backtest_engine.py) is named "CVD" but
+  is actually Cumulative Money Flow Volume (Chaikin AD-line style):
+  `v × (2c - l - h) / (h - l)` accumulated. True tick-aggressor CVD would need
+  trade-by-trade buy/sell classification — not what this is. The invariant
+  (formula consistency between chart + backtest) still holds; the name is the
+  documented misnomer.
+- VWAP is referenced as a "primary indicator" in some older docs but is NOT
+  implemented as a standalone `compute_vwap()`. The Cipher B "VWAP" line is
+  `WT1 - WT2` (momentum oscillator), not price-volume VWAP.
 
 ## Calculation Invariants (do not change without updating both sides)
 - WaveTrend: n1=10, n2=21, rolling(4) — must match in both chart_indicators.py AND backtest_engine.py
@@ -551,7 +639,7 @@ Standalone-capable crypto trading curriculum. **Zero imports from the journal co
 - **Mounted inside the journal** at `/training` (single try/except in `app.py` ~line 74). Visible as 🎓 Training tab in the nav (above Acki section).
 - **Standalone** via `python -m training --port 5050` — verified working with only `flask` + `pyyaml` as runtime deps.
 
-51 graded units across 6 tiers (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution → Capstone). ~520 quiz questions. 24 visual diagrams (dark-themed PNGs generated via `training/scripts/generate_chart_diagrams.py`, wired into lessons via idempotent `training/scripts/insert_diagrams_into_lessons.py`).
+58 graded units across 6 tiers (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution → Capstone). ~590 quiz questions. 24 visual diagrams (dark-themed PNGs generated via `training/scripts/generate_chart_diagrams.py`, wired into lessons via idempotent `training/scripts/insert_diagrams_into_lessons.py`).
 
 ### Coupling rules (enforced)
 - training/ MUST NOT import journal modules (chart_*, trading/*, database.py, etc.). Delete training/ → journal works. Delete the try/except in app.py → training detaches cleanly.

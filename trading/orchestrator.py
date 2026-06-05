@@ -133,9 +133,17 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     if len(_evaluated_setups) > 500:
                         _evaluated_setups.clear()
 
-                score = int(setup.get("setup_score") or 0)
+                # BUG-001 fix (2026-05-26): use float comparison so a setup
+                # scored 6.95 isn't silently truncated to 6 — important once
+                # SCANNER_MIN_SCORE is allowed to be fractional (e.g. 6.5).
+                score = float(setup.get("setup_score") or 0)
                 from constants import SCANNER_MIN_SCORE
                 if score < SCANNER_MIN_SCORE:
+                    # BUG-002 fix (2026-05-26): used to be a silent skip — no
+                    # visibility into why nothing fired. Now logged so the
+                    # operator can see "13 setups produced, 13 below threshold".
+                    _log(conn, "rejected_low_score", setup,
+                         f"setup_score {score:.2f} < SCANNER_MIN_SCORE {SCANNER_MIN_SCORE}")
                     continue
                 summary["evaluated"] += 1
 
@@ -152,6 +160,20 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 if not can_trade:
                     summary["rejected_killswitch"] += 1
                     _log(conn, "rejected_killswitch", setup, reason)
+                    continue
+
+                # 1b. Archetype gate (2026-05-26):
+                # Calibration finding from 12 closed auto_ai trades showed
+                # `low_conviction` archetype was 0-for-7 (lost on every
+                # single trade). Reject these before the consensus call —
+                # saves an Opus call AND avoids known-bad setups.
+                # Re-evaluate when n ≥ 30 with the new tiered sizing in place.
+                archetype_now = (setup.get("trade_type") or "").lower()
+                if archetype_now == "low_conviction":
+                    summary["rejected_killswitch"] += 1  # bucket with safety rejects
+                    _log(conn, "rejected_archetype", setup,
+                         "low_conviction archetype — 0/7 historical wins (auto_ai n=12 calibration). "
+                         "Auto-rejected pre-consensus. Re-evaluate threshold at n ≥ 30.")
                     continue
 
                 # 2. consensus — gated by CONSENSUS_MIN_SCORE for cost.
@@ -209,10 +231,18 @@ def on_scan_completed(scanner_state: dict) -> dict:
                 # (Opus = 5 → "half" tier, 1% equity risk instead of 2%).
                 opus_ai_score = ((verdict.get("ai") or {}).get("score")
                                  if isinstance(verdict.get("ai"), dict) else None)
+                # BUG-010 fix (2026-05-26): use Opus-emitted override prices
+                # when the scanner setup had none (quick_score_only path).
+                # Without this, EIGEN-style setups passed consensus but died
+                # in sizing because size_trade got entry=None, sl=None.
+                sizing_entry = (setup.get("_override_entry")
+                                or setup.get("entry_zone", {}).get("low")
+                                or setup.get("entry_price"))
+                sizing_sl    = setup.get("_override_sl") or setup.get("sl_price")
                 sizing = risk_budget.size_trade(
                     score      = verdict["consensus_score"],
-                    entry      = setup.get("entry_zone", {}).get("low") or setup.get("entry_price"),
-                    sl         = setup.get("sl_price"),
+                    entry      = sizing_entry,
+                    sl         = sizing_sl,
                     equity_usdt= equity,
                     conn       = conn,
                     symbol     = setup.get("symbol"),  # for per-asset vol dampener
@@ -328,6 +358,9 @@ def on_scan_completed(scanner_state: dict) -> dict:
                     # AI score at open — added 2026-05-24 for Opus calibration
                     "ai_score":             (verdict.get("ai") or {}).get("score")
                                             or verdict.get("consensus_score"),
+                    # Scan completion timestamp — executor uses it to compute
+                    # execution_lag_minutes at insert time (2026-05-26).
+                    "_scan_completed_at":   scan_ts,
                 }
                 if fa_config.is_real_mode():
                     opened_ok = _open_real(conn, signal, sizing)
@@ -360,29 +393,37 @@ def on_monitor_cycle() -> dict:
         if state == "pause_now":
             return _close_all(conn, reason="pause_now")
 
-        # Otherwise manage normally
+        # Otherwise manage normally. hedge_manager is mode-aware and runs
+        # in BOTH modes (1:1 parity — paper triggers storm hedges too).
+        try:
+            from . import hedge_manager
+        except ImportError:
+            hedge_manager = None
         if fa_config.is_real_mode():
-            # real-mode executor manages real Bitget positions
             try:
-                from . import executor, hedge_manager
+                from . import executor
                 result = executor.manage_real_positions(conn)
-                # Catastrophe hedge manager — runs every cycle in real mode
-                # only. Order matters: manage_active first (close hedge if
-                # storm passed), then check_and_open (open new hedge if
-                # storm just started). Both are no-ops when conditions
-                # aren't met or HEDGE_ENABLED=0.
+            except ImportError:
+                return {"skipped": "executor not yet built"}
+        else:
+            result = paper.manage_paper_positions(conn, _mark_price_lookup)
+
+        # Catastrophe hedge manager — runs every cycle in EITHER mode.
+        # Order matters: manage_active first (close hedge if storm passed),
+        # then check_and_open (open new hedge if storm just started). Both
+        # are no-ops when conditions aren't met or HEDGE_ENABLED=0.
+        if hedge_manager is not None:
+            try:
                 hedge_closed  = hedge_manager.manage_active_hedge(conn)
                 hedge_opened  = hedge_manager.check_and_open_hedge(conn)
                 if hedge_closed or hedge_opened:
                     if isinstance(result, dict):
                         result["hedge_action"] = (
                             "closed" if hedge_closed else "opened")
-                return result
-            except ImportError:
-                return {"skipped": "executor not yet built"}
-        else:
-            # paper mode — needs a mark-price lookup
-            return paper.manage_paper_positions(conn, _mark_price_lookup)
+            except Exception:
+                # Never let hedge_manager errors block the main lifecycle
+                pass
+        return result
 
 
 def _mark_price_lookup(symbol: str) -> float:

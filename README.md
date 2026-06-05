@@ -91,7 +91,7 @@ Institutional-grade portfolio metrics — VaR, position correlation, P&L attribu
 - **Pending Orders UX** — pop-out button on chart thumbnail opens full interactive chart; AI verdict JSON display fix with retry hint on truncated Gemini responses
 - **Futures-AI Auto-Trader** — autonomous Bitget chain (separate subaccount) consuming scanner output. Pipeline: scanner → Sonnet consensus → kill-switch → Kelly-scaled sizing → live Bitget order with ATR-based SL/TP plan orders → BE/Trail/MAE lifecycle → post-trade reflection. Two-chain DB isolation (`positions.chain = 'manual' | 'auto_ai'`) keeps manual hindsight/rulebook/learnings separate from AI ones while sharing market data, scanner, and baselines.
 - **Auto-Trader Risk Envelope** — 2% risk-per-trade (Kelly-scaled 1.0×/1.5×/2.0× by score), $25 notional cap, 10× max leverage, 5 concurrent positions (soft cap), 7 hard cap when a scanner-verified 10/10 setup unlocks the elite-bypass slot. Circuit breakers: -5% daily DD, -15% total DD, 3 consecutive losses. All decisions land in `futures_ai_log` with full audit trail.
-- **🎓 Training Module** — standalone-capable Flask sub-app at `/training`. 51-lesson Beginner-to-Pro crypto trading course across 6 tiers (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution + Capstone), ~520 quiz questions, 24 dark-themed diagrams. Path view with strict-within-tier unlock, configurable `unlock_mode: enforce|open` testing toggle, per-question explanations on wrong answers, reset-all-progress button. ZERO imports from the journal — `cd training/ && python -m training --port 5050` runs it as its own server with only `flask` + `pyyaml` as runtime deps. See [`training/README.md`](training/README.md).
+- **🎓 Training Module** — standalone-capable Flask sub-app at `/training`. 58-lesson Beginner-to-Pro crypto trading course across 6 tiers (Foundations → Chart Reading → Indicators → Advanced → Macro → Execution + Capstone), ~590 quiz questions, 24 dark-themed diagrams. Path view with strict-within-tier unlock, configurable `unlock_mode: enforce|open` testing toggle, per-question explanations on wrong answers, reset-all-progress button. ZERO imports from the journal — `cd training/ && python -m training --port 5050` runs it as its own server with only `flask` + `pyyaml` as runtime deps. See [`training/README.md`](training/README.md).
 
 ---
 
@@ -128,16 +128,34 @@ Institutional-grade portfolio metrics — VaR, position correlation, P&L attribu
 - `backtest_quality.py` — PBO + Deflated Sharpe + Bootstrap CI (Bailey et al. 2014)
 - Hermes agent — `~/.hermes/` on Pi; `hermes-gateway.service` (user systemd)
 - `trading/` package — auto-trader chain:
-  - `trading/config.py` — knobs (env-driven) + runtime state machine (active / pause_after_close / pause_now / circuit_breaker)
+  - `trading/config.py` — knobs (env-driven) + runtime state machine + L-1 read-path accessors (learned_params → constants fallback)
   - `trading/orchestrator.py` — scan-hook + monitor-tick driver wiring kill_switch → consensus → sizing → dispatch
   - `trading/kill_switch.py` — capital-preservation gate; daily/total DD, consec-loss, soft+elite concurrent caps, state machine
-  - `trading/signal_consensus.py` — Sonnet second-opinion (`consensus_score = min(scanner, ai)`)
+  - `trading/signal_consensus.py` — Sonnet/Opus second-opinion (`consensus_score = min(scanner, ai)`) + N-1/N-4/A-E/A-A veto chain
   - `trading/risk_budget.py` — Kelly-scaled sizing × win-streak compounding × drawdown dampener (dynamic notional cap)
   - `trading/bitget_trader.py` — V2 REST write client (HMAC-SHA256, tick-size snapping, ATR-based SL/TP repair, plan-order attach, cross margin mode)
   - `trading/hedge_manager.py` — catastrophe BTC-short hedge during basket-flush events
-  - `trading/executor.py` — real-mode order placement + Bitget history reconciliation
+  - `trading/executor.py` — real-mode order placement + Bitget history reconciliation + A-D slippage capture on every fill
   - `trading/paper.py` — paper-mode simulator (price-walk fills, identical accounting)
   - `trading/learner.py` — Sonnet post-trade reflection feeding rulebook
+  - **Self-Learning stack (option-a, 2026-05-31):**
+    - `trading/bayes.py` — R-5 Beta-Binomial / Wilson / Gaussian-conjugate / bootstrap CI primitives
+    - `trading/learned.py` + `trading/learner_symbol.py` — L-0 learned_params store + per-symbol modifier learner
+    - `trading/learner_time.py` — L-2 session / day-of-week / hour bucket learners
+    - `trading/learner_threshold.py` — L-3 consensus_min_score (A-B gated)
+    - `trading/learner_tpsl.py` — L-4 TP1 distance + SL buffer from MFE/MAE
+    - `trading/learner_risk.py` — L-5 Kelly risk_per_trade + max_notional + time_stop_hours
+    - `trading/backtest_validator.py` — A-B heuristic gate before any L-3/L-4/L-5 write
+    - `trading/red_team_agent.py` — A-A Haiku adversarial reviewer (soft → hard mode after 14d)
+    - `trading/post_mortem.py` — A-C Haiku 10-class failure-mode classifier on every loss
+    - `trading/exec_quality.py` — A-D slippage tracker + 7d aggregate
+    - `trading/cascade_predictor.py` — A-E VPIN × funding × OI side-aware veto
+    - `trading/vpin.py` — N-4 VPIN snapshot (Binance @aggTrades REST poll, top-20 watchlist)
+    - `trading/noise_gates.py` — N-3 wick / ADX / BB-squeeze Stage-3 modifiers
+    - `trading/persistence_gate.py` + `trading/fdr_correction.py` — N-1 persistence helper + N-2 BH FDR
+    - `trading/edge_decay.py` — R-4 per-archetype CUSUM + Page-Hinkley change-point detection
+    - `trading/daily_report.py` — 7-section daily Telegram digest builder
+    - `trading/r3_funding_liq.py` — R-3 funding_paid + liq_distance backfill (cross-mode aware)
 - `chart_fvg.py` — Fair Value Gap detection (3-candle imbalance, unfilled detection)
 - `chart_rsi.py` — RSI Mastery: regime-aware weighting + failure swings + regular/hidden divergences
 - `bear_phase.py` — Bear-market phase classifier (distribution/decline/capitulation/recovery) with directional bias
@@ -145,6 +163,18 @@ Institutional-grade portfolio metrics — VaR, position correlation, P&L attribu
 ---
 
 ## Recent Additions
+
+**2026-05-31 — Self-Learning Architecture ship (option-a, 12-week plan in one day, commit `1a76c00`):**
+
+- **5 Specialised Agents** — A-A Red-Team (Haiku adversarial review, soft mode 14d), A-B Backtest Validator (Stage-0 heuristic gate; full replay engine staged), A-C Post-Mortem (Haiku failure-mode classifier on every loss), A-D Execution-Quality Monitor (signed slippage in bps, 7d aggregate), A-E Cascade Predictor (VPIN × funding spread × OI divergence → side-aware veto).
+- **6 Self-Learners (L-0 → L-5)** — per-symbol modifier, session/DoW/hour buckets, consensus_min_score (A-B gated), TP/SL ATR distance from MFE/MAE, Kelly risk + time-stop. Every write gates through R-5 Bayesian credible interval + A-B backtest validator; operator can pin/unpin via `learned_params` rows.
+- **4 Noise Detection Gates** — N-1 consensus-variance (|scanner − ai| > 2.5 → veto), N-2 Benjamini-Hochberg FDR helper, N-3 structural Stage-3 modifiers (wick rejection / ADX < 20 / BB squeeze), N-4 VPIN order-flow toxicity (≥ 0.70 → veto).
+- **Daily Telegram digest** — 7 sections: Performance (24h/7d/30d) · Reminders · Learner activity · Noise gates · Edge-decay watch (per-archetype CUSUM + Page-Hinkley) · Top loss patterns · Execution quality. Fires at first cycle ≥ 09:00 UTC.
+- **11 background loops** — per-symbol/time/threshold/TPSL/risk learners (4-24 h cadence), post-mortem (hourly), exec-quality (hourly), VPIN sampler (5 min), R-3 funding+liq backfill (hourly), daily report. All spawned by `monitor_scheduler.py`.
+- **Schema migrations 68-71** — `positions.funding_paid_usd`, `liq_distance_atr`, `postmortem_*`, `mfe_atr_4h`/`mae_atr_4h`, `intended_entry`/`slippage_bps`. New tables: `learned_params`, `learner_log`, `vpin_snapshot`. All migrations idempotent.
+- **Stats UI panels** — Futures-AI Statistics page bottom: Recent auto-adjustments (live learner_log), Noise-gate rejection counters (24h), Reminders & countdowns, Edge-decay watch table. Backed by `/api/futures-ai/l7-panels`.
+- **Docs** — new Layer 5 (Microstructure) in Data Sources, new Specialized Agents / Learning Ladder / Noise Detection sections in AI Architecture, N-3 modifier table + post-consensus veto chain in Scanner Pipeline, dedicated 🤖 **Self-Learning Architecture** page covering all 11 loops + daily-report sections + schema additions + live-introspection API surface.
+- **Deferred** — DSPy classifier prompt tuning (next day); A-B Stage-1 backtest replay engine (when scanner replay scaffolding lands).
 
 **2026-05-23 / 2026-05-24 sprint (single-day, ~25 commits):**
 

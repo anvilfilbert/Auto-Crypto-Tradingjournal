@@ -3,13 +3,28 @@
 // LIVE TRADES — Call Match + Targets Panel (split from 08-live.js v2.1)
 // ══════════════════════════════════════════════════════════════════════════════
 
-// Compact coin-amount formatter (15000 → "15k", 30000000 → "30M").
+// Coin-amount formatter — keeps decimals visible for sub-1 positions.
+//   15000   → "15k"
+//   30e6    → "30M"
+//   234.5   → "234"
+//   12.345  → "12.35"
+//   0.1234  → "0.1234"
+//   0.00012 → "0.00012"
+// Previously rounded everything <1000 to nearest integer which lost all
+// decimals for high-priced coins (0.1 BTC → "0", 0.5 ETH → "1").
 function _fmtCoins(n) {
-  const v = Math.abs(parseFloat(n) || 0);
+  const raw = parseFloat(n);
+  if (!Number.isFinite(raw) || raw === 0) return '0';
+  const v = Math.abs(raw);
   if (v >= 1e9) return (v / 1e9).toFixed(v >= 10e9 ? 0 : 1) + 'B';
   if (v >= 1e6) return (v / 1e6).toFixed(v >= 10e6 ? 0 : 1) + 'M';
   if (v >= 1e3) return (v / 1e3).toFixed(v >= 10e3 ? 0 : 1) + 'k';
-  return String(Math.round(v));
+  if (v >= 100) return raw.toFixed(0);     // 234
+  if (v >= 10)  return raw.toFixed(2);     // 23.45
+  if (v >= 1)   return raw.toFixed(3);     // 1.234
+  if (v >= 0.01) return raw.toFixed(4);    // 0.1234
+  // Sub-cent: up to 6 decimals, trim trailing zeros
+  return raw.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 function renderMatchBanners(pendingMatches, positions) {

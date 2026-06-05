@@ -409,7 +409,8 @@ def get_fred_macro() -> dict:
 
 def get_macro_regime() -> dict:
     """
-    Fetch VIX, DXY, and ES1! (S&P 500 futures) via yfinance.
+    Fetch VIX, DXY, and ES1! (S&P 500 futures) via yfinance. 5-min cached
+    (yfinance is slow and is hit by multiple scanners per cycle).
 
     Returns {"vix": float|None, "dxy": float|None, "es": float|None,
              "es_change_pct": float|None, "regime": str}
@@ -419,49 +420,51 @@ def get_macro_regime() -> dict:
       Falling ES + rising VIX = double risk-off signal for crypto longs.
       Rising ES + low VIX = equity tailwind, positive for crypto.
     """
-    try:
-        import yfinance as yf
-        tickers = yf.download(
-            ["^VIX", "DX-Y.NYB", "ES=F"],
-            period="2d", interval="1h",
-            group_by="ticker", auto_adjust=True, progress=False,
-        )
-        def _last(sym):
-            try:
-                col = tickers[sym]["Close"].dropna()
-                return round(float(col.iloc[-1]), 2) if not col.empty else None
-            except Exception:
-                return None
-
-        vix = _last("^VIX")
-        dxy = _last("DX-Y.NYB")
-        es  = _last("ES=F")
-
-        # S&P 500 futures 24h change %
-        es_chg = None
+    def _fetch():
         try:
-            col = tickers["ES=F"]["Close"].dropna()
-            if len(col) >= 2:
-                es_chg = round((col.iloc[-1] - col.iloc[-24]) / col.iloc[-24] * 100, 2)
+            import yfinance as yf
+            tickers = yf.download(
+                ["^VIX", "DX-Y.NYB", "ES=F"],
+                period="2d", interval="1h",
+                group_by="ticker", auto_adjust=True, progress=False,
+            )
+            def _last(sym):
+                try:
+                    col = tickers[sym]["Close"].dropna()
+                    return round(float(col.iloc[-1]), 2) if not col.empty else None
+                except Exception:
+                    return None
+
+            vix = _last("^VIX")
+            dxy = _last("DX-Y.NYB")
+            es  = _last("ES=F")
+
+            # S&P 500 futures 24h change %
+            es_chg = None
+            try:
+                col = tickers["ES=F"]["Close"].dropna()
+                if len(col) >= 2:
+                    es_chg = round((col.iloc[-1] - col.iloc[-24]) / col.iloc[-24] * 100, 2)
+            except Exception:
+                pass
+
+            if vix is None:
+                regime = "unknown"
+            elif vix > 30:
+                regime = "risk-off"
+            elif vix > 20:
+                regime = "neutral"
+            else:
+                regime = "risk-on"
+
+            return {
+                "vix": vix, "dxy": dxy, "regime": regime,
+                "es": es, "es_change_pct": es_chg,
+            }
         except Exception:
-            pass
-
-        if vix is None:
-            regime = "unknown"
-        elif vix > 30:
-            regime = "risk-off"
-        elif vix > 20:
-            regime = "neutral"
-        else:
-            regime = "risk-on"
-
-        return {
-            "vix": vix, "dxy": dxy, "regime": regime,
-            "es": es, "es_change_pct": es_chg,
-        }
-    except Exception:
-        return {"vix": None, "dxy": None, "es": None,
-                "es_change_pct": None, "regime": "unknown"}
+            return {"vix": None, "dxy": None, "es": None,
+                    "es_change_pct": None, "regime": "unknown"}
+    return _cached("macro_regime", _fetch, ttl=300)
 
 
 # ── Multi-exchange long/short consensus ────────────────────────────────────────

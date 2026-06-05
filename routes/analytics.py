@@ -286,9 +286,10 @@ def api_token_usage():
             rows = [dict(r) for r in conn.execute("""
                 SELECT module, model,
                        COUNT(*) AS calls,
-                       SUM(input_tokens)  AS total_input,
-                       SUM(output_tokens) AS total_output,
-                       SUM(cached_tokens) AS total_cached
+                       SUM(input_tokens)           AS total_input,
+                       SUM(output_tokens)          AS total_output,
+                       SUM(cached_tokens)          AS total_cached,
+                       SUM(cache_creation_tokens)  AS total_cache_create
                 FROM token_usage
                 WHERE ts >= datetime('now', ? || ' days')
                 GROUP BY module, model
@@ -296,9 +297,10 @@ def api_token_usage():
             """, (f"-{days}",)).fetchall()]
 
             totals = dict(conn.execute("""
-                SELECT SUM(input_tokens) AS total_input,
-                       SUM(output_tokens) AS total_output,
-                       SUM(cached_tokens) AS total_cached,
+                SELECT SUM(input_tokens)           AS total_input,
+                       SUM(output_tokens)          AS total_output,
+                       SUM(cached_tokens)          AS total_cached,
+                       SUM(cache_creation_tokens)  AS total_cache_create,
                        COUNT(*) AS total_calls
                 FROM token_usage
                 WHERE ts >= datetime('now', ? || ' days')
@@ -311,15 +313,27 @@ def api_token_usage():
                 FROM token_usage
             """).fetchone() or {})
 
-        sonnet_in_cost  = 3.0 / 1_000_000   # $/token (input)
-        sonnet_out_cost = 15.0 / 1_000_000  # $/token (output)
-        haiku_in_cost   = 0.8 / 1_000_000
-        haiku_out_cost  = 4.0 / 1_000_000
+        # Pricing per 1M tokens (verified 2026-05-31 from claude-api skill):
+        #   (input, cache_read=0.1x, cache_write=1.25x, output)
+        # Previous hardcoded values were Sonnet 4.0/Haiku 3.5 + missed cache_write.
+        PRICING = {
+            "claude-opus":   (5.0,  0.50, 6.25,  25.0),
+            "claude-sonnet": (3.0,  0.30, 3.75,  15.0),
+            "claude-haiku":  (1.0,  0.10, 1.25,  5.0),
+        }
 
         def cost(row):
-            if "haiku" in row.get("model", "").lower():
-                return round(row["total_input"] * haiku_in_cost + row["total_output"] * haiku_out_cost, 4)
-            return round(row["total_input"] * sonnet_in_cost + row["total_output"] * sonnet_out_cost, 4)
+            model = (row.get("model") or "").lower()
+            for prefix, (in_p, cr_p, cw_p, out_p) in PRICING.items():
+                if model.startswith(prefix):
+                    return round(
+                        (row.get("total_input")        or 0) * in_p  / 1e6 +
+                        (row.get("total_cached")       or 0) * cr_p  / 1e6 +
+                        (row.get("total_cache_create") or 0) * cw_p  / 1e6 +
+                        (row.get("total_output")       or 0) * out_p / 1e6,
+                        4
+                    )
+            return 0.0  # non-Anthropic (cascade fallback) — free tier or separate accounting
 
         for r in rows:
             r["est_cost_usd"] = cost(r)
@@ -332,6 +346,193 @@ def api_token_usage():
             "all_time": all_time,
             "est_cost_usd": round(total_cost, 4),
         })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/shadow-stats")
+def api_shadow_stats():
+    """GET /api/shadow-stats?days=7 — model-by-model comparison vs primary.
+
+    For each shadow_model+module pair: success rate, mean latency, total cost,
+    text-similarity placeholder (Jaccard on tokens). Cheap aggregation; deeper
+    agreement analysis is offline.
+    """
+    try:
+        days = int(request.args.get("days", 7))
+        with db_conn() as conn:
+            # Per-(shadow_model, module) aggregates
+            rows = [dict(r) for r in conn.execute("""
+                SELECT primary_module, shadow_provider, shadow_model,
+                       COUNT(*)                                AS samples,
+                       SUM(CASE WHEN shadow_error IS NULL THEN 1 ELSE 0 END) AS successes,
+                       SUM(CASE WHEN shadow_error IS NOT NULL THEN 1 ELSE 0 END) AS errors,
+                       ROUND(AVG(shadow_latency_ms), 0)        AS mean_lat_ms,
+                       ROUND(AVG(primary_latency_ms), 0)       AS primary_mean_lat_ms,
+                       ROUND(SUM(shadow_cost_usd), 4)          AS total_cost_usd,
+                       SUM(shadow_input_tokens)                AS shadow_in_tok,
+                       SUM(shadow_output_tokens)               AS shadow_out_tok,
+                       SUM(primary_input_tokens)               AS primary_in_tok,
+                       SUM(primary_output_tokens)              AS primary_out_tok
+                FROM shadow_responses
+                WHERE ts >= datetime('now', ? || ' days')
+                GROUP BY primary_module, shadow_provider, shadow_model
+                ORDER BY samples DESC
+            """, (f"-{days}",)).fetchall()]
+
+            for r in rows:
+                # Compute success rate and cost-per-call delta vs primary (Haiku 4.5)
+                s = r["samples"] or 1
+                r["success_pct"] = round(100.0 * (r["successes"] or 0) / s, 1)
+                # Primary cost using current Haiku pricing
+                primary_cost = (
+                    (r["primary_in_tok"]  or 0) * 1.0 / 1e6 +
+                    (r["primary_out_tok"] or 0) * 5.0 / 1e6
+                )
+                r["primary_cost_usd"] = round(primary_cost, 4)
+                r["cost_ratio_vs_primary"] = (
+                    round((r["total_cost_usd"] or 0) / primary_cost, 3)
+                    if primary_cost > 0 else None
+                )
+
+            # Recent error sample (last 5 per model)
+            errors = [dict(r) for r in conn.execute("""
+                SELECT ts, shadow_model, shadow_error
+                FROM shadow_responses
+                WHERE shadow_error IS NOT NULL
+                  AND ts >= datetime('now', ? || ' days')
+                ORDER BY ts DESC
+                LIMIT 20
+            """, (f"-{days}",)).fetchall()]
+
+        return _ok({
+            "days":      days,
+            "by_model":  rows,
+            "errors":    errors,
+            "note":      "primary_cost_usd uses Haiku 4.5 pricing ($1/$5 per 1M)",
+        })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/vmc-cipher/<symbol>")
+def api_chart_vmc_cipher(symbol):
+    """
+    GET /api/chart/vmc-cipher/BTCUSDT?timeframe=4H&limit=200&format=json|png
+    VMC Cipher B indicator data for a symbol.
+      format=json (default) → JSON payload for LightweightCharts popup
+      format=png            → base64 PNG (price+VMC dual-pane) for static use
+      format=pane           → base64 PNG (oscillator pane only)
+    """
+    try:
+        import chart_candles
+        import chart_vmc_cipher
+        import chart_vmc_draw
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        fmt       = (request.args.get("format") or "json").lower()
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        if fmt == "png":
+            b64 = chart_vmc_draw.draw_price_and_vmc(df, symbol=sym)
+            return _ok({"symbol": sym, "timeframe": timeframe,
+                        "format": "png", "image_b64": b64})
+        if fmt == "pane":
+            b64 = chart_vmc_draw.draw_vmc_only(df, symbol=sym)
+            return _ok({"symbol": sym, "timeframe": timeframe,
+                        "format": "pane", "image_b64": b64})
+
+        vmc = chart_vmc_cipher.compute_vmc_cipher(df)
+        payload = chart_vmc_cipher.to_json_payload(vmc, df)
+        payload["symbol"]    = sym
+        payload["timeframe"] = timeframe
+        payload["bars"]      = len(df)
+        return _ok(payload)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/vmc-cipher-a/<symbol>")
+def api_chart_vmc_cipher_a(symbol):
+    """
+    GET /api/chart/vmc-cipher-a/BTCUSDT?timeframe=4H&limit=200
+    Cipher A — EMA ribbon (8 EMAs) + signal markers (long_ema, short_ema,
+    red_cross, blue_triangle, red_diamond, blood_diamond, yellow_x, bull_candle).
+    Always JSON — Cipher A is an on-chart overlay, no standalone PNG.
+    """
+    try:
+        import chart_candles
+        import chart_vmc_cipher_a
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+        cipher_a = chart_vmc_cipher_a.compute_cipher_a(df)
+        payload = chart_vmc_cipher_a.to_json_payload(cipher_a, df)
+        payload["symbol"]    = sym
+        payload["timeframe"] = timeframe
+        return _ok(payload)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/mtf-ema/<symbol>")
+def api_chart_mtf_ema(symbol):
+    """
+    GET /api/chart/mtf-ema/BTCUSDT?length=200
+    Multi-Timeframe EMA average — average of N-period EMA across
+    1H/4H/12H/1D/3D/1W. Returns scalar + bias (long/short/neutral).
+    """
+    try:
+        import chart_mtf_ema
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        length = max(20, min(500, int(request.args.get("length", 200))))
+        result = chart_mtf_ema.compute_mtf_ema_avg(sym, length=length)
+        return _ok(result)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/vmc-signal/<symbol>")
+def api_chart_vmc_signal(symbol):
+    """
+    GET /api/chart/vmc-signal/BTCUSDT?timeframe=4H
+    Unified VuManChu signal — combines Cipher A + Cipher B + MTF EMA into a
+    signed score [-1.0, +1.0] with active-signal breakdown and label.
+    """
+    try:
+        import chart_candles
+        import chart_vmc_signals
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(80, min(500, int(request.args.get("limit", 250))))
+        include_mtf = (request.args.get("mtf", "1") not in ("0", "false", "no"))
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+        result = chart_vmc_signals.compute_unified_signal(sym, df,
+                                                            include_mtf=include_mtf)
+        result["timeframe"] = timeframe
+        return _ok(result)
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)
@@ -351,6 +552,133 @@ def api_chart_indicators():
         timeframes = [t.strip() for t in tf_raw.split(",") if t.strip()]
         ctx = chart_context.get_chart_context(symbol, timeframes)
         return _ok(ctx)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+# ── 2026-05-30 chart-overlay endpoints for VWAP / Volume Profile / Supertrend ──
+# All return per-bar series shaped for LightweightCharts addLineSeries /
+# canvas overlay rendering. Defensive: each route is independently fail-soft —
+# a missing dep returns ok=true with empty data so the popup renders gracefully.
+
+@bp.route("/api/chart/vwap/<symbol>")
+def api_chart_vwap(symbol):
+    """
+    GET /api/chart/vwap/BTCUSDT?timeframe=4H&limit=200&anchored=session
+    Returns VWAP per-bar series for overlay plotting (one line per band).
+
+    Payload:
+      { "summary": { "vwap": float, "upper_1": float, "lower_1": float,
+                     "upper_2": float, "lower_2": float, ... },
+        "series":  [ {"time": int, "vwap": float, "upper_1": float, ...}, ... ],
+        "symbol":  str, "timeframe": str }
+    """
+    try:
+        import chart_candles
+        import chart_vwap
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        anchored  = request.args.get("anchored", "session").strip()
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        summary = chart_vwap.compute_vwap(df, anchored=anchored) or {}
+        series  = chart_vwap.compute_vwap_series(df, anchored=anchored) or []
+        return _ok({
+            "symbol":    sym,
+            "timeframe": timeframe,
+            "summary":   summary,
+            "series":    series,
+            "bars":      len(series),
+        })
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/volume_profile/<symbol>")
+def api_chart_volume_profile(symbol):
+    """
+    GET /api/chart/volume_profile/BTCUSDT?timeframe=4H&limit=200&bins=24
+    Returns POC, VAH/VAL, HVN/LVN lists for drawing a right-side histogram
+    overlay on the popup chart.
+
+    Payload:
+      { "poc": float, "vah": float, "val": float,
+        "hvn": [float], "lvn": [float],
+        "at_poc": str, "distance_to_poc_pct": float,
+        "in_value_area": bool, "bins_used": int, "lookback_bars": int,
+        "symbol": str, "timeframe": str }
+    """
+    try:
+        import chart_candles
+        import chart_volume_profile
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        bins      = max(8, min(64, int(request.args.get("bins", 24))))
+        va_pct    = max(0.5, min(0.9, float(request.args.get("va_pct", 0.70))))
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        result = chart_volume_profile.compute_volume_profile(
+            df, bins=bins, va_pct=va_pct, lookback_bars=limit) or {}
+        result["symbol"]    = sym
+        result["timeframe"] = timeframe
+        return _ok(result)
+    except Exception:
+        traceback.print_exc()
+        return _err("Internal server error", 500)
+
+
+@bp.route("/api/chart/supertrend/<symbol>")
+def api_chart_supertrend(symbol):
+    """
+    GET /api/chart/supertrend/BTCUSDT?timeframe=4H&limit=200&period=10&mult=3.0
+    Returns current Supertrend state (line value + direction + flip age) for
+    overlay rendering. Frontend draws supertrend_value as a line, colored by
+    direction sign.
+
+    Payload:
+      { "direction": +1|-1, "supertrend_value": float, "flip_bars_ago": int,
+        "signal": str, "symbol": str, "timeframe": str }
+    """
+    try:
+        import chart_candles
+        import chart_indicators
+        sym = symbol.strip().upper()
+        if not sym:
+            return _err("symbol is required")
+        timeframe = request.args.get("timeframe", "4H").strip()
+        limit     = max(50, min(500, int(request.args.get("limit", 200))))
+        period    = max(5, min(50, int(request.args.get("period", 10))))
+        mult      = max(1.0, min(5.0, float(request.args.get("mult", 3.0))))
+
+        df = chart_candles.get_candles(sym, timeframe, limit=limit)
+        if df is None or df.empty:
+            return _err(f"no candles available for {sym} {timeframe}")
+
+        summary = chart_indicators.compute_supertrend(df, period=period,
+                                                       multiplier=mult) or {}
+        series  = chart_indicators.compute_supertrend_series(df, period=period,
+                                                              multiplier=mult) or []
+        return _ok({
+            "symbol":    sym,
+            "timeframe": timeframe,
+            "summary":   summary,
+            "series":    series,
+            "bars":      len(series),
+        })
     except Exception:
         traceback.print_exc()
         return _err("Internal server error", 500)

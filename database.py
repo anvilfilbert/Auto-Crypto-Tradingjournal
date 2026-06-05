@@ -25,6 +25,11 @@ def get_conn():
     conn.execute("PRAGMA journal_mode=WAL")   # safe for concurrent reads
     conn.execute("PRAGMA wal_autocheckpoint=100")  # checkpoint every 100 pages (~400KB), keeps WAL small
     conn.execute("PRAGMA foreign_keys=ON")
+    # Wait up to 5 seconds for a write lock instead of failing immediately.
+    # Added 2026-05-31 — shadow_runner spawns daemon threads that compete
+    # with 11 monitor_scheduler loops for the SQLite writer. Without this,
+    # contended writes silently dropped via `except: pass` in callers.
+    conn.execute("PRAGMA busy_timeout=5000")
     return conn
 
 
@@ -560,6 +565,101 @@ def init_db():
     _apply(66, "positions.sizing_tier",
            "ALTER TABLE positions ADD COLUMN sizing_tier TEXT DEFAULT 'full'")
 
+    # ── SL persistence (added 2026-05-31) ─────────────────────────────────────
+    # Snapshot of the INITIAL stop-loss price at trade open. Defines 1R risk
+    # for downstream realized-R computation in the stats page. Written by
+    # executor._insert_open_position and paper.open_paper_trade. Never moved
+    # — even if SL gets trailed or bumped to BE during the trade, this column
+    # holds the original SL so R-multiples stay anchored to the entry-time
+    # plan. NULL for historical positions opened before this migration.
+    _apply(67, "positions.sl_price",
+           "ALTER TABLE positions ADD COLUMN sl_price REAL DEFAULT NULL")
+
+    # ── R-3 funding cost + liquidation distance (2026-05-31, Master plan R-3)
+    # funding_paid_usd: total funding paid (positive) or received (negative)
+    #   across the hold period. Pulled from Bitget position history
+    #   (totalFunding field) at reconcile time. Default NULL for historical
+    #   positions; populated by funding_backfill job going forward.
+    # liq_distance_atr: at trade open, distance from entry to liquidation
+    #   measured in 4H ATR units. >5 = healthy, <2 = structurally fragile
+    #   (SL is likely inside liquidation zone, exchange forces close before
+    #   our SL fires). Written by executor._insert_open_position.
+    _apply(68, "positions.funding_paid_usd",
+           "ALTER TABLE positions ADD COLUMN funding_paid_usd REAL DEFAULT NULL")
+    _apply(69, "positions.liq_distance_atr",
+           "ALTER TABLE positions ADD COLUMN liq_distance_atr REAL DEFAULT NULL")
+
+    # ── L-0 (Master plan): self-learning foundation ──────────────────────────
+    # learned_params: versioned key-value store. The scanner / orchestrator /
+    # executor read tunables from here via trading.learned.get(). Pinned rows
+    # are operator overrides — the learner respects them.
+    _apply(70, "learned_params",
+           "CREATE TABLE IF NOT EXISTS learned_params ("
+           "key TEXT PRIMARY KEY, "
+           "value TEXT NOT NULL, "
+           "value_type TEXT NOT NULL DEFAULT 'json', "
+           "default_value TEXT, "
+           "updated_at TEXT NOT NULL DEFAULT (datetime('now')), "
+           "sample_size INTEGER DEFAULT 0, "
+           "ci_low REAL, ci_high REAL, p_value REAL, "
+           "pinned INTEGER NOT NULL DEFAULT 0, "
+           "pinned_reason TEXT, "
+           "last_revert_at TEXT, "
+           "revert_count INTEGER NOT NULL DEFAULT 0)")
+
+    # learner_log: every learner decision (apply / skip / revert) logged here.
+    # Read by daily Telegram report + Stats UI "Recent auto-adjustments" panel.
+    _apply(71, "learner_log",
+           "CREATE TABLE IF NOT EXISTS learner_log ("
+           "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+           "ts TEXT NOT NULL DEFAULT (datetime('now')), "
+           "learner_name TEXT NOT NULL, "
+           "param_key TEXT NOT NULL, "
+           "old_value TEXT, new_value TEXT, "
+           "action TEXT NOT NULL, "
+           "gate_reason TEXT, "
+           "sample_size INTEGER, "
+           "ci_low REAL, ci_high REAL, p_value REAL, "
+           "payload_json TEXT)")
+
+    # token_usage.cache_creation_tokens: tokens written to prompt cache.
+    # Billed at 1.25x input price. Previously approximated via comment in
+    # system_state.py; this fix logs it explicitly so cost dashboards match
+    # Anthropic billing (was ~35% of spend, silently underreported).
+    _apply(72, "token_usage.cache_creation_tokens",
+           "ALTER TABLE token_usage ADD COLUMN cache_creation_tokens INTEGER DEFAULT 0")
+
+    # shadow_responses: side-by-side log of primary (Anthropic) vs shadow
+    # (OpenRouter cheaper-model) responses for a sampled fraction of calls.
+    # Drives the cost/agreement analysis to decide if any cheaper model is
+    # viable as a primary swap. Sampling controlled by AI_SHADOW_RATE env.
+    _apply(73, "shadow_responses",
+           "CREATE TABLE IF NOT EXISTS shadow_responses ("
+           "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+           "ts TEXT NOT NULL DEFAULT (datetime('now')), "
+           "primary_request_id TEXT NOT NULL, "
+           "primary_module TEXT NOT NULL, "
+           "primary_model TEXT NOT NULL, "
+           "primary_text TEXT, "
+           "primary_input_tokens INTEGER, "
+           "primary_output_tokens INTEGER, "
+           "primary_latency_ms INTEGER, "
+           "shadow_provider TEXT NOT NULL, "
+           "shadow_model TEXT NOT NULL, "
+           "shadow_text TEXT, "
+           "shadow_latency_ms INTEGER, "
+           "shadow_input_tokens INTEGER, "
+           "shadow_output_tokens INTEGER, "
+           "shadow_cost_usd REAL, "
+           "shadow_error TEXT)")
+
+    # Index for the /api/shadow-stats aggregation query — filters on ts and
+    # groups by primary_module + shadow_model. Without this the dashboard
+    # gets progressively slower as rows accumulate (~470/day at 20% rate).
+    _apply(74, "shadow_responses.idx_ts_module",
+           "CREATE INDEX IF NOT EXISTS idx_shadow_ts_module "
+           "ON shadow_responses(ts, primary_module)")
+
     # ── settings ──────────────────────────────────────────────────────────────
     # Key-value store: last sync time, account equity, rulebook timestamps.
     # Also created by bitget_sync._ensure_settings_table() but must exist here
@@ -586,13 +686,14 @@ def init_db():
     # One row per Claude API call. Provides cost visibility per module.
     cur.execute("""
         CREATE TABLE IF NOT EXISTS token_usage (
-            id             INTEGER PRIMARY KEY AUTOINCREMENT,
-            ts             TEXT    DEFAULT (datetime('now')),
-            module         TEXT    NOT NULL,   -- 'call_analyzer', 'scanner', 'rulebook', 'hindsight', 'advisor'
-            model          TEXT    NOT NULL,
-            input_tokens   INTEGER NOT NULL,
-            output_tokens  INTEGER NOT NULL,
-            cached_tokens  INTEGER DEFAULT 0
+            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts                      TEXT    DEFAULT (datetime('now')),
+            module                  TEXT    NOT NULL,   -- 'call_analyzer', 'scanner', 'rulebook', 'hindsight', 'advisor'
+            model                   TEXT    NOT NULL,
+            input_tokens            INTEGER NOT NULL,
+            output_tokens           INTEGER NOT NULL,
+            cached_tokens           INTEGER DEFAULT 0,  -- cache_read (billed at 0.1x input)
+            cache_creation_tokens   INTEGER DEFAULT 0   -- cache_write (billed at 1.25x input)
         )
     """)
 
