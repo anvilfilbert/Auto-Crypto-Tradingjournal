@@ -3,6 +3,7 @@
 All routes are registered on `bp` (imported here from blueprint.py).
 """
 import json
+import re
 from pathlib import Path
 import yaml
 from flask import current_app, render_template, request, jsonify, abort
@@ -15,6 +16,9 @@ from .db import (
 from . import config as training_config
 
 
+_SAFE_SLUG_RE = re.compile(r"\A[A-Za-z0-9_-]{1,64}\Z")
+
+
 def _db_path() -> Path:
     return Path(current_app.config["TRAINING_DB_PATH"])
 
@@ -23,16 +27,30 @@ def _content_dir() -> Path:
     return Path(__file__).parent / "content"
 
 
+def _safe_content_path(subdir: str, name: str, suffix: str) -> Path | None:
+    # Defence-in-depth: reject anything outside [A-Za-z0-9_-] before touching
+    # the filesystem, then re-verify the resolved path is inside _content_dir.
+    if not _SAFE_SLUG_RE.fullmatch(name or ""):
+        return None
+    base = _content_dir().resolve()
+    candidate = (base / subdir / f"{name}{suffix}").resolve()
+    try:
+        candidate.relative_to(base)
+    except ValueError:
+        return None
+    return candidate
+
+
 def _load_lesson_content(slug: str) -> dict:
-    path = _content_dir() / "lessons" / f"{slug}.json"
-    if not path.exists():
+    path = _safe_content_path("lessons", slug, ".json")
+    if path is None or not path.exists():
         return None
     return json.loads(path.read_text())
 
 
 def _load_quiz(quiz_id: str) -> dict:
-    path = _content_dir() / "quizzes" / f"{quiz_id}.yaml"
-    if not path.exists():
+    path = _safe_content_path("quizzes", quiz_id, ".yaml")
+    if path is None or not path.exists():
         return None
     return yaml.safe_load(path.read_text())
 
