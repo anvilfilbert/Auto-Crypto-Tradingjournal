@@ -1,6 +1,6 @@
 # Trading Journal — Architecture & Data Flow
 
-*v1.6.0 + Futures-AI + trader-sheet integration · Updated 2026-05-24*
+*v1.6.0 + Futures-AI + trader-sheet integration · Updated 2026-06-05*
 
 ## See also (dedicated pages)
 - [**DATA_SOURCES.md**](DATA_SOURCES.md) — every external data source, auth, cadence
@@ -120,6 +120,8 @@ Autonomous trading chain that consumes scanner output and places real Bitget ord
 - Market data, scanner output, indicators, baselines, and macro caps are **shared** (no point duplicating)
 
 The Futures-AI page (`#page-futuresai`, JS in `static/js/18-futures-ai.js`) shows the AI's open positions and recent decisions; the operator's main book continues on Live Trades / Journal / Deep Dive.
+
+A second analytics page — **🤖 Model Comparison** at `#page-faimodels`, JS in `static/js/20-futures-ai-models.js` — surfaces side-by-side stats and per-trade reasoning across the primary Anthropic model and the 3 OpenRouter shadow models. Backed by `GET /api/futures-ai/model-comparison`. Per-trade rows are click-to-expand cards showing each model's score, direction, and full reasoning text alongside the actual trade outcome. The cost-vs-P&L tile attributes shadow LLM spend to the closed-trade pool so you can read net-of-AI ROI directly.
 
 ### Module map
 | Module | Responsibility |

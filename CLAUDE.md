@@ -85,6 +85,45 @@ fixed in 6 changes:
 
 To re-enable F&G: set `FUTURES_AI_FNG_PAUSED=0` in Pi `.env`, restart.
 
+## Model Comparison page (2026-06-01)
+
+New analytics page under Futures-AI Stats nav: 🤖 **Model Comparison** at
+`#page-faimodels`. Surfaces side-by-side stats and per-trade reasoning
+across the primary Anthropic model and the 3 OpenRouter shadow models.
+
+- Backend: `GET /api/futures-ai/model-comparison?window=24h|7d|30d|all&min_score=N`
+  in `routes/futures_ai.py`. Aggregates per-model: `n_calls`, `n_with_score`,
+  `score_histogram`, `agreement_rate`, `would_open_rate`, latency p50/p95,
+  cost, errors. Joins each closed paper trade to its shadow scores by
+  symbol + ±10 min window. Cost-vs-P&L tile: closed trades, total realized
+  P&L, attributed LLM cost, NET, avg P&L/trade, avg cost/trade,
+  ROI on LLM spend, window total shadow spend.
+- Frontend: `static/js/20-futures-ai-models.js` (DOM API + textContent
+  throughout — no innerHTML interpolation). Per-trade row is click-to-
+  expand, showing each model's score + direction + full reasoning text
+  side-by-side.
+- Schema dep: `shadow_responses.symbol TEXT` + `idx_shadow_responses_sym`.
+  Populated going forward by `shadow_runner._extract_symbol_from_messages`.
+  Pre-2026-06-01 rows backfilled once via `/tmp/backfill_shadow_symbols.py`
+  (futures_ai_log timestamp join, ±60s window).
+
+## Paper-mode + entry-score floor (current state, 2026-06-01 onward)
+
+The auto-trader has been running in `FUTURES_AI_MODE=paper` with
+`SCANNER_MIN_SCORE=1` and `FUTURES_AI_CONSENSUS_MIN_SCORE=1` since
+2026-06-01 for data-collection. Two consequences a future session must
+remember:
+- Opus consensus spend ~5× normal: almost every Stage-3a setup goes
+  through to Opus when the floor is 1. Accept as part of paper-mode
+  cost.
+- The 1:1 rule: any new field or computation added to live mode MUST
+  appear identically in paper mode. Operator quote: "if not — why to
+  do live trading". See [[feedback_paper_must_equal_live]] in memory.
+
+To flip back to live: `FUTURES_AI_MODE=real`, restore
+`SCANNER_MIN_SCORE=6`, `CONSENSUS_MIN_SCORE=5`,
+`MAX_CONCURRENT_POSITIONS=8`, `MAX_ELITE_POSITIONS=10`. Restart.
+
 ## Operator-behavior caps removed (2026-05-25)
 The personal-bad-hour cap (UTC 13/15/19/20 → score ≤ 5.5) and reversal-archetype
 cap (reversal trades → ≤ 5.5) were removed from scanner scoring. Both were
