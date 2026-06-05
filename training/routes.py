@@ -27,32 +27,35 @@ def _content_dir() -> Path:
     return Path(__file__).parent / "content"
 
 
-def _safe_content_path(subdir: str, name: str, suffix: str) -> Path | None:
-    # Defence-in-depth: reject anything outside [A-Za-z0-9_-] before touching
-    # the filesystem, then re-verify the resolved path is inside _content_dir.
+def _find_content_file(subdir: str, name: str, suffix: str):
+    # Path-injection-safe lookup: enumerate the trusted content directory
+    # and match by stem + suffix. The user-supplied `name` is only ever used
+    # in a string equality check, never in filesystem path construction,
+    # so a malicious `../etc/passwd` cannot escape — there is no path
+    # arithmetic that could be subverted.
     if not _SAFE_SLUG_RE.fullmatch(name or ""):
         return None
-    base = _content_dir().resolve()
-    candidate = (base / subdir / f"{name}{suffix}").resolve()
-    try:
-        candidate.relative_to(base)
-    except ValueError:
+    subdir_path = _content_dir() / subdir
+    if not subdir_path.is_dir():
         return None
-    return candidate
+    for entry in subdir_path.iterdir():
+        if entry.is_file() and entry.suffix == suffix and entry.stem == name:
+            return entry
+    return None
 
 
 def _load_lesson_content(slug: str) -> dict:
-    path = _safe_content_path("lessons", slug, ".json")
-    if path is None or not path.exists():
+    entry = _find_content_file("lessons", slug, ".json")
+    if entry is None:
         return None
-    return json.loads(path.read_text())
+    return json.loads(entry.read_text())
 
 
 def _load_quiz(quiz_id: str) -> dict:
-    path = _safe_content_path("quizzes", quiz_id, ".yaml")
-    if path is None or not path.exists():
+    entry = _find_content_file("quizzes", quiz_id, ".yaml")
+    if entry is None:
         return None
-    return yaml.safe_load(path.read_text())
+    return yaml.safe_load(entry.read_text())
 
 
 # ── Views ───────────────────────────────────────────────────────────────────
